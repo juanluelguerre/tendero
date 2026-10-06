@@ -121,7 +121,6 @@ fit). What changes in code:
 - `InProcessOnnxChat` and `ScriptedChatClient` read only a message's text and
   would drop a picture. The scripted one learns to match on a picture's presence,
   so the pipeline runs in CI with no model.
-- `Catalog:Images:RootPath` is set in the AppHost so a container can read the store.
 - Every call is metered as today; the picture's tokens are already in `Usage`.
 
 **Degraded path**: with no vision-capable profile, everything in I-3 and I-4
@@ -140,6 +139,16 @@ today that it cannot).
 The storefront renders the approved text as the picture's `alt`. **The non-AI
 path** is the shopkeeper typing it on the product's screen, which must exist and
 work with every model stopped.
+
+*As planned and begun (2026-10-06)*: the code had less than this step assumed —
+alt text could be stored and served but nothing could change it, a re-import
+erased it, a proposal could carry no picture and no edit, and no job had ever
+proposed anything. The step is redrawn in six slices in
+`docs/plans/2026-10-06-images-i3-alt-text.md`, with three rulings it asks of the
+author. **A-1 is built**: `Product.DescribeImage`, the command `SetImageAltText`
+(both languages at once) and `PUT /api/catalog/products/{id}/images/{imageId}/alt`
+— the path with no model, first — and an import that carries no alt text now keeps
+the one the product has.
 
 ### I-4 · What a picture says, as claims — and against the data
 

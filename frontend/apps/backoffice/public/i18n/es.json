@@ -78,6 +78,7 @@
       "ScheduleCampaignCommand": "Programar una campaña",
       "SetBrowsingCommand": "Activar o desactivar un historial de navegación",
       "SetCartLineCommand": "Cambiar una línea del carrito",
+      "SetImageAltTextCommand": "Describir una imagen de producto",
       "SetProductAttributeCommand": "Fijar un atributo de producto",
       "SetProductTranslationCommand": "Traducir un producto",
       "StewardTurnCommand": "Preguntar a Steward",

@@ -212,6 +212,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/products/{id}/images/{imageId}/alt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetImageAltText"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{code}/review": {
         parameters: {
             query?: never;
@@ -1833,6 +1849,8 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: string;
+        /** @enum {unknown} */
+        ImageAltOutcome: "Described" | "Unchanged" | "NoSuchImage" | "Archived" | "NotFound";
         ImportProductsCommand: {
             source: string;
         };
@@ -2730,6 +2748,19 @@ export interface components {
             /** Format: int32 */
             quantity: number;
         };
+        SetImageAltTextConflict: {
+            title: string;
+            detail: string;
+        };
+        SetImageAltTextRequest: {
+            es: string;
+            en: string;
+        };
+        SetImageAltTextResponse: {
+            productId: string;
+            imageId: string;
+            outcome: components["schemas"]["ImageAltOutcome"];
+        };
         SetProductTranslationConflict: {
             title: string;
             detail: string;
@@ -3405,6 +3436,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetProductTranslationConflict"];
+                };
+            };
+        };
+    };
+    SetImageAltText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                imageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetImageAltTextRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImageAltTextResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImageAltTextConflict"];
                 };
             };
         };

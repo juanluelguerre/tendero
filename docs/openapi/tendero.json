@@ -504,6 +504,68 @@
         }
       }
     },
+    "/api/catalog/products/{id}/images/{imageId}/alt": {
+      "put": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "SetImageAltText",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetImageAltTextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetImageAltTextResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetImageAltTextConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{code}/review": {
       "get": {
         "tags": [
@@ -5619,6 +5681,15 @@
         "type": "string",
         "format": "binary"
       },
+      "ImageAltOutcome": {
+        "enum": [
+          "Described",
+          "Unchanged",
+          "NoSuchImage",
+          "Archived",
+          "NotFound"
+        ]
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -9081,6 +9152,55 @@
           "quantity": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "SetImageAltTextConflict": {
+        "required": [
+          "title",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "SetImageAltTextRequest": {
+        "required": [
+          "es",
+          "en"
+        ],
+        "type": "object",
+        "properties": {
+          "es": {
+            "type": "string"
+          },
+          "en": {
+            "type": "string"
+          }
+        }
+      },
+      "SetImageAltTextResponse": {
+        "required": [
+          "productId",
+          "imageId",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "imageId": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/ImageAltOutcome"
           }
         }
       },

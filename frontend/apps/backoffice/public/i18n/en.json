@@ -78,6 +78,7 @@
       "ScheduleCampaignCommand": "Schedule a campaign",
       "SetBrowsingCommand": "Switch a browsing history on or off",
       "SetCartLineCommand": "Change a cart line",
+      "SetImageAltTextCommand": "Describe a product picture",
       "SetProductAttributeCommand": "Set a product attribute",
       "SetProductTranslationCommand": "Translate a product",
       "StewardTurnCommand": "Ask Steward",

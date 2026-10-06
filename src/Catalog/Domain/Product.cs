@@ -16,7 +16,19 @@ public enum ProductStatus
 /// rows. The alternative text is user-facing, hence LocalizedText (invariant 6):
 /// a screen reader in English cannot read out Spanish.
 /// </summary>
-public sealed record ProductImage(ImageId Id, LocalizedText? Alt, int SortOrder);
+public sealed record ProductImage(ImageId Id, LocalizedText? Alt, int SortOrder)
+{
+    /// <summary>
+    /// Whether the picture is already described in exactly these words. Compared by
+    /// the WORDS: <see cref="LocalizedText"/> has reference equality, and every
+    /// import and every command builds a new one.
+    /// </summary>
+    public bool Says(LocalizedText? alt) =>
+        Alt is null || alt is null
+            ? Alt is null && alt is null
+            : Alt.Values.Count == alt.Values.Count &&
+              Alt.Values.All(pair => alt.Values.TryGetValue(pair.Key, out var other) && other == pair.Value);
+}
 
 // The key across N connectors: (source, external id). E.g. ("shopify", "gid://shopify/Product/123")
 public sealed record ExternalReference(string Source, string ExternalId);
@@ -33,6 +45,10 @@ public sealed class Product : AggregateRoot
     public const int NameMaxLength = 200;
 
     public const int DescriptionMaxLength = 4000;
+
+    /// <summary>What a picture shows, in one language, at most. A screen reader reads
+    /// it whole, so it is a sentence or two; the limit is what refuses an essay.</summary>
+    public const int ImageAltMaxLength = 300;
 
     private readonly List<ProductImage> images = [];
     private readonly List<AttributeValue> attributes = [];
@@ -255,9 +271,13 @@ public sealed class Product : AggregateRoot
     {
         ArgumentNullException.ThrowIfNull(gallery);
 
+        // What the source does not say, the product keeps: a seed with no alt text
+        // must not erase the one a person approved (phase 13a). A source that does
+        // describe its picture has the last word.
         var replacement = gallery
             .DistinctBy(image => image.Id)
-            .Select((image, index) => new ProductImage(image.Id, image.Alt, index))
+            .Select((image, index) => new ProductImage(
+                image.Id, image.Alt ?? this.images.FirstOrDefault(kept => kept.Id == image.Id)?.Alt, index))
             .ToList();
 
         if (replacement.SequenceEqual(this.images.OrderBy(image => image.SortOrder), SameImage.Instance))
@@ -266,6 +286,28 @@ public sealed class Product : AggregateRoot
         this.images.Clear();
         this.images.AddRange(replacement);
         Touch(clock);
+    }
+
+    /// <summary>
+    /// Says what one of the product's pictures shows (phase 13a): what a shopkeeper
+    /// types, and what a model proposes and a person approves. The picture keeps its
+    /// place in the gallery. The same words again are not a change — no timestamp,
+    /// no event.
+    /// </summary>
+    /// <returns>False when the product has no such picture.</returns>
+    public bool DescribeImage(TimeProvider clock, ImageId id, LocalizedText alt)
+    {
+        ArgumentNullException.ThrowIfNull(alt);
+
+        var at = this.images.FindIndex(image => image.Id == id);
+        if (at < 0)
+            return false;
+        if (this.images[at].Says(alt))
+            return true;
+
+        this.images[at] = this.images[at] with { Alt = alt };
+        Touch(clock);
+        return true;
     }
 
     /// <summary>
@@ -282,15 +324,9 @@ public sealed class Product : AggregateRoot
             a is not null && b is not null &&
             a.Id == b.Id &&
             a.SortOrder == b.SortOrder &&
-            SameWords(a.Alt, b.Alt);
+            a.Says(b.Alt);
 
         public int GetHashCode(ProductImage image) => HashCode.Combine(image.Id, image.SortOrder);
-
-        private static bool SameWords(LocalizedText? a, LocalizedText? b) =>
-            a is null || b is null
-                ? a is null && b is null
-                : a.Values.Count == b.Values.Count &&
-                  a.Values.All(pair => b.Values.TryGetValue(pair.Key, out var other) && other == pair.Value);
     }
 
     // Idempotent: re-importing from the same source does not duplicate references.
