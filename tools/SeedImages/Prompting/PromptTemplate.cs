@@ -105,7 +105,7 @@ public static class PromptTemplate
         // modifies "pannier" for a reader and is a second object for a diffusion
         // model. The eight illustrations made by hand used the description alone
         // and none of them drew the wrong thing.
-        var description = WithoutMeasurements(product.EnglishDescription);
+        var description = WithoutCareInstructions(WithoutMeasurements(product.EnglishDescription));
 
         var subject = colour is null
             ? $"The object: {description}"
@@ -153,6 +153,33 @@ public static class PromptTemplate
 
         return String.Join(". ", sentences) + ".";
     }
+
+    /// <summary>
+    /// The description without the sentences that say how the thing is washed.
+    ///
+    /// **Bought with two identical failures.** A house slipper described as "Hand
+    /// washable." came back twice with a round emblem on its side: the hand-wash
+    /// symbol, as a care label carries it. The same lesson as the measurements, one
+    /// kind of sentence over: what a draughtsman cannot draw as the object, the model
+    /// draws as something printed on it.
+    ///
+    /// Narrow on purpose. Fifteen sentences of the catalogue mention washing, an
+    /// iron or a dishwasher, and fourteen of them are the product itself — a wash
+    /// bag, washed linen, a cast iron pan. Only an instruction of the kind a care
+    /// label carries goes.
+    /// </summary>
+    public static string WithoutCareInstructions(string description)
+    {
+        var sentences = description
+            .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(sentence => !CareInstruction.IsMatch(sentence));
+
+        return String.Join(". ", sentences) + ".";
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex CareInstruction = new(
+        @"\b(?:hand|machine)[\s-]wash(?:able)?\b|\bdry[\s-]clean",
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
     /// <summary>
     /// A figure with a unit attached: `4 mm`, `12 cups`, `24-hour`, `UPF 30`.

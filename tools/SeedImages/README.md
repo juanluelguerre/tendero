@@ -189,3 +189,11 @@ also a figure that was never earning its place: 4 mm of lug is a moulded sole at
 any scale. Counts survive, because "set of 3 pans" is three pans; a run of
 figures sharing one unit goes out together, because `20, 24 and 28 cm pans`
 carries the unit only on the last one.
+
+**And so is how a thing is washed.** A house slipper described as *"Hand
+washable."* came back twice with a round emblem on its side: the hand-wash symbol
+of a care label, against a prompt that says no labels and no badges. What cannot
+be drawn as the object gets drawn as something printed on it, so a care
+instruction — hand or machine washing, dry cleaning — never reaches the model.
+Only the instruction: a wash bag, washed linen and a cast iron pan are the
+product, and their sentences stay.

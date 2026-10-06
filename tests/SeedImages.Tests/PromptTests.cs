@@ -151,6 +151,37 @@ public sealed class PromptTests
     }
 
     /// <summary>
+    /// **Bought with two identical failures** (2026-10-06): a house slipper described
+    /// as "Hand washable." came back twice with a round emblem on its side — the
+    /// hand-wash symbol of a care label — against a prompt that says no labels and
+    /// no badges. How a thing is washed is not something it looks like, so the
+    /// sentence never reaches the model.
+    /// </summary>
+    [Theory]
+    [InlineData("Wool-lined house slipper with a non-slip sole. Hand washable.", "Wool-lined house slipper with a non-slip sole.")]
+    [InlineData("A cotton throw. Machine-washable at low temperature. Fringed ends.", "A cotton throw. Fringed ends.")]
+    [InlineData("Wool coat with horn buttons. Dry clean only.", "Wool coat with horn buttons.")]
+    public void How_a_thing_is_washed_never_reaches_the_model_because_it_gets_drawn_as_a_care_label(string description, string drawn)
+    {
+        Assert.Equal(drawn, PromptTemplate.WithoutCareInstructions(description));
+    }
+
+    /// <summary>
+    /// Only the instruction goes. A wash bag is a bag, washed linen is a cloth, and
+    /// a dish that goes in the dishwasher says so beside what it is made of: none of
+    /// them is a care label, and a rule that took their sentences would take the product.
+    /// </summary>
+    [Theory]
+    [InlineData("Wash bag with a hanging hook, a waterproof lining and a removable mirror.")]
+    [InlineData("Washed linen shirt with a soft collar and a single pocket.")]
+    [InlineData("Glazed ceramic dish for the oven, the microwave and the dishwasher.")]
+    [InlineData("Pre-seasoned cast iron pan for induction, oven and open flame.")]
+    public void What_only_mentions_washing_is_still_the_product(string description)
+    {
+        Assert.Equal(description, PromptTemplate.WithoutCareInstructions(description));
+    }
+
+    /// <summary>
     /// Removing "8 mm" from "8 mm drop." leaves the sentence "drop.", which is
     /// not a fact about anything. A sentence down to one word was the
     /// measurement's own sentence, so it leaves with it.
