@@ -78,6 +78,19 @@ step redrawn against the code.
   laterales…* / *Green olive backpack with orange accents…*. Right about what is
   drawn, and a word a person would change in each (*zapatilla*, *olive green*):
   the case for ruling 1, made by the first two.
-- **Still to build**: ruling 1 (approve with the corrected text), ruling 3 (who
-  proposed, on the proposal — a column, so a migration), A-5 (the backoffice) and
-  A-6 (the event, planned in the tracking plan as `image_alt_proposal_decided`).
+- **Ruling 1** built 2026-10-07: `ApproveEditedProposalCommand` and
+  `POST /api/steward/proposals/{id}/approve-edited`. A change on a proposal's
+  display may name the payload's field its words are (`ProposalChange.Key`); only
+  those fields are a person's to correct, so what the proposal is about never is.
+  The command's own validators judge the corrected words; refused, the proposal
+  waits as it was (`DecisionOutcome.Invalid`). What the model wrote is kept
+  (`ActionProposal.ProposedPayload`, a column: migration
+  `ProposalEditsAndProposer`), and the view says `edited`. The same words back are
+  a plain approval.
+- **Ruling 3** built 2026-10-07: a proposal says what proposed it
+  (`ProposalProvenance.Proposer`: `Steward`, `AltTextJob`), served on the view; one
+  stored before the name existed was Steward's.
+- **Still to build**: A-5 (the backoffice: the batch's button, the picture and the
+  editable words in the review, who proposed, the alt field on the product's
+  screen) and A-6 (the event `image_alt_proposal_decided`, planned in the tracking
+  plan).

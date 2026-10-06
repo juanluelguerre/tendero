@@ -45,6 +45,7 @@
     "commands": {
       "AddToCartCommand": "Añadir al carrito",
       "ApproveProposalsCommand": "Aprobar propuestas",
+      "ApproveEditedProposalCommand": "Aprobar una propuesta con correcciones",
       "CancelCheckoutSessionCommand": "Cancelar un pago",
       "ChangeAgentTrustCommand": "Cambiar la confianza de un agente",
       "ClaimCartCommand": "Conservar el carrito al iniciar sesión",

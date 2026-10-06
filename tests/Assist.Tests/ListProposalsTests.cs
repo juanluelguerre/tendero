@@ -34,6 +34,19 @@ public sealed class ListProposalsTests
         Assert.Equal(["9f2c", null], page.Items.OrderBy(item => item.Subject).Select(item => item.Image));
     }
 
+    /// <summary>The review says whose a proposal is; one stored before there was a second proposer was Steward's.</summary>
+    [Fact]
+    public async Task A_proposal_says_what_proposed_it_and_an_older_one_was_stewards()
+    {
+        var (handler, proposals) = Handler();
+        proposals.Add(ActionProposal.Propose(FakeEntry.CommandName, "{}", "A-JOB", "{}", "Because.", Provenance with { Proposer = Proposers.AltTextJob }, Clock));
+        proposals.Add(Proposal("B-OLD"));
+
+        var page = await handler.HandleAsync(new ListProposalsQuery(ProposalFilter.ToReview, null, 1, 20, "en"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["AltTextJob", "Steward"], page.Items.OrderBy(item => item.Subject).Select(item => item.Provenance.Proposer));
+    }
+
     private static (ListProposalsHandler Handler, InMemoryProposals Proposals) Handler()
     {
         var proposals = new InMemoryProposals();
@@ -126,7 +139,7 @@ public sealed class ListProposalsTests
             new ListProposalsQuery(ProposalFilter.All, null, 1, 20, "es"), TestContext.Current.CancellationToken)).Items);
 
         Assert.Equal(("Poner un valor", "Taza", "Value", "Because."), (item.Action, item.Title, item.Topic, item.Reason));
-        Assert.Equal(new ProposalChangeView("Value", "(empty)", "Mug"), Assert.Single(item.Changes));
+        Assert.Equal(new ProposalChangeView("Value", "(empty)", "Mug", "value"), Assert.Single(item.Changes));
         Assert.Equal(("qwen", "steward-1", "Lucía", "trace-1"), (item.Provenance.Model, item.Provenance.PromptVersion, item.Provenance.AskedBy, item.Provenance.TraceId));
     }
 

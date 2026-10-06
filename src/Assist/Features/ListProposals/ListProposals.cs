@@ -61,12 +61,16 @@ public sealed record ProposalView(
     DateTimeOffset? DecidedAt,
     string? Result,
     ProposalProvenanceView Provenance,
-    string? Image = null);
+    string? Image = null,
+    bool Edited = false);
 
-public sealed record ProposalChangeView(string Field, string? Now, string? Proposed);
+/// <param name="Key">Set when a person may correct these words before approving: what an edited approval names them by.</param>
+public sealed record ProposalChangeView(string Field, string? Now, string? Proposed, string? Key = null);
 
+/// <param name="Proposer">What proposed it — "Steward", "AltTextJob" — so the review says whose it is; the backoffice writes its words.</param>
 public sealed record ProposalProvenanceView(
-    string? Profile, string? Model, string? PromptVersion, string? ConversationId, string? TraceId, string AskedBy);
+    string? Profile, string? Model, string? PromptVersion, string? ConversationId, string? TraceId, string AskedBy,
+    string Proposer = Proposers.Steward);
 
 public sealed class ListProposalsValidator : AbstractValidator<ListProposalsQuery>
 {
@@ -136,7 +140,7 @@ public sealed class ListProposalsHandler(IProposalRepository proposals, Proposab
             proposal.Subject,
             display?.Title.In(culture) ?? proposal.Subject,
             display?.Kind.In(culture) ?? action,
-            [.. (display?.Changes ?? []).Select(change => new ProposalChangeView(change.Field.In(culture), change.Now?.In(culture), change.Proposed?.In(culture)))],
+            [.. (display?.Changes ?? []).Select(change => new ProposalChangeView(change.Field.In(culture), change.Now?.In(culture), change.Proposed?.In(culture), change.Key))],
             proposal.Reason,
             proposal.Status,
             proposal.ProposedAt,
@@ -144,8 +148,10 @@ public sealed class ListProposalsHandler(IProposalRepository proposals, Proposab
             proposal.DecidedAt,
             proposal.Result,
             new ProposalProvenanceView(
-                provenance.Profile, provenance.Model, provenance.PromptVersion, provenance.ConversationId, provenance.TraceId, provenance.AskedBy),
-            display?.Image);
+                provenance.Profile, provenance.Model, provenance.PromptVersion, provenance.ConversationId, provenance.TraceId, provenance.AskedBy,
+                Proposers.Of(provenance)),
+            display?.Image,
+            proposal.Edited);
     }
 }
 

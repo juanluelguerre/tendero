@@ -107,7 +107,10 @@ public sealed record ProposalSubject(string Subject, object Now, ProposalDisplay
 /// the language they were written in, and a status is words in each language the
 /// shop speaks — never an enum's name (the review of S-4).
 /// </summary>
-public sealed record ProposalChange(LocalizedText Field, LocalizedText? Now, LocalizedText? Proposed)
+/// <param name="Key">The payload's field these words are, when a person may correct
+/// them before approving (phase 13a): "english", "name". A change with no key is
+/// read and not rewritten — a status, a withdrawal. Only a field that is text.</param>
+public sealed record ProposalChange(LocalizedText Field, LocalizedText? Now, LocalizedText? Proposed, string? Key = null)
 {
     /// <summary>Text as written, in the language it was written in; null stays null.</summary>
     public static LocalizedText? Written(string culture, string? text) => text is null ? null : LocalizedText.From(culture, text);
@@ -130,7 +133,7 @@ public sealed record ProposalDisplay(
 
     public string ToJson() => JsonSerializer.Serialize(
         new Stored(Title.Values, Kind.Values,
-            [.. Changes.Select(change => new StoredChange(change.Field.Values, Words(change.Now), Words(change.Proposed)))],
+            [.. Changes.Select(change => new StoredChange(change.Field.Values, Words(change.Now), Words(change.Proposed), change.Key))],
             Image),
         Json);
 
@@ -147,7 +150,9 @@ public sealed record ProposalDisplay(
                 ? new ProposalDisplay(new LocalizedText(stored.Title), new LocalizedText(stored.Kind),
                 [
                     .. (stored.Changes ?? []).Where(change => change.Field is { Count: > 0 })
-                        .Select(change => new ProposalChange(new LocalizedText(change.Field), Read(change.Now), Read(change.Proposed))),
+                        .Select(change => new ProposalChange(
+                            new LocalizedText(change.Field), Read(change.Now), Read(change.Proposed),
+                            string.IsNullOrWhiteSpace(change.Key) ? null : change.Key)),
                 ],
                 string.IsNullOrWhiteSpace(stored.Image) ? null : stored.Image)
                 : null;
@@ -163,7 +168,7 @@ public sealed record ProposalDisplay(
         string? Image = null);
 
     /// <param name="Now">Words per language — or, in the first displays, plain text.</param>
-    private sealed record StoredChange(IReadOnlyDictionary<string, string> Field, JsonElement? Now, JsonElement? Proposed);
+    private sealed record StoredChange(IReadOnlyDictionary<string, string> Field, JsonElement? Now, JsonElement? Proposed, string? Key = null);
 
     private static JsonElement? Words(LocalizedText? text) =>
         text is null ? null : JsonSerializer.SerializeToElement(text.Values, Json);

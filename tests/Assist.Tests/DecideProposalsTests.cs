@@ -267,6 +267,141 @@ public sealed class DecideProposalsTests
         Assert.Equal((DecisionOutcome.Failed, "No proposable command is named Retired."), (row.Outcome, row.Reason));
     }
 
+    // ---------- approved with the person's own words ----------
+
+    /// <summary>
+    /// The third decision (phase 13a; the author, 2026-10-06): the words were nearly
+    /// right, so the person corrects them and approves. What runs is the person's
+    /// text; what the model wrote is kept beside it, because an edit is what a
+    /// prompt is judged against as much as a rejection is.
+    /// </summary>
+    [Fact]
+    public async Task Approved_with_edits_runs_the_persons_words_and_keeps_the_models()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new", editable: true);
+
+        var row = await shop.ApproveEdited(proposal.Id, ("value", "better"));
+
+        Assert.Equal(DecisionOutcome.Applied, row.Outcome);
+        Assert.Equal("better", shop.World["MUG-1"]);
+        Assert.Equal((ProposalStatus.Applied, true, "Lucía"), (proposal.Status, proposal.Edited, proposal.DecidedBy));
+        Assert.Equal(FakeEntry.Payload("MUG-1", "better").GetRawText(), proposal.Payload);
+        Assert.Equal(FakeEntry.Payload("MUG-1", "new").GetRawText(), proposal.ProposedPayload);
+        // What a person reads of it afterwards is what was applied.
+        Assert.Equal("better", ProposalDisplay.FromJson(proposal.Display)!.Changes.Single().Proposed!.In("en"));
+        Assert.Equal(("MUG-1", (ProposalId?)proposal.Id), Assert.Single(FakeEntry.Applied));
+    }
+
+    /// <summary>Only the words the proposal offers to change: its subject, or anything its display did not name, is not a person's to rewrite here.</summary>
+    [Theory]
+    [InlineData("subject", "CUP-2")]
+    [InlineData("price", "0")]
+    public async Task An_edit_of_what_the_proposal_does_not_offer_is_refused_and_nothing_runs(string key, string text)
+    {
+        var shop = Shop(("MUG-1", "old"), ("CUP-2", "old"));
+        var proposal = shop.Propose("MUG-1", "new", editable: true);
+
+        var row = await shop.ApproveEdited(proposal.Id, (key, text));
+
+        Assert.Equal(DecisionOutcome.Invalid, row.Outcome);
+        Assert.Contains(key, row.Reason);
+        Assert.Equal((ProposalStatus.Proposed, false), (proposal.Status, proposal.Edited));
+        Assert.Equal(("old", "old"), (shop.World["MUG-1"], shop.World["CUP-2"]));
+        Assert.Empty(FakeEntry.Applied);
+    }
+
+    /// <summary>A proposal whose display names nothing editable — one made before this, or a status change — has no words to correct.</summary>
+    [Fact]
+    public async Task A_proposal_that_offers_no_words_cannot_be_edited()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new");
+
+        Assert.Equal(DecisionOutcome.Invalid, (await shop.ApproveEdited(proposal.Id, ("value", "better"))).Outcome);
+        Assert.Equal(ProposalStatus.Proposed, proposal.Status);
+    }
+
+    /// <summary>The command's own validators judge the person's words as they judged the model's: refused, the proposal waits as it was.</summary>
+    [Fact]
+    public async Task Words_the_command_refuses_leave_the_proposal_waiting_with_the_reason()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new", editable: true);
+
+        var row = await shop.ApproveEdited(proposal.Id, ("value", "   "));
+
+        Assert.Equal((DecisionOutcome.Invalid, "Value must not be blank."), (row.Outcome, row.Reason));
+        Assert.Equal((ProposalStatus.Proposed, false), (proposal.Status, proposal.Edited));
+        Assert.Equal(FakeEntry.Payload("MUG-1", "new").GetRawText(), proposal.Payload);
+        Assert.Equal(0, shop.UnitOfWork.Saved);
+    }
+
+    /// <summary>The same words back are an approval, not an edit: nothing says a person changed what they did not.</summary>
+    [Fact]
+    public async Task Approved_with_the_same_words_is_a_plain_approval()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new", editable: true);
+
+        var row = await shop.ApproveEdited(proposal.Id, ("value", "new"));
+
+        Assert.Equal(DecisionOutcome.Applied, row.Outcome);
+        Assert.Equal((false, (string?)null, "new"), (proposal.Edited, proposal.ProposedPayload, shop.World["MUG-1"]));
+    }
+
+    [Fact]
+    public async Task What_changed_since_it_was_proposed_is_stale_whatever_the_person_wrote()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new", editable: true);
+        shop.World["MUG-1"] = "somebody else's";
+
+        var row = await shop.ApproveEdited(proposal.Id, ("value", "better"));
+
+        Assert.Equal(DecisionOutcome.Stale, row.Outcome);
+        Assert.Equal("somebody else's", shop.World["MUG-1"]);
+    }
+
+    [Fact]
+    public async Task Only_a_proposal_still_waiting_is_edited()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var decided = shop.Propose("MUG-1", "new", editable: true);
+        decided.Reject("Lucía", "No.", Clock);
+
+        Assert.Equal(DecisionOutcome.NotWaiting, (await shop.ApproveEdited(decided.Id, ("value", "better"))).Outcome);
+        Assert.Equal(DecisionOutcome.NotFound, (await shop.ApproveEdited(ProposalId.New(Clock.GetUtcNow()), ("value", "better"))).Outcome);
+        Assert.Equal("old", shop.World["MUG-1"]);
+    }
+
+    /// <summary>As a command's result, a decision tells the audit log whether it was a refusal: only an applied one is not, and a refusal carries its reason or its name.</summary>
+    [Theory]
+    [InlineData(DecisionOutcome.Applied, null, AuditOutcome.Allowed, null)]
+    [InlineData(DecisionOutcome.Invalid, "Value must not be blank.", AuditOutcome.Denied, "Value must not be blank.")]
+    [InlineData(DecisionOutcome.Stale, null, AuditOutcome.Denied, "Stale")]
+    [InlineData(DecisionOutcome.NotWaiting, null, AuditOutcome.Denied, "NotWaiting")]
+    [InlineData(DecisionOutcome.NotFound, null, AuditOutcome.Denied, "NotFound")]
+    [InlineData(DecisionOutcome.Failed, "Archived", AuditOutcome.Denied, "Archived")]
+    public void A_decision_tells_the_audit_log_whether_it_was_a_refusal(DecisionOutcome outcome, string? reason, AuditOutcome audited, string? told)
+    {
+        IAuditedResult result = new ProposalDecision(ProposalId.New(Clock.GetUtcNow()), outcome, reason);
+
+        Assert.Equal((audited, told), (result.AuditOutcome, result.AuditReason));
+    }
+
+    [Fact]
+    public void An_edited_approval_names_what_it_changes_and_no_essay()
+    {
+        var id = ProposalId.New(Clock.GetUtcNow());
+        var validator = new ApproveEditedProposalValidator();
+
+        Assert.True(validator.Validate(new ApproveEditedProposalCommand(id, new Dictionary<string, string> { ["value"] = "better" })).IsValid);
+        Assert.False(validator.Validate(new ApproveEditedProposalCommand(id, new Dictionary<string, string>())).IsValid);
+        Assert.False(validator.Validate(new ApproveEditedProposalCommand(
+            id, new Dictionary<string, string> { ["value"] = new string('a', ApproveEditedProposalValidator.MaxText + 1) })).IsValid);
+    }
+
     [Fact]
     public async Task Rejecting_records_the_reason_and_runs_nothing()
     {
@@ -334,10 +469,12 @@ public sealed class DecideProposalsTests
 
         public ScriptedUnitOfWork UnitOfWork { get; } = new();
 
-        public ActionProposal Propose(string subject, string value)
+        /// <param name="editable">With the display its entry writes, which names the words a person may correct.</param>
+        public ActionProposal Propose(string subject, string value, bool editable = false)
         {
             var proposal = ActionProposal.Propose(FakeEntry.CommandName, FakeEntry.Payload(subject, value).GetRawText(),
-                subject, FakeEntry.Snapshot(World, subject), "because", new ProposalProvenance(null, null, null, null, null, "lucia"), Clock);
+                subject, FakeEntry.Snapshot(World, subject), "because", new ProposalProvenance(null, null, null, null, null, "lucia"), Clock,
+                editable ? FakeEntry.Display(subject, World[subject], value).ToJson() : null);
             Proposals.Add(proposal);
             return proposal;
         }
@@ -347,6 +484,10 @@ public sealed class DecideProposalsTests
         public Task<ProposalDecisions> Approve(CancellationToken cancellationToken, params ProposalId[] ids) =>
             new ApproveProposalsHandler(provider.GetRequiredService<IServiceScopeFactory>(), new FixedPrincipal("Lucía"), Clock)
                 .HandleAsync(new ApproveProposalsCommand(ids), cancellationToken);
+
+        public Task<ProposalDecision> ApproveEdited(ProposalId id, params (string Key, string Text)[] edits) =>
+            new ApproveProposalsHandler(provider.GetRequiredService<IServiceScopeFactory>(), new FixedPrincipal("Lucía"), Clock)
+                .HandleAsync(new ApproveEditedProposalCommand(id, edits.ToDictionary(edit => edit.Key, edit => edit.Text)), TestContext.Current.CancellationToken);
 
         /// <summary>What rejecting saved: its handler writes through a unit of work of its own.</summary>
         public CountingUnitOfWork Rejections { get; } = new();

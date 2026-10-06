@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/steward/proposals/{id}/approve-edited": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ApproveEditedProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/steward/proposals/reject": {
         parameters: {
             query?: never;
@@ -1524,6 +1540,11 @@ export interface components {
         ApproveClaimsRequest: {
             ids: null | string[];
         };
+        ApproveEditedProposalRequest: {
+            edits: {
+                [key: string]: string;
+            };
+        };
         ApproveProposalsRequest: {
             ids: string[];
         };
@@ -1821,7 +1842,7 @@ export interface components {
             reason: null | string;
         };
         /** @enum {unknown} */
-        DecisionOutcome: "Applied" | "Failed" | "Stale" | "Rejected" | "NotFound" | "NotWaiting";
+        DecisionOutcome: "Applied" | "Failed" | "Stale" | "Rejected" | "NotFound" | "NotWaiting" | "Invalid";
         DefineVariantsRequest: {
             axes: components["schemas"]["VariantAxisRequest"][];
             skuPrefix: null | string;
@@ -2326,6 +2347,7 @@ export interface components {
             field: string;
             now: null | string;
             proposed: null | string;
+            key?: null | string;
         };
         ProposalDecisionView: {
             id: string;
@@ -2349,6 +2371,8 @@ export interface components {
             conversationId: null | string;
             traceId: null | string;
             askedBy: string;
+            /** @default Steward */
+            proposer: string;
         };
         /** @enum {unknown} */
         ProposalStatus: "Proposed" | "Approved" | "Applied" | "Failed" | "Rejected" | "Stale";
@@ -2370,6 +2394,8 @@ export interface components {
             result: null | string;
             provenance: components["schemas"]["ProposalProvenanceView"];
             image?: null | string;
+            /** @default false */
+            edited: boolean;
         };
         ProposalsPage: {
             items: components["schemas"]["ProposalView"][];
@@ -3362,6 +3388,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProposalDecisionsResponse"];
+                };
+            };
+        };
+    };
+    ApproveEditedProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveEditedProposalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalDecisionView"];
                 };
             };
         };

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Carter;
 using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Assist.Ports;
@@ -17,6 +18,15 @@ public sealed record ApproveProposalsCommand(IReadOnlyList<ProposalId> Ids) : IC
 
 public sealed record RejectProposalsCommand(IReadOnlyList<ProposalId> Ids, string Reason) : ICommand<ProposalDecisions>;
 
+/// <summary>
+/// Approves one proposal with the words the person corrected (phase 13a; the
+/// author, 2026-10-06): the third decision beside approving and rejecting. One at a
+/// time, because correcting is reading. Only the words the proposal's display names
+/// may change — never what it is about.
+/// </summary>
+/// <param name="Edits">The corrected words, by the key of the change they belong to.</param>
+public sealed record ApproveEditedProposalCommand(ProposalId Id, IReadOnlyDictionary<string, string> Edits) : ICommand<ProposalDecision>;
+
 public enum DecisionOutcome
 {
     Applied,
@@ -27,9 +37,28 @@ public enum DecisionOutcome
 
     /// <summary>Already decided: rejected, stale, applied or failed.</summary>
     NotWaiting,
+
+    /// <summary>The corrected words were refused — a field the proposal does not
+    /// offer, or text the command's own rules do not take. It waits as it was.</summary>
+    Invalid,
 }
 
-public sealed record ProposalDecision(ProposalId Id, DecisionOutcome Outcome, string? Reason);
+/// <summary>
+/// One proposal's decision. As a command's own result — an approval with the
+/// person's corrections — it tells the audit log whether that was a refusal: only
+/// an applied one is not.
+/// </summary>
+public sealed record ProposalDecision(ProposalId Id, DecisionOutcome Outcome, string? Reason) : IAuditedResult
+{
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        DecisionOutcome.Applied => AuditOutcome.Allowed,
+        DecisionOutcome.Failed or DecisionOutcome.Stale or DecisionOutcome.Rejected or DecisionOutcome.NotFound
+            or DecisionOutcome.NotWaiting or DecisionOutcome.Invalid => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason => Outcome == DecisionOutcome.Applied ? null : Reason ?? Outcome.ToString();
+}
 
 /// <summary>One row per distinct id, in the order asked: the review shows each
 /// row's result in place.</summary>
@@ -41,6 +70,19 @@ public sealed class ApproveProposalsValidator : AbstractValidator<ApproveProposa
     {
         RuleFor(x => x.Ids).NotEmpty();
         RuleFor(x => x.Ids.Count).LessThanOrEqualTo(ProposalLimits.MaxBatch);
+    }
+}
+
+public sealed class ApproveEditedProposalValidator : AbstractValidator<ApproveEditedProposalCommand>
+{
+    /// <summary>A corrected field at most: the longest text any proposable command takes is a description.</summary>
+    public const int MaxText = 4000;
+
+    public ApproveEditedProposalValidator()
+    {
+        RuleFor(x => x.Edits).NotEmpty().WithMessage("An edited approval says which words it corrects.");
+        RuleForEach(x => x.Edits).Must(edit => edit.Value is not null && edit.Value.Length <= MaxText)
+            .WithMessage($"A corrected text is at most {MaxText} characters.");
     }
 }
 
@@ -71,7 +113,8 @@ public sealed class RejectProposalsValidator : AbstractValidator<RejectProposals
 public sealed class ApproveProposalsHandler(
     IServiceScopeFactory scopes,
     IPrincipalAccessor principals,
-    TimeProvider clock) : ICommandHandler<ApproveProposalsCommand, ProposalDecisions>
+    TimeProvider clock) : ICommandHandler<ApproveProposalsCommand, ProposalDecisions>,
+    ICommandHandler<ApproveEditedProposalCommand, ProposalDecision>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Assist);
 
@@ -93,11 +136,20 @@ public sealed class ApproveProposalsHandler(
         return new ProposalDecisions(rows);
     }
 
-    private async Task<ProposalDecision> DecideAsync(ProposalId id, string approver, CancellationToken cancellationToken)
+    public async Task<ProposalDecision> HandleAsync(ApproveEditedProposalCommand command, CancellationToken cancellationToken)
+    {
+        using var activity = Telemetry.StartActivity("assist.approve_edited");
+        var decision = await DecideAsync(command.Id, Decider.Of(principals), cancellationToken, command.Edits);
+        activity?.SetTag("assist.outcome", decision.Outcome.ToString());
+        return decision;
+    }
+
+    private async Task<ProposalDecision> DecideAsync(
+        ProposalId id, string approver, CancellationToken cancellationToken, IReadOnlyDictionary<string, string>? edits = null)
     {
         try
         {
-            return await ApproveAsync(id, approver, cancellationToken);
+            return await ApproveAsync(id, approver, edits, cancellationToken);
         }
         catch (Exception failure) when (failure is not OperationCanceledException)
         {
@@ -107,7 +159,8 @@ public sealed class ApproveProposalsHandler(
         }
     }
 
-    private async Task<ProposalDecision> ApproveAsync(ProposalId id, string approver, CancellationToken cancellationToken)
+    private async Task<ProposalDecision> ApproveAsync(
+        ProposalId id, string approver, IReadOnlyDictionary<string, string>? edits, CancellationToken cancellationToken)
     {
         await using var books = scopes.CreateAsyncScope();
         var proposals = books.ServiceProvider.GetRequiredService<IProposalRepository>();
@@ -123,8 +176,21 @@ public sealed class ApproveProposalsHandler(
         if (proposal.Status != ProposalStatus.Proposed && !retrying)
             return new ProposalDecision(id, DecisionOutcome.NotWaiting, null);
 
+        // An approval that died is finished as it was approved, never rewritten.
+        if (edits is not null && retrying)
+            return new ProposalDecision(id, DecisionOutcome.NotWaiting, null);
+
         await using var scope = scopes.CreateAsyncScope();
         var entry = scope.ServiceProvider.GetRequiredService<ProposableCommands>().Find(proposal.Command);
+
+        // The person's words first: refused, the proposal waits as it was and
+        // nothing below runs; taken, they are what is approved and applied.
+        if (edits is not null && entry is not null)
+        {
+            if (await CorrectAsync(proposal, entry, edits, cancellationToken) is { } refusal)
+                return new ProposalDecision(id, DecisionOutcome.Invalid, refusal);
+        }
+
         using var document = JsonDocument.Parse(proposal.Payload);
         var payload = document.RootElement;
 
@@ -171,6 +237,41 @@ public sealed class ApproveProposalsHandler(
         await unitOfWork.SaveChangesAsync(CancellationToken.None);
 
         return new ProposalDecision(id, application.Applied ? DecisionOutcome.Applied : DecisionOutcome.Failed, application.Reason);
+    }
+
+    /// <summary>
+    /// Puts the person's words in the proposal, or says why not. Only a field its
+    /// display offers (<see cref="ProposalChange.Key"/>) is rewritten, so what the
+    /// proposal is about — a product, a picture, a language — is never an edit's to
+    /// change; and the command's own validators judge the result as they judged
+    /// the model's. The same words back change nothing: that is a plain approval.
+    /// </summary>
+    private static async Task<string?> CorrectAsync(
+        ActionProposal proposal, IProposableCommand entry, IReadOnlyDictionary<string, string> edits, CancellationToken cancellationToken)
+    {
+        var offered = (ProposalDisplay.FromJson(proposal.Display)?.Changes ?? [])
+            .Select(change => change.Key).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        if (edits.Keys.Where(key => !offered.Contains(key)).ToList() is { Count: > 0 } notOffered)
+            return $"This proposal does not offer these to correct: {string.Join(", ", notOffered)}.";
+
+        if (JsonNode.Parse(proposal.Payload) is not JsonObject corrected)
+            return "The proposal's payload cannot be corrected.";
+        foreach (var (key, text) in edits)
+            corrected[key] = text;
+
+        using var before = JsonDocument.Parse(proposal.Payload);
+        var payload = JsonSerializer.SerializeToElement(corrected);
+        if (JsonElement.DeepEquals(payload, before.RootElement))
+            return null;
+
+        var check = await entry.CheckAsync(payload, cancellationToken);
+        if (!check.IsValid)
+            return string.Join(" ", check.Errors);
+        if (check.Subject != proposal.Subject)
+            return "The corrected words would change what the proposal is about.";
+
+        proposal.Amend(payload.GetRawText(), check.Display?.ToJson());
+        return null;
     }
 
     private static async Task<ProposalApplication> ApplyAsync(
@@ -268,6 +369,9 @@ public sealed record ApproveProposalsRequest(IReadOnlyList<Guid> Ids);
 
 public sealed record RejectProposalsRequest(IReadOnlyList<Guid> Ids, string Reason);
 
+/// <param name="Edits">The corrected words, by the key of the change they belong to: { "english": "…" }.</param>
+public sealed record ApproveEditedProposalRequest(IReadOnlyDictionary<string, string> Edits);
+
 public sealed record ProposalDecisionView(string Id, DecisionOutcome Outcome, string? Reason);
 
 public sealed record ProposalDecisionsResponse(IReadOnlyList<ProposalDecisionView> Rows);
@@ -282,6 +386,18 @@ public sealed class DecideProposalsEndpoints : ICarterModule
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Steward")
             .WithName("ApproveProposals");
+
+        // POST /api/steward/proposals/{id}/approve-edited  { "edits": { "english": "…" } }
+        app.MapPost("/api/steward/proposals/{id:guid}/approve-edited",
+                async Task<Ok<ProposalDecisionView>> (Guid id, ApproveEditedProposalRequest body, ICommandDispatcher dispatcher, CancellationToken ct) =>
+                {
+                    var decision = await dispatcher.SendAsync(
+                        new ApproveEditedProposalCommand(new ProposalId(id), body.Edits ?? new Dictionary<string, string>()), ct);
+                    return TypedResults.Ok(new ProposalDecisionView(decision.Id.ToString(), decision.Outcome, decision.Reason));
+                })
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithTags("Steward")
+            .WithName("ApproveEditedProposal");
 
         app.MapPost("/api/steward/proposals/reject",
                 async Task<Ok<ProposalDecisionsResponse>> (RejectProposalsRequest body, ICommandDispatcher dispatcher, CancellationToken ct) =>

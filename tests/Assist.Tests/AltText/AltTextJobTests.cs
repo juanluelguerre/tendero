@@ -178,8 +178,9 @@ public sealed class AltTextJobTests
 
         var proposal = shop.Proposals.All.Single();
         Assert.Equal(
-            ("scripted", "scripted-model", AltTextPrompt.Version, (string?)null, "Lucía"),
-            (proposal.Provenance.Profile, proposal.Provenance.Model, proposal.Provenance.PromptVersion, proposal.Provenance.ConversationId, proposal.Provenance.AskedBy));
+            ("scripted", "scripted-model", AltTextPrompt.Version, (string?)null, "Lucía", Proposers.AltTextJob),
+            (proposal.Provenance.Profile, proposal.Provenance.Model, proposal.Provenance.PromptVersion, proposal.Provenance.ConversationId,
+             proposal.Provenance.AskedBy, proposal.Provenance.Proposer));
         // The reason is code's, in the language of whoever asked for the batch.
         Assert.Equal(AltTextPrompt.Reason("en"), proposal.Reason);
         Assert.NotEqual(AltTextPrompt.Reason("en"), AltTextPrompt.Reason("es"));

@@ -368,6 +368,47 @@
         }
       }
     },
+    "/api/steward/proposals/{id}/approve-edited": {
+      "post": {
+        "tags": [
+          "Steward"
+        ],
+        "operationId": "ApproveEditedProposal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveEditedProposalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalDecisionView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/steward/proposals/reject": {
       "post": {
         "tags": [
@@ -4388,6 +4429,20 @@
           }
         }
       },
+      "ApproveEditedProposalRequest": {
+        "required": [
+          "edits"
+        ],
+        "type": "object",
+        "properties": {
+          "edits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ApproveProposalsRequest": {
         "required": [
           "ids"
@@ -5555,7 +5610,8 @@
           "Stale",
           "Rejected",
           "NotFound",
-          "NotWaiting"
+          "NotWaiting",
+          "Invalid"
         ]
       },
       "DefineVariantsRequest": {
@@ -7524,6 +7580,12 @@
               "null",
               "string"
             ]
+          },
+          "key": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7631,6 +7693,10 @@
           },
           "askedBy": {
             "type": "string"
+          },
+          "proposer": {
+            "type": "string",
+            "default": "Steward"
           }
         }
       },
@@ -7724,6 +7790,10 @@
               "null",
               "string"
             ]
+          },
+          "edited": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

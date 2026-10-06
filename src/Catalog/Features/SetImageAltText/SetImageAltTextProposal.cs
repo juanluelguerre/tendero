@@ -51,9 +51,9 @@ public sealed class SetImageAltTextProposal(IServiceProvider services, IProductR
             LocalizedText.Both("Alt text", "Texto alternativo"),
             [
                 new(LocalizedText.Both("Alt text · ES", "Texto alternativo · ES"),
-                    ProposalChange.Written("es", now.Spanish), ProposalChange.Written("es", command.Spanish)),
+                    ProposalChange.Written("es", now.Spanish), ProposalChange.Written("es", command.Spanish), "spanish"),
                 new(LocalizedText.Both("Alt text · EN", "Texto alternativo · EN"),
-                    ProposalChange.Written("en", now.English), ProposalChange.Written("en", command.English)),
+                    ProposalChange.Written("en", now.English), ProposalChange.Written("en", command.English), "english"),
             ],
             picture.Id.Value));
     }

@@ -45,6 +45,7 @@
     "commands": {
       "AddToCartCommand": "Add to cart",
       "ApproveProposalsCommand": "Approve proposals",
+      "ApproveEditedProposalCommand": "Approve a proposal with corrections",
       "CancelCheckoutSessionCommand": "Cancel a checkout",
       "ChangeAgentTrustCommand": "Change an agent's trust",
       "ClaimCartCommand": "Keep a guest's cart on signing in",

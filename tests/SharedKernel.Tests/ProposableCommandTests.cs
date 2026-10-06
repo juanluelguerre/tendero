@@ -197,6 +197,19 @@ public sealed class ProposalDisplayTests
         Assert.Null(ProposalDisplay.FromJson("""{"title":{"en":"Mug"},"kind":{"en":"Alt text"},"changes":[],"image":" "}""")!.Image);
     }
 
+    /// <summary>A change may name the payload's field it is the words of, which is what lets a person correct them; one that names none is read, not rewritten.</summary>
+    [Fact]
+    public void A_change_may_name_the_words_a_person_can_correct()
+    {
+        var display = new ProposalDisplay(LocalizedText.From("en", "Mug"), LocalizedText.From("en", "Alt text"),
+        [
+            new ProposalChange(LocalizedText.From("en", "Alt text · EN"), null, LocalizedText.From("en", "A white mug."), "english"),
+            new ProposalChange(LocalizedText.From("en", "Status"), LocalizedText.From("en", "On sale"), LocalizedText.From("en", "Draft")),
+        ]);
+
+        Assert.Equal(["english", null], ProposalDisplay.FromJson(display.ToJson())!.Changes.Select(change => change.Key));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

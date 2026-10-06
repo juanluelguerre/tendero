@@ -199,7 +199,7 @@ public sealed class ProposeAltTextHandler(
         if (actions.Count > 0)
         {
             var result = await commands.SendAsync(
-                new ProposeActionsCommand(actions, new ProposalSource(name, profile.Model, AltTextPrompt.Version, null)), cancellationToken);
+                new ProposeActionsCommand(actions, new ProposalSource(name, profile.Model, AltTextPrompt.Version, null, Proposers.AltTextJob)), cancellationToken);
             stored.AddRange(result.Rows.Where(row => row.Id is not null).Select(row => row.Id!.Value.ToString()));
 
             // What the command's own validators refused — a sentence too long — is the model's failure too.

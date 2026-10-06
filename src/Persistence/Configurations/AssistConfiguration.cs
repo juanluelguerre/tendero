@@ -19,7 +19,9 @@ internal sealed class ActionProposalConfiguration : IEntityTypeConfiguration<Act
         // jsonb, as the audit's payload: the command and its snapshot are read
         // back field by field by the review.
         builder.Property(proposal => proposal.Payload).HasColumnType("jsonb").IsRequired();
+        builder.Property(proposal => proposal.ProposedPayload).HasColumnType("jsonb");
         builder.Property(proposal => proposal.Before).HasColumnType("jsonb");
+        builder.Ignore(proposal => proposal.Edited);
         builder.Property(proposal => proposal.Display).HasColumnType("jsonb");
 
         builder.Property(proposal => proposal.Subject).HasMaxLength(200).IsRequired();

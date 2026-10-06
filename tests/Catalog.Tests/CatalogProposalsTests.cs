@@ -169,6 +169,26 @@ public sealed class CatalogProposalsTests
             [("Alt text · ES", "Cafetera italiana de aluminio."), ("Alt text · EN", "Aluminium moka pot.")],
             display.Changes.Select(change => (change.Field.In("en"), change.Proposed!.In("en"))));
         Assert.All(display.Changes, change => Assert.Null(change.Now));
+        // The two sentences are what a person may correct before approving: the payload's own fields.
+        Assert.Equal(["spanish", "english"], display.Changes.Select(change => change.Key));
+    }
+
+    /// <summary>A translation's words can be corrected; taking a product off sale has no words to correct.</summary>
+    [Fact]
+    public async Task A_translations_words_are_a_persons_to_correct_and_a_withdrawal_has_none()
+    {
+        var product = AProduct();
+        product.Publish(Clock);
+        var entries = Entries(product);
+
+        var translation = (await entries.Single(e => e.Name == "SetProductTranslation").CheckAsync(
+            Payload($$"""{"productId":"{{product.Id.Value}}","culture":"en","name":"Moka pot","description":"For the stove."}"""),
+            TestContext.Current.CancellationToken)).Display!;
+        var withdrawal = (await entries.Single(e => e.Name == "WithdrawProduct").CheckAsync(
+            Payload($$"""{"productId":"{{product.Id.Value}}"}"""), TestContext.Current.CancellationToken)).Display!;
+
+        Assert.Equal(["name", "description"], translation.Changes.Select(change => change.Key));
+        Assert.All(withdrawal.Changes, change => Assert.Null(change.Key));
     }
 
     [Fact]

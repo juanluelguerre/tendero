@@ -987,6 +987,8 @@ classDiagram
         +ProposalId Id
         +string Command
         +string Payload
+        +string? ProposedPayload
+        +bool Edited
         +string Subject
         +string? Before
         +string? Display
@@ -1007,6 +1009,7 @@ classDiagram
         +string? ConversationId
         +string? TraceId
         +string AskedBy
+        +string? Proposer
     }
     class ProposalStatus {
         <<enumeration>>

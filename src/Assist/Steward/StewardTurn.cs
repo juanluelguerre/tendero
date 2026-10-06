@@ -152,7 +152,7 @@ public sealed partial class StewardTurnHandler(
         foreach (var candidate in candidates)
         {
             candidate.Tools = StewardTools.For(reads, proposals, commands,
-                new ProposalSource(candidate.Name, candidate.Profile.Model, StewardPrompt.Version, command.ConversationId),
+                new ProposalSource(candidate.Name, candidate.Profile.Model, StewardPrompt.Version, command.ConversationId, Domain.Proposers.Steward),
                 candidate.Trace);
             // The instructions and the tools' schemas travel with every call, and an
             // answer needs its room: all of it is what the window must hold.
