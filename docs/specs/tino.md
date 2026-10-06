@@ -509,15 +509,24 @@ ways for Tino:
    accepted when read, only for the product the shopper is looking at and only when
    the turn read it; anywhere else the model has *products* or *the shop has no such
    information*. The panel shows that product's card above the sentence, since the
-   conversation outlives the page. Prompt `tino-2026-10-05g`. **Not re-measured**:
-   the `assistant` suite has not run since; its three *sin dato* cases are all on a
-   product's page.
+   conversation outlives the page. Prompt `tino-2026-10-05h`. **Measured**: 26 and
+   26 of 28 — after a first wording (`g`) that explained the rule to the model in
+   five lines and broke an order case four runs of four
+   (`docs/analysis/tino-models.md`).
    The docked page scrolls under the header (its bar starts below the awning); the
    header's rows run to the panel's edge; sending is an arrow and, while a turn is
    out, a square in its place — in both panels.
-   **Not captured**: the not-available state — at the close.
+   Captured at the close: `screens/01` to `05`, the not-available state the fifth.
 7. **T-7 · Close** (`P12b-8`). The ADR (*an answer is a list of cited facts*),
    Stryker, the captures, the notebook and the material map.
+   *As built (2026-10-06)*: ADR 0055. Stryker over `Assist` (84.69 %, then 86.26 %
+   of covered) and six projects scoped; what it found and what is left, in
+   `docs/testing.md`. The suite once more: 26 and 26 of 28. Five captures from a
+   scripted stack and three from Edge on the real model. The browser spec now
+   holds the docked layout — the awning's height, no scrollbar of the window's, the
+   page ending where the panel starts — and found one more thing through it: the
+   `sr-only` elements of the page escaped an unpositioned scroller and made the
+   document taller than the window.
 
 ## The mock-ups (2026-10-05)
 
