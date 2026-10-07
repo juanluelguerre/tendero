@@ -592,10 +592,85 @@ held by a schema to the attribute's options, compared by code.
     instead of a value in JSON: footwear 48.3 % → 64.4 %, food 76.4 % → 58.2 %,
     home 67.8 % → 51.4 %; overall 68.0 % → 62.6 %. Not yet separated: the
     letter, or the grammar that holds the JSON.
-- **Next**: the probability taken from the answer the shop already asks for
-  (the value under its schema), so the better format keeps its accuracy and
-  gains a confidence; then the tray. In the suite, with tests — the three
-  probes above were scripts and are not in the repository.
+- **The format, separated the same night: it was the grammar.** Four ways of
+  asking the same question of the same 1,610 photographs, picture alone:
+
+  | The answer is… | Right | Tokens an answer |
+  |---|---|---|
+  | **one of the options, as plain text** | **80.5 %** | 3.2 |
+  | a value in a JSON object, held by a schema | 68.0 % | 25–29 on some |
+  | an option's letter | 62.6 % | 1 |
+  | a bare JSON string, held by an enum | 59.3 % | — |
+
+  - Looking at the tokens under the schema says why: where the grammar forces
+    an opening brace the model wanted to write the answer (*`3`* at 87 %), and
+    it fills the space the grammar allows with tabs before it gets back to it.
+    That padding is also what cut the count at twenty tokens the day before.
+  - By domain, plain text: clothing 75.2 %, food 84.9 %, footwear **71.3 %**
+    (from 48.3 %), home 80.1 %, jewellery and general apparel 92.3 %. Above
+    every open model in the paper's table, under GPT-4V's 86.8 %. Three answers
+    of 1,610 were none of the options.
+  - **Built**: `ClosedQuestion` in the model port (`src/AI/Chat`) — the options
+    listed in the question, one short plain answer at temperature zero, read by
+    code (what is none of the options is no answer), and the probability of the
+    tokens that carry it. `--suite implicit-ave` asks with it by default
+    (`--format json` reproduces the 68.0 %) and prints precision against
+    coverage. From the suite itself, 0.25 s an example:
+
+    | Accepted at confidence ≥ | Covers | Right |
+    |---|---|---|
+    | 0.99 | 23.7 % | 98.7 % |
+    | 0.97 | 38.3 % | 96.4 % |
+    | **0.95** | **45.7 %** | **95.9 %** |
+    | 0.90 | 56.0 % | 93.2 % |
+    | 0.80 | 69.4 % | 89.8 % |
+
+    Chosen on half and measured on the other half: aimed at 95 %, 51.1 % at
+    94.6 %; aimed at 90 %, 73.4 % at 87.8 %. So the line is set with a margin.
+- **The tray, built** (the author's target: at least 90 % right among what is
+  approved in bulk).
+  - **The shop's own question is asked the same way.** How many is now plain
+    text: one token, with its probability. The reading carries it —
+    *Items counted in the picture: 3 (confidence 97 %).*, the percentage rounded
+    down — and it is the claim's support, in place of the 1 a line of the
+    document had by construction. An answer with no probability is neither weak
+    nor sure. Prompt `picture-reading-2026-10-08`.
+  - **A sure answer may go with others**: a picture's own answer (built by code
+    from what the picture answered, not extracted from prose about it) with a
+    support at or above `ProductClaim.SureAnswer`, **0.95**. It is still shown
+    with its picture and a person still approves it (invariant 12) — from its
+    row or in the bulk dialog, where every other claim read from a picture is
+    still opened alone. Applying it with nobody is a later ADR.
+  - **On the sixteen seed pictures**: six sets, six counted as the seed
+    declares, confidences 82 % to 99 %. Four are sure (bowls 99, tumblers 99,
+    packing cubes 97, cushion covers 99); the pans (82) and the knives (87) are
+    right and decided alone.
+  - The evidence it is worth having: `tendero.knowledge.claims.reviewed` says
+    whether each decision was on a sure answer (`sure_answer`). More than one in
+    ten of them rejected, and the line goes up.
+- **Still open**: a closed question of options asked by the shop itself — the
+  first will be a variant's colour, when a picture belongs to a variant; a
+  threshold per attribute, which needs more than the 20 to 150 examples each has
+  here; and whether Tino's composed answers, which are held by a schema on
+  purpose (ADR 0055), pay any of this price — a different task, not assumed.
+
+### I-4c · Attributes by category (ADR 0056, built 2026-10-08)
+
+- A category declares which attributes its products have; a category below adds
+  its own; a product has its whole branch's. Declared in
+  `seed/categories.sample.json`, and held by a test to the seed's own products:
+  every attribute a product carries is one its branch declares.
+- **Offered, never enforced**: it narrows what an extractor is offered and what
+  a picture is asked. An import carrying something else keeps it.
+- What a picture shows is the attribute's own flag (`isShownInPictures`), in
+  `seed/attributes.sample.json`: `PIECES`, and nothing else today. The list that
+  lived in an adapter is gone.
+- **So a shoe's picture is described and not counted** — a pair is not two
+  pieces — and a description of cookware is no longer offered a lamp's colour
+  temperature or a coffee maker's cups.
+- **Owed**: the claims suite still offers the whole vocabulary, as when its
+  floors were set; measuring it by category will move them. Facets by category,
+  and a screen to edit the declarations, are their own work.
 
 ### I-5 · Image embeddings, behind a gate
 
