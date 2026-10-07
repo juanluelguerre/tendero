@@ -41,7 +41,7 @@ public sealed class ClaimProposalWorkerTests
     /// <summary>Only what a picture can show: how many.</summary>
     private sealed class OnlyPieces : IAttributeVocabulary
     {
-        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default) =>
+        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(ProductId product, SourceKind readFrom, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<AttributeSpec>>([new AttributeSpec("PIECES", "Number", null, "pieces", [], "piezas")]);
     }
 

@@ -590,6 +590,7 @@
     },
     "proposedBy": "Propuesta por {{extractor}}",
     "fromPicture": "Leída de una imagen",
+    "sureAnswer": "Respuesta segura del modelo",
     "pictureNotice": "Un modelo describió esta imagen y la afirmación sale de esa descripción. Las citas de abajo son palabras del modelo, no texto de la tienda. Comprueba la afirmación con la imagen antes de aprobarla.",
     "pictureAlt": "La imagen de {{product}} de la que se leyó esta afirmación",
     "readBy": "imagen leída por {{model}}",

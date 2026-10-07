@@ -68,6 +68,12 @@
                     class="ms-1 mt-1 inline-block rounded-sm border border-accent px-2 py-px text-3xs text-accent"
                     >{{ t('claims.fromPicture') }}</span
                   >
+                  @if (!claim.decidedAlone) {
+                    <span
+                      class="ms-1 mt-1 inline-block rounded-sm border border-hairline-strong px-2 py-px text-3xs text-muted"
+                      >{{ t('claims.sureAnswer') }}</span
+                    >
+                  }
                 }
                 @if (claim.contradicts) {
                   <span
@@ -82,8 +88,10 @@
                 <!-- Quiet, both: one clay action per view, and a queue of rows has many. -->
                 <!-- Read from a picture, or saying another value than the catalogue
                      holds: approved with both in front, so from the pane and never
-                     from the row. -->
-                @if (!claim.picture && !claim.contradicts) {
+                     from the row. Unless it is the picture's own answer and the
+                     model was sure of it: the server then gives no reason to
+                     decide it alone, and it is approved from here like any other. -->
+                @if (!(claim.picture && claim.decidedAlone) && !claim.contradicts) {
                   <button
                     type="button"
                     class="button button--small button--quiet"
@@ -115,6 +123,9 @@
             <span class="m-0 font-medium">{{ statement(claim) }}</span>
             @if (claim.picture) {
               <span class="text-3xs text-accent">{{ t('claims.fromPicture') }}</span>
+              @if (!claim.decidedAlone) {
+                <span class="text-3xs text-muted">{{ t('claims.sureAnswer') }}</span>
+              }
             }
             @if (claim.contradicts) {
               <span class="text-3xs text-warning">{{ t('claims.contradicts') }}</span>

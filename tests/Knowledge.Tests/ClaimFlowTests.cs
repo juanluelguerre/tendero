@@ -220,7 +220,7 @@ public sealed class ClaimFlowTests
 
     private sealed class Vocabulary : IAttributeVocabulary
     {
-        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default) =>
+        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(ProductId product, SourceKind readFrom, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<AttributeSpec>>(
             [
                 new("INDUCTION", "Boolean", null, "induction", [], "inducción"),

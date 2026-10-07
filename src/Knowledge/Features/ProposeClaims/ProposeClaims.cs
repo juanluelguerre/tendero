@@ -34,8 +34,10 @@ public sealed record ProposeClaimsResult(int Proposed, IReadOnlyList<DropReason>
 /// question when it was read, and <see cref="PictureAnswersExtractor"/> reads
 /// that answer back: the claim is typed by code, and no sentence is proposed
 /// from the reading's prose — the same weights typed twelve of seventeen wrong
-/// when asked to. Such a claim is the document's own line, so it is supported by
-/// construction, as a rule's is.
+/// when asked to. **Its support is how sure the model was of its answer** — the
+/// probability it gave the number it wrote, which the reading carries — and not
+/// a second model's opinion of the first. An answer that came with no
+/// probability is neither weak nor sure: it sits on the line between.
 ///
 /// For the description: the model when the AppHost started it, the rules
 /// otherwise — the path with no model (invariant 8). A rule's claim is the
@@ -69,8 +71,9 @@ public sealed class ProposeClaimsHandler(
             : (model, ClaimExtractors.Chat);
         activity?.SetTag("knowledge.extractor", name);
 
-        // The vocabulary of each kind of source, asked once a kind: a picture's
-        // reading is offered only what a picture can show.
+        // The product's vocabulary for each kind of source, asked once a kind: what
+        // its category declares, and of that a picture's reading only what a
+        // picture can show.
         Dictionary<SourceKind, IReadOnlyList<AttributeSpec>> offered = [];
 
         var run = Guid.CreateVersion7().ToString();
@@ -88,7 +91,7 @@ public sealed class ProposeClaimsHandler(
         foreach (var (spanish, english) in sources)
         {
             if (!offered.TryGetValue(spanish.Kind, out var attributes))
-                offered[spanish.Kind] = attributes = await vocabulary.CurrentAsync(spanish.Kind, cancellationToken);
+                offered[spanish.Kind] = attributes = await vocabulary.CurrentAsync(command.ProductId, spanish.Kind, cancellationToken);
 
             // A reading is read by code, whichever extractor reads the description.
             var reading = spanish.Reading;
@@ -108,8 +111,8 @@ public sealed class ProposeClaimsHandler(
 
             foreach (var claim in kept)
             {
-                var support = reading is not null || scorer is null
-                    ? 1.0
+                var support = reading is not null ? claim.Confidence ?? ProductClaim.WeakSupport
+                    : scorer is null ? 1.0
                     : await scorer.ScoreAsync(spanish.Text, claim.Statement.In("es"), cancellationToken);
                 List<Evidence> evidence = [new(spanish.Id, claim.QuoteSpanish, support)];
                 if (english is not null && claim.QuoteEnglish is { } quoteEnglish)

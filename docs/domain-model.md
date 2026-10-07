@@ -33,6 +33,7 @@ classDiagram
         +bool IsVariantAxis
         +bool IsFacet
         +bool IsSearchable
+        +bool IsShownInPictures
         +bool IsDraft
         +AttributeOption[] Options
         +string[] Aliases
@@ -73,6 +74,7 @@ classDiagram
         +string Path
         +int SortOrder
         +DateTimeOffset UpdatedAt
+        +string[] Attributes
         +string[] Ancestry
     }
     class CategoryTree {

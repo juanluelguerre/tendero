@@ -76,6 +76,14 @@ public sealed class AttributeDefinition : AggregateRoot
     public bool IsSearchable { get; private set; }
 
     /// <summary>
+    /// Whether a picture of the product shows it (phase 13a): how many pieces
+    /// there are, yes; a power, a capacity or what it is made of, no. Only such
+    /// an attribute is asked of a picture, and only such a claim is taken from
+    /// one — said by the attribute itself, not by a list in whoever asks.
+    /// </summary>
+    public bool IsShownInPictures { get; private set; }
+
+    /// <summary>
     /// Proposed by the importer and waiting for a human to give it labels. Same
     /// idea as Draft on a product: importing does not publish, and here it does
     /// not define either.
@@ -106,7 +114,8 @@ public sealed class AttributeDefinition : AggregateRoot
         bool isVariantAxis = false,
         bool isFacet = false,
         bool isSearchable = true,
-        bool isDraft = false)
+        bool isDraft = false,
+        bool isShownInPictures = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
 
@@ -121,6 +130,7 @@ public sealed class AttributeDefinition : AggregateRoot
             IsFacet = isFacet,
             IsSearchable = isSearchable,
             IsDraft = isDraft,
+            IsShownInPictures = isShownInPictures,
             CreatedAt = now,
             UpdatedAt = now
         };

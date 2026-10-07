@@ -18,13 +18,15 @@ public enum DropReason
 }
 
 /// <summary>A claim that passed: where it rests, and what it states and types, normalised.</summary>
+/// <param name="Confidence">What the extractor said of itself, carried through untouched.</param>
 public sealed record VettedClaim(
     Quote QuoteSpanish,
     Quote? QuoteEnglish,
     LocalizedText Statement,
     string? AttributeCode,
     string? Value,
-    bool TypingRefused);
+    bool TypingRefused,
+    double? Confidence = null);
 
 /// <summary>
 /// What code checks before a claim is ever proposed (ADR 0018, 4) — every rule
@@ -69,7 +71,7 @@ public static partial class ClaimVetting
             }
 
             var (code, value, refused) = Normalise(claim, attributes);
-            kept.Add(new VettedClaim(quote, english?.Locate(claim.QuoteEnglish), statement, code, value, refused));
+            kept.Add(new VettedClaim(quote, english?.Locate(claim.QuoteEnglish), statement, code, value, refused, claim.Confidence));
         }
 
         return (kept, dropped);

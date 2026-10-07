@@ -14,7 +14,7 @@ import { ClaimsReviewStore } from './claims-review.store';
 const Claims = 'http://api/api/knowledge/claims';
 const Products = 'http://api/api/catalog/products';
 
-const claim = (claimId: string, fromPicture: boolean, contradicts = false) =>
+const claim = (claimId: string, fromPicture: boolean, contradicts = false, sure = false) =>
   ({
     claimId,
     productId: 'p1',
@@ -29,7 +29,8 @@ const claim = (claimId: string, fromPicture: boolean, contradicts = false) =>
     model: 'extractor-model',
     picture: fromPicture ? { imageId: 'lamp-front', readBy: 'vision-model', promptVersion: 'v1' } : null,
     contradicts: contradicts ? { attributeCode: 'MATERIAL', claimed: 'CARBON_STEEL', held: 'acero inoxidable' } : null,
-    decidedAlone: contradicts ? 'ContradictsTheCatalogue' : fromPicture ? 'ReadFromAPicture' : null,
+    // The server's rule, as it sends it: a picture's own answer the model was sure of is not decided alone.
+    decidedAlone: contradicts ? 'ContradictsTheCatalogue' : fromPicture && !sure ? 'ReadFromAPicture' : null,
   }) as unknown as ClaimForReview;
 
 /** The list and the pane as the page holds them: one store, provided once. */
@@ -72,8 +73,13 @@ describe('claims read from a picture', () => {
       .match((req) => req.url === Claims)
       .forEach((req) =>
         req.flush({
-          items: [claim('written', false), claim('read', true), claim('against', false, true)],
-          total: 3,
+          items: [
+            claim('written', false),
+            claim('read', true),
+            claim('against', false, true),
+            claim('sure', true, false, true),
+          ],
+          total: 4,
           page: 1,
           pageSize: 20,
           counts: [],
@@ -104,6 +110,17 @@ describe('claims read from a picture', () => {
     expect(labels(read)).not.toContain('claims.approve');
     // Rejecting needs no look at the picture: nothing reaches the catalogue.
     expect(labels(read)).toContain('claims.reject');
+  });
+
+  it('lets a sure answer from a picture be approved from its row, and says it is one', async () => {
+    const page = await at('/?support=all');
+    const sure = [...page.querySelectorAll('tbody tr')][3];
+
+    expect(sure.textContent).toContain('claims.fromPicture');
+    expect(sure.textContent).toContain('claims.sureAnswer');
+    expect(labels(sure)).toContain('claims.approve');
+    // And the one the model was not sure of does not say so.
+    expect([...page.querySelectorAll('tbody tr')][1].textContent).not.toContain('claims.sureAnswer');
   });
 
   it('shows the picture the claim was read from, says whose words the quotes are, and approves there', async () => {

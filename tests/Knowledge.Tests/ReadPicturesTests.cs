@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Features.ReadPictures;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
@@ -43,6 +44,14 @@ public sealed class ReadPicturesTests
         }
     }
 
+    /// <summary>What a picture of each product is asked: how many, unless the product is one of those that are not.</summary>
+    private sealed class Offers(HashSet<Guid> notCounted) : IAttributeVocabulary
+    {
+        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(ProductId product, SourceKind readFrom, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<AttributeSpec>>(
+                notCounted.Contains(product.Value) ? [] : [new AttributeSpec("PIECES", "Number", null, "pieces", [], "piezas")]);
+    }
+
     private sealed class Asker(string name) : IPrincipalAccessor
     {
         public CommercePrincipal Current { get; } = new(null, null, name.ToLowerInvariant(), name, ["shopkeeper"]);
@@ -78,7 +87,7 @@ public sealed class ReadPicturesTests
 
     private static Shop Compose(
         IReadOnlyList<ProductPicture> pictures, bool readsPictures = true, string? model = "scripted", IEnumerable<string>? missingBytes = null,
-        string script = "read-pictures.json")
+        string script = "read-pictures.json", IEnumerable<ProductPicture>? notCounted = null)
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
@@ -102,6 +111,7 @@ public sealed class ReadPicturesTests
         services.AddSingleton<IUnitOfWork>(knowledge);
         services.AddSingleton<IProductPictures>(new Catalogue(pictures));
         services.AddSingleton<IImageStore>(store);
+        services.AddSingleton<IAttributeVocabulary>(new Offers([.. (notCounted ?? []).Select(picture => picture.ProductId)]));
         services.AddKnowledge(configuration);
         services.AddModelProfiles(configuration);
         return new Shop(services.BuildServiceProvider(), knowledge, store);
@@ -218,6 +228,28 @@ public sealed class ReadPicturesTests
         Assert.Equal(
             ["Cuatro cuencos de cerámica apilados.\nElementos contados en la imagen: 4.", "Four stacked ceramic bowls.\nItems counted in the picture: 4."],
             shop.Knowledge.Documents.OrderByDescending(document => document.Culture).Select(document => document.Text));
+    }
+
+    /// <summary>
+    /// **A picture is asked what its product's category declares** (ADR 0056). A
+    /// shoe's does not declare pieces — a pair is not two — so its picture is not
+    /// asked how many: one call instead of two, and a reading with no count under
+    /// its words. The script answers the count with something that is no number,
+    /// so a job that asks it anyway fails the picture.
+    /// </summary>
+    [Fact]
+    public async Task A_picture_is_not_asked_how_many_when_its_product_is_not_offered_the_pieces()
+    {
+        var shoe = Picture("Zapatilla", "shoe-cover");
+        await using var shop = Compose([shoe], script: "read-pictures-uncounted.json", notCounted: [shoe]);
+
+        var result = await shop.Ask();
+
+        Assert.Equal((PictureReadingStatus.Ran, 1, 0), (result.Status, result.Read, result.Failed));
+        Assert.Equal(
+            ["A white mug with a handle.", "Una taza blanca con asa."],
+            shop.Knowledge.Documents.Select(document => document.Text).Order(StringComparer.Ordinal));
+        Assert.Single(shop.Metered());
     }
 
     // ---------- every way a picture ends without a reading ----------

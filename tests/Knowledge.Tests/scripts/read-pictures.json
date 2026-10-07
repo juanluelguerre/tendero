@@ -17,8 +17,6 @@
   {
     "when": "how many separate items",
     "pictures": 1,
-    "reply": {
-      "count": 1
-    }
+    "say": "1"
   }
 ]

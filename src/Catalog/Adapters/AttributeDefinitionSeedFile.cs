@@ -55,7 +55,8 @@ public static class AttributeDefinitionSeedFile
             string.IsNullOrWhiteSpace(entry.Unit) ? null : entry.Unit,
             entry.IsVariantAxis,
             entry.IsFacet,
-            entry.IsSearchable);
+            entry.IsSearchable,
+            isShownInPictures: entry.IsShownInPictures);
 
         foreach (var alias in entry.Aliases)
             definition.AddAlias(clock, alias);
@@ -73,7 +74,8 @@ public static class AttributeDefinitionSeedFile
         string? Unit = null,
         bool IsVariantAxis = false,
         bool IsFacet = false,
-        bool IsSearchable = true)
+        bool IsSearchable = true,
+        bool IsShownInPictures = false)
     {
         public List<string> Aliases { get; init; } = [];
         public List<SeedOption> Options { get; init; } = [];

@@ -200,7 +200,7 @@
       "name": "Claim review",
       "area": "backoffice",
       "question": "Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones?",
-      "decision": "A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read.",
+      "decision": "A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. And of the sure answers a picture gave (sure_answer = true), more than one in ten rejected means the line they clear is too low: raise ProductClaim.SureAnswer before anything is applied without a person.",
       "signals": [
         "tendero.knowledge.claims.reviewed"
       ]
@@ -1390,6 +1390,14 @@
           ],
           "description": "ReviewDecision, labelled by MetricLabels.",
           "from": "ReviewDecision"
+        },
+        "sure_answer": {
+          "type": "string",
+          "values": [
+            "true",
+            "false"
+          ],
+          "description": "Whether the claim was a picture's own answer the model was sure of (at or above ProductClaim.SureAnswer): the ones a person may approve in bulk."
         }
       }
     },

@@ -63,6 +63,13 @@ public sealed class ReadPicturesOnTheLocalModelTests(ITestOutputHelper output)
             Task.FromResult<StoredImage?>(new StoredImage(File.OpenRead(SeedPicture(id.Value)), "image/webp"));
     }
 
+    /// <summary>Every picture is asked how many: what is looked at here is what the model says, whatever the product.</summary>
+    private sealed class CountsEverything : IAttributeVocabulary
+    {
+        public Task<IReadOnlyList<Extraction.AttributeSpec>> CurrentAsync(ProductId product, SourceKind readFrom, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Extraction.AttributeSpec>>([new Extraction.AttributeSpec("PIECES", "Number", null, "pieces", [], "piezas")]);
+    }
+
     private sealed class Asker : IPrincipalAccessor
     {
         public CommercePrincipal Current { get; } = new(null, null, "lucía", "Lucía", ["shopkeeper"]);
@@ -100,6 +107,7 @@ public sealed class ReadPicturesOnTheLocalModelTests(ITestOutputHelper output)
         services.AddSingleton<IUnitOfWork>(knowledge);
         services.AddSingleton<IProductPictures>(new Seed([.. Pictures.Select(picture => new ProductPicture(Guid.CreateVersion7(), picture.ItemId, picture.ItemId))]));
         services.AddSingleton<IImageStore>(new FromDisk());
+        services.AddSingleton<IAttributeVocabulary>(new CountsEverything());
         services.AddKnowledge(configuration);
         services.AddModelProfiles(configuration);
         await using var provider = services.BuildServiceProvider();

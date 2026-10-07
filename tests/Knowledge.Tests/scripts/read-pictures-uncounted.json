@@ -10,6 +10,6 @@
   {
     "when": "how many separate items",
     "pictures": 1,
-    "reply": "There are several of them."
+    "say": "There are several of them."
   }
 ]

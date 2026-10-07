@@ -10,8 +10,6 @@
   {
     "when": "how many separate items",
     "pictures": 1,
-    "reply": {
-      "count": 4
-    }
+    "say": "4"
   }
 ]

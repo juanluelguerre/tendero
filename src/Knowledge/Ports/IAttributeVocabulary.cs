@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Extraction;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Knowledge.Ports;
 
@@ -14,9 +15,14 @@ namespace ElGuerre.Tendero.Knowledge.Ports;
 /// buckle as the product's material. So a reading is offered only what a picture
 /// can show, and what it types beyond that is refused by the vetting, which
 /// checks against the same list.
+///
+/// **And by the product** (ADR 0056). The same reasoning one step further: a
+/// backpack offered a coffee maker's cups has a wrong drawer within reach. What
+/// a product is offered is what its category's branch declares.
 /// </summary>
 public interface IAttributeVocabulary
 {
+    /// <param name="product">The product the claims are about.</param>
     /// <param name="readFrom">The kind of source the claims will be read from.</param>
-    Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AttributeSpec>> CurrentAsync(ProductId product, SourceKind readFrom, CancellationToken cancellationToken = default);
 }

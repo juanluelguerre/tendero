@@ -20,7 +20,7 @@ public sealed class RecordPictureReadingTests
     private static readonly ProductId Pan = ProductId.New();
     private static readonly PictureReading Front = new(new ImageId("front"), "Qwen/Qwen3.5-4B", "picture-2026-10-07");
 
-    private Task<RecordPictureReadingResult> Read(PictureReading reading, string spanish, string english, int count = 1) =>
+    private Task<RecordPictureReadingResult> Read(PictureReading reading, string spanish, string english, int? count = 1) =>
         new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock)
             .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english, count), TestContext.Current.CancellationToken);
 
@@ -70,6 +70,17 @@ public sealed class RecordPictureReadingTests
 
         Assert.Equal(
             ["Three black pans.\nItems counted in the picture: 3.", "Tres sartenes negras.\nElementos contados en la imagen: 3."],
+            this.knowledge.Documents.Select(document => document.Text).Order(StringComparer.Ordinal));
+    }
+
+    /// <summary>A picture that was not asked how many has only its words: no line is written for an answer nobody gave.</summary>
+    [Fact]
+    public async Task A_picture_that_was_not_asked_how_many_is_recorded_as_its_words_alone()
+    {
+        await Read(Front, "Una zapatilla gris.", "A grey shoe.", count: null);
+
+        Assert.Equal(
+            ["A grey shoe.", "Una zapatilla gris."],
             this.knowledge.Documents.Select(document => document.Text).Order(StringComparer.Ordinal));
     }
 
@@ -160,5 +171,15 @@ public sealed class RecordPictureReadingTests
         Assert.Equal(RecordDescriptionOutcome.Unchanged, again.Outcome);
         Assert.Equal(ClaimStatus.Proposed, claim.Status);
         Assert.Equal(3, this.knowledge.Documents.Count);
+    }
+    /// <summary>The probability the model gave its count is part of what the picture answered, and of the document.</summary>
+    [Fact]
+    public async Task How_sure_the_model_was_of_its_count_is_recorded_with_it()
+    {
+        await new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock).HandleAsync(
+            new RecordPictureReadingCommand(Pan, Front, "Tres sartenes.", "Three pans.", 3, 0.981), TestContext.Current.CancellationToken);
+
+        Assert.Contains(this.knowledge.Documents, document => document.Text == "Three pans.\nItems counted in the picture: 3 (confidence 98 %).");
+        Assert.Contains(this.knowledge.Documents, document => document.Text == "Tres sartenes.\nElementos contados en la imagen: 3 (confianza 98 %).");
     }
 }

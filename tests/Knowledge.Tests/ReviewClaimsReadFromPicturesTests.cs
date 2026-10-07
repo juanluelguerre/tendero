@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Features.ReadPictures;
 using ElGuerre.Tendero.Knowledge.Features.ReviewClaims;
 using ElGuerre.Tendero.Knowledge.Ports;
@@ -35,6 +36,26 @@ public sealed class ReviewClaimsReadFromPicturesTests
             null, null,
             [new Evidence(document.Id, document.Locate(quote)!, support)],
             new Provenance("chat", "Qwen/Qwen3.5-4B", "851bf6e", "claims-2026-09-26", "run", this.clock.GetUtcNow()),
+            this.clock);
+        this.knowledge.Add(claim);
+        return claim;
+    }
+
+    /// <summary>
+    /// A picture's own answer: built by code from what the picture answered to a
+    /// closed question, its support the probability the model gave that answer.
+    /// </summary>
+    private ProductClaim AnsweredByThePicture(double confidence)
+    {
+        var document = SourceDocument.Depict(this.lamp, "es", PictureAnswers.Under("Dos lámparas negras.", "es", 2, confidence), Front, this.clock);
+        this.knowledge.Add(document);
+        var line = PictureAnswers.CountIn(document.Text, "es")!.Value;
+        var claim = ProductClaim.Propose(
+            this.lamp,
+            LocalizedText.From("es", "piezas: 2").With("en", "pieces: 2"),
+            "PIECES", "2",
+            [new Evidence(document.Id, document.Locate(line.Line)!, line.Confidence!.Value)],
+            new Provenance(ClaimExtractors.Picture, Front.Model, null, Front.PromptVersion, "run", this.clock.GetUtcNow()),
             this.clock);
         this.knowledge.Add(claim);
         return claim;
@@ -155,5 +176,73 @@ public sealed class ReviewClaimsReadFromPicturesTests
     private sealed class NoAudit : IAuditWriter
     {
         public Task WriteAsync(AuditEntry entry, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+    // ---------- the tray: a picture's own answer, and a sure one ----------
+
+    /// <summary>
+    /// **What may be approved together** (the author's target, 2026-10-08: at
+    /// least 90 % right among what is approved in bulk). A picture's own answer
+    /// to a closed question, given with a probability at or above the line, has
+    /// no reason to be decided alone — and one under the line still has.
+    /// </summary>
+    [Theory]
+    [InlineData(0.97, null)]
+    [InlineData(0.95, null)]
+    [InlineData(0.94, AloneReason.ReadFromAPicture)]
+    [InlineData(0.50, AloneReason.WeakSupport)]
+    public async Task A_pictures_own_answer_goes_with_others_only_when_the_model_was_sure(double confidence, AloneReason? alone)
+    {
+        var answered = AnsweredByThePicture(confidence);
+
+        var queued = (await Queue()).Single(claim => claim.ClaimId == answered.Id.ToString());
+
+        Assert.Equal(alone, queued.DecidedAlone);
+        // It is still shown with its picture: sure is not unseen.
+        Assert.NotNull(queued.Picture);
+    }
+
+    /// <summary>
+    /// **The number that says whether the tray is worth having** (ADR 0036): each
+    /// decision says whether it was on a sure answer, so the share of them a
+    /// person rejects can be read — the tray promises at most one in ten.
+    /// </summary>
+    [Fact]
+    public async Task A_decision_says_whether_it_was_on_a_sure_answer()
+    {
+        var (sure, extracted) = (AnsweredByThePicture(0.97), FromThePicture());
+        using var metrics = new InstrumentRecorder("tendero.knowledge.claims.reviewed");
+
+        await Decide(sure, inBulk: true, ReviewDecision.Reject);
+        await Decide(extracted, inBulk: false);
+
+        Assert.Equal(
+            [("reject", "true"), ("approve", "false")],
+            metrics.Of("tendero.knowledge.claims.reviewed").Select(tags => ((string)tags["decision"]!, (string)tags["sure_answer"]!)));
+    }
+
+    [Fact]
+    public async Task A_sure_answer_is_approved_in_bulk_by_the_person_and_an_unsure_one_is_refused()
+    {
+        var (sure, unsure) = (AnsweredByThePicture(0.97), AnsweredByThePicture(0.94));
+
+        var approved = await Decide(sure, inBulk: true);
+        var refused = await Decide(unsure, inBulk: true);
+
+        Assert.Equal((ReviewOutcome.Approved, ClaimStatus.Approved, "Ana Tendera"), (approved.Outcome, sure.Status, sure.ReviewedBy));
+        Assert.Equal((ReviewOutcome.ReadFromAPicture, ClaimStatus.Proposed), (refused.Outcome, unsure.Status));
+    }
+
+    /// <summary>
+    /// Sure of an answer is the picture's answer, not any claim that happens to
+    /// rest on a reading with a high score: a sentence a model extracted from
+    /// prose about a picture is decided alone, however well a scorer liked it.
+    /// </summary>
+    [Fact]
+    public async Task A_sentence_extracted_from_a_readings_prose_is_decided_alone_however_well_supported()
+    {
+        var extracted = FromThePicture(support: 0.99);
+
+        Assert.Equal(AloneReason.ReadFromAPicture, (await Queue()).Single().DecidedAlone);
+        Assert.Equal(ReviewOutcome.ReadFromAPicture, (await Decide(extracted, inBulk: true)).Outcome);
     }
 }

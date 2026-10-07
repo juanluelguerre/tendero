@@ -1,6 +1,7 @@
 using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -107,12 +108,31 @@ public enum AloneReason
     ContradictsTheCatalogue,
 
     /// <summary>
-    /// It rests on a model's description of a picture (phase 13a, I-4): its
-    /// support is a model's sentence held to a model's words, so the person who
-    /// approves it is the only independent check — and has to have it open, with
-    /// the picture, to be one.
+    /// It rests on what a model read in a picture (phase 13a, I-4), and the
+    /// model was not sure enough of it: the person who approves it is the only
+    /// independent check — and has to have it open, with the picture, to be one.
+    ///
+    /// **Not every claim from a picture.** A picture's own answer to a closed
+    /// question, given with a probability at or above
+    /// <see cref="ProductClaim.SureAnswer"/>, may be approved with others: that
+    /// is the tray. A person still approves it (invariant 12).
     /// </summary>
     ReadFromAPicture,
+}
+
+/// <summary>Which claims read from a picture a person may approve together with others.</summary>
+public static class PictureClaims
+{
+    /// <summary>
+    /// A picture's own answer, and a sure one: built by code from what the
+    /// picture answered (not extracted from prose about it), with the model's
+    /// probability for that answer at or above the line.
+    /// </summary>
+    public static bool IsASureAnswer(ProductClaim claim)
+    {
+        ArgumentNullException.ThrowIfNull(claim);
+        return claim.Provenance.Extractor == ClaimExtractors.Picture && claim.Support >= ProductClaim.SureAnswer;
+    }
 }
 
 /// <summary>
@@ -184,7 +204,7 @@ public sealed class ListClaimsForReviewHandler(IKnowledgeRepository knowledge, I
     private static AloneReason? AloneFor(ProductClaim claim, CatalogueContradiction? contradiction, PictureReading? reading) =>
         claim.IsWeaklySupported ? AloneReason.WeakSupport
         : contradiction is not null ? AloneReason.ContradictsTheCatalogue
-        : reading is not null ? AloneReason.ReadFromAPicture
+        : reading is not null && !PictureClaims.IsASureAnswer(claim) ? AloneReason.ReadFromAPicture
         : null;
 }
 
@@ -259,14 +279,15 @@ public sealed class ReviewClaimHandler(
         if (command.InBulk && command.Decision == ReviewDecision.Approve && claim.IsWeaklySupported)
             return new ReviewClaimResult(ReviewOutcome.WeakSupport, command.ClaimId);
 
-        // And so is one read from a picture: what supports it is a model's
-        // description, and the person is the only check that is not a model.
+        // And so is one read from a picture, unless it is the picture's own answer
+        // and a sure one: otherwise the person is the only check that is not a model.
         // Nor one that says another value than the catalogue holds: approving
         // it replaces that value. Asked before the picture, as the queue says it.
         if (command.InBulk && command.Decision == ReviewDecision.Approve && await ContradictsAsync(claim, cancellationToken))
             return new ReviewClaimResult(ReviewOutcome.ContradictsTheCatalogue, command.ClaimId);
 
-        if (command.InBulk && command.Decision == ReviewDecision.Approve && await RestsOnAPictureAsync(claim, cancellationToken))
+        if (command.InBulk && command.Decision == ReviewDecision.Approve && !PictureClaims.IsASureAnswer(claim)
+            && await RestsOnAPictureAsync(claim, cancellationToken))
             return new ReviewClaimResult(ReviewOutcome.ReadFromAPicture, command.ClaimId);
 
         var principal = principals.Current;
@@ -278,7 +299,7 @@ public sealed class ReviewClaimHandler(
             claim.Reject(reviewer, clock);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        ClaimsReviewed.Record(command.Decision);
+        ClaimsReviewed.Record(command.Decision, PictureClaims.IsASureAnswer(claim));
 
         return new ReviewClaimResult(
             command.Decision == ReviewDecision.Approve ? ReviewOutcome.Approved : ReviewOutcome.Rejected, claim.Id);
@@ -318,8 +339,12 @@ internal static class ClaimsReviewed
     private static readonly Counter<long> Reviewed = Meter.CreateCounter<long>(
         "tendero.knowledge.claims.reviewed", unit: "{claim}", description: "Claims a person approved or rejected, by decision.");
 
-    public static void Record(ReviewDecision decision) =>
-        Reviewed.Add(1, new KeyValuePair<string, object?>("decision", MetricLabels.Of(decision)));
+    /// <param name="sureAnswer">Whether the claim was a picture's own answer the model was sure of: the ones a person may approve in bulk.</param>
+    public static void Record(ReviewDecision decision, bool sureAnswer) =>
+        Reviewed.Add(
+            1,
+            new KeyValuePair<string, object?>("decision", MetricLabels.Of(decision)),
+            new KeyValuePair<string, object?>("sure_answer", sureAnswer ? "true" : "false"));
 }
 
 // ---------- The wire ----------

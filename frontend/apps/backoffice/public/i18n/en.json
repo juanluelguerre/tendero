@@ -590,6 +590,7 @@
     },
     "proposedBy": "Proposed by {{extractor}}",
     "fromPicture": "Read from a picture",
+    "sureAnswer": "The model's sure answer",
     "pictureNotice": "A model described this picture, and the claim was taken from its description. The quotes below are the model's words, not the shop's text. Check the claim against the picture before you approve it.",
     "pictureAlt": "The picture of {{product}} this claim was read from",
     "readBy": "picture read by {{model}}",

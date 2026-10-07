@@ -5,6 +5,7 @@ using Carter;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -44,7 +45,7 @@ public sealed class PictureReadingOptions
 /// </summary>
 public static class PictureReadingPrompt
 {
-    public const string Version = "picture-reading-2026-10-07c";
+    public const string Version = "picture-reading-2026-10-08";
 
     /// <summary>What the answer is held to: the description, in each language.</summary>
     public static readonly JsonElement Schema = JsonDocument.Parse("""
@@ -95,6 +96,14 @@ public static class PictureReadingPrompt
 /// and how many items are drawn (<see cref="PictureQuestions.Count"/>), a number
 /// code turns into a claim. The second is asked by itself, with the wording the
 /// known-bad set measures: nothing is extracted from the prose afterwards.
+/// **And as plain text, not under a schema** (<see cref="ClosedQuestion"/>): the
+/// number is one token instead of the twenty-five the schema's grammar padded it
+/// to, and it comes with the probability the model gave it — which the reading
+/// keeps, and which decides whether its claim may be approved with others.
+///
+/// **A picture is asked what its product is offered** (ADR 0056): how many,
+/// only of a product whose category declares its pieces. A shoe's does not — a
+/// pair is not two pieces — so its picture is described and not counted.
 /// </summary>
 /// <param name="Count">How many pictures, at most <see cref="PictureReadingOptions.MaxBatch"/>.</param>
 public sealed record ReadPicturesCommand(int Count) : ICommand<ReadPicturesResult>;
@@ -129,6 +138,7 @@ public sealed class ReadPicturesHandler(
     IProductPictures pictures,
     IImageStore images,
     IKnowledgeRepository knowledge,
+    IAttributeVocabulary vocabulary,
     ICommandDispatcher commands,
     IServiceProvider services,
     ModelProfiles profiles,
@@ -180,13 +190,24 @@ public sealed class ReadPicturesHandler(
                 continue;
             }
 
-            // Its words and its answer, or nothing: a picture the model described
-            // and did not count is read again, whole, by the next batch.
-            if (await DescribeAsync(model, picture, content, settings, cancellationToken) is not { } said
-                || await CountAsync(model, picture, content, cancellationToken) is not { } count)
+            if (await DescribeAsync(model, picture, content, settings, cancellationToken) is not { } said)
             {
                 failed++;
                 continue;
+            }
+
+            // Its words and the answers it was asked for, or nothing: a picture
+            // the model described and did not count is read again, whole, by the
+            // next batch.
+            Counted? counted = null;
+            if (await IsCountedAsync(picture, cancellationToken))
+            {
+                counted = await CountAsync(model, picture, content, cancellationToken);
+                if (counted is null)
+                {
+                    failed++;
+                    continue;
+                }
             }
 
             await commands.SendAsync(
@@ -195,7 +216,8 @@ public sealed class ReadPicturesHandler(
                     new PictureReading(new ImageId(picture.ImageId), reader, PictureReadingPrompt.Version),
                     said.Es,
                     said.En,
-                    count),
+                    counted?.Number,
+                    counted?.Confidence),
                 cancellationToken);
             read++;
         }
@@ -231,6 +253,11 @@ public sealed class ReadPicturesHandler(
 
         return next;
     }
+
+    /// <summary>Whether a picture of this product is asked how many: when the product is offered its pieces from a picture.</summary>
+    private async Task<bool> IsCountedAsync(ProductPicture picture, CancellationToken cancellationToken) =>
+        (await vocabulary.CurrentAsync(new ProductId(picture.ProductId), SourceKind.ProductImage, cancellationToken))
+            .Any(attribute => string.Equals(attribute.Code, PictureAnswers.Pieces, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The picture as a model takes it, or null when the store has no such bytes or they are no picture.</summary>
     private async Task<DataContent?> OpenAsync(ProductPicture picture, CancellationToken cancellationToken)
@@ -276,18 +303,27 @@ public sealed class ReadPicturesHandler(
     }
 
     /// <summary>
-    /// How many items the model counts in the picture, or null when it answered no
-    /// number. The question alone, with no instructions before it: that is how it
-    /// was measured.
+    /// How many items the model counts in the picture and how sure it was, or null
+    /// when it answered no number. The question alone, with no instructions
+    /// before it: that is how it was measured.
     /// </summary>
-    private async Task<int?> CountAsync(IChatClient model, ProductPicture picture, DataContent content, CancellationToken cancellationToken)
+    private async Task<Counted?> CountAsync(IChatClient model, ProductPicture picture, DataContent content, CancellationToken cancellationToken)
     {
-        var counted = await AskAsync<Counted>(
-            model, picture,
-            [new ChatMessage(ChatRole.User, [content, new TextContent(PictureQuestions.Count)])],
-            CountSchema, "picture_count", MaxCountTokens, cancellationToken);
+        try
+        {
+            var counted = await ClosedQuestion.CountAsync(
+                model, [content], PictureQuestions.Count,
+                ModelCall.Options(Operation, promptVersion: PictureReadingPrompt.Version, person: principal.Current.Subject),
+                cancellationToken);
 
-        return counted is { Count: >= 0 } ? counted.Count : null;
+            return counted.Number is null ? null : counted;
+        }
+        catch (Exception failure) when (failure is HttpRequestException or InvalidOperationException or TaskCanceledException
+            && !cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(failure, "The picture-reading job's model did not count a picture of {Code}.", picture.Code);
+            return null;
+        }
     }
 
     /// <summary>The model's answer to one question about the picture, held to a schema; null when it cannot be read as one.</summary>
@@ -326,20 +362,7 @@ public sealed class ReadPicturesHandler(
             Taken.Add(count, new KeyValuePair<string, object?>("outcome", outcome));
     }
 
-    /// <summary>
-    /// A number and its braces are seven tokens, and the shop's 4B has spent
-    /// twenty-nine reaching them — it pads the object with white space the
-    /// schema allows. Capped at twenty, four pictures of twelve came back cut in
-    /// the middle of the word "count".
-    /// </summary>
-    private const int MaxCountTokens = 100;
-
-    private static readonly JsonElement CountSchema = JsonDocument.Parse(PictureQuestions.CountSchema).RootElement.Clone();
-
     private sealed record Said(string Es, string En);
-
-    /// <summary>Null when the answer carries no number: a missing one must not read as none counted.</summary>
-    private sealed record Counted(int? Count);
 }
 
 // ---------- The wire ----------

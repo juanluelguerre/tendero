@@ -32,9 +32,19 @@ internal sealed class SeedFileCategoryReader(
         if (!File.Exists(path))
             return this.cached = CategoryTree.Empty;
 
+        return this.cached = await CategorySeedFile.LoadAsync(path, clock, cancellationToken);
+    }
+}
+
+/// <summary>The category file, read: beside <see cref="AttributeDefinitionSeedFile"/>, and for the same reasons.</summary>
+public static class CategorySeedFile
+{
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    public static async Task<CategoryTree> LoadAsync(string path, TimeProvider clock, CancellationToken cancellationToken = default)
+    {
         await using var file = File.OpenRead(path);
-        var raw = await JsonSerializer.DeserializeAsync<List<SeedCategory>>(
-            file, new JsonSerializerOptions(JsonSerializerDefaults.Web), cancellationToken) ?? [];
+        var raw = await JsonSerializer.DeserializeAsync<List<SeedCategory>>(file, Json, cancellationToken) ?? [];
 
         // Built in file order, so a parent has to appear before its children.
         // That is a constraint of the file and not of the model, and it is
@@ -43,12 +53,16 @@ internal sealed class SeedFileCategoryReader(
         foreach (var entry in raw)
         {
             var parent = entry.Parent is null ? null : built.GetValueOrDefault(entry.Parent);
-            var category = Category.Define(clock, entry.Code, new LocalizedText(entry.Name), parent);
+            var category = Category.Define(clock, entry.Code, new LocalizedText(entry.Name), parent, attributes: entry.Attributes);
             built[category.Code] = category;
         }
 
-        return this.cached = new CategoryTree([.. built.Values]);
+        return new CategoryTree([.. built.Values]);
     }
 
-    private sealed record SeedCategory(string Code, Dictionary<string, string> Name, string? Parent = null);
+    private sealed record SeedCategory(string Code, Dictionary<string, string> Name, string? Parent = null)
+    {
+        /// <summary>The attributes this category declares for itself (ADR 0056); its ancestors' are not repeated.</summary>
+        public List<string> Attributes { get; init; } = [];
+    }
 }

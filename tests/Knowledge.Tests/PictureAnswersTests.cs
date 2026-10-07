@@ -78,4 +78,43 @@ public sealed class PictureAnswersTests
 
         Assert.Equal("", claim.QuoteEnglish);
     }
+    /// <summary>
+    /// How sure the model was is written beside the number, as a whole percentage
+    /// **rounded down** — 0.949 is 94 %, never 95 — and read back with it, so the
+    /// claim carries it and no answer reads surer than it was.
+    /// </summary>
+    [Fact]
+    public async Task How_sure_the_model_was_is_written_beside_the_count_rounded_down_and_read_back()
+    {
+        var spanish = PictureAnswers.Under("Tres sartenes.", "es", 3, 0.949);
+        var english = PictureAnswers.Under("Three pans.", "en", 3, 0.949);
+
+        Assert.Equal("Tres sartenes.\nElementos contados en la imagen: 3 (confianza 94 %).", spanish);
+        Assert.Equal("Three pans.\nItems counted in the picture: 3 (confidence 94 %).", english);
+
+        var claim = Assert.Single(await Read(spanish, english, Pieces));
+        Assert.Equal(
+            ("Elementos contados en la imagen: 3 (confianza 94 %).", "Items counted in the picture: 3 (confidence 94 %).", "3", 0.94),
+            (claim.QuoteSpanish, claim.QuoteEnglish, claim.Value, claim.Confidence));
+    }
+
+    /// <summary>An answer whose server gave no probability says no confidence: not one of 100 %.</summary>
+    [Fact]
+    public async Task A_count_with_no_probability_carries_no_confidence()
+    {
+        var claim = Assert.Single(await Read(PictureAnswers.Under("Tres sartenes.", "es", 3), PictureAnswers.Under("Three pans.", "en", 3), Pieces));
+
+        Assert.Null(claim.Confidence);
+    }
+
+    /// <summary>A line that is not the one code writes is no answer: nothing is guessed from half of it.</summary>
+    [Theory]
+    [InlineData("Tres sartenes.\nElementos contados en la imagen: 3 (confianza alta).")]
+    [InlineData("Tres sartenes.\nElementos contados en la imagen: tres.")]
+    [InlineData("Tres sartenes.\nElementos contados en la imagen: 3 (confianza 94 %)")]
+    [InlineData("Doce sartenes.\nElementos contados en la imagen: 12")]
+    public async Task A_line_code_did_not_write_is_no_answer(string spanish)
+    {
+        Assert.Empty(await Read(spanish, "", Pieces));
+    }
 }

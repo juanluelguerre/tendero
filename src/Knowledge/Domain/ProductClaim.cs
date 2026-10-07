@@ -149,6 +149,16 @@ public sealed class ProductClaim : AggregateRoot
 
     public bool IsWeaklySupported => Support < WeakSupport;
 
+    /// <summary>
+    /// The confidence at and above which a picture's own answer may be approved
+    /// together with others (phase 13a). Set from a measurement and with a
+    /// margin: on 1,610 product photographs the shop's model was right 95.7 % of
+    /// the time at 0.95 and above, and a threshold tuned on half of them to give
+    /// 95 % gave 94.8 % on the rest. The target is 90 % right among what a person
+    /// approves in bulk (the author's, 2026-10-08).
+    /// </summary>
+    public const double SureAnswer = 0.95;
+
     private ProductClaim() { } // EF Core
 
     public static ProductClaim Propose(

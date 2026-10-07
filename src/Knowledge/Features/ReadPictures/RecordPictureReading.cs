@@ -6,8 +6,10 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Knowledge.Features.ReadPictures;
 
 /// <summary>What a model wrote about one picture of a product, in both languages, and what it answered.</summary>
-/// <param name="Count">How many items it counted in the picture.</param>
-public sealed record RecordPictureReadingCommand(ProductId ProductId, PictureReading Reading, string Spanish, string English, int Count)
+/// <param name="Count">How many items it counted in the picture, or null when the picture was not asked.</param>
+/// <param name="CountConfidence">The probability the model gave that number, when its server said.</param>
+public sealed record RecordPictureReadingCommand(
+    ProductId ProductId, PictureReading Reading, string Spanish, string English, int? Count, double? CountConfidence = null)
     : ICommand<RecordPictureReadingResult>;
 
 public enum RecordPictureReadingOutcome
@@ -56,11 +58,14 @@ public sealed class RecordPictureReadingHandler(IKnowledgeRepository knowledge, 
         var current = await knowledge.CurrentReadingsAsync(command.ProductId, command.Reading.Picture, cancellationToken);
         List<SourceDocumentId> replaced = [];
 
-        (string Culture, string Text)[] words =
-        [
-            ("es", PictureAnswers.Under(command.Spanish, "es", command.Count)),
-            ("en", PictureAnswers.Under(command.English, "en", command.Count)),
-        ];
+        // A picture that was not asked how many has only its words.
+        (string Culture, string Text)[] words = command.Count is { } count
+            ?
+            [
+                ("es", PictureAnswers.Under(command.Spanish, "es", count, command.CountConfidence)),
+                ("en", PictureAnswers.Under(command.English, "en", count, command.CountConfidence)),
+            ]
+            : [("es", command.Spanish.TrimEnd()), ("en", command.English.TrimEnd())];
 
         foreach (var (culture, text) in words)
         {

@@ -32,9 +32,9 @@ public sealed class ClaimsFromPicturesTests
         new RecordDescriptionHandler(this.knowledge, this.knowledge, this.clock)
             .HandleAsync(new RecordDescriptionCommand(Pan, culture, text), TestContext.Current.CancellationToken);
 
-    private Task Read(PictureReading reading, string spanish, string english, int count = 1) =>
+    private Task Read(PictureReading reading, string spanish, string english, int count = 1, double? confidence = null) =>
         new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock)
-            .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english, count), TestContext.Current.CancellationToken);
+            .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english, count, confidence), TestContext.Current.CancellationToken);
 
     private Task<ProposeClaimsResult> Propose(
         IClaimExtractor? model = null, ISupportScorer? scorer = null, Vocabulary? vocabulary = null, Held? catalogue = null)
@@ -90,7 +90,7 @@ public sealed class ClaimsFromPicturesTests
 
         public List<SourceKind> Asked { get; } = [];
 
-        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(ProductId product, SourceKind readFrom, CancellationToken cancellationToken = default)
         {
             Asked.Add(readFrom);
             return Task.FromResult<IReadOnlyList<AttributeSpec>>(readFrom == SourceKind.ProductImage ? [Pieces] : [Pieces, Light]);
@@ -130,12 +130,13 @@ public sealed class ClaimsFromPicturesTests
     /// <summary>
     /// The claim is typed by code from the number the picture answered, and rests
     /// on the reading — the line that says it, in both of its documents. No model
-    /// read the reading and none scored the claim: it is the document's own line.
+    /// read the reading and none scored the claim: **its support is how sure the
+    /// model was of the number it wrote**, which the reading carries.
     /// </summary>
     [Fact]
     public async Task What_a_picture_counted_is_a_typed_claim_built_by_code_that_rests_on_its_reading()
     {
-        await Read(Front, "Sartenes negras apiladas.", "Stacked black pans.", count: 3);
+        await Read(Front, "Sartenes negras apiladas.", "Stacked black pans.", count: 3, confidence: 0.97);
         var (model, scorer) = (new QuotesTheFirstWord(), new Hears(0.4));
 
         var result = await Propose(model, scorer);
@@ -146,9 +147,9 @@ public sealed class ClaimsFromPicturesTests
         Assert.Equal(("piezas: 3", "pieces: 3"), (claim.Statement.In("es"), claim.Statement.In("en")));
         Assert.Equal([Document(Front, "es").Id, Document(Front, "en").Id], claim.Evidence.Select(evidence => evidence.Document));
         Assert.Equal(
-            ["Elementos contados en la imagen: 3.", "Items counted in the picture: 3."],
+            ["Elementos contados en la imagen: 3 (confianza 97 %).", "Items counted in the picture: 3 (confidence 97 %)."],
             claim.Evidence.Select(evidence => evidence.Quote.Text));
-        Assert.Equal(1.0, claim.Support);
+        Assert.Equal(0.97, claim.Support);
         Assert.Empty(model.Read);
         Assert.Empty(scorer.Heard);
         // Who answered: the model that read the picture, under the instructions it was read with.
@@ -200,6 +201,24 @@ public sealed class ClaimsFromPicturesTests
 
         Assert.Equal(proposed, result.Proposed);
         Assert.Equal(proposed, this.knowledge.Claims.Count(claim => claim is { AttributeCode: "PIECES", Value: "1" }));
+    }
+
+    /// <summary>
+    /// An answer that came with no probability is neither weak nor sure: its
+    /// support sits on the line between, so it is not flagged as thin and is not
+    /// approved with others either.
+    /// </summary>
+    [Fact]
+    public async Task An_answer_with_no_probability_is_neither_weak_nor_sure()
+    {
+        await Read(Front, "Sartenes negras.", "Black pans.", count: 3);
+
+        await Propose();
+
+        var claim = Assert.Single(this.knowledge.Claims);
+        Assert.Equal(ProductClaim.WeakSupport, claim.Support);
+        Assert.False(claim.IsWeaklySupported);
+        Assert.True(claim.Support < ProductClaim.SureAnswer);
     }
 
     /// <summary>More than one is said whatever the catalogue holds: that is how a set nobody typed gets its pieces.</summary>

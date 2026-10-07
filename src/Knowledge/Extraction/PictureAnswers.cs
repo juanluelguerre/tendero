@@ -29,15 +29,27 @@ public static class PictureAnswers
     private static string Lead(string culture) =>
         culture == "es" ? "Elementos contados en la imagen: " : "Items counted in the picture: ";
 
-    /// <summary>The reading's text: the model's prose, and under it what it counted.</summary>
-    public static string Under(string prose, string culture, int count)
+    private static string Sure(string culture) => culture == "es" ? " (confianza " : " (confidence ";
+
+    private const string Percent = " %)";
+
+    /// <summary>
+    /// The reading's text: the model's prose, and under it what it counted — and
+    /// how sure it was, when the model's server said: the probability it gave the
+    /// number it wrote, as a whole percentage **rounded down**, so that no answer
+    /// reads surer than it was.
+    /// </summary>
+    public static string Under(string prose, string culture, int count, double? confidence = null)
     {
         ArgumentNullException.ThrowIfNull(prose);
-        return $"{prose.TrimEnd()}\n{Lead(culture)}{count.ToString(CultureInfo.InvariantCulture)}.";
+        var sure = confidence is { } probability
+            ? $"{Sure(culture)}{((int)Math.Floor(Math.Clamp(probability, 0, 1) * 100)).ToString(CultureInfo.InvariantCulture)}{Percent}"
+            : "";
+        return $"{prose.TrimEnd()}\n{Lead(culture)}{count.ToString(CultureInfo.InvariantCulture)}{sure}.";
     }
 
-    /// <summary>The count written under a reading and the line that says it, or null when there is none.</summary>
-    public static (string Line, int Count)? CountIn(string text, string culture)
+    /// <summary>The count written under a reading, how sure the model was, and the line that says it — or null when there is none.</summary>
+    public static (string Line, int Count, double? Confidence)? CountIn(string text, string culture)
     {
         ArgumentNullException.ThrowIfNull(text);
         var lead = Lead(culture);
@@ -46,16 +58,32 @@ public static class PictureAnswers
             return null;
 
         var line = text[(start + 1)..];
-        var number = line[lead.Length..].TrimEnd('.');
-        return line.EndsWith('.') && int.TryParse(number, NumberStyles.None, CultureInfo.InvariantCulture, out var count)
-            ? (line, count)
-            : null;
+        if (!line.EndsWith('.'))
+            return null;
+
+        var answer = line[lead.Length..^1];
+        double? confidence = null;
+        if (answer.IndexOf(Sure(culture), StringComparison.Ordinal) is var at and >= 0)
+        {
+            var percent = answer[(at + Sure(culture).Length)..];
+            if (!percent.EndsWith(Percent, StringComparison.Ordinal)
+                || !int.TryParse(percent[..^Percent.Length], NumberStyles.None, CultureInfo.InvariantCulture, out var hundredths))
+            {
+                return null;
+            }
+
+            confidence = hundredths / 100.0;
+            answer = answer[..at];
+        }
+
+        return int.TryParse(answer, NumberStyles.None, CultureInfo.InvariantCulture, out var count) ? (line, count, confidence) : null;
     }
 }
 
 /// <summary>
 /// Reads the answers written under a picture's reading: no model, and none of
-/// the prose. A count of none is nothing seen, and proposes nothing.
+/// the prose. A count of none is nothing seen, and proposes nothing. The claim
+/// carries how sure the model was of its answer, when the reading says.
 /// </summary>
 public sealed class PictureAnswersExtractor : IClaimExtractor
 {
@@ -73,6 +101,6 @@ public sealed class PictureAnswersExtractor : IClaimExtractor
 
         var english = PictureAnswers.CountIn(text.English, "en")?.Line ?? "";
         return Task.FromResult<IReadOnlyList<ProposedClaim>>(
-            [new ProposedClaim(spanish.Line, english, "", "", PictureAnswers.Pieces, spanish.Count.ToString(CultureInfo.InvariantCulture), null)]);
+            [new ProposedClaim(spanish.Line, english, "", "", PictureAnswers.Pieces, spanish.Count.ToString(CultureInfo.InvariantCulture), spanish.Confidence)]);
     }
 }

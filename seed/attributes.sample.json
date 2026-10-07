@@ -397,6 +397,7 @@
     "label": {
       "es": "piezas",
       "en": "pieces"
-    }
+    },
+    "isShownInPictures": true
   }
 ]

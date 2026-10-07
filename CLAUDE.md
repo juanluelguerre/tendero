@@ -216,6 +216,15 @@ node tools/api-map.mjs --schema CartView
 - A closed set is an enum everywhere it crosses the wire (ADR 0043): in a body
   through `WireJson.Enums()`, in a query string bound as `WireEnum<T>` — by exact
   name in any case, never a number — and the contract tests hold both.
+- **A category declares its products' attributes** (ADR 0056): inherited down
+  the branch, and *offered, never enforced* — it narrows what an extractor is
+  offered and what a picture is asked, and never refuses a product. What a
+  picture can show is the attribute's own flag.
+- **A closed question to a model is plain text, never a schema**
+  (`ClosedQuestion`, `src/AI/Chat`): the options in the question, a short answer
+  read by code, and the answered tokens' probability as its confidence. Measured:
+  the same question under a JSON schema is right 68.0 % of the time against
+  80.5 %. A schema stays for what is composed, not chosen (ADR 0055).
 - **A day is the shop's day** (ADR 0046): times are stored and sent in UTC, and a
   day is counted in `ShopOptions.TimeZone` with NodaTime — never `TimeZoneInfo`,
   which cannot resolve an IANA zone under `InvariantGlobalization`.

@@ -15,9 +15,17 @@ public sealed record CategoryChanged(string Code, DateTimeOffset OccurredAt) : I
 ///
 /// The CODE is still the identity and does not change; what is added is the
 /// translatable name and the place in the tree.
+///
+/// **And the attributes its products have** (ADR 0056): a category declares
+/// which of the catalogue's attributes belong to it, and a category below adds
+/// its own. That is what a product of the category is offered — to the extractor
+/// that reads its description, to the questions its picture is asked — and it
+/// is not a rule: a product may hold an attribute its category never declared.
 /// </summary>
 public sealed class Category : AggregateRoot
 {
+    private readonly List<string> attributes = [];
+
     public string Code { get; private set; } = default!;
     public LocalizedText Name { get; private set; } = default!;
     public string? ParentCode { get; private set; }
@@ -33,10 +41,18 @@ public sealed class Category : AggregateRoot
     public int SortOrder { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    /// <summary>
+    /// The attributes this category declares for itself, by code, in the order
+    /// declared. What its products have is these and its ancestors':
+    /// <see cref="CategoryTree.AttributesOf"/>.
+    /// </summary>
+    public IReadOnlyList<string> Attributes => this.attributes;
+
     private Category() { } // EF Core
 
     public static Category Define(
-        TimeProvider clock, string code, LocalizedText name, Category? parent = null, int sortOrder = 0)
+        TimeProvider clock, string code, LocalizedText name, Category? parent = null, int sortOrder = 0,
+        IEnumerable<string>? attributes = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
 
@@ -52,6 +68,8 @@ public sealed class Category : AggregateRoot
             SortOrder = sortOrder,
             UpdatedAt = now
         };
+
+        category.attributes.AddRange((attributes ?? []).Select(AttributeDefinition.Normalise).Distinct(StringComparer.Ordinal));
 
         category.Raise(new CategoryChanged(normalised, now));
         return category;
@@ -84,6 +102,30 @@ public sealed class CategoryTree(IReadOnlyList<Category> categories)
 
     public Category? ByCode(string? code) =>
         code is null ? null : this.byCode.GetValueOrDefault(AttributeDefinition.Normalise(code));
+
+    /// <summary>
+    /// The attributes a product of this category has: what its whole branch
+    /// declares, root first, each code once (ADR 0056).
+    ///
+    /// **Null when the branch declares nothing** — or there is no such category.
+    /// That is not "no attributes": nobody has said. Whoever asks then offers
+    /// what it offered before there were declarations, so a catalogue that has
+    /// none keeps working, and one that is half declared is not half silent.
+    /// </summary>
+    public IReadOnlyList<string>? AttributesOf(string? code)
+    {
+        if (ByCode(code) is not { } category)
+            return null;
+
+        string[] declared =
+        [
+            .. category.Ancestry
+                .SelectMany(ancestor => ByCode(ancestor)?.Attributes ?? [])
+                .Distinct(StringComparer.Ordinal),
+        ];
+
+        return declared.Length == 0 ? null : declared;
+    }
 
     /// <summary>
     /// A category's searchable text in one culture: the names of its whole
