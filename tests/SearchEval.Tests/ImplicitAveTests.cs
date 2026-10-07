@@ -108,4 +108,73 @@ public sealed class ImplicitAveTests
             score.ByAttribute.Select(part => (part.Name, part.Accuracy)));
         Assert.Equal(3.0, score.LatencyP50Seconds);
     }
+
+    /// <summary>Asked in plain text, the question stops at the question: the options are the closed question's to list.</summary>
+    [Fact]
+    public void The_plain_question_is_the_question_alone_and_the_picture_only_one_carries_no_text_of_the_product()
+    {
+        var example = new ImplicitAveExample("Home", "B01", "B01.jpg", "Candles", "[Title] A lavender candle", "Season", "All Seasons");
+
+        Assert.Equal("Look at this product photograph. What is the Season of the product?", ImplicitAveQuestion.Plain(example, ImplicitAveModality.Image));
+        Assert.Contains("lavender", ImplicitAveQuestion.Plain(example, ImplicitAveModality.Both), StringComparison.Ordinal);
+        Assert.DoesNotContain("photograph", ImplicitAveQuestion.Plain(example, ImplicitAveModality.Text), StringComparison.Ordinal);
+    }
+
+    private static ImplicitAveAnswer Answered(string value, string? said, double? confidence) =>
+        new(new ImplicitAveExample("Home", "id", "id.jpg", "c", "t", "Season", value), said, 1.0, confidence);
+
+    /// <summary>
+    /// What a threshold accepts and how much of it is right. Coverage is of every
+    /// example; an answer that is no option, or that came with no confidence, is
+    /// never accepted, however sure.
+    /// </summary>
+    [Fact]
+    public void A_threshold_accepts_the_answers_at_or_above_it_and_precision_is_of_those()
+    {
+        ImplicitAveAnswer[] answers =
+        [
+            Answered("Winter", "Winter", 0.99),
+            Answered("Winter", "Summer", 0.95),
+            Answered("Winter", "Winter", 0.90),
+            Answered("Winter", "Winter", 0.40),
+            Answered("Winter", null, 0.99),
+            Answered("Winter", "Winter", null),
+        ];
+
+        var at = ImplicitAveAcceptance.At(answers, [0.95, 0.90]);
+
+        Assert.Equal([(0.95, 6, 2, 1), (0.90, 6, 3, 2)], at.Select(one => (one.Threshold, one.Examples, one.Accepted, one.Right)));
+        Assert.Equal((2 / 6.0, 0.5), (at[0].Coverage, at[0].Precision));
+    }
+
+    /// <summary>The lowest confidence that still keeps the target, and none when nothing does.</summary>
+    [Fact]
+    public void The_threshold_for_a_target_is_the_lowest_confidence_that_still_keeps_it()
+    {
+        ImplicitAveAnswer[] answers =
+        [
+            Answered("Winter", "Winter", 0.99),
+            Answered("Winter", "Winter", 0.95),
+            Answered("Winter", "Winter", 0.90),
+            Answered("Winter", "Summer", 0.80),
+            Answered("Winter", "Winter", 0.70),
+            Answered("Winter", "Summer", 0.60),
+        ];
+
+        Assert.Equal(0.70, ImplicitAveAcceptance.ThresholdFor(answers, 0.80, atLeast: 2));
+        Assert.Equal(0.90, ImplicitAveAcceptance.ThresholdFor(answers, 0.95, atLeast: 2));
+        // Too few answers above it to trust the share.
+        Assert.Null(ImplicitAveAcceptance.ThresholdFor(answers, 0.95, atLeast: 4));
+    }
+
+    [Fact]
+    public void A_threshold_is_chosen_on_every_other_answer_and_measured_on_the_rest()
+    {
+        ImplicitAveAnswer[] answers = [.. Enumerable.Range(0, 5).Select(index => Answered("Winter", "Winter", index / 10.0))];
+
+        var (tune, held) = ImplicitAveAcceptance.Halves(answers);
+
+        Assert.Equal([0.0, 0.2, 0.4], tune.Select(answer => answer.Confidence!.Value));
+        Assert.Equal([0.1, 0.3], held.Select(answer => answer.Confidence!.Value));
+    }
 }

@@ -138,8 +138,14 @@ atributo, comparación exacta.
 dotnet run --project tools/SearchEval -- --suite implicit-ave \
   --dataset <carpeta data/evaluation_data de ImplicitAVE> \
   --chat http://localhost:38085 --model qwen3.5-4b-q8_0 \
-  [--modality both|image|text] [--take 80] [--report informe.json]
+  [--modality both|image|text] [--format plain|json] [--take 80] [--report informe.json]
 ```
+
+`--format plain` (por defecto) pregunta con `ClosedQuestion`: el modelo escribe
+una de las opciones como texto y la respuesta trae la probabilidad que le dio,
+así que el informe incluye qué se aceptaría a cada umbral de confianza y cuánto
+de eso acierta. `--format json` sujeta la respuesta con un esquema, como se midió
+la primera vez: 68,0 % frente a 80,5 % con solo la imagen.
 
 **Los datos no están en el repositorio ni deben estarlo**: su repositorio no
 declara licencia y derivan de MAVE y de datos de producto de Amazon. Se

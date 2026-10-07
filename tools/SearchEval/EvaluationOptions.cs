@@ -42,7 +42,8 @@ public sealed record EvaluationOptions(
     string? Only = null,
     string? Dataset = null,
     string? Modality = null,
-    int? Take = null)
+    int? Take = null,
+    string? Format = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -93,6 +94,7 @@ public sealed record EvaluationOptions(
           --dataset <dir>         ImplicitAVE's data/evaluation_data folder, downloaded outside this repository
           --chat <url> --model <id>  The OpenAI-compatible endpoint, and what it serves
           --modality <name>       both (default: picture and title), image, or text
+          --format <name>         plain (default: the option as text, with its probability) or json (held by a schema)
           --take <n>              Only n examples, spread over the whole set
           --report <file>         Every answer beside its annotation, as JSON
 
@@ -188,6 +190,7 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("only"),
             values.GetValueOrDefault("dataset"),
             values.GetValueOrDefault("modality"),
-            int.TryParse(values.GetValueOrDefault("take"), out var take) ? take : null);
+            int.TryParse(values.GetValueOrDefault("take"), out var take) ? take : null,
+            values.GetValueOrDefault("format"));
     }
 }

@@ -14,10 +14,17 @@ namespace ElGuerre.Tendero.SearchEval.Suites;
 /// attribute off a real product photograph, in five domains, and whether a
 /// tuned model would have anything to add.
 ///
-/// **Asked as the shop asks** (invariant 12): a closed question, the answer held
-/// by a schema to the attribute's own options, compared by code. No sentence to
-/// search for the value in — the benchmark's own scoring looks for the label
-/// inside whatever the model wrote.
+/// **Asked as the shop asks** (invariant 12): a closed question whose answer is
+/// one of the attribute's own options, compared by code. No sentence to search
+/// for the value in — the benchmark's own scoring looks for the label inside
+/// whatever the model wrote.
+///
+/// **Two ways of asking, and they are twelve points apart.** `plain`, the
+/// default: <see cref="ClosedQuestion"/>, the option written as text, which
+/// comes with the probability the model gave it — so the report says what a
+/// confidence threshold would accept, and how much of that is right. `json`:
+/// the answer held to the options by a schema, as this suite first asked, kept
+/// to reproduce that number (68.0 % against 80.5 %, picture alone).
 ///
 /// **The data is not in this repository and must not be.** Its repository
 /// declares no licence, and it derives from MAVE and Amazon's product data: it
@@ -58,6 +65,13 @@ internal sealed class ImplicitAveSuite : IEvaluationSuite
             var other => throw new ArgumentException($"Unknown modality '{other}'. Available: both, image, text."),
         };
 
+        var plain = options.Format?.ToLowerInvariant() switch
+        {
+            null or "plain" => true,
+            "json" => false,
+            var other => throw new ArgumentException($"Unknown format '{other}'. Available: plain, json."),
+        };
+
         var (examples, options_) = await ImplicitAveSet.ReadAsync(dataset, cancellationToken);
         if (options.Take is { } take)
             examples = ImplicitAveSet.Spread(examples, take);
@@ -68,28 +82,56 @@ internal sealed class ImplicitAveSuite : IEvaluationSuite
         foreach (var example in examples)
         {
             var clock = Stopwatch.StartNew();
-            var said = await AskAsync(model, dataset, example, options_[(example.Domain, example.Attribute)], modality, cancellationToken);
-            answers.Add(new ImplicitAveAnswer(example, said, clock.Elapsed.TotalSeconds));
+            var choices = options_[(example.Domain, example.Attribute)];
+            var (said, confidence) = plain
+                ? await AskPlainAsync(model, dataset, example, choices, modality, cancellationToken)
+                : (await AskAsync(model, dataset, example, choices, modality, cancellationToken), null);
+            answers.Add(new ImplicitAveAnswer(example, said, clock.Elapsed.TotalSeconds, confidence));
 
             if (answers.Count % 100 == 0)
                 Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"  {answers.Count}/{examples.Count} · {ImplicitAveScore.Of(answers).Accuracy:P1} so far"));
         }
 
         var score = ImplicitAveScore.Of(answers);
-        Console.WriteLine(ImplicitAveScore.Report(modelName, modality, score));
+        Console.WriteLine(ImplicitAveScore.Report($"{modelName} · {(plain ? "plain" : "json")}", modality, score));
+        if (plain)
+            Console.WriteLine(ImplicitAveAcceptance.Report(answers));
 
         if (options.ReportPath is { Length: > 0 } report)
         {
             await File.WriteAllTextAsync(
                 report,
-                JsonSerializer.Serialize(new { model = modelName, modality = modality.ToString(), score, answers }, Indented),
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        model = modelName,
+                        modality = modality.ToString(),
+                        format = plain ? "plain" : "json",
+                        score,
+                        acceptance = ImplicitAveAcceptance.At(answers, ImplicitAveAcceptance.Thresholds),
+                        answers,
+                    },
+                    Indented),
                 cancellationToken);
         }
 
         return 0;
     }
 
-    /// <summary>The option the model chose, or null when what it wrote is not one answer of the shape asked for.</summary>
+    /// <summary>The option the model wrote as plain text and the probability it gave it; no option when it wrote none of them.</summary>
+    private static async Task<(string? Said, double? Confidence)> AskPlainAsync(
+        IChatClient model, string dataset, ImplicitAveExample example, IReadOnlyList<string> choices, ImplicitAveModality modality,
+        CancellationToken cancellationToken)
+    {
+        List<AIContent> shown = [];
+        if (modality != ImplicitAveModality.Text)
+            shown.Add(Pictures.ForModel(await File.ReadAllBytesAsync(Path.Combine(dataset, "images", example.Image), cancellationToken)));
+
+        var choice = await ClosedQuestion.AskAsync(model, shown, ImplicitAveQuestion.Plain(example, modality), choices, cancellationToken: cancellationToken);
+        return (choice.Option, choice.Confidence);
+    }
+
+    /// <summary>The option the model chose under a schema, or null when what it wrote is not one answer of the shape asked for.</summary>
     private static async Task<string?> AskAsync(
         IChatClient model, string dataset, ImplicitAveExample example, IReadOnlyList<string> choices, ImplicitAveModality modality,
         CancellationToken cancellationToken)
@@ -140,7 +182,8 @@ internal enum ImplicitAveModality
 internal sealed record ImplicitAveExample(string Domain, string Id, string Image, string Category, string Text, string Attribute, string Value);
 
 /// <param name="Said">The option the model chose, or null when it gave no answer that could be read.</param>
-internal sealed record ImplicitAveAnswer(ImplicitAveExample Example, string? Said, double Seconds)
+/// <param name="Confidence">The probability the model gave the answer it wrote, when it was asked in plain text.</param>
+internal sealed record ImplicitAveAnswer(ImplicitAveExample Example, string? Said, double Seconds, double? Confidence = null)
 {
     public bool Right => string.Equals(Said?.Trim(), Example.Value.Trim(), StringComparison.OrdinalIgnoreCase);
 }
@@ -229,6 +272,15 @@ internal static class ImplicitAveQuestion
             + $"value: what is the {example.Attribute} of the product? Choose the one option that fits best.",
     };
 
+    /// <summary>The question for <see cref="ClosedQuestion"/>, which lists the options after it.</summary>
+    public static string Plain(ImplicitAveExample example, ImplicitAveModality modality) => modality switch
+    {
+        ImplicitAveModality.Image => $"Look at this product photograph. What is the {example.Attribute} of the product?",
+        ImplicitAveModality.Text => $"A product in the category \"{example.Category}\": {example.Text} What is the {example.Attribute} of the product?",
+        _ => $"Look at this product photograph. It is sold in the category \"{example.Category}\" as: {example.Text} "
+            + $"What is the {example.Attribute} of the product?",
+    };
+
     public static JsonElement Schema(IReadOnlyList<string> choices) =>
         JsonSerializer.SerializeToElement(new
         {
@@ -279,6 +331,82 @@ internal sealed record ImplicitAveScore(
         lines.AddRange(score.ByDomain.Select(part => string.Create(CultureInfo.InvariantCulture, $"  {part.Name,-32} {part.Right,4}/{part.Examples,-4} {part.Accuracy:P1}")));
         lines.Add("  by attribute:");
         lines.AddRange(score.ByAttribute.Select(part => string.Create(CultureInfo.InvariantCulture, $"    {part.Name,-52} {part.Right,4}/{part.Examples,-4} {part.Accuracy:P1}")));
+        return string.Join(Environment.NewLine, lines);
+    }
+}
+
+/// <summary>What accepting only the answers at or above a confidence would let through.</summary>
+/// <param name="Accepted">Answers that are one of the options, at or above the threshold.</param>
+/// <param name="Right">Of those, the ones answered as annotated.</param>
+internal sealed record ImplicitAveAccepted(double Threshold, int Examples, int Accepted, int Right)
+{
+    /// <summary>The share of all the examples that would be accepted.</summary>
+    public double Coverage => Examples == 0 ? 0 : Accepted / (double)Examples;
+
+    /// <summary>The share of the accepted that is right: what a bulk approval would be trusting.</summary>
+    public double Precision => Accepted == 0 ? 0 : Right / (double)Accepted;
+}
+
+/// <summary>
+/// Precision against coverage: the number the shop's target is set in (at least
+/// 90 % right among what is offered for bulk approval), where accuracy over
+/// everything is not. An answer with no confidence, or that is no option, is
+/// never accepted.
+/// </summary>
+internal static class ImplicitAveAcceptance
+{
+    public static readonly double[] Thresholds = [0.99, 0.97, 0.95, 0.90, 0.80, 0.70, 0.50];
+
+    public static IReadOnlyList<ImplicitAveAccepted> At(IReadOnlyList<ImplicitAveAnswer> answers, IReadOnlyList<double> thresholds) =>
+    [
+        .. thresholds.Select(threshold =>
+        {
+            var accepted = answers.Where(answer => answer.Said is not null && answer.Confidence >= threshold).ToArray();
+            return new ImplicitAveAccepted(threshold, answers.Count, accepted.Length, accepted.Count(answer => answer.Right));
+        }),
+    ];
+
+    /// <summary>
+    /// The lowest confidence at which everything at or above it is right at least
+    /// <paramref name="target"/> of the time, over at least <paramref name="atLeast"/>
+    /// answers — or null when no threshold reaches it. Chosen on one set of
+    /// answers, it is to be measured on another: on the answers it was chosen
+    /// from it reaches the target by construction.
+    /// </summary>
+    public static double? ThresholdFor(IReadOnlyList<ImplicitAveAnswer> answers, double target, int atLeast = 30)
+    {
+        double? threshold = null;
+        var (seen, right) = (0, 0);
+        foreach (var answer in answers.Where(answer => answer is { Said: not null, Confidence: not null }).OrderByDescending(answer => answer.Confidence))
+        {
+            seen++;
+            right += answer.Right ? 1 : 0;
+            if (seen >= atLeast && right / (double)seen >= target)
+                threshold = answer.Confidence;
+        }
+
+        return threshold;
+    }
+
+    /// <summary>Every other answer: the half a threshold is chosen on (even places) and the half it is measured on (odd).</summary>
+    public static (IReadOnlyList<ImplicitAveAnswer> Tune, IReadOnlyList<ImplicitAveAnswer> Held) Halves(IReadOnlyList<ImplicitAveAnswer> answers) =>
+        ([.. answers.Where((_, index) => index % 2 == 0)], [.. answers.Where((_, index) => index % 2 == 1)]);
+
+    public static string Report(IReadOnlyList<ImplicitAveAnswer> answers)
+    {
+        var lines = new List<string> { "  accepted at a confidence, of all the examples:" };
+        lines.AddRange(At(answers, Thresholds).Select(at => string.Create(CultureInfo.InvariantCulture,
+            $"    >= {at.Threshold:F2}   covers {at.Coverage,6:P1} ({at.Accepted,4})   right {at.Precision:P1}")));
+
+        var (tune, held) = Halves(answers);
+        lines.Add("  a threshold chosen on half the examples for a target, measured on the other half:");
+        foreach (var target in (double[])[0.90, 0.95])
+        {
+            lines.Add(ThresholdFor(tune, target) is { } threshold && At(held, [threshold]) is [var at]
+                ? string.Create(CultureInfo.InvariantCulture, $"    target {target:P0}   threshold {threshold:F3}   covers {at.Coverage:P1}   right {at.Precision:P1}")
+                : string.Create(CultureInfo.InvariantCulture, $"    target {target:P0}   no threshold reaches it"));
+        }
+
         return string.Join(Environment.NewLine, lines);
     }
 }
