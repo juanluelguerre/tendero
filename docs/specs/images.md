@@ -23,7 +23,7 @@ all of this is feasible on the stack already running is a spike
 | What a claim read from a picture rests on | **Option A**: the document is the model's description of the picture, the quote is taken from it, and the claim is marked as read from a picture |
 | A picture a shopper uploads | Not kept, metadata stripped, written in `docs/privacy.md` |
 | Voice | Not here: postponed to a phase of its own (14) |
-| What the pictures may cost | **2 € in all**, and drawn **five at a time**, not the 82 at once |
+| What the pictures may cost | **3 € in all** (2 € until 2026-10-07, raised by the author when $1.29 was spent with 47 pictures to go), and drawn **five at a time**, or ten at his word, not the 82 at once |
 | What a batch is | The five drawn together: the author looks at their contact sheet and accepts or sends back, batch by batch |
 | Alt text | In the same batches of five, so a mistake costs five and not a hundred |
 | New packages in `src/` | Yes to `Microsoft.ML.OnnxRuntime`, `Microsoft.ML.Tokenizers` and SkiaSharp, each checked at its exact version when added |
@@ -39,8 +39,8 @@ check the generated ones need.
 
 `tools/SeedImages generate --take 5` with the `gemini` provider draws what
 `seed/images/` lacks, **five at a time**. It is a paid call (about $0.03 a
-picture) on the author's renewed key, **under a ceiling of 2 € for all of it**:
-at that price the ceiling does not reach 82 pictures and their redraws, so the
+picture) on the author's renewed key, **under a ceiling of 3 € for all of it**
+(2 € at first): the first ceiling did not reach 82 pictures and their redraws, so the
 spend is counted batch by batch in the table below and the run stops and asks
 before the batch that would cross it.
 
@@ -49,6 +49,12 @@ before the batch that would cross it.
 | 1 | 2026-10-06 | `B10SHO0102` to `B10SHO0106` | 5 | $0.15 | $0.15 | **accepted by the author**, with `B10SHO0106` to be redrawn: an emblem on its side |
 | 2 | 2026-10-06 | `B10SHO0107`, `B10SHO0108`, `B10SHI0201` to `B10SHI0203` | 5 or 6 (one picture took the time of two) | $0.15–0.18 | $0.39 at most | **the first batch through the shop model's five checks: 5 of 5 pass**; accepted by the author |
 | 1, redraws | 2026-10-06 | `B10SHO0106`, twice | 2 | $0.06 | $0.21 | the first redraw carried the emblem again — the hand-wash symbol, drawn from *"Hand washable."* in the description; with that sentence kept out of the prompt (`WithoutCareInstructions`), the second is clean |
+| 3 | 2026-10-07 | `B10SHI0204` to `B10SHI0208` | 5 | $0.15 | $0.54 at most | **the first batch through the seven questions of I-2b: 5 of 5 pass**, and nothing seen on the contact sheet; the cycling jersey is drawn from the back, where its three pockets are. **Accepted by the author** (2026-10-07) |
+| 4 | 2026-10-07 | ten, none of them clothing, at the author's word — a batch is five: `B11COO0303`, `B11COO0310`, `B11COF0401`, `B11COF0407`, `B11TAB0501`, `B11TAB0504`, `B12LAM0603`, `B13BAG0702`, `B14ORG0901`, `B15SHO1101` | 10 | $0.30 | $0.84 at most | **5 of 10 pass, 5 to look at**, and by eye: **two are wrong** — the set of 3 knives has four, the set of 6 tumblers has seven — both doubted by the count; **two are false alarms** — the four plates counted as five, and the moka pot's safety valve, which its description names, read as a mark; **one is the catalogue's** — the toaster declares `piezas: 2` for its two slots. The count doubted every picture whose number was wrong, with the right number once (four knives) and a wrong one twice (eight for seven tumblers, five for four plates). The author's rulings: the knives and the tumblers rejected, the toaster's `piezas` removed from the seed, the boots wanted as a pair |
+| 4, redraws | 2026-10-07 | `B11COO0310`, `B11TAB0504` | 2 | $0.06 | $0.90 at most | the two rejected pictures **kept first** (`reject`, the first two of `known-bad/`), and the cause repaired before the redraw: the prompt named the number and then said *One single object*. A product that declares more than one piece is now asked for *Exactly three of them, each one whole and none hidden behind another* (`PromptTemplate.SetOf`). Both came back with the right number, by eye — **the shop's model has not been asked**: the author's load tests were running. On the knives two of the three stand blade up in the block. The author: the six tumblers are right; **the knives are wrong both times**, blades up; the boots stay one |
+| 4, the knives again | 2026-10-07 | `B11COO0310` | 1 | $0.03 | $0.93 at most | the second wrong picture kept too, under a kind of defect added for it — `Form`, the product itself drawn wrong, which no code can draw into a right picture. A redraw can now be told what the last one got wrong (`generate --only <id> --hint "…"`, said as what the object is and placed after the description): *its blade is inside the block and only its handle shows above it*. Three knives, three handles up. **Accepted by the author, with the rest of batch 4** (2026-10-07) |
+| 5 | 2026-10-07 | ten more of mixed kinds: `B11TAB0502`, `B11TAB0503`, `B11COO0304`, `B11COO0308`, `B11COF0406`, `B12LAM0601`, `B14HOM0805`, `B14HOM0806`, `B15SHO1102`, `B13BAG0704` | 10 | $0.30 | $1.23 at most | **the three sets came back with their number** — four bowls, five utensils, two cushion covers — under the new set line, and the count agreed each time. **One real defect, caught by the mark question**: the desk lamp's *three temperatures* drawn as three icons on its shade. **Two false alarms, both the scene list naming the product's own parts or a set's own members** (the kettle's spout and handle; the five utensils), and the same on the redrawn knives. **Accepted by the author** (2026-10-07), the lamp's last redraw with it |
+| 5, the lamp | 2026-10-07 | `B12LAM0601`, twice | 2 | $0.06 | $1.29 at most | rejected by the author and kept. **The first redraw was worse**: `350°` lettered beside the lamp and a dial drawn for it — *350 degrees of rotation* had reached the prompt, because an angle was not among the measurements code takes out. It is now (`WithoutMeasurements`, with what it measures), that picture is kept too, and the second redraw has nothing printed and nothing beside it. **It stands on a round base, and the description says a desk clamp**: said to the author, who accepted the batch |
 
 A picture is accepted only when it is **right for its product's description** and
 **in the register of the first eight**. `verify` today checks text, colour, scene
@@ -126,6 +132,96 @@ fit). What changes in code:
 **Degraded path**: with no vision-capable profile, everything in I-3 and I-4
 says so and proposes nothing; the catalogue and the shop are unchanged.
 
+### I-2b · The checks, held to what goes wrong (added and built 2026-10-07)
+
+The measurement above asks one thing: a picture shown with another product's
+data. That is *a wrong thing*, and the model sees it. What a generator gets wrong
+is *the right thing drawn wrong* — and the one defect of batch 1, the hand-wash
+symbol, was seen by a person: no question was asked of it, because the model had
+no eyes yet, and the picture was drawn over before it had. Whether any question
+would have caught it is not known. Three changes, before the pictures still to
+draw are judged by these checks:
+
+1. **A set of known-bad pictures, by kind of defect.** The pictures a batch
+   rejects are kept from now on instead of deleted — the kinds already seen are an
+   emblem on a slipper, `4 mm` on a midsole, `24h` on a display, and where the
+   rejected file is gone the defect is drawn again on purpose — each labelled with
+   what is wrong: a count, a
+   symbol or lettering, a colour, a scene, the register. They live with the tool,
+   outside `seed/images/`, and never reach the catalogue. Every one of the five
+   questions is measured against the set, so there is a table of what each one
+   catches and of what none does.
+2. **The model reads, code compares** (invariant 12). *Does it match the
+   description?* leaves the verdict to the model, and that is the question that
+   passed one pan as a set of three. A question is asked for each structured
+   attribute the product has, closed, and answered with a value: *how many do you
+   see?* against the attribute's count, the colour against the catalogue's nine,
+   the material against its options. Code compares the answer with the attribute.
+   And a question of its own for what is not text: *is there a symbol, an icon or
+   a label on the product?* The open question stays, as one more voice.
+3. **A miss rate that may not rise.** The set's result is recorded per question,
+   as the search gate's NDCG and Stryker's `of covered` are. Changing the model,
+   the projector, a question or its wording means running the set again, and a
+   question that catches less than its recorded number is a regression to explain.
+
+What stays as it is: **a check proposes and a person accepts the batch**, because
+the next defect is one nobody has labelled yet; and **what cannot be drawn is kept
+out of the prompt by code**, which repaired the emblem when no check had seen it.
+
+Not known until the set says it: whether a 4B model counts small or overlapping
+objects. If the count question misses too, its number says so and the person's
+look carries that kind of defect.
+
+*As built (2026-10-07)* — `tools/SeedImages`: `defects`, `reject`, and `verify`
+asking through one `PictureExaminer`.
+
+- **The set is drawn by code, not by the generator.** The rejected pictures were
+  gone and each redraw is a paid call, so `DefectForge` puts one defect of each
+  kind into every picture there is: lettering (`4 mm`, in strokes), an emblem, a
+  surface with a second object, the hue turned, the product twice, a graded
+  background. Free, the same on every run, and **the easy case**: a stamped
+  emblem is cleaner than a drawn one. `reject` keeps a picture a person rejects,
+  with its defect, in `tools/SeedImages/known-bad/` — the hard half, empty today.
+- **A defect counts as caught by a question only when that question did not
+  already doubt the picture before the defect went in.**
+- **Measured, the shop's model, 28 pictures and 126 with a defect drawn in:**
+
+  | Defect drawn in | Pictures | Caught by | By no question |
+  |---|---|---|---|
+  | Lettering | 28 | Text **28** · Scene 22 · Mark 4 | 0 |
+  | Emblem | 28 | Mark **27** · Text 11 · Scene 8 | 0 |
+  | Scene | 28 | Register 25 · Scene **23** (and the other 5 it doubted before) | 0 |
+  | Colour | 11 | Colour **9** | 2 |
+  | Count | 3 | Count **3** | 0 |
+  | Background | 28 | Register **27** | 1 |
+
+  Right pictures doubted: Scene 5 of 28, Colour 4 of 28, every other question 0.
+  The board is `known-bad/baseline.json`; `defects --ci` fails below it.
+- **What the numbers changed:**
+  - *A symbol does need its own question.* The question about text names symbols
+    too and caught 11 emblems of 28; the one that asks only that caught 27.
+  - *"Does it match the description?" caught none of the 126.* It tells one
+    product from another (`pairs`) and nothing drawn wrong.
+  - *The scene question was blind.* Asked yes or no, the model said no to 28 of
+    28 — and, asked what it saw, named the surface and the ball in every one. It
+    now **lists** what is drawn besides the product and code says whether the
+    list is a scene, leaving out the shadow and the background. 0 caught became
+    all 28 doubted, at the price of 5 right pictures doubted, all bags: three
+    are drawn with things that are not the product (a toothbrush and a tube in
+    the wash bag, a card and a charger by the laptop sleeve, a bottle in the
+    backpack) and two list the bag's own handles and zips. **Whether the first
+    three are scenes is the author's to say.**
+- **Not built, and why:** the material question. A flat illustration does not
+  tell steel from aluminium; it would be asked and answered at random.
+- **Small numbers:** three pictured products declare `piezas`, so the count is
+  measured on three; eleven have a hue to turn.
+- **Seen in the server's log, tried, and it changes nothing here:** llama.cpp
+  warns that Qwen-VL wants at least 1,024 image tokens (`--image-min-tokens
+  1024`). The whole board measured again with it came out the same, cell for
+  cell: a 1,024 px picture already takes that many. It is a floor for a small
+  picture, so it matters where one can arrive — a shopper's upload (I-6) — and
+  is decided there, not here. The server and the stack run without it.
+
 ### I-3 · Alt text, proposed and approved
 
 An image has no alt text in either language. A job reads each picture that lacks
@@ -176,6 +272,137 @@ review names the proposer (`docs/plans/2026-10-06-images-i3-alt-text.md`).
   (the picture is black, the colour says navy), the review queue gets a flag that
   names both. It never corrects either: which one is wrong is a person's call,
   as it was for `B13BAG0710`.
+- **What is printed on the product** (added 2026-10-07, with the author; not
+  built). *Nothing printed* is the seed's rule and not the shop's: its brands are
+  invented and its pictures generated, so any lettering there was made up by the
+  generator (I-2b's `Text` and `Mark` questions). A real product carries print
+  that belongs to it, and a picture without it would be the wrong one:
+  - **identity** — the maker's brand, the model's name: trainers with their logo,
+    a pan with its stamp on the handle, an appliance with its badge;
+  - **function** — what a button says, a dial's numbers, a jug's scale, a display;
+  - **regulation** — a CE mark, a care label, *induction* on a pan's base;
+  - **decoration** — a T-shirt's print, which is the thing sold.
+
+  So, for a picture a person uploads or a supplier sends, the question is never
+  *is something printed?* It is **what does it say**, and the rule is that what is
+  printed is accounted for by the product's data. As everywhere in I-2b, the
+  model reads and code compares:
+  - **Identity is compared by code**: the brand and model the picture is read to
+    carry, against the product's own. Another maker's name is a flag that names
+    both; none where the data has one is a flag too.
+  - **Function, regulation and decoration are listed, not judged**: the data does
+    not say what a button reads or what a print looks like. What the model read
+    is shown beside the picture, and a person decides.
+
+  **Before any of it is trusted, it is measured** as `defects` measures: the
+  shop's 4B read `4 mm` in large strokes 28 times of 28, and nothing says it
+  reads a maker's stamp a few millimetres high. The seed has no real brand to
+  measure with — that needs pictures of real products, which is its own
+  question of rights and is the author's to open.
+
+*As built (2026-10-07), the first four steps of five* — a picture is read, claims
+are proposed from its reading, and the review queue shows them as read from a
+picture, with the picture; nothing is held against the catalogue's data yet.
+
+- **A reading is a `SourceDocument` of kind `ProductImage`**, made by
+  `SourceDocument.Depict`: the text is the model's description, and it says which
+  picture, which model and which prompt version (`PictureReading`). Its identity
+  has the picture in it, so the same sentence from two pictures, or from a picture
+  and the description, is three documents. A description's identity did not move —
+  a test pins the hash — because stored claims point at it.
+- **A reading is never the description.** "The newest document of this product"
+  had no kind in it: a reading recorded after the description would have passed
+  for it, been stored again as one and taken the description's claims down.
+  `CurrentDocumentsAsync` and the queue are descriptions only, a picture has
+  `CurrentReadingsAsync`, and both rules are held in SQL by an integration test
+  with two mutations seen red.
+- **The job** (`Knowledge/Features/ReadPictures`): `POST /api/knowledge/pictures/read`
+  `{ "count": 5 }`, a shopkeeper's, in batches of five at most. It takes the next
+  pictures with no reading in both languages by this model under this prompt
+  version (`picture-reading-2026-10-07`), asks the profile `PictureReading:Model`
+  (`local`) for a description in es and en held to a schema, checks by code that
+  each is in its language, and records it (`RecordPictureReadingCommand`: the fast
+  half, which supersedes the claims resting on the words it replaces). A picture
+  read under older instructions is read again. It proposes nothing.
+- **Degraded** (invariant 8, tested): no profile that reads pictures → `NoModel`,
+  nothing opened, nothing stored, and claims go on from descriptions alone. A
+  picture the store lacks is skipped; prose, a missing language or English filed
+  as Spanish is a failed picture and never a document.
+- **Every picture comes from Catalog as values**: `IProductPictures` in the
+  kernel, as `IUndescribedPictures` is. The image store and that reader are now
+  registered with Catalog's readers, which both hosts call: the worker registers
+  Knowledge's handlers whole, and its container did not build with one it could
+  not construct — found by `WorkerContainerTests`, not by a reader.
+- **Its evidence of use**: `tendero.picture_reading.pictures` by outcome, in the
+  tracking plan with its question. Whether claims read from pictures are worth
+  reviewing is measured where they are decided, in the steps to come.
+- **Claims from a reading** (step 3): the queue and `ProposeClaims` read **a
+  source at a time** — the description, then each picture's reading — and never
+  two as one text, so a claim rests on the documents it was taken from: a
+  reading's claim on the reading, in both languages, scored against the reading's
+  Spanish. The same extractor, vetting and scorer as a description's; with no
+  model the rules read a reading too (*Tres sartenes apiladas* → `PIECES` 3).
+  Each source is saved when it is done: one that brings the extractor down
+  leaves the ones before it proposed and is the only one retried, up to the
+  limit, with its reason on the document. A product is in the queue once however
+  many of its sources wait; a reading replaced by a newer one of the same picture
+  is history, and another picture's reading never makes it so — in SQL, with two
+  mutations seen red.
+- **In front of the reviewer** (step 4): `ClaimForReview` carries the picture a
+  claim was read from and who read it (`PictureForReview`), and why a claim is
+  decided on its own (`DecidedAlone`: weak support, or read from a picture) — the
+  server's rule, sent, so no screen keeps a copy. The pane shows the picture
+  above the quotes and says whose words they are; the list marks the row and
+  **does not approve it from the row**; the bulk review leaves it unticked with
+  its own words. **And the server refuses it in bulk whatever a screen sent**
+  (`ReviewOutcome.ReadFromAPicture`, a denial in the audit): its support is a
+  model's sentence held to a model's description, so the person who approves it
+  has it open. Rejecting needs no look and goes with the others. Captures:
+  `docs/blog/reports/2026-10-06-phase-13a-images/screens/09` to `11`.
+- **Run on the real stack** (2026-10-07, vision, the extractor and the scorer):
+  eight pictures read, none failed; two skipped — the store had no such bytes.
+  - **With the rules alone a reading gives nothing.** The first five readings
+    were proposed from and left no claim: the rules read patterns a description
+    has, not a model's prose. Claims from pictures need the extractor.
+  - **With the extractor, the first product read gave six claims, and five are
+    typed wrong.** A hip pack: *the strap is gray* as `COLOUR_TEMPERATURE = gray`,
+    and *green* and *orange* the same way — a lamp's attribute; *two visible
+    zippers* as `PIECES = 2`; *a beige plastic buckle* as `MATERIAL =
+    SYNTHETIC_MESH`. Each quote is in the reading and each scored 0.97: the
+    scorer holds the sentence to the words, not the value to the attribute. **The
+    extractor fits what it reads into the vocabulary it is given**, and a picture
+    has far more in it that the vocabulary has no place for than a description
+    does. Not repaired here; it is the reason the person looks, and the first
+    thing to measure before these are proposed in number.
+  - **The claims are in the development database**, proposed by the pipeline and
+    decided by nobody.
+- **Not measured**: how often a picture proposes what the description already
+  did (*three pans*, twice). Nothing merges the two; the reviewer would see both.
+- **Known and not solved**: a picture the model fails on stays at the head of the
+  next batch, as in the alt-text job. Five such pictures would hold the queue.
+- **Run against the shop's model on five seed pictures** (2026-10-07,
+  `ReadPicturesOnTheLocalModelTests`, 12 s): five of five read, in both languages.
+  What it wrote is mostly what is drawn — *three stacked frying pans, teal with
+  black interiors*; *a black desk lamp with a round base*, which is the picture
+  and not the description's desk clamp. **And twice it wrote the product's name
+  instead of the picture**: one slipper read as *a pair of grey indoor slippers*,
+  and the moka pot as *a six-cup stovetop coffee maker* — a capacity no picture
+  shows. Both words were in the name the job hands the model. A claim taken from
+  that sentence would be the shop's own data returning as evidence from a
+  picture. The Spanish is rougher than the English (*un cafetera*, *copas* for
+  tumblers).
+- **So the model is told nothing of the product** (the author's ruling, the same
+  day; prompt `picture-reading-2026-10-07b`, and `ProductPicture` no longer
+  carries a name). Run again on the same five: the slipper is *a grey indoor
+  shoe*, one; no capacity anywhere; the pans, the tumblers and the lamp as before.
+  **The price, as said beforehand and larger**: the moka pot is now *a metallic
+  object in silver colour … with multiple facets* — it is no longer called a
+  coffee maker at all. A reading that names less and invents nothing is the one
+  a claim may rest on; what the object is, the catalogue already says. A test
+  holds it: the script answers a product's code with prose, so a job that sends
+  it fails.
+- **Decided with the author for the steps to come**: a reading is kept in both
+  languages; the contradiction flag is for any claim, not only a picture's.
 
 ### I-5 · Image embeddings, behind a gate
 
@@ -227,6 +454,8 @@ book's map.
 
 - **The two new checks** on known-wrong pairs: misses and false alarms, before any
   generated picture is judged by them.
+- **Each question on the known-bad set** (I-2b): caught and missed per kind of
+  defect, recorded, and not allowed to fall when the model or a question changes.
 - **Alt text**: every approved, edited and rejected proposal is the measure —
   the share approved unedited, per language.
 - **Visual search**: an `images` suite in `tools/SearchEval`. Queries are pictures
@@ -259,9 +488,10 @@ book's map.
 ## Open questions
 
 1. **Where the picture control sits** in the search box — a mock-up settles it.
-2. **The ceiling against the count.** 2 € is about 65 pictures at $0.03 with no
-   redraw, and there are 82 to draw. The author's to say when the total nears it:
-   raise it, or leave some products without a picture.
+2. **The ceiling against the count.** *Settled 2026-10-07*: raised from 2 € to
+   3 €. The 47 pictures left are about $1.41 with no redraw, and $1.29 is spent.
+   The twenty products the catalogue is to gain have their own count when they
+   have their own spec.
 3. **`verify` has no model to ask on this machine.** It wants Ollama with
    `qwen3.5:9b`, and the only model installed there is a 27B that does not fit the
    card. Until I-2 gives the shop's own model eyes, a batch is checked by `probe`

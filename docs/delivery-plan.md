@@ -913,6 +913,24 @@ what a microphone changes about the questions people ask. `#AIEngineering #RAG #
   kinds of image work; weights converted by us, never a third party's copy
   (ADR 0031); a picture's claim rests on the model's description of it and is
   marked as such; a shopper's uploaded picture is not kept and loses its metadata.
+  Added and built 2026-10-07: **I-2b**, the picture checks held to what goes
+  wrong — a set of known-bad pictures by kind of defect (drawn by code, and the
+  ones a person rejects from now on), questions whose answers code compares with
+  the product's attributes, and a recorded board per question that may not fall
+  (`defects --ci`). It found the scene question blind, 0 of 28, and repaired it.
+- **Proposed by the author on 2026-10-07, not scheduled: the catalogue grows,
+  it does not change.** Looking at the pictures, the shop reads as bags and
+  shoes; he asked for chairs, tables, beds, wardrobes, plants. Replacing
+  products would move the golden set's judgments and every number an article
+  quotes, so the ruling is to **add about twenty products in families the shop
+  does not have** — seating and tables, the bedroom and large storage, plants and
+  the garden, decoration, and the bathroom, which he added — with their
+  categories in es and en,
+  prices, stock and pictures, and the golden set extended rather than rejudged.
+  It needs a spec of its own, and it changes `CLAUDE.md`'s *The catalogue is 100
+  products*. Worth having for the picture checks too: a bed or a plant is hard
+  to draw without a scene. **When: after I-4 and the 47 pictures still to draw**,
+  as a phase of its own (the author, the same day).
 - **13c · The kit solver** — `P13-5` to `P13-8`, after 13a. It needs nothing of
   the image work.
 
