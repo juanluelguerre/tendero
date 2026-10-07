@@ -396,6 +396,15 @@
       ]
     },
     {
+      "name": "Pictures read for claims",
+      "area": "backoffice",
+      "question": "Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for?",
+      "decision": "Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events.",
+      "signals": [
+        "tendero.picture_reading.pictures"
+      ]
+    },
+    {
       "name": "Tino",
       "area": "storefront",
       "question": "Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?",
@@ -1553,6 +1562,23 @@
             "failed"
           ],
           "description": "proposed: a description was stored for a person to review. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be proposed."
+        }
+      }
+    },
+    {
+      "name": "tendero.picture_reading.pictures",
+      "instrument": "counter",
+      "unit": "{picture}",
+      "description": "Pictures the reading job took, by what became of each.",
+      "attributes": {
+        "outcome": {
+          "type": "string",
+          "values": [
+            "read",
+            "skipped",
+            "failed"
+          ],
+          "description": "read: the model's description was kept as a document, in both languages. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be kept."
         }
       }
     }

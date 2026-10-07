@@ -12,6 +12,25 @@
         }
       </section>
 
+      @if (claim.picture; as picture) {
+        <!-- Read from a picture: the quotes below are a model's words about it, so
+             the picture is what the claim is checked against. -->
+        <section class="pane-section">
+          <h3 class="eyebrow text-accent">{{ t('claims.fromPicture') }}</h3>
+          <figure
+            class="relative m-0 aspect-square w-full flex-none overflow-hidden rounded-lg border border-hairline bg-raised"
+          >
+            <img
+              class="object-contain"
+              [ngSrc]="images.of(picture.imageId)"
+              fill
+              [alt]="t('claims.pictureAlt', { product: store.productName(claim) })"
+            />
+          </figure>
+          <p class="m-0 text-xs text-muted">{{ t('claims.pictureNotice') }}</p>
+        </section>
+      }
+
       <section class="pane-section">
         <h3 class="eyebrow">{{ t('claims.column.evidence') }}</h3>
         <ul class="grid gap-hair text-xs" role="list">
@@ -31,6 +50,9 @@
       </p>
       <p class="mt-1 text-3xs text-muted">
         {{ t('claims.proposedBy', { extractor: claim.model ?? claim.extractor }) }}
+        @if (claim.picture; as picture) {
+          · {{ t('claims.readBy', { model: picture.readBy }) }}
+        }
       </p>
 
       <div class="flex flex-wrap gap-2">

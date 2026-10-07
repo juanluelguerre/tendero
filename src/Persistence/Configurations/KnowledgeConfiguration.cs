@@ -26,6 +26,12 @@ internal sealed class SourceDocumentConfiguration : IEntityTypeConfiguration<Sou
         builder.Property(document => document.LastFailure).HasMaxLength(500);
         builder.Ignore(document => document.IsWaiting);
 
+        // A picture's reading (phase 13a, I-4): which picture, and who read it.
+        builder.Property(document => document.PictureId).HasMaxLength(128);
+        builder.Property(document => document.ReadByModel).HasMaxLength(200);
+        builder.Property(document => document.ReadWithPrompt).HasMaxLength(100);
+        builder.Ignore(document => document.Reading);
+
         // "The documents of this product" — to find the current text and supersede the claims of the old one.
         builder.HasIndex(document => new { document.ProductId, document.Culture });
     }

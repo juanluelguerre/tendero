@@ -898,6 +898,12 @@ classDiagram
         +Quote Quote
         +double Support
     }
+    class PictureReading {
+        <<record>>
+        +ImageId Picture
+        +string Model
+        +string PromptVersion
+    }
     class ProductClaim {
         <<aggregate>>
         +ClaimId Id
@@ -938,6 +944,10 @@ classDiagram
         +string Culture
         +string Text
         +DateTimeOffset RetrievedAt
+        +PictureReading? Reading
+        +string? PictureId
+        +string? ReadByModel
+        +string? ReadWithPrompt
         +DateTimeOffset? ProposedAt
         +int FailedAttempts
         +bool IsWaiting
@@ -950,6 +960,7 @@ classDiagram
     class SourceKind {
         <<enumeration>>
         ProductDescription
+        ProductImage
     }
     Evidence --> SourceDocumentId : Document
     Evidence --> Quote : Quote
@@ -957,6 +968,7 @@ classDiagram
     ProductClaim --> Provenance : Provenance
     ProductClaim "1" --> "*" Evidence : Evidence
     SourceDocument --> SourceDocumentId : Id
+    SourceDocument --> PictureReading : Reading
 ```
 
 ### Events

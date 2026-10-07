@@ -57,6 +57,13 @@ public static class KnowledgeServiceCollectionExtensions
         // assistant holds its answers to it too.
         services.AddSupportScorer(configuration);
 
+        // The job that has pictures read (phase 13a, I-4): which profile reads them.
+        // No profiles unless the host adds them (the API does): a host with none —
+        // the worker — builds, and the job there answers that no model is here.
+        services.TryAddSingleton(ModelProfiles.None);
+        services.Configure<Features.ReadPictures.PictureReadingOptions>(
+            configuration.GetSection(Features.ReadPictures.PictureReadingOptions.SectionName));
+
         services.AddSingleton(Extractor);
         return services;
     }

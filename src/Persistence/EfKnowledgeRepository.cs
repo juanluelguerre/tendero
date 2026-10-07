@@ -17,7 +17,18 @@ internal sealed class EfKnowledgeRepository(TenderoDbContext context) : IKnowled
     {
         // A product has a handful of documents in its life; the newest per culture is picked here.
         var documents = await context.SourceDocuments
-            .Where(document => document.ProductId == productId)
+            .Where(document => document.ProductId == productId && document.Kind == SourceKind.ProductDescription)
+            .ToListAsync(cancellationToken);
+
+        return [.. documents.GroupBy(document => document.Culture).Select(culture => culture.MaxBy(document => document.RetrievedAt)!)];
+    }
+
+    public async Task<IReadOnlyList<SourceDocument>> CurrentReadingsAsync(ProductId productId, ImageId picture, CancellationToken cancellationToken = default)
+    {
+        var documents = await context.SourceDocuments
+            .Where(document => document.ProductId == productId
+                               && document.Kind == SourceKind.ProductImage
+                               && document.PictureId == picture.Value)
             .ToListAsync(cancellationToken);
 
         return [.. documents.GroupBy(document => document.Culture).Select(culture => culture.MaxBy(document => document.RetrievedAt)!)];
@@ -28,23 +39,47 @@ internal sealed class EfKnowledgeRepository(TenderoDbContext context) : IKnowled
             .Where(claim => claim.ProductId == productId && Standing.Contains(claim.Status))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<SourceDocument>> CurrentReadingsAsync(ProductId productId, CancellationToken cancellationToken = default)
+    {
+        var documents = await context.SourceDocuments
+            .Where(document => document.ProductId == productId && document.Kind == SourceKind.ProductImage)
+            .ToListAsync(cancellationToken);
+
+        return
+        [
+            .. documents.GroupBy(document => (document.PictureId, document.Culture))
+                .Select(reading => reading.MaxBy(document => document.RetrievedAt)!),
+        ];
+    }
+
     /// <summary>
-    /// Only a product's CURRENT Spanish document can be waiting: a text replaced
+    /// Only a source's CURRENT Spanish document can be waiting: a text replaced
     /// before the model reached it is history, and asking for it again would turn
-    /// the queue into a loop that never empties.
+    /// the queue into a loop that never empties. A source is the description, or
+    /// one picture's reading — "newer" is among documents of the same source, so
+    /// a reading never makes a description history, nor one picture another's.
     /// </summary>
-    public async Task<IReadOnlyList<ProductId>> WaitingAsync(int limit, CancellationToken cancellationToken = default) =>
-        await context.SourceDocuments
+    public async Task<IReadOnlyList<ProductId>> WaitingAsync(int limit, CancellationToken cancellationToken = default)
+    {
+        // The oldest waiting document of each product, then the oldest products:
+        // a product with a description and three pictures waiting is one product.
+        var waiting = await context.SourceDocuments
             .Where(document => document.Culture == "es"
                                && document.ProposedAt == null
                                && document.FailedAttempts < SourceDocument.MaxAttempts
                                && !context.SourceDocuments.Any(newer => newer.ProductId == document.ProductId
+                                                                         && newer.Kind == document.Kind
+                                                                         && newer.PictureId == document.PictureId
                                                                          && newer.Culture == document.Culture
                                                                          && newer.RetrievedAt > document.RetrievedAt))
-            .OrderBy(document => document.RetrievedAt)
-            .Select(document => document.ProductId)
+            .GroupBy(document => document.ProductId)
+            .Select(product => new { ProductId = product.Key, Since = product.Min(document => document.RetrievedAt) })
+            .OrderBy(product => product.Since)
             .Take(limit)
             .ToListAsync(cancellationToken);
+
+        return [.. waiting.Select(product => product.ProductId)];
+    }
 
     public Task<ProductClaim?> FindClaimAsync(ClaimId id, CancellationToken cancellationToken = default) =>
         context.Claims.FirstOrDefaultAsync(claim => claim.Id == id, cancellationToken);

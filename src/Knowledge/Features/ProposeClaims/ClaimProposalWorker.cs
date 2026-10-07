@@ -1,4 +1,5 @@
 using System.Diagnostics.Metrics;
+using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.DependencyInjection;
@@ -93,7 +94,14 @@ public sealed partial class ClaimProposalWorker(
             // A fresh scope: the failed one may hold half-tracked claims.
             await using var retry = scopes.CreateAsyncScope();
             var fresh = retry.ServiceProvider.GetRequiredService<IKnowledgeRepository>();
-            foreach (var document in await fresh.CurrentDocumentsAsync(product, cancellationToken))
+            // Whatever still waits is what failed or was not reached: a source
+            // proposed before the failure was saved, and waits no more.
+            SourceDocument[] unread =
+            [
+                .. await fresh.CurrentDocumentsAsync(product, cancellationToken),
+                .. await fresh.CurrentReadingsAsync(product, cancellationToken),
+            ];
+            foreach (var document in unread)
                 if (document.IsWaiting)
                     document.RecordFailedAttempt($"{exception.GetType().Name}: {exception.Message}");
             await retry.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(cancellationToken);

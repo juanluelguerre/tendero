@@ -1479,6 +1479,42 @@
         }
       }
     },
+    "/api/knowledge/pictures/read": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "ReadPictures",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReadPicturesRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadPicturesResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/knowledge/specs": {
       "get": {
         "tags": [
@@ -4306,6 +4342,13 @@
           }
         }
       },
+      "AloneReason": {
+        "enum": [
+          "WeakSupport",
+          "ReadFromAPicture",
+          null
+        ]
+      },
       "AltTextStatus": {
         "enum": [
           "Ran",
@@ -4735,6 +4778,7 @@
         "enum": [
           "Approved",
           "WeakSupport",
+          "ReadFromAPicture",
           "NotWaiting",
           "NotFound"
         ]
@@ -5379,7 +5423,9 @@
           "extractor",
           "model",
           "proposedAt",
-          "isWeak"
+          "isWeak",
+          "picture",
+          "decidedAlone"
         ],
         "type": "object",
         "properties": {
@@ -5432,6 +5478,26 @@
           },
           "isWeak": {
             "type": "boolean"
+          },
+          "picture": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PictureForReview"
+              }
+            ]
+          },
+          "decidedAlone": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AloneReason"
+              }
+            ]
           }
         }
       },
@@ -6895,6 +6961,32 @@
           "Worst"
         ]
       },
+      "PictureForReview": {
+        "required": [
+          "imageId",
+          "readBy",
+          "promptVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "string"
+          },
+          "readBy": {
+            "type": "string"
+          },
+          "promptVersion": {
+            "type": "string"
+          }
+        }
+      },
+      "PictureReadingStatus": {
+        "enum": [
+          "Ran",
+          "NothingToRead",
+          "NoModel"
+        ]
+      },
       "PlaceOrderRequest": {
         "required": [
           "shippingAddress",
@@ -8197,6 +8289,47 @@
           }
         }
       },
+      "ReadPicturesRequest": {
+        "required": [
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ReadPicturesResult": {
+        "required": [
+          "status",
+          "read",
+          "skipped",
+          "failed"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/PictureReadingStatus"
+          },
+          "read": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "Reason": {
         "required": [
           "text",
@@ -8874,6 +9007,7 @@
           "Rejected",
           "NotWaiting",
           "WeakSupport",
+          "ReadFromAPicture",
           "NotFound"
         ]
       },

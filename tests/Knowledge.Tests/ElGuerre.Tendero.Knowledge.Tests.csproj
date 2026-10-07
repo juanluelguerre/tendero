@@ -19,4 +19,8 @@
     <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="scripts/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -64,9 +64,39 @@ public sealed record ClaimForReview(
     /// <summary>Whether its support is under the line a person is for — the
     /// server's rule (`ProductClaim.WeakSupport`), sent so the screen marks it
     /// without keeping a copy of 0.8 (R-7.2).</summary>
-    bool IsWeak);
+    bool IsWeak,
+    /// <summary>The picture it was read from, for a claim that rests on a model's
+    /// description of one (phase 13a, I-4); null for a claim read from the shop's
+    /// own text. Its quotes are then the model's words about the picture, and the
+    /// screen shows the picture beside them.</summary>
+    PictureForReview? Picture,
+    /// <summary>Why it is opened and decided on its own, never approved with
+    /// others; null when it may go together. The server's rule, sent so no screen
+    /// keeps a copy of it.</summary>
+    AloneReason? DecidedAlone);
 
 public sealed record QuoteForReview(string Culture, string Text, int Start, int End, double Support);
+
+/// <summary>The picture a claim was read from, and who read it.</summary>
+/// <param name="ImageId">The picture, by the id the image store serves it under.</param>
+/// <param name="ReadBy">The model that described it.</param>
+/// <param name="PromptVersion">The instructions it was described under.</param>
+public sealed record PictureForReview(string ImageId, string ReadBy, string PromptVersion);
+
+/// <summary>Why a claim is never approved together with others.</summary>
+public enum AloneReason
+{
+    /// <summary>Its support is under the line a person is for (S-5).</summary>
+    WeakSupport,
+
+    /// <summary>
+    /// It rests on a model's description of a picture (phase 13a, I-4): its
+    /// support is a model's sentence held to a model's words, so the person who
+    /// approves it is the only independent check — and has to have it open, with
+    /// the picture, to be one.
+    /// </summary>
+    ReadFromAPicture,
+}
 
 public sealed class ListClaimsForReviewHandler(IKnowledgeRepository knowledge)
     : IQueryHandler<ListClaimsForReviewQuery, ClaimsForReviewPage>
@@ -79,11 +109,13 @@ public sealed class ListClaimsForReviewHandler(IKnowledgeRepository knowledge)
         foreach (var claim in page.Claims)
         {
             var quotes = new List<QuoteForReview>();
+            PictureReading? reading = null;
             foreach (var evidence in claim.Evidence)
             {
                 // A quote's culture is its document's; the documents are few per product.
                 var document = await knowledge.FindDocumentAsync(evidence.Document, cancellationToken);
                 quotes.Add(new QuoteForReview(document?.Culture ?? "", evidence.Quote.Text, evidence.Quote.Start, evidence.Quote.End, evidence.Support));
+                reading ??= document?.Reading;
             }
 
             result.Add(new ClaimForReview(
@@ -91,7 +123,10 @@ public sealed class ListClaimsForReviewHandler(IKnowledgeRepository knowledge)
                 claim.Statement.In("es"), claim.Statement.In("en"),
                 claim.AttributeCode, claim.Value, claim.Support, quotes,
                 claim.Provenance.Extractor, claim.Provenance.ModelId, claim.CreatedAt,
-                claim.IsWeaklySupported));
+                claim.IsWeaklySupported,
+                reading is null ? null : new PictureForReview(reading.Picture.Value, reading.Model, reading.PromptVersion),
+                // Weak first: it is the reason to read a claim before the rest, whatever it was read from.
+                claim.IsWeaklySupported ? AloneReason.WeakSupport : reading is null ? null : AloneReason.ReadFromAPicture));
         }
 
         return new ClaimsForReviewPage(
@@ -125,6 +160,9 @@ public enum ReviewOutcome
     /// <summary>Weakly supported and approved in bulk: never — it is decided on its own (S-5).</summary>
     WeakSupport,
 
+    /// <summary>Read from a picture and approved in bulk: never — the person who approves it has it open, with the picture (phase 13a, I-4).</summary>
+    ReadFromAPicture,
+
     NotFound,
 }
 
@@ -133,7 +171,7 @@ public sealed record ReviewClaimResult(ReviewOutcome Outcome, ClaimId ClaimId) :
     AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
     {
         ReviewOutcome.Approved or ReviewOutcome.Rejected => AuditOutcome.Allowed,
-        ReviewOutcome.NotWaiting or ReviewOutcome.NotFound or ReviewOutcome.WeakSupport => AuditOutcome.Denied,
+        ReviewOutcome.NotWaiting or ReviewOutcome.NotFound or ReviewOutcome.WeakSupport or ReviewOutcome.ReadFromAPicture => AuditOutcome.Denied,
     };
 
     string? IAuditedResult.AuditReason =>
@@ -164,6 +202,11 @@ public sealed class ReviewClaimHandler(
         if (command.InBulk && command.Decision == ReviewDecision.Approve && claim.IsWeaklySupported)
             return new ReviewClaimResult(ReviewOutcome.WeakSupport, command.ClaimId);
 
+        // And so is one read from a picture: what supports it is a model's
+        // description, and the person is the only check that is not a model.
+        if (command.InBulk && command.Decision == ReviewDecision.Approve && await RestsOnAPictureAsync(claim, cancellationToken))
+            return new ReviewClaimResult(ReviewOutcome.ReadFromAPicture, command.ClaimId);
+
         var principal = principals.Current;
         var reviewer = principal.DisplayName ?? principal.Subject ?? "unknown";
 
@@ -177,6 +220,17 @@ public sealed class ReviewClaimHandler(
 
         return new ReviewClaimResult(
             command.Decision == ReviewDecision.Approve ? ReviewOutcome.Approved : ReviewOutcome.Rejected, claim.Id);
+    }
+
+    private async Task<bool> RestsOnAPictureAsync(ProductClaim claim, CancellationToken cancellationToken)
+    {
+        foreach (var evidence in claim.Evidence)
+        {
+            if (await knowledge.FindDocumentAsync(evidence.Document, cancellationToken) is { Kind: SourceKind.ProductImage })
+                return true;
+        }
+
+        return false;
     }
 }
 

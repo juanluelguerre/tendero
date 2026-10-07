@@ -10,13 +10,15 @@ import { ClaimsBulkReview } from './claims-bulk-review';
 
 const Claims = 'http://api/api/knowledge/claims';
 
-const claim = (claimId: string, isWeak = false) =>
+const claim = (claimId: string, isWeak = false, fromPicture = false) =>
   ({
     claimId,
     productId: 'p1',
     attributeCode: claimId,
     value: 'v',
     isWeak,
+    picture: fromPicture ? { imageId: 'img', readBy: 'model', promptVersion: 'v1' } : null,
+    decidedAlone: isWeak ? 'WeakSupport' : fromPicture ? 'ReadFromAPicture' : null,
     statementSpanish: '',
     statementEnglish: '',
     quotes: [{ culture: 'es', text: `cita ${claimId}`, start: 0, end: 1, support: 0.5 }],
@@ -65,5 +67,28 @@ describe('the claims bulk review', () => {
     ]);
     (element.querySelector('tbody button') as HTMLButtonElement).click();
     expect(opened).toEqual([{ claimId: 'b', productId: 'p1' }]);
+  });
+
+  it('leaves a claim read from a picture unticked and says why, in other words than a weak one', async () => {
+    const fixture = TestBed.createComponent(ClaimsBulkReview);
+    fixture.componentInstance.open('p1', 'Taza');
+    fixture.detectChanges();
+    http
+      .expectOne((req) => req.url === Claims)
+      .flush({ items: [claim('a'), claim('p', false, true), claim('w', true)], counts: [] });
+    for (const translations of http.match((req) => req.url.includes('/i18n/'))) translations.flush({});
+    await TestBed.inject(ApplicationRef).whenStable();
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    const boxes = [...element.querySelectorAll('input[type=checkbox]')] as HTMLInputElement[];
+    expect(boxes.map((box) => [box.checked, box.disabled])).toEqual([
+      [true, false],
+      [false, true],
+      [false, true],
+    ]);
+    // No translations are loaded here, so a label is its key: each reason has its own.
+    const reasons = [...element.querySelectorAll('tbody button')].map((button) => button.textContent?.trim());
+    expect(reasons).toEqual(['claimsBulk.picture', 'claimsBulk.weak']);
   });
 });

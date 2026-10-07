@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261006220639_ProposalEditsAndProposer";
+    public override string LastMigrationId => "20261007153524_SourceDocumentPictureReading";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -796,6 +796,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("character varying(500)")
                     .HasColumnName("last_failure");
 
+                b.Property<string>("PictureId")
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)")
+                    .HasColumnName("picture_id");
+
                 b.Property<Guid>("ProductId")
                     .HasColumnType("uuid")
                     .HasColumnName("product_id");
@@ -803,6 +808,16 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateTimeOffset?>("ProposedAt")
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("proposed_at");
+
+                b.Property<string>("ReadByModel")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("read_by_model");
+
+                b.Property<string>("ReadWithPrompt")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("read_with_prompt");
 
                 b.Property<DateTimeOffset>("RetrievedAt")
                     .HasColumnType("timestamp with time zone")

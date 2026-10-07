@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-43 features: **38** answered by a signal emitted today,
+44 features: **39** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -58,6 +58,7 @@ everything here that is not *planned* is emitted.
 | Stock search and filters | Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which? | If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count. | `backoffice_affordance_used` | emitted |
 | Steward | Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? | Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. | `steward_opened`, `steward_answered`, `proposals_reviewed`, `steward_unavailable` | emitted |
 | Alt text for pictures | Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read? | Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes. | `tendero.alt_text.pictures`, `image_alt_proposal_decided` | emitted |
+| Pictures read for claims | Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for? | Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events. | `tendero.picture_reading.pictures` | emitted |
 
 ### Agents
 
@@ -736,3 +737,15 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `outcome` | string | `proposed`, `skipped`, `failed` | proposed: a description was stored for a person to review. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be proposed. |
+
+### `tendero.picture_reading.pictures`
+
+counter, unit `{picture}`. Pictures the reading job took, by what became of each.
+
+Answers:
+
+- **Pictures read for claims** — Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `outcome` | string | `read`, `skipped`, `failed` | read: the model's description was kept as a document, in both languages. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be kept. |

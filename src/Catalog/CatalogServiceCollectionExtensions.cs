@@ -36,11 +36,6 @@ public static class CatalogServiceCollectionExtensions
 
         services.AddCatalogReaders(configuration);
 
-        // The image store: a port, and today a single adapter. The S3 one enters
-        // when the file system stops being enough, without touching anything else.
-        services.Configure<FileSystemImageStoreOptions>(
-            configuration.GetSection(FileSystemImageStoreOptions.SectionName));
-        services.AddSingleton<IImageStore, FileSystemImageStore>();
         services.AddHttpClient<IExternalImageReader, ExternalImageReader>();
 
         // What Steward may propose (phase 12): a class here and a line there.
@@ -89,6 +84,18 @@ public static class CatalogServiceCollectionExtensions
         services.Configure<CategorySeedOptions>(
             configuration.GetSection(CategorySeedOptions.SectionName));
         services.TryAddSingleton<ICategoryReader, SeedFileCategoryReader>();
+
+        // The image store: a port, and today a single adapter. The S3 one enters
+        // when the file system stops being enough, without touching anything else.
+        // Here and not in AddCatalog since phase 13a: Knowledge's job that has
+        // pictures read is a handler of an assembly the worker registers whole,
+        // and a container with a handler it cannot build does not start.
+        services.Configure<FileSystemImageStoreOptions>(
+            configuration.GetSection(FileSystemImageStoreOptions.SectionName));
+        services.TryAddSingleton<IImageStore, FileSystemImageStore>();
+
+        // Every picture of the catalogue, for that job (phase 13a, I-4).
+        services.TryAddScoped<IProductPictures, Adapters.ProductPicturesReader>();
 
         return services;
     }

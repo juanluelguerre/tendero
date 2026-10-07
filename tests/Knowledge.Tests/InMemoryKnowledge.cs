@@ -16,7 +16,15 @@ public sealed class InMemoryKnowledge : IKnowledgeRepository, IUnitOfWork
     public Task<IReadOnlyList<SourceDocument>> CurrentDocumentsAsync(ProductId productId, CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<SourceDocument>>(
         [
-            .. Documents.Where(document => document.ProductId == productId)
+            .. Documents.Where(document => document.ProductId == productId && document.Kind == SourceKind.ProductDescription)
+                .GroupBy(document => document.Culture)
+                .Select(culture => culture.MaxBy(document => document.RetrievedAt)!),
+        ]);
+
+    public Task<IReadOnlyList<SourceDocument>> CurrentReadingsAsync(ProductId productId, ImageId picture, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<SourceDocument>>(
+        [
+            .. Documents.Where(document => document.ProductId == productId && document.Reading?.Picture == picture)
                 .GroupBy(document => document.Culture)
                 .Select(culture => culture.MaxBy(document => document.RetrievedAt)!),
         ]);
@@ -25,17 +33,30 @@ public sealed class InMemoryKnowledge : IKnowledgeRepository, IUnitOfWork
         Task.FromResult<IReadOnlyList<ProductClaim>>(
             [.. Claims.Where(claim => claim.ProductId == productId && claim.Status is ClaimStatus.Proposed or ClaimStatus.Approved)]);
 
+    public Task<IReadOnlyList<SourceDocument>> CurrentReadingsAsync(ProductId productId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<SourceDocument>>(
+        [
+            .. Documents.Where(document => document.ProductId == productId && document.Kind == SourceKind.ProductImage)
+                .GroupBy(document => (document.PictureId, document.Culture))
+                .Select(reading => reading.MaxBy(document => document.RetrievedAt)!),
+        ]);
+
     public async Task<IReadOnlyList<ProductId>> WaitingAsync(int limit, CancellationToken cancellationToken = default)
     {
-        var waiting = new List<ProductId>();
+        var waiting = new List<(ProductId Product, DateTimeOffset Since)>();
         foreach (var product in Documents.Select(document => document.ProductId).Distinct())
         {
-            var current = await CurrentDocumentsAsync(product, cancellationToken);
-            if (current.FirstOrDefault(document => document.Culture == "es") is { IsWaiting: true })
-                waiting.Add(product);
+            SourceDocument[] current =
+            [
+                .. await CurrentDocumentsAsync(product, cancellationToken),
+                .. await CurrentReadingsAsync(product, cancellationToken),
+            ];
+            var sources = current.Where(document => document is { Culture: "es", IsWaiting: true }).ToList();
+            if (sources.Count > 0)
+                waiting.Add((product, sources.Min(document => document.RetrievedAt)));
         }
 
-        return [.. waiting.Take(limit)];
+        return [.. waiting.OrderBy(product => product.Since).Select(product => product.Product).Take(limit)];
     }
 
     public Task<ProductClaim?> FindClaimAsync(ClaimId id, CancellationToken cancellationToken = default) =>

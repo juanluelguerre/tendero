@@ -564,6 +564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/knowledge/pictures/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReadPictures"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/knowledge/specs": {
         parameters: {
             query?: never;
@@ -1512,6 +1528,8 @@ export interface components {
             updatedAt: string;
         };
         /** @enum {unknown} */
+        AloneReason: "WeakSupport" | "ReadFromAPicture" | null;
+        /** @enum {unknown} */
         AltTextStatus: "Ran" | "NothingToDescribe" | "NoModel";
         AlternateSlug: {
             culture: string;
@@ -1615,7 +1633,7 @@ export interface components {
             searches: components["schemas"]["PastSearch"][];
         };
         /** @enum {unknown} */
-        BulkApprovalOutcome: "Approved" | "WeakSupport" | "NotWaiting" | "NotFound";
+        BulkApprovalOutcome: "Approved" | "WeakSupport" | "ReadFromAPicture" | "NotWaiting" | "NotFound";
         /** @enum {unknown} */
         CampaignChange: "Created" | "Updated" | "Scheduled" | "Unscheduled" | "Ended" | "Unchanged" | "NotFound" | "AlreadyExists" | "UnknownPromotion" | "UnknownImage" | "WindowClosed" | "NotEditable" | "NotAllowed";
         CampaignChangeResponse: {
@@ -1793,6 +1811,8 @@ export interface components {
             /** Format: date-time */
             proposedAt: string;
             isWeak: boolean;
+            picture: null | components["schemas"]["PictureForReview"];
+            decidedAlone: null | components["schemas"]["AloneReason"];
         };
         ClaimSupportCount: {
             support: components["schemas"]["ClaimSupportFilter"];
@@ -2180,6 +2200,13 @@ export interface components {
         };
         /** @enum {unknown} */
         PerformanceRanking: "Best" | "Worst";
+        PictureForReview: {
+            imageId: string;
+            readBy: string;
+            promptVersion: string;
+        };
+        /** @enum {unknown} */
+        PictureReadingStatus: "Ran" | "NothingToRead" | "NoModel";
         PlaceOrderRequest: {
             shippingAddress: components["schemas"]["AddressRequest"];
             shippingOptionCode: string;
@@ -2509,6 +2536,19 @@ export interface components {
             days: number;
             items: components["schemas"]["RankedProduct"][];
         };
+        ReadPicturesRequest: {
+            /** Format: int32 */
+            count: null | number;
+        };
+        ReadPicturesResult: {
+            status: components["schemas"]["PictureReadingStatus"];
+            /** Format: int32 */
+            read: number;
+            /** Format: int32 */
+            skipped: number;
+            /** Format: int32 */
+            failed: number;
+        };
         Reason: {
             text: string;
             source: components["schemas"]["FactSource"];
@@ -2683,7 +2723,7 @@ export interface components {
             outcome: components["schemas"]["ReviewOutcome"];
         };
         /** @enum {unknown} */
-        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "NotFound";
+        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "ReadFromAPicture" | "NotFound";
         ReviewedImage: {
             id: string;
             alt: {
@@ -4140,6 +4180,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReviewClaimConflict"];
+                };
+            };
+        };
+    };
+    ReadPictures: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["ReadPicturesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadPicturesResult"];
                 };
             };
         };

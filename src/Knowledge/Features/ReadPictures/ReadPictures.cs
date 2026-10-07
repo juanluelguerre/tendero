@@ -1,0 +1,313 @@
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Text.Json;
+using Carter;
+using ElGuerre.Tendero.AI;
+using ElGuerre.Tendero.AI.Chat;
+using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Ports;
+using ElGuerre.Tendero.SharedKernel;
+using FluentValidation;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+namespace ElGuerre.Tendero.Knowledge.Features.ReadPictures;
+
+/// <summary>The picture-reading job's settings (`PictureReading:` in configuration).</summary>
+public sealed class PictureReadingOptions
+{
+    public const string SectionName = "PictureReading";
+
+    /// <summary>
+    /// Pictures a batch reads at most. Five, as the alt-text job's (the author's
+    /// ruling, 2026-10-06): what a batch leaves is what a person reviews at once.
+    /// </summary>
+    public const int MaxBatch = 5;
+
+    /// <summary>The profile that reads the pictures, by its name among the shop's model profiles.</summary>
+    public string? Model { get; init; } = "local";
+
+    /// <summary>The answer at most: a few sentences, in each language.</summary>
+    public int MaxOutputTokens { get; init; } = 500;
+}
+
+/// <summary>
+/// The model's instructions, versioned: a reading records the version it was made
+/// under, and a picture read under an older one is read again — two readings are
+/// only comparable when the same instructions wrote them.
+/// </summary>
+public static class PictureReadingPrompt
+{
+    public const string Version = "picture-reading-2026-10-07b";
+
+    /// <summary>What the answer is held to: the description, in each language.</summary>
+    public static readonly JsonElement Schema = JsonDocument.Parse("""
+        {
+          "type": "object",
+          "properties": { "es": { "type": "string" }, "en": { "type": "string" } },
+          "required": ["es", "en"],
+          "additionalProperties": false
+        }
+        """).RootElement.Clone();
+
+    public const string Instructions = """
+        You describe the pictures of an online shop's products for the shop's own
+        records. Look at the picture and write what it shows, as plain facts.
+
+        - Two to four short sentences: the kind of object, how many of them there
+          are, its colours, what it appears to be made of, and the parts that can
+          be seen.
+        - Only what the picture shows. No brand, no price, no size, no use, and
+          nothing you would have to guess: what cannot be told from the picture is
+          left out.
+        - You are not told what the product is. Name the object as it looks, in
+          plain words, and do not guess a model, a capacity or a set it belongs to.
+        - Reply in JSON: "es" is the description in Spanish, "en" the same
+          description in English.
+        """;
+
+    /// <summary>
+    /// What goes beside the picture: **nothing of the product.** The first
+    /// version gave its name, "to name the object correctly", and the shop's 4B
+    /// handed the name back as something seen — one slipper read as "a pair of
+    /// slippers", a moka pot as "a six-cup coffee maker". A reading is worth
+    /// keeping as a source only while nothing in it came from the catalogue: a
+    /// claim taken from it cites a picture.
+    /// </summary>
+    public const string Ask = "Describe the picture.";
+}
+
+/// <summary>
+/// Have the next pictures read that nobody has read under today's instructions
+/// (phase 13a, I-4). A batch a shopkeeper asks for, never a queue that drains on
+/// its own. It leaves documents — a model's description of each picture, in each
+/// language — and proposes nothing: claims are proposed from those documents by
+/// the step that proposes them from a description, and a person approves each
+/// (invariant 12).
+/// </summary>
+/// <param name="Count">How many pictures, at most <see cref="PictureReadingOptions.MaxBatch"/>.</param>
+public sealed record ReadPicturesCommand(int Count) : ICommand<ReadPicturesResult>;
+
+public enum PictureReadingStatus
+{
+    /// <summary>The batch ran: see how many were read, skipped and failed.</summary>
+    Ran,
+
+    /// <summary>Every picture has been read under these instructions.</summary>
+    NothingToRead,
+
+    /// <summary>No profile that reads pictures is here: nothing was opened and nothing kept.
+    /// Claims go on being proposed from the descriptions alone.</summary>
+    NoModel,
+}
+
+/// <param name="Read">Pictures whose reading was kept.</param>
+/// <param name="Skipped">Pictures whose bytes the store did not have, or were not a picture.</param>
+/// <param name="Failed">Pictures the model did not describe in a way that can be kept.</param>
+public sealed record ReadPicturesResult(PictureReadingStatus Status, int Read, int Skipped, int Failed);
+
+public sealed class ReadPicturesValidator : AbstractValidator<ReadPicturesCommand>
+{
+    public ReadPicturesValidator()
+    {
+        RuleFor(x => x.Count).InclusiveBetween(1, PictureReadingOptions.MaxBatch);
+    }
+}
+
+public sealed class ReadPicturesHandler(
+    IProductPictures pictures,
+    IImageStore images,
+    IKnowledgeRepository knowledge,
+    ICommandDispatcher commands,
+    IServiceProvider services,
+    ModelProfiles profiles,
+    IPrincipalAccessor principal,
+    IOptions<PictureReadingOptions> options,
+    ILogger<ReadPicturesHandler> logger) : ICommandHandler<ReadPicturesCommand, ReadPicturesResult>
+{
+    /// <summary>What the model's calls are metered under.</summary>
+    public const string Operation = "knowledge.read_picture";
+
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Knowledge);
+    private static readonly Meter Meter = new(TelemetrySources.Knowledge);
+
+    /// <summary>`tendero.picture_reading.pictures`: pictures a batch took, by what became of each.</summary>
+    private static readonly Counter<long> Taken = Meter.CreateCounter<long>(
+        "tendero.picture_reading.pictures", unit: "{picture}", description: "Pictures the reading job took, by what became of each.");
+
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    public async Task<ReadPicturesResult> HandleAsync(ReadPicturesCommand command, CancellationToken cancellationToken)
+    {
+        using var activity = Telemetry.StartActivity("knowledge.pictures.read");
+        var settings = options.Value;
+
+        // Asked before anything is opened: a profile that does not say it reads
+        // pictures is not sent one (invariant 8).
+        if (settings.Model is not { Length: > 0 } name
+            || profiles.Find(name) is not { ReadsPictures: true } profile
+            || services.GetKeyedService<IChatClient>(name) is not { } model)
+        {
+            activity?.SetTag("knowledge.unavailable", true);
+            return new ReadPicturesResult(PictureReadingStatus.NoModel, 0, 0, 0);
+        }
+
+        // Who read it, for the document: the model the profile names, or the
+        // profile itself when it names none.
+        var reader = profile.Model ?? name;
+
+        var batch = await NextAsync(reader, command.Count, cancellationToken);
+        if (batch.Count == 0)
+            return new ReadPicturesResult(PictureReadingStatus.NothingToRead, 0, 0, 0);
+
+        var (read, skipped, failed) = (0, 0, 0);
+        foreach (var picture in batch)
+        {
+            if (await OpenAsync(picture, cancellationToken) is not { } content)
+            {
+                skipped++;
+                continue;
+            }
+
+            if (await DescribeAsync(model, picture, content, settings, cancellationToken) is not { } said)
+            {
+                failed++;
+                continue;
+            }
+
+            await commands.SendAsync(
+                new RecordPictureReadingCommand(
+                    new ProductId(picture.ProductId),
+                    new PictureReading(new ImageId(picture.ImageId), reader, PictureReadingPrompt.Version),
+                    said.Es,
+                    said.En),
+                cancellationToken);
+            read++;
+        }
+
+        Count("read", read);
+        Count("skipped", skipped);
+        Count("failed", failed);
+        activity?.SetTag("knowledge.pictures.read", read);
+        return new ReadPicturesResult(PictureReadingStatus.Ran, read, skipped, failed);
+    }
+
+    /// <summary>
+    /// The next pictures with no reading in both languages made by this model under
+    /// these instructions, in the catalogue's order. A hundred products and one
+    /// look-up a picture: the scale rule's "deferred with its number".
+    /// </summary>
+    private async Task<IReadOnlyList<ProductPicture>> NextAsync(string model, int count, CancellationToken cancellationToken)
+    {
+        List<ProductPicture> next = [];
+        foreach (var picture in await pictures.AllAsync(cancellationToken))
+        {
+            var readings = await knowledge.CurrentReadingsAsync(new ProductId(picture.ProductId), new ImageId(picture.ImageId), cancellationToken);
+            var current = readings.Count == 2 && readings.All(document =>
+                document.Reading is { } reading && reading.Model == model && reading.PromptVersion == PictureReadingPrompt.Version);
+
+            if (current)
+                continue;
+
+            next.Add(picture);
+            if (next.Count == count)
+                break;
+        }
+
+        return next;
+    }
+
+    /// <summary>The picture as a model takes it, or null when the store has no such bytes or they are no picture.</summary>
+    private async Task<DataContent?> OpenAsync(ProductPicture picture, CancellationToken cancellationToken)
+    {
+        var stored = await images.OpenAsync(new ImageId(picture.ImageId), cancellationToken);
+        if (stored is null)
+            return null;
+
+        await using var content = stored.Content;
+        using var buffer = new MemoryStream();
+        await content.CopyToAsync(buffer, cancellationToken);
+        try
+        {
+            return Pictures.ForModel(buffer.GetBuffer().AsSpan(0, (int)buffer.Length));
+        }
+        catch (InvalidDataException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// What the model says the picture shows, or null when what it wrote cannot be
+    /// kept: not the shape asked for, a language missing, or a description that is
+    /// not in the language it is filed under — told by code, not by asking again.
+    /// </summary>
+    private async Task<Said?> DescribeAsync(
+        IChatClient model, ProductPicture picture, DataContent content, PictureReadingOptions settings, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await model.GetResponseAsync(
+                [
+                    new ChatMessage(ChatRole.System, PictureReadingPrompt.Instructions),
+                    new ChatMessage(ChatRole.User, [content, new TextContent(PictureReadingPrompt.Ask)]),
+                ],
+                ModelCall.Options(Operation, promptVersion: PictureReadingPrompt.Version,
+                    options: new ChatOptions
+                    {
+                        ResponseFormat = ChatResponseFormat.ForJsonSchema(PictureReadingPrompt.Schema, "picture_reading"),
+                        MaxOutputTokens = settings.MaxOutputTokens,
+                        Temperature = 0,
+                    },
+                    person: principal.Current.Subject),
+                cancellationToken);
+
+            var said = JsonSerializer.Deserialize<Said>(response.Text, Json);
+            return said is { Es.Length: > 0, En.Length: > 0 }
+                && !string.IsNullOrWhiteSpace(said.Es) && !string.IsNullOrWhiteSpace(said.En)
+                && WrittenLanguage.Is(said.Es, "es") && WrittenLanguage.Is(said.En, "en")
+                    ? new Said(said.Es.Trim(), said.En.Trim())
+                    : null;
+        }
+        catch (Exception failure) when (failure is JsonException or HttpRequestException or InvalidOperationException or TaskCanceledException
+            && !cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(failure, "The picture-reading job's model did not describe a picture of {Code}.", picture.Code);
+            return null;
+        }
+    }
+
+    private static void Count(string outcome, int count)
+    {
+        if (count > 0)
+            Taken.Add(count, new KeyValuePair<string, object?>("outcome", outcome));
+    }
+
+    private sealed record Said(string Es, string En);
+}
+
+// ---------- The wire ----------
+
+public sealed record ReadPicturesRequest(int? Count);
+
+public sealed class ReadPicturesEndpoints : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        // POST /api/knowledge/pictures/read  { "count": 5 }
+        // A shopkeeper asks for a batch: what comes back is how many pictures were
+        // read — nothing is proposed and nothing is written to the catalogue here.
+        app.MapPost("/api/knowledge/pictures/read",
+                async Task<Ok<ReadPicturesResult>> (ReadPicturesRequest? body, ICommandDispatcher dispatcher, CancellationToken ct) =>
+                    TypedResults.Ok(await dispatcher.SendAsync(new ReadPicturesCommand(body?.Count ?? PictureReadingOptions.MaxBatch), ct)))
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithTags("Knowledge")
+            .WithName("ReadPictures");
+    }
+}
