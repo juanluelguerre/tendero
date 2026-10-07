@@ -398,6 +398,43 @@ picture, and a claim that says another value than the catalogue holds names both
   holds 15. They had been waiting with nothing to say so; approving one would
   have replaced the value unseen. Which side is wrong in each is not judged
   here: the author's to read.
+- **A reading is offered only what a picture can show** (2026-10-07, after the
+  hip pack): `IAttributeVocabulary.CurrentAsync(SourceKind)`. For a picture that
+  is `PIECES` and nothing else today — the author's ruling; its colour is a
+  variant axis, offered to no source, which is why the extractor had reached for
+  a lamp's colour temperature. What the model types beyond the list, the vetting
+  refuses and keeps as a sentence.
+- **Measured before and after, on twelve seed pictures**
+  (`ClaimsFromPicturesOnTheLocalModelTests`: the model reads, the same weights
+  extract, against a real Postgres; 4.5 minutes for both runs):
+
+  | | Whole vocabulary | A picture's |
+  |---|---|---|
+  | Claims proposed | 64 | 71 |
+  | Typed | 17 | 4 |
+  | Typed, and wrong | **12** | **2** |
+  | Typed, and right | 5 | 2 |
+  | Sentences with no attribute | 47 | 67 |
+
+  - **The filter does what it was for**: seven colours typed as colour
+    temperature, four materials guessed from a part (a knife block's wood as
+    `COTTON`, a lamp's arms as `SYNTHETIC_MESH`), a toaster's slots as `CUPS` —
+    gone.
+  - **What is left is half wrong, and it lost half of what was right.** The
+    toaster's *two slots* and its lever's *five positions* are both `PIECES`
+    now; and of six sets, whose number the reading states correctly every time
+    (*three frying pans*, *three knives*, *four bowls*, *six glasses*, *three
+    travel bags*, *two cushions*), the extractor types two.
+  - **The reading is right and the extraction is the weak step**, for the one
+    attribute a picture has. And it leaves five to nine sentences a picture —
+    *the product has small feet*, *the pans are arranged by size* — that are
+    true and that nobody would filter or compare by: about 550 for a hundred
+    pictures, each to be opened on its own.
+  - **So, proposed and not built**: for a picture, no extraction from prose. The
+    reading itself answers the few closed questions a picture can (how many;
+    which of the catalogue's colours), code builds the typed claim or holds it
+    against the catalogue, and no untyped sentence is proposed from a picture.
+    The prose stays as the document a reviewer reads. The author's to decide.
 - **Not measured**: how often a picture proposes what the description already
   did (*three pans*, twice). Nothing merges the two; the reviewer would see both.
 - **Known and not solved**: a picture the model fails on stays at the head of the
