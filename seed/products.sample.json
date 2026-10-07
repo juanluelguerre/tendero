@@ -1135,8 +1135,7 @@
     ],
     "attributes": {
       "material": "acero inoxidable",
-      "potencia_w": "900",
-      "piezas": "2"
+      "potencia_w": "900"
     },
     "available_from": "2026-05-06"
   },
