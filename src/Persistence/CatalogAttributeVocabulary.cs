@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Ports;
 
@@ -17,13 +18,25 @@ internal sealed class CatalogAttributeVocabulary(IAttributeDefinitionReader defi
 {
     private static readonly HashSet<string> NotFromText = new(StringComparer.OrdinalIgnoreCase) { "SIZE_RANGE" };
 
-    public async Task<IReadOnlyList<AttributeSpec>> CurrentAsync(CancellationToken cancellationToken = default)
+    /// <summary>
+    /// What a picture can show of what the catalogue has a name for: how many
+    /// there are, and nothing else today (the author's ruling, 2026-10-07). Not a
+    /// power, a capacity or a colour temperature; not a material, which a flat
+    /// illustration does not tell. Its colour is a variant axis, offered to no
+    /// source. Listed here beside the other exclusion until an attribute's
+    /// definition can say it of itself — the catalogue's new families will bring
+    /// attributes a picture does show (a closure, a pattern), and that is when.
+    /// </summary>
+    private static readonly HashSet<string> ShownInPictures = new(StringComparer.OrdinalIgnoreCase) { "PIECES" };
+
+    public async Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default)
     {
         var all = await definitions.AllAsync(cancellationToken);
         return
         [
             .. all.All
                 .Where(definition => !definition.IsVariantAxis && !NotFromText.Contains(definition.Code))
+                .Where(definition => readFrom != SourceKind.ProductImage || ShownInPictures.Contains(definition.Code))
                 .Select(definition => new AttributeSpec(
                     definition.Code,
                     definition.Kind.ToString(),

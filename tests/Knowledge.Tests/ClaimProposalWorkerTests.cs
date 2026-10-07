@@ -40,7 +40,7 @@ public sealed class ClaimProposalWorkerTests
 
     private sealed class NoAttributes : IAttributeVocabulary
     {
-        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(CancellationToken cancellationToken = default) =>
+        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<AttributeSpec>>([]);
     }
 

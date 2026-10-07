@@ -61,7 +61,10 @@ public sealed class ProposeClaimsHandler(
             : (model, ClaimExtractors.Chat);
         activity?.SetTag("knowledge.extractor", name);
 
-        var attributes = await vocabulary.CurrentAsync(cancellationToken);
+        // The vocabulary of each kind of source, asked once a kind: a picture's
+        // reading is offered only what a picture can show.
+        Dictionary<SourceKind, IReadOnlyList<AttributeSpec>> offered = [];
+
         var provenance = name == ClaimExtractors.Chat
             ? new Provenance(name, extractorModel.ModelId, extractorModel.Revision, ChatClaimExtractor.PromptVersion, Guid.CreateVersion7().ToString(), clock.GetUtcNow())
             : new Provenance(name, null, null, null, Guid.CreateVersion7().ToString(), clock.GetUtcNow());
@@ -71,6 +74,9 @@ public sealed class ProposeClaimsHandler(
 
         foreach (var (spanish, english) in sources)
         {
+            if (!offered.TryGetValue(spanish.Kind, out var attributes))
+                offered[spanish.Kind] = attributes = await vocabulary.CurrentAsync(spanish.Kind, cancellationToken);
+
             var proposed = await extractor.ExtractAsync(new ProductText(spanish.Text, english?.Text ?? ""), attributes, cancellationToken);
             var (kept, dropped) = ClaimVetting.Vet(proposed, spanish, english, attributes);
 

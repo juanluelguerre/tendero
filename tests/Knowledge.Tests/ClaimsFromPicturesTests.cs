@@ -35,7 +35,7 @@ public sealed class ClaimsFromPicturesTests
         new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock)
             .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english), TestContext.Current.CancellationToken);
 
-    private Task<ProposeClaimsResult> Propose(IClaimExtractor? model = null, ISupportScorer? scorer = null)
+    private Task<ProposeClaimsResult> Propose(IClaimExtractor? model = null, ISupportScorer? scorer = null, Vocabulary? vocabulary = null)
     {
         var services = new ServiceCollection();
         services.AddKeyedSingleton<IClaimExtractor, RulesClaimExtractor>(ClaimExtractors.Rules);
@@ -45,7 +45,7 @@ public sealed class ClaimsFromPicturesTests
             services.AddSingleton(scorer);
 
         using var provider = services.BuildServiceProvider();
-        return new ProposeClaimsHandler(this.knowledge, new Vocabulary(), provider, KnowledgeServiceCollectionExtensions.Extractor, this.knowledge, this.clock)
+        return new ProposeClaimsHandler(this.knowledge, vocabulary ?? new Vocabulary(), provider, KnowledgeServiceCollectionExtensions.Extractor, this.knowledge, this.clock)
             .HandleAsync(new ProposeClaimsCommand(Pan), TestContext.Current.CancellationToken);
     }
 
@@ -77,10 +77,33 @@ public sealed class ClaimsFromPicturesTests
         }
     }
 
+    /// <summary>What a description may type, and the little of it a picture can show.</summary>
     private sealed class Vocabulary : IAttributeVocabulary
     {
-        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<AttributeSpec>>([new("PIECES", "Number", null, "pieces", [], "piezas")]);
+        private static readonly AttributeSpec Pieces = new("PIECES", "Number", null, "pieces", [], "piezas");
+        private static readonly AttributeSpec Light = new("COLOUR_TEMPERATURE", "Text", null, "colour temperature", [], "temperatura de color");
+
+        public List<SourceKind> Asked { get; } = [];
+
+        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default)
+        {
+            Asked.Add(readFrom);
+            return Task.FromResult<IReadOnlyList<AttributeSpec>>(readFrom == SourceKind.ProductImage ? [Pieces] : [Pieces, Light]);
+        }
+    }
+
+    /// <summary>Types whatever it reads as a lamp's colour temperature, and says what it was offered.</summary>
+    private sealed class TypesEverythingAsLight : IClaimExtractor
+    {
+        public List<IReadOnlyList<string>> Offered { get; } = [];
+
+        public Task<IReadOnlyList<ProposedClaim>> ExtractAsync(ProductText text, IReadOnlyList<AttributeSpec> attributes, CancellationToken cancellationToken)
+        {
+            Offered.Add([.. attributes.Select(attribute => attribute.Code)]);
+            var (spanish, english) = (text.Spanish.Split(' ')[0], text.English.Split(' ')[0]);
+            return Task.FromResult<IReadOnlyList<ProposedClaim>>(
+                [new ProposedClaim(spanish, english, $"Dice «{spanish}».", $"It says \"{english}\".", "COLOUR_TEMPERATURE", "gray", 0.9)]);
+        }
     }
 
     [Fact]
@@ -134,6 +157,46 @@ public sealed class ClaimsFromPicturesTests
         Assert.Equal(Document(Side, "es").Id, quoted["Mango"]);
         Assert.Equal(SourceKind.ProductDescription, this.knowledge.Documents.Single(document => document.Id == quoted["Cazo"]).Kind);
         Assert.All(this.knowledge.Documents, document => Assert.False(document.IsWaiting));
+    }
+
+    /// <summary>
+    /// **A picture is offered only what a picture can show.** Handed the whole
+    /// vocabulary, the extractor typed a strap's grey as a lamp's colour
+    /// temperature: it fits what it reads into what it is given. Each source is
+    /// read with the vocabulary of its kind.
+    /// </summary>
+    [Fact]
+    public async Task Each_source_is_read_with_the_vocabulary_of_its_kind()
+    {
+        await Describe("es", "Flexo blanco.");
+        await Describe("en", "White lamp.");
+        await Read(Front, "Correa gris.", "Gray strap.");
+        var model = new TypesEverythingAsLight();
+        var vocabulary = new Vocabulary();
+
+        await Propose(model, new Hears(0.9), vocabulary);
+
+        Assert.Equal([SourceKind.ProductDescription, SourceKind.ProductImage], vocabulary.Asked);
+        Assert.Equal<IEnumerable<string>>([["PIECES", "COLOUR_TEMPERATURE"], ["PIECES"]], model.Offered);
+    }
+
+    /// <summary>
+    /// And when the model types it anyway, code refuses the typing and keeps the
+    /// sentence: what it saw is still true, it is the drawer that was wrong.
+    /// </summary>
+    [Fact]
+    public async Task A_typing_a_picture_cannot_show_is_refused_and_the_sentence_is_kept()
+    {
+        await Describe("es", "Flexo blanco.");
+        await Read(Front, "Correa gris.", "Gray strap.");
+
+        await Propose(new TypesEverythingAsLight(), new Hears(0.9));
+
+        var written = this.knowledge.Claims.Single(claim => claim.Evidence[0].Quote.Text == "Flexo");
+        var read = this.knowledge.Claims.Single(claim => claim.Evidence[0].Quote.Text == "Correa");
+        Assert.Equal(("COLOUR_TEMPERATURE", "gray"), (written.AttributeCode, written.Value));
+        Assert.Equal(((string?)null, (string?)null), (read.AttributeCode, read.Value));
+        Assert.Equal("Dice «Correa».", read.Statement.In("es"));
     }
 
     /// <summary>What was proposed from is not proposed from again: a second pass finds only the picture read since.</summary>
