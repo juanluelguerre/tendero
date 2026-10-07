@@ -39,7 +39,10 @@ public sealed record EvaluationOptions(
     int ContextTokens = 8192,
     string? CopilotDirectory = null,
     string? AssistantDirectory = null,
-    string? Only = null)
+    string? Only = null,
+    string? Dataset = null,
+    string? Modality = null,
+    int? Take = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -85,6 +88,13 @@ public sealed record EvaluationOptions(
           --attributes <file>     Attribute seed        (default seed/attributes.sample.json)
           --report <file>         Every prediction and its verdict, as JSON
           --ci                    With claims or support: exit 1 under the floors in knowledge/gates.json
+
+        The ImplicitAVE suite (--suite implicit-ave) asks a model read attributes off product photographs:
+          --dataset <dir>         ImplicitAVE's data/evaluation_data folder, downloaded outside this repository
+          --chat <url> --model <id>  The OpenAI-compatible endpoint, and what it serves
+          --modality <name>       both (default: picture and title), image, or text
+          --take <n>              Only n examples, spread over the whole set
+          --report <file>         Every answer beside its annotation, as JSON
 
         The support suite (--suite support) scores a scorer against knowledge/support.json:
           --scorer <name>         nli, reranker (both through TEI at --tei) or yesno (through --chat)
@@ -175,6 +185,9 @@ public sealed record EvaluationOptions(
             int.TryParse(values.GetValueOrDefault("context"), out var context) ? context : 8192,
             values.GetValueOrDefault("copilot", Path.Combine("tools", "SearchEval", "Copilot")),
             values.GetValueOrDefault("assistant", Path.Combine("tools", "SearchEval", "Assistant")),
-            values.GetValueOrDefault("only"));
+            values.GetValueOrDefault("only"),
+            values.GetValueOrDefault("dataset"),
+            values.GetValueOrDefault("modality"),
+            int.TryParse(values.GetValueOrDefault("take"), out var take) ? take : null);
     }
 }

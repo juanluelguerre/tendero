@@ -126,3 +126,22 @@ los números están en `docs/analysis/tino-models.md`, y lo que varía de una pa
 a otra con el mismo modelo, también. Un caso que nombra un producto, un pedido,
 una lectura o un comprador que el laboratorio no tiene detiene la suite antes de
 preguntar a ningún modelo.
+
+## La suite `implicit-ave` (fase 13a)
+
+El modelo de la tienda contra un examen ajeno: los 1.610 ejemplos de test de
+ImplicitAVE (foto real del producto, título, un atributo y el valor que anotó
+una persona). Pregunta cerrada, respuesta sujeta por esquema a las opciones del
+atributo, comparación exacta.
+
+```bash
+dotnet run --project tools/SearchEval -- --suite implicit-ave \
+  --dataset <carpeta data/evaluation_data de ImplicitAVE> \
+  --chat http://localhost:38085 --model qwen3.5-4b-q8_0 \
+  [--modality both|image|text] [--take 80] [--report informe.json]
+```
+
+**Los datos no están en el repositorio ni deben estarlo**: su repositorio no
+declara licencia y derivan de MAVE y de datos de producto de Amazon. Se
+descargan fuera del árbol. Es una medida, no una puerta: no tiene umbral y CI no
+la ejecuta. Resultados y lectura en `docs/specs/images.md` (I-4b).
