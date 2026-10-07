@@ -44,7 +44,8 @@ switch (command)
             // gemini by default, because it is what drew the catalogue. The
             // local one is the offline path and asks to be named.
             Value("--provider") ?? "gemini",
-            Value("--model"));
+            Value("--model"),
+            Value("--hint"));
 
     case "verify":
         return Verify(
@@ -57,6 +58,21 @@ switch (command)
 
     case "pairs":
         return Pairs(Value("--in"), Vision(), int.TryParse(Value("--offset"), out var offset) ? offset : 1);
+
+    case "defects":
+        return Defects(
+            Value("--in"),
+            Vision(),
+            Value("--only"),
+            Int32.TryParse(Value("--take"), out var pictures) ? pictures : Int32.MaxValue,
+            Value("--reference"),
+            Value("--dump"),
+            args.Contains("--draw-only"),
+            args.Contains("--record"),
+            args.Contains("--ci"));
+
+    case "reject":
+        return Reject(Value("--in"), Value("--only"), Value("--defect"), Value("--note"));
 
     case "probe":
         return Probe(Value("--in"));
@@ -76,7 +92,7 @@ switch (command)
             Usage: dotnet run --project tools/SeedImages -- <command> [options]
 
               inspect --models <dir> [--ep dml|cpu]   print what the ONNX graphs declare
-              generate [--provider gemini|sdxl] [--only <id>] [--take <n>]
+              generate [--provider gemini|sdxl] [--only <id> [--hint "<what the last drawing got wrong>"]] [--take <n>]
                        [--out <dir>] [--force] [--size <px>] [--model <hosted id>]
                        [--models <dir>] [--steps <n>] [--guidance <f>]
                        [--ep dml|cpu] [--rng-seed <n>]
@@ -85,13 +101,22 @@ switch (command)
                                                       GEMINI_API_KEY; sdxl needs --models
               verify [--in <dir>] [--only <id,id>] [--provider ollama|llama] [--url <url>]
                      [--model <name>] [--reference <id>] [--ci]
-                                                      ask a vision model what it sees: text,
-                                                      colour, a scene, whether it is the product
-                                                      described, and whether it is drawn as the
-                                                      reference picture is
+                                                      ask a vision model what it sees: text, a mark
+                                                      on the product, colour, a scene, how many,
+                                                      whether it is the product described, and
+                                                      whether it is drawn as the reference picture is
               pairs [--in <dir>] [--offset <n>] [--provider ollama|llama] [--url <url>] [--model <name>]
                                                       measure the description check: every picture
                                                       against its own product and against another's
+              defects [--in <dir>] [--only <id,id>] [--take <n>] [--dump <dir> [--draw-only]] [--record] [--ci]
+                      [--provider ollama|llama] [--url <url>] [--model <name>] [--reference <id>]
+                                                      measure every question: each picture as it is,
+                                                      and with one defect of each kind drawn into it,
+                                                      beside the pictures a person rejected. --record
+                                                      writes the board; --ci fails below the recorded one
+              reject --only <id> --defect <kind> --note "<what is wrong>" [--in <dir>]
+                                                      keep a picture a person rejected, with its defect,
+                                                      before it is drawn over
               probe --in <dir|file>                   where the object sits in images that exist
               tokens --models <dir>                   what each line of the prompt costs
               dry-run [--only <id>] [--take <n>] [--models <dir>]
@@ -280,10 +305,17 @@ static int Tokens(string? models)
 static int Generate(
     string? models, string? only, int take, int steps, float guidance,
     string? outDirectory, string provider, bool force, ulong? rngSeed, int size,
-    string illustrator, string? hostedModel)
+    string illustrator, string? hostedModel, string? hint)
 {
     // Only the local generator needs a model folder. The hosted one needs a key,
     // and it says so itself when it does not find one.
+    // A hint says what one drawing got wrong: on a batch it would be said of every product.
+    if (hint is not null && only is null)
+    {
+        Console.Error.WriteLine("--hint is for one product's redraw: it needs --only <id>.");
+        return 2;
+    }
+
     if (illustrator == "sdxl" && (models is null || !Directory.Exists(models)))
     {
         Console.Error.WriteLine($"No model directory at '{models}'. Pass --models <dir>.");
@@ -311,7 +343,7 @@ static int Generate(
     }
 
     var jobs = wanted
-        .Select(product => (product.ItemId, Prompt: PromptTemplate.Positive(product, colours)))
+        .Select(product => (product.ItemId, Prompt: PromptTemplate.Positive(product, colours, hint)))
         .ToArray();
 
     using IIllustrationGenerator generator = illustrator switch
@@ -453,7 +485,6 @@ static int Verify(string? input, IVisionModel model, string? only, string? refer
         .ToDictionary(product => product.ItemId, StringComparer.OrdinalIgnoreCase);
 
     var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
-    var vocabulary = colours.EnglishLabels;
 
     try
     {
@@ -466,6 +497,7 @@ static int Verify(string? input, IVisionModel model, string? only, string? refer
     }
 
     var vision = new VisionChecks(model);
+    var examiner = new PictureExaminer(vision, colours);
 
     // One of the pictures drawn by hand, which set the register every other one
     // is held to. It is never compared with itself.
@@ -491,39 +523,21 @@ static int Verify(string? input, IVisionModel model, string? only, string? refer
             continue;
         }
 
-        var verdict = vision.Look(bytes, vocabulary);
-        var product = products.GetValueOrDefault(itemId);
-
-        List<string> faults = [];
-
-        if (verdict.HasScene)
-            faults.Add("something else is drawn beside the product");
-
-        if (verdict.HasText)
-            faults.Add("there is text or a symbol in it");
-
-        if (product is not null && vision.Against(bytes, product.EnglishName, product.EnglishDescription) is { Matches: false } against)
-            faults.Add($"it shows \"{against.Shows}\", not the product described: {against.Differs}");
-
-        if (referenceBytes is not null && !string.Equals(itemId, reference, StringComparison.OrdinalIgnoreCase)
-            && vision.Beside(bytes, referenceBytes) is { } beside && !(beside.SameStyle && beside.SameBackground))
-            faults.Add($"it is not drawn as {reference} is: {beside.Differs}");
+        var itself = string.Equals(itemId, reference, StringComparison.OrdinalIgnoreCase);
+        var examination = examiner.Examine(bytes, products.GetValueOrDefault(itemId), itself ? null : referenceBytes, reference);
 
         // A colour mismatch is reported and NOT treated the same way. The
         // catalogue's colour for an invented product is arbitrary and the drawing
         // is the expensive part, so seed/IMAGES-TODO.md says the cheap repair is
         // to change the catalogue -- which is a person's call, not a retry.
-        if (product?.SpanishColour is { } spanish
-            && colours.English(spanish) is { } declared
-            && !string.Equals(declared, verdict.Colour, StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(verdict.Colour, "other", StringComparison.OrdinalIgnoreCase))
-        {
-            Console.WriteLine($"note  {itemId,-14}  catalogue says {declared}, the picture looks {verdict.Colour}");
-        }
+        foreach (var colour in examination.Doubts.Where(doubt => doubt.Question == Question.Colour))
+            Console.WriteLine($"note  {itemId,-14}  {colour.Says}");
 
-        if (faults.Count == 0)
+        var faults = examination.Doubts.Where(doubt => doubt.Question != Question.Colour).Select(doubt => doubt.Says).ToArray();
+
+        if (faults.Length == 0)
         {
-            Console.WriteLine($"ok    {itemId,-14}  {verdict.Colour}");
+            Console.WriteLine($"ok    {itemId,-14}  {examination.Colour}");
             continue;
         }
 
@@ -600,6 +614,225 @@ static int Pairs(string? input, IVisionModel model, int offset)
     Console.WriteLine($"{model.Name}: {files.Length} pictures, each against its own product and another's.");
     Console.WriteLine($"  false alarms (its own product refused): {falseAlarms} of {files.Length}");
     Console.WriteLine($"  misses (another product accepted):      {misses} of {files.Length}");
+
+    return 0;
+}
+
+// What each question catches, measured on pictures known to be wrong (the phase
+// 13a spec, I-2b). `pairs` shows a picture with another product's data: a wrong
+// thing. This shows the right thing drawn wrong -- a defect of each kind drawn
+// into every picture there is, and the pictures a person really rejected -- and
+// counts, per kind, which question doubted it. A doubt the picture already raised
+// before the defect went in is not the defect being caught, so it is not counted.
+//
+// The board it prints is recorded with --record and held with --ci: a question
+// that catches less than it did is a change to explain.
+static int Defects(string? input, IVisionModel model, string? only, int take, string? reference, string? dump, bool drawOnly, bool record, bool ci)
+{
+    var root = RepositoryRoot.Find();
+    input ??= Path.Combine(root, "seed", "images");
+
+    var products = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"))
+        .ToDictionary(product => product.ItemId, StringComparer.OrdinalIgnoreCase);
+    var wanted = only?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    var files = Directory.EnumerateFiles(input, "*.webp").Order()
+        .Where(file => products.ContainsKey(Path.GetFileNameWithoutExtension(file)))
+        .Where(file => wanted is null || wanted.Contains(Path.GetFileNameWithoutExtension(file), StringComparer.OrdinalIgnoreCase))
+        .Take(take)
+        .ToArray();
+
+    if (files.Length == 0)
+    {
+        Console.Error.WriteLine($"No picture of a known product at '{input}'.");
+        return 2;
+    }
+
+    // The set, for a person to look at before any model does: a defect nobody
+    // can see in the picture measures the forge and not the question.
+    if (drawOnly)
+    {
+        if (dump is null)
+        {
+            Console.Error.WriteLine("--draw-only writes the pictures and asks nothing: it needs --dump <dir>.");
+            return 2;
+        }
+
+        Directory.CreateDirectory(dump);
+        var drawn = 0;
+
+        foreach (var file in files)
+        {
+            var itemId = Path.GetFileNameWithoutExtension(file);
+            foreach (var defect in Enum.GetValues<Defect>())
+            {
+                if (DefectForge.Draw(defect, File.ReadAllBytes(file)) is not { } bad)
+                    continue;
+
+                File.WriteAllBytes(Path.Combine(dump, $"{itemId}-{defect.ToString().ToLowerInvariant()}.png"), bad);
+                drawn++;
+            }
+        }
+
+        Console.WriteLine($"{drawn} picture(s) with a defect drawn in, from {files.Length}, in {dump}.");
+        return 0;
+    }
+
+    try
+    {
+        model.EnsureReachable();
+    }
+    catch (InvalidOperationException failure)
+    {
+        Console.Error.WriteLine(failure.Message);
+        return 2;
+    }
+
+    var examiner = new PictureExaminer(
+        new VisionChecks(model),
+        ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json")));
+
+    reference ??= "B10SHO0101";
+    var referenceFile = Path.Combine(root, "seed", "images", reference + ".webp");
+    var referenceBytes = File.Exists(referenceFile) ? File.ReadAllBytes(referenceFile) : null;
+
+    if (dump is not null)
+        Directory.CreateDirectory(dump);
+
+    HashSet<Question> Asked(byte[] picture, SeedProduct product) =>
+    [
+        .. examiner
+            .Examine(picture, product, string.Equals(product.ItemId, reference, StringComparison.OrdinalIgnoreCase) ? null : referenceBytes, reference)
+            .Doubts.Select(doubt => doubt.Question),
+    ];
+
+    List<Trial> trials = [];
+    Dictionary<string, HashSet<Question>> asIs = new(StringComparer.OrdinalIgnoreCase);
+
+    Console.WriteLine($"asking {model.Name} about {files.Length} picture(s), as they are and with each defect drawn in...");
+    Console.WriteLine();
+
+    foreach (var file in files)
+    {
+        var product = products[Path.GetFileNameWithoutExtension(file)];
+        var good = File.ReadAllBytes(file);
+        var before = asIs[product.ItemId] = Asked(good, product);
+
+        trials.Add(new Trial(product.ItemId, null, before));
+        Console.WriteLine($"{product.ItemId,-12} as it is     {Named(before)}");
+
+        foreach (var defect in Enum.GetValues<Defect>())
+        {
+            // A count is held to the pieces a product declares, and a colour to the
+            // one it declares: with nothing declared there is nothing the defect
+            // could be caught against, and the miss would be the set's.
+            if ((defect == Defect.Count && product.Pieces is null) || (defect == Defect.Colour && product.SpanishColour is null))
+                continue;
+
+            if (DefectForge.Draw(defect, good) is not { } bad)
+                continue;
+
+            if (dump is not null)
+                File.WriteAllBytes(Path.Combine(dump, $"{product.ItemId}-{defect.ToString().ToLowerInvariant()}.png"), bad);
+
+            var raised = Asked(bad, product);
+            raised.ExceptWith(before);
+            trials.Add(new Trial($"{product.ItemId}-{defect}", defect, raised));
+            Console.WriteLine($"{product.ItemId,-12} {defect,-12}  {(raised.Count == 0 ? "MISSED" : Named(raised))}");
+        }
+    }
+
+    var kept = new KnownBad(Path.Combine(root, "tools", "SeedImages", "known-bad"));
+
+    foreach (var rejected in kept.Read())
+    {
+        if (!products.TryGetValue(rejected.ItemId, out var product)
+            || (wanted is not null && !wanted.Contains(rejected.ItemId, StringComparer.OrdinalIgnoreCase)))
+        {
+            continue;
+        }
+
+        // Held against the picture that was accepted for the same product, when
+        // this run looked at it: what that one raises too is not this defect.
+        var raised = Asked(File.ReadAllBytes(Path.Combine(kept.Folder, rejected.File)), product);
+        raised.ExceptWith(asIs.GetValueOrDefault(rejected.ItemId) ?? []);
+        trials.Add(new Trial(rejected.File, rejected.Defect, raised));
+        Console.WriteLine($"{rejected.File,-28} rejected: {rejected.Defect,-10}  {(raised.Count == 0 ? "MISSED" : Named(raised))}");
+    }
+
+    var board = Scoreboard.Of(trials);
+    var questions = Enum.GetValues<Question>();
+
+    Console.WriteLine();
+    Console.WriteLine($"{model.Name}. Caught, per kind of defect and per question:");
+    Console.WriteLine();
+    Console.WriteLine($"  {"",-12}{"pictures",9}{string.Concat(questions.Select(question => $"{question,13}"))}{"by none",10}");
+
+    foreach (var (defect, score) in board.Kinds)
+    {
+        Console.WriteLine(
+            $"  {defect,-12}{score.Pictures,9}{string.Concat(questions.Select(question => $"{score.Caught.GetValueOrDefault(question),13}"))}{score.ByNone,10}");
+    }
+
+    Console.WriteLine();
+    Console.WriteLine($"  {"as they are",-12}{board.Good,9}{string.Concat(questions.Select(question => $"{board.FalseAlarms.GetValueOrDefault(question),13}"))}   (doubts about a right picture)");
+
+    var recordedFile = Path.Combine(kept.Folder, "baseline.json");
+    // Held to the recorded board only when the whole set was asked: two pictures
+    // of twenty-eight have shares of their own, and every one of them reads as a fall.
+    var whole = wanted is null && take == Int32.MaxValue;
+    var falls = whole && File.Exists(recordedFile) ? board.FallsBelow(Scoreboard.Read(File.ReadAllText(recordedFile))) : [];
+
+    if (!whole && (record || ci))
+    {
+        Console.Error.WriteLine("--record and --ci are for the whole set: leave out --only and --take.");
+        return 2;
+    }
+
+    if (falls.Count > 0)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Below the recorded board:");
+        foreach (var fall in falls)
+            Console.WriteLine($"  {fall}");
+    }
+
+    if (record)
+    {
+        Directory.CreateDirectory(kept.Folder);
+        File.WriteAllText(recordedFile, board.Write() + "\n");
+        Console.WriteLine();
+        Console.WriteLine($"Recorded in {Path.GetRelativePath(root, recordedFile)}.");
+    }
+
+    return falls.Count == 0 || !ci ? 0 : 1;
+
+    static string Named(IReadOnlySet<Question> raised) =>
+        raised.Count == 0 ? "-" : string.Join(", ", raised.Order());
+}
+
+// A picture a person rejected is kept before it is drawn over (the phase 13a
+// spec, I-2b): it is what the questions are measured against next time.
+static int Reject(string? input, string? only, string? defect, string? note)
+{
+    var root = RepositoryRoot.Find();
+    input ??= Path.Combine(root, "seed", "images");
+
+    if (only is null || note is null || !Enum.TryParse<Defect>(defect, ignoreCase: true, out var kind))
+    {
+        Console.Error.WriteLine(
+            $"reject needs --only <id>, --note \"<what is wrong>\" and --defect <{string.Join('|', Enum.GetNames<Defect>()).ToLowerInvariant()}>.");
+        return 2;
+    }
+
+    var picture = File.Exists(input) ? input : Path.Combine(input, only + ".webp");
+    if (!File.Exists(picture))
+    {
+        Console.Error.WriteLine($"No picture at '{picture}'.");
+        return 2;
+    }
+
+    var kept = new KnownBad(Path.Combine(root, "tools", "SeedImages", "known-bad")).Keep(picture, only, kind, note);
+    Console.WriteLine($"Kept as known-bad/{kept.File}: {kept.Defect}, {kept.Note}");
 
     return 0;
 }

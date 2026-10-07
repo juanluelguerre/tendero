@@ -1,0 +1,58 @@
+{
+  "good": 28,
+  "false_alarms": {
+    "Scene": 5,
+    "Colour": 4
+  },
+  "kinds": {
+    "Lettering": {
+      "pictures": 28,
+      "caught": {
+        "Text": 28,
+        "Mark": 4,
+        "Scene": 22
+      },
+      "by_none": 0
+    },
+    "Emblem": {
+      "pictures": 28,
+      "caught": {
+        "Text": 11,
+        "Mark": 27,
+        "Scene": 8
+      },
+      "by_none": 0
+    },
+    "Scene": {
+      "pictures": 28,
+      "caught": {
+        "Scene": 23,
+        "Register": 25
+      },
+      "by_none": 0
+    },
+    "Colour": {
+      "pictures": 11,
+      "caught": {
+        "Colour": 9
+      },
+      "by_none": 2
+    },
+    "Count": {
+      "pictures": 3,
+      "caught": {
+        "Count": 3
+      },
+      "by_none": 0
+    },
+    "Background": {
+      "pictures": 28,
+      "caught": {
+        "Scene": 1,
+        "Colour": 1,
+        "Register": 27
+      },
+      "by_none": 1
+    }
+  }
+}

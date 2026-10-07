@@ -67,6 +67,84 @@ public sealed class PromptTests
     }
 
     /// <summary>
+    /// A set of three knives came back with four and a set of six tumblers with
+    /// seven, under a prompt that named the number and then said "One single
+    /// object". A product that declares its pieces is asked for exactly that many,
+    /// each one whole — and in a word, because a figure in a prompt is drawn as a label.
+    /// </summary>
+    [Fact]
+    public void A_set_is_asked_for_exactly_its_pieces_and_never_for_one_single_object()
+    {
+        var tumblers = new SeedProduct(
+            "B11TAB0504",
+            "Set of 6 recycled glass tumblers",
+            "Six 350 ml tumblers blown from recycled glass. Each one comes out slightly different.",
+            null,
+            6);
+
+        var prompt = PromptTemplate.Positive(tumblers, Lexicon);
+
+        Assert.Contains("Exactly six of them", prompt, StringComparison.Ordinal);
+        Assert.Contains("each one whole", prompt, StringComparison.Ordinal);
+        Assert.DoesNotContain("One single object", prompt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6", prompt, StringComparison.Ordinal);
+        // The rest of the register is the catalogue's, set or not.
+        Assert.Contains("warm grey background", prompt, StringComparison.Ordinal);
+        Assert.Contains("at most 70% of the frame height", prompt, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// An angle is a measurement too: "350 degrees of rotation" reached the
+    /// generator and came back as `350°` lettered beside the desk lamp, with a
+    /// little dial drawn for it. What it turns through goes with the figure, or
+    /// the sentence is left saying "of rotation" about nothing.
+    /// </summary>
+    [Fact]
+    public void An_angle_never_reaches_the_model_and_takes_what_it_measured_with_it()
+    {
+        Assert.Equal(
+            "Double-arm lamp with a desk clamp, and dimmable light at three temperatures.",
+            PromptTemplate.WithoutMeasurements(
+                "Double-arm lamp with a desk clamp, 350 degrees of rotation and dimmable light at three temperatures."));
+    }
+
+    /// <summary>
+    /// A redraw can be told what was wrong with the last one: the knives came back
+    /// twice with two blades standing up out of the block. The hint follows the
+    /// description, so it is read as part of what the object is.
+    /// </summary>
+    [Fact]
+    public void A_redraw_carries_what_was_wrong_with_the_last_one_after_the_description()
+    {
+        var prompt = PromptTemplate.Positive(SpiceRack, Lexicon, "Every jar stands upright.");
+
+        var description = prompt.IndexOf("standard cupboard.", StringComparison.Ordinal);
+        var hint = prompt.IndexOf("Every jar stands upright.", StringComparison.Ordinal);
+        var style = prompt.IndexOf("Bold clean outlines", StringComparison.Ordinal);
+
+        Assert.True(description >= 0 && description < hint && hint < style, prompt);
+    }
+
+    [Fact]
+    public void A_drawing_with_no_hint_is_the_prompt_it_always_was()
+    {
+        Assert.Equal(PromptTemplate.Positive(SpiceRack, Lexicon), PromptTemplate.Positive(SpiceRack, Lexicon, null));
+        Assert.Equal(PromptTemplate.Positive(SpiceRack, Lexicon), PromptTemplate.Positive(SpiceRack, Lexicon, "  "));
+    }
+
+    /// <summary>One cast iron pan declares one piece, and most products declare none: both are one single object.</summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(null)]
+    public void What_is_one_piece_or_declares_none_is_one_single_object(int? pieces)
+    {
+        var prompt = PromptTemplate.Positive(SpiceRack with { Pieces = pieces }, Lexicon);
+
+        Assert.Contains("One single object", prompt, StringComparison.Ordinal);
+        Assert.DoesNotContain("Exactly", prompt, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// The register is published in <c>seed/IMAGES-TODO.md</c> so a person can
     /// read what the hundred images are supposed to look like. If the code and
     /// the document drift, the document is the one people believe.

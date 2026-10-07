@@ -165,6 +165,18 @@ is right for its product and drawn as the others are:
   drawn by hand (`--reference`, `B10SHO0101` by default): the same flat
   illustration, the same plain background.
 
+**And two whose answer is a value, not a verdict** (phase 13a, I-2b): the model
+reads and code compares.
+
+- **How many are drawn?** A number, held by code to the product's `piezas` — and
+  asked only of a product that declares them. Asked whether a picture *matched*
+  "a set of three", the model passed one pan.
+- **Is something printed on the product?** A symbol, an emblem, a care label:
+  apart from the question about text, because a symbol is not text.
+
+The colour already worked this way: the model names one of the catalogue's nine
+and code compares it with the product's.
+
 **Every line `verify` prints is a proposal.** It says `LOOK`, not `REDO`: a person
 looks at the batch and accepts it, and a flagged picture is redrawn or its
 catalogue entry corrected, whichever is wrong.
@@ -219,6 +231,59 @@ not**. One pan passed as a set of three; a backpack as a gym duffel; a ceramic
 table lamp as a desk lamp with a USB port; a trail shoe as a racing shoe. So it
 catches a picture of the wrong thing, not a picture of the right thing drawn
 wrong, and the person's look at the batch is not optional.
+
+### What each question catches
+
+`pairs` shows a wrong thing. `defects` shows **the right thing drawn wrong**: it
+draws one defect of each kind into every picture there is (`DefectForge` — by
+code, so it is free and the same on every run), asks every question of the
+picture as it is and with the defect in, and counts which question newly doubted
+it. The pictures a person rejects are kept with `reject` and measured beside them.
+
+```bash
+dotnet run --project tools/SeedImages -- defects --provider llama            # the board, held to the recorded one
+dotnet run --project tools/SeedImages -- defects --provider llama --record   # after a change that is meant
+dotnet run --project tools/SeedImages -- defects --draw-only --dump <dir>    # the drawn defects, for a person to look at; no model
+dotnet run --project tools/SeedImages -- reject --only B10SHO0106 --defect emblem --note "a hand-wash symbol on its side"
+```
+
+Measured on 2026-10-07, the shop's model, 28 pictures, about 20 minutes:
+
+| Defect drawn in | Pictures | Caught by | By no question |
+|---|---|---|---|
+| Lettering | 28 | Text **28** · Scene 22 · Mark 4 | 0 |
+| Emblem | 28 | Mark **27** · Text 11 · Scene 8 | 0 |
+| Scene | 28 | Register 25 · Scene **23** (the other 5 it doubted already) | 0 |
+| Colour | 11 | Colour **9** | 2 |
+| Count | 3 | Count **3** | 0 |
+| Background | 28 | Register **27** | 1 |
+
+Right pictures doubted: Scene 5 of 28 (all bags), Colour 4 of 28, the rest none.
+
+**The model reads well and judges badly.** Asked "is anything drawn besides the
+product?" it said no to 28 pictures of 28 with a brown surface and a red ball
+drawn in; asked what it saw, it named both every time. So the scene question
+lists and code decides. The same held for a count, and "does it match the
+description?" caught none of the 126.
+
+The recorded board is `known-bad/baseline.json`. **Changing the model, its
+projector, a question or its wording means running `defects` again**; `--ci`
+fails when a question catches a smaller share of a kind, when more pictures are
+caught by none, or when a question doubts more right pictures. `--record` and
+`--ci` take the whole set only.
+
+A stamped emblem is cleaner than one a generator draws: this is the easy case,
+and the kept rejections are the hard one. One kind is only ever a rejection:
+`form`, the product itself drawn wrong (a knife standing blade up in its block).
+
+**A redraw can be told what the last one got wrong**, said as what the object is:
+
+```bash
+dotnet run --project tools/SeedImages -- generate --only B11COO0310 --force   --hint "Every knife is stored the right way: its blade is inside the block and only its handle shows above it."
+```
+
+And a product that declares more than one piece is asked for exactly that many,
+each one whole, instead of *One single object* (`PromptTemplate.SetOf`).
 
 ## The prompts
 

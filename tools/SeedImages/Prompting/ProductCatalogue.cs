@@ -15,11 +15,15 @@ namespace ElGuerre.Tendero.SeedImages;
 /// **Thirty-five products declare none**, and that is not missing data — the
 /// packing cubes are three cubes of three colours, and the attribute was removed
 /// rather than a lie chosen.</param>
+/// <param name="Pieces">How many items the product is, where the catalogue says
+/// so (`piezas`: a set of three pans, one cast iron pan) — what a picture's count
+/// is held to. Null for most: a pair of shoes declares none.</param>
 public sealed record SeedProduct(
     string ItemId,
     string EnglishName,
     string EnglishDescription,
-    string? SpanishColour);
+    string? SpanishColour,
+    int? Pieces = null);
 
 /// <summary>
 /// Reads <c>seed/products.sample.json</c>.
@@ -40,6 +44,8 @@ public static class ProductCatalogue
     /// the connector's aliases and not in the definitions' codes.</summary>
     private const string ColourKey = "color";
 
+    private const string PiecesKey = "piezas";
+
     public static IReadOnlyList<SeedProduct> Read(string path)
     {
         var rows = JsonSerializer.Deserialize<Row[]>(File.ReadAllText(path), JsonOptions)
@@ -53,7 +59,8 @@ public static class ProductCatalogue
                     row.ItemId,
                     Text(row.Name),
                     Text(row.Description),
-                    row.Attributes?.GetValueOrDefault(ColourKey)))
+                    row.Attributes?.GetValueOrDefault(ColourKey),
+                    int.TryParse(row.Attributes?.GetValueOrDefault(PiecesKey), out var pieces) ? pieces : null))
         ];
     }
 

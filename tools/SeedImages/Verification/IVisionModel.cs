@@ -173,6 +173,88 @@ public sealed class VisionChecks(IVisionModel model)
         return new RegisterVerdict(answer.SameStyle, answer.SameBackground, answer.Differs ?? "");
     }
 
+    private const string CountSchema = """
+        {
+          "type": "object",
+          "properties": { "count": { "type": "integer", "minimum": 0 } },
+          "required": ["count"],
+          "additionalProperties": false
+        }
+        """;
+
+    private const string CountQuestion =
+        "Look at this product illustration. "
+        + "count: how many separate items are drawn? Count each whole item once, wherever it is in the picture, "
+        + "and count the two shoes of a pair as two. Answer with the number only.";
+
+    /// <summary>
+    /// How many items are drawn — **a number, and nothing about whether it is the
+    /// right one** (phase 13a, I-2b). Asked whether a picture matched "a set of
+    /// three", the model passed one pan; what it is asked here it can only read,
+    /// and the comparison with the product's pieces is code's
+    /// (<see cref="PictureExaminer"/>).
+    /// </summary>
+    public int Count(byte[] image) =>
+        Read<CountAnswer>(model.Ask([AsPng(image)], CountQuestion, CountSchema)).Count;
+
+    private const string OthersSchema = """
+        {
+          "type": "object",
+          "properties": {
+            "product": { "type": "string" },
+            "others": { "type": "array", "maxItems": 6, "items": { "type": "string", "maxLength": 40 } }
+          },
+          "required": ["product", "others"],
+          "additionalProperties": false
+        }
+        """;
+
+    private const string OthersQuestion =
+        "Look at the whole illustration, its edges and corners included. "
+        + "product: name the product drawn, in a few words. "
+        + "others: list every other thing drawn that is not that product, not a part of it and not its shadow — "
+        + "a shape, a bar, a surface, a second object, however small or plain. An empty list when there is nothing else.";
+
+    /// <summary>
+    /// What is drawn besides the product, **as a list and not as a yes or no**
+    /// (phase 13a, I-2b). Asked "is anything drawn besides the product?", the
+    /// model said no to 28 pictures of 28 with a brown surface and a red ball
+    /// drawn into them — and, asked what it saw, named both in every one. It reads
+    /// well and judges badly; whether the list means a scene is code's to say.
+    ///
+    /// **The list is bounded in the schema.** Left open, a backpack's went on —
+    /// bottle, strap, strap — until the answer ran out of tokens in the middle of
+    /// a string, and the run stopped on picture twenty of twenty-eight.
+    /// </summary>
+    public IReadOnlyList<string> Others(byte[] image) =>
+        Read<OthersAnswer>(model.Ask([AsPng(image)], OthersQuestion, OthersSchema)).Others ?? [];
+
+    private const string MarkSchema = """
+        {
+          "type": "object",
+          "properties": { "has_mark": { "type": "boolean" } },
+          "required": ["has_mark"],
+          "additionalProperties": false
+        }
+        """;
+
+    private const string MarkQuestion =
+        "Look closely at the product in this illustration, at its surface. "
+        + "has_mark: is anything printed, stitched or stamped on the product that is not part of its shape — "
+        + "a small symbol, an icon, an emblem, a badge, a care label, a tag, a logo? "
+        + "Seams, laces, buttons, zips, handles and the product's own pattern are not marks.";
+
+    /// <summary>
+    /// Whether something is printed on the product that is not the product. **A
+    /// question of its own, because a symbol is not text**: the first batch's
+    /// slipper carried a hand-wash symbol, drawn from "Hand washable." in its
+    /// description. The question about text names symbols too; whether one that
+    /// asks only this catches more is not assumed — `defects` measures both
+    /// against the same pictures.
+    /// </summary>
+    public bool Marked(byte[] image) =>
+        Read<MarkAnswer>(model.Ask([AsPng(image)], MarkQuestion, MarkSchema)).HasMark;
+
     public string Describe(byte[] image, string? dumpTo = null)
     {
         var png = AsPng(image);
@@ -236,4 +318,10 @@ public sealed class VisionChecks(IVisionModel model)
     private sealed record DescriptionAnswer(string? Shows, bool Matches, string? Differs);
 
     private sealed record RegisterAnswer(bool SameStyle, bool SameBackground, string? Differs);
+
+    private sealed record OthersAnswer(string? Product, string[]? Others);
+
+    private sealed record CountAnswer(int Count);
+
+    private sealed record MarkAnswer(bool HasMark);
 }

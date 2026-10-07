@@ -39,7 +39,7 @@ public static class PromptTemplate
         "Bold clean outlines, solid saturated colours, flat shading.",
         "Plain unmarked surfaces with no writing, no labels and no badges.",
         "Plain light warm grey background, even lighting, minimal soft shadow.",
-        "One single object, isolated and centred, three-quarter view,",
+        OneObject,
         "at most 70% of the frame height, with wide empty margins above and below."
     ];
 
@@ -84,7 +84,8 @@ public static class PromptTemplate
     /// names the object without the invented brand — a generator has never heard
     /// of a "Pulse Runner" and reads "cushioned running shoes" perfectly well.
     /// </summary>
-    public static string Positive(SeedProduct product, ColourLexicon colours)
+    /// <param name="hint">For a redraw: what was wrong with the last drawing, said as what the object is. It follows the description.</param>
+    public static string Positive(SeedProduct product, ColourLexicon colours, string? hint = null)
     {
         // Thirty-five products declare no colour, and one of them says why in
         // seed/IMAGES-TODO.md: the packing cubes are three cubes of three
@@ -107,12 +108,37 @@ public static class PromptTemplate
         // and none of them drew the wrong thing.
         var description = WithoutCareInstructions(WithoutMeasurements(product.EnglishDescription));
 
+        if (!string.IsNullOrWhiteSpace(hint))
+            description = $"{description} {hint.Trim()}";
+
         var subject = colour is null
             ? $"The object: {description}"
             : $"The object is {colour}: {description}";
 
-        return string.Join(Environment.NewLine, [StyleLines[0], subject, .. StyleLines[1..]]);
+        // A set is not "one single object", and saying both got four knives for
+        // three and seven tumblers for six.
+        var composition = product.Pieces is > 1 and var pieces
+            ? StyleLines[1..].Select(line => line == OneObject ? SetOf(pieces) : line)
+            : StyleLines[1..];
+
+        return string.Join(Environment.NewLine, [StyleLines[0], subject, .. composition]);
     }
+
+    /// <summary>The line a set replaces: it asks for one object, and a set is several.</summary>
+    private const string OneObject = "One single object, isolated and centred, three-quarter view,";
+
+    private static readonly string[] Numbers =
+        ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+
+    /// <summary>
+    /// How many to draw, for a product that declares its pieces. **In a word, not
+    /// a figure**: a figure in a prompt is what gets lettered onto the product.
+    /// "Each one whole" because the generator stacks and overlaps a set, and an
+    /// overlapped set is one nobody can count — the model that checks it least of all.
+    /// </summary>
+    public static string SetOf(int pieces) =>
+        $"Exactly {(pieces < Numbers.Length ? Numbers[pieces] : pieces.ToString(System.Globalization.CultureInfo.InvariantCulture))} of them, "
+        + "each one whole and none hidden behind another, grouped and centred, three-quarter view,";
 
     /// <summary>
     /// The description with its figures taken out.
@@ -192,7 +218,10 @@ public static class PromptTemplate
         @"\b(?:UPF|SPF|IPX)\s*\d+\b"
         + @"|\b\d+(?:[.,]\d+)?(?:\s*(?:,|and|y)\s*\d+(?:[.,]\d+)?)*"
         + @"\s*-?\s*(?:mm|cm|m|g|kg|ml|l|w|v|"
-        + @"hour|hours|cup|cups|litre|litres|liter|liters|inch|inches)\b",
+        + @"hour|hours|cup|cups|litre|litres|liter|liters|inch|inches|"
+        // An angle, with what it measures: "350 degrees of rotation" leaves
+        // nothing behind, where "350 degrees" alone would leave "of rotation".
+        + @"degrees?(?:\s+of\s+\w+)?)\b",
         System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
     private static readonly System.Text.RegularExpressions.Regex BeforePunctuation =
