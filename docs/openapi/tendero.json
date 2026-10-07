@@ -1375,6 +1375,13 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4345,6 +4352,7 @@
       "AloneReason": {
         "enum": [
           "WeakSupport",
+          "ContradictsTheCatalogue",
           "ReadFromAPicture",
           null
         ]
@@ -4779,6 +4787,7 @@
           "Approved",
           "WeakSupport",
           "ReadFromAPicture",
+          "ContradictsTheCatalogue",
           "NotWaiting",
           "NotFound"
         ]
@@ -5161,6 +5170,25 @@
           }
         }
       },
+      "CatalogueContradiction": {
+        "required": [
+          "attributeCode",
+          "claimed",
+          "held"
+        ],
+        "type": "object",
+        "properties": {
+          "attributeCode": {
+            "type": "string"
+          },
+          "claimed": {
+            "type": "string"
+          },
+          "held": {
+            "type": "string"
+          }
+        }
+      },
       "CatalogueGap": {
         "enum": [
           "MissingName",
@@ -5425,7 +5453,8 @@
           "proposedAt",
           "isWeak",
           "picture",
-          "decidedAlone"
+          "decidedAlone",
+          "contradicts"
         ],
         "type": "object",
         "properties": {
@@ -5496,6 +5525,16 @@
               },
               {
                 "$ref": "#/components/schemas/AloneReason"
+              }
+            ]
+          },
+          "contradicts": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CatalogueContradiction"
               }
             ]
           }
@@ -9008,6 +9047,7 @@
           "NotWaiting",
           "WeakSupport",
           "ReadFromAPicture",
+          "ContradictsTheCatalogue",
           "NotFound"
         ]
       },

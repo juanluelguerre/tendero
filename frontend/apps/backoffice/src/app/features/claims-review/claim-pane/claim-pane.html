@@ -12,6 +12,25 @@
         }
       </section>
 
+      @if (claim.contradicts; as contradiction) {
+        <!-- The catalogue holds another value for this attribute: both are named and
+             neither is corrected. Approving replaces what the catalogue holds. -->
+        <section class="pane-section">
+          <h3 class="eyebrow text-warning">{{ t('claims.contradicts') }}</h3>
+          <dl class="m-0 grid gap-2 rounded-lg border border-hairline bg-raised p-4 text-xs">
+            <div class="grid gap-hair">
+              <dt class="text-muted">{{ t('claims.catalogueSays', { attribute: contradiction.attributeCode }) }}</dt>
+              <dd class="m-0 font-medium">{{ contradiction.held }}</dd>
+            </div>
+            <div class="grid gap-hair">
+              <dt class="text-muted">{{ t('claims.claimSays') }}</dt>
+              <dd class="m-0 font-medium">{{ contradiction.claimed }}</dd>
+            </div>
+          </dl>
+          <p class="m-0 text-xs text-muted">{{ t('claims.contradictsNotice') }}</p>
+        </section>
+      }
+
       @if (claim.picture; as picture) {
         <!-- Read from a picture: the quotes below are a model's words about it, so
              the picture is what the claim is checked against. -->

@@ -64,7 +64,13 @@ export const ClaimsReviewStore = signalStore(
         }),
         stream: ({ params }) =>
           forkJoin({
-            claims: store._knowledge.claims(params.support, params.page, store.pageSize, params.product),
+            claims: store._knowledge.claims(
+              params.support,
+              params.page,
+              store.pageSize,
+              params.product,
+              params.culture,
+            ),
             products: store._catalog.list(null, params.culture, 1, 100),
           }),
       }),

@@ -7,6 +7,7 @@ using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Features.ProductSpecs;
 using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
+using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Contracts;
@@ -95,6 +96,53 @@ public sealed class ApprovedClaimToCatalogTests(PostgresFixture postgres)
         Assert.Equal((SpecSources.Description, 3m, "L"), (capacity.Source, capacity.Number, capacity.Unit));
         Assert.Equal("3 L", capacity.Evidence!.Quotes.Single().Text);
         Assert.Contains(sheet.Statements, statement => statement.Text == "Tiene unobtainium.");
+    }
+
+    /// <summary>
+    /// What the review queue puts a claim beside (phase 13a, I-4): a product's
+    /// attribute values as Catalog holds them, each with the culture-free key a
+    /// claim's own value is compared with and the words a reviewer reads — for a
+    /// product that is still a draft, which is when its claims are reviewed, and
+    /// nothing at all for a product the catalogue does not have.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task The_catalogue_says_what_a_draft_product_holds_with_the_key_a_claim_is_compared_with()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("knowledge_held_values");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        await using var provider = Compose(factory.ConnectionString);
+        await using (var scope = provider.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new ImportProductsCommand("seed"), ct);
+
+        Product product;
+        await using (var context = factory.Create())
+            product = (await context.Products.ToListAsync(ct)).First(found => found.Attributes.Any(value => value.Kind == AttributeKind.Option));
+        Assert.Equal(ProductStatus.Draft, product.Status);
+        var unknown = ProductId.New();
+
+        await using var asking = provider.CreateAsyncScope();
+        var catalogue = asking.ServiceProvider.GetRequiredService<ICatalogueValues>();
+        var english = await catalogue.OfAsync([product.Id, unknown], "en", ct);
+        var spanish = await catalogue.OfAsync([product.Id], "es", ct);
+
+        Assert.Equal([product.Id], english.Keys);
+        Assert.Equal(
+            product.Attributes.Select(value => (value.Code, value.Key)).OrderBy(value => value.Code),
+            english[product.Id].Select(held => (held.AttributeCode, held.Key)).OrderBy(held => held.AttributeCode));
+        Assert.All(english[product.Id], held => Assert.False(string.IsNullOrWhiteSpace(held.Shown)));
+
+        // An option is shown by its label in the reviewer's language, and keyed by its code in both.
+        var option = product.Attributes.First(value => value.Kind == AttributeKind.Option);
+        var (inEnglish, inSpanish) = (
+            english[product.Id].Single(held => held.AttributeCode == option.Code),
+            spanish[product.Id].Single(held => held.AttributeCode == option.Code));
+        Assert.Equal((option.OptionCode, option.OptionCode), (inEnglish.Key, inSpanish.Key));
+        Assert.NotEqual(inEnglish.Shown, inSpanish.Shown);
     }
 
     private static ProductClaim Approved(ProductId product, string attribute, string value)

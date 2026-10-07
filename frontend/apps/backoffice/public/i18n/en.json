@@ -593,6 +593,10 @@
     "pictureNotice": "A model described this picture, and the claim was taken from its description. The quotes below are the model's words, not the shop's text. Check the claim against the picture before you approve it.",
     "pictureAlt": "The picture of {{product}} this claim was read from",
     "readBy": "picture read by {{model}}",
+    "contradicts": "The catalogue says otherwise",
+    "catalogueSays": "The catalogue holds, for {{attribute}}",
+    "claimSays": "This claim says",
+    "contradictsNotice": "One of the two is wrong, and nothing here says which. Approving this claim replaces what the catalogue holds; rejecting it leaves the catalogue as it is.",
     "supportExplained": "How well the quote supports the claim, measured by a textual-inference model — not what the extractor says about itself.",
     "approve": "Approve",
     "reject": "Reject",
@@ -1238,7 +1242,7 @@
   "claimsBulk": {
     "door": "Review this product's claims together",
     "heading": "Review {{count}} claims · {{product}}",
-    "lede": "The same review as Steward's proposals: what changes, and the evidence for it. Weakly supported claims, and claims read from a picture, cannot be approved together — open them one by one.",
+    "lede": "The same review as Steward's proposals: what changes, and the evidence for it. Claims with weak support, claims the catalogue contradicts and claims read from a picture cannot be approved together — open them one by one.",
     "failed": "The claims could not be loaded. Try again.",
     "column": {
       "pick": "Approve",
@@ -1247,11 +1251,18 @@
       "evidence": "Evidence",
       "result": "Result"
     },
-    "weak": "Weak support — open it to decide",
-    "picture": "Read from a picture — open it to decide",
-    "pictureFor": "{{attribute}}: read from a picture — open it to decide",
     "openAlone": "Open the one left out",
     "openFirstAlone": "Open the first one left out",
+    "alone": {
+      "WeakSupport": "Weak support — open it to decide",
+      "ContradictsTheCatalogue": "The catalogue says otherwise — open it to decide",
+      "ReadFromAPicture": "Read from a picture — open it to decide"
+    },
+    "aloneFor": {
+      "WeakSupport": "{{attribute}}: weak support — open it to decide",
+      "ContradictsTheCatalogue": "{{attribute}}: the catalogue says otherwise — open it to decide",
+      "ReadFromAPicture": "{{attribute}}: read from a picture — open it to decide"
+    },
     "tally": "{{together}} of {{count}} can go together · {{alone}} to open one by one",
     "selected": "{{selected}} of {{count}} selected",
     "cancel": "Cancel",
@@ -1261,6 +1272,7 @@
       "Approved": "Approved",
       "WeakSupport": "Weak support — not approved",
       "ReadFromAPicture": "Read from a picture — not approved",
+      "ContradictsTheCatalogue": "The catalogue says otherwise — not approved",
       "NotWaiting": "Already decided",
       "NotFound": "Not found"
     },
@@ -1268,7 +1280,6 @@
     "loading": "Loading the claims of {{product}}…",
     "capped": "Showing the first {{shown}} of {{total}}; the rest wait in the queue.",
     "tallyOne": "{{together}} of {{count}} can go together · 1 to open on its own",
-    "weakFor": "{{attribute}}: weak support — open it to decide",
     "approveFailed": "The approval did not go through. What was decided shows on its row; try the rest again.",
     "done": "{{approved}} approved."
   }

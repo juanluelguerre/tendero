@@ -593,6 +593,10 @@
     "pictureNotice": "Un modelo describió esta imagen y la afirmación sale de esa descripción. Las citas de abajo son palabras del modelo, no texto de la tienda. Comprueba la afirmación con la imagen antes de aprobarla.",
     "pictureAlt": "La imagen de {{product}} de la que se leyó esta afirmación",
     "readBy": "imagen leída por {{model}}",
+    "contradicts": "El catálogo dice otra cosa",
+    "catalogueSays": "El catálogo tiene, para {{attribute}}",
+    "claimSays": "Esta afirmación dice",
+    "contradictsNotice": "Una de las dos está mal, y nada aquí dice cuál. Aprobar esta afirmación sustituye lo que tiene el catálogo; rechazarla lo deja como está.",
     "supportExplained": "Cuánto respalda la cita a la afirmación, medido por un modelo de inferencia textual — no lo que el extractor dice de sí mismo.",
     "approve": "Aprobar",
     "reject": "Rechazar",
@@ -1238,7 +1242,7 @@
   "claimsBulk": {
     "door": "Revisar juntas las afirmaciones de este producto",
     "heading": "Revisar {{count}} afirmaciones · {{product}}",
-    "lede": "La misma revisión que las propuestas de Steward: qué cambia y en qué se apoya. Las afirmaciones con apoyo débil, y las leídas de una imagen, no se aprueban juntas: ábrelas una a una.",
+    "lede": "La misma revisión que las propuestas de Steward: qué cambia y en qué se apoya. Las afirmaciones con apoyo débil, las que el catálogo contradice y las leídas de una imagen no se aprueban juntas: ábrelas una a una.",
     "failed": "No se pudieron cargar las afirmaciones. Inténtalo de nuevo.",
     "column": {
       "pick": "Aprobar",
@@ -1247,11 +1251,18 @@
       "evidence": "Evidencia",
       "result": "Resultado"
     },
-    "weak": "Apoyo débil — ábrela para decidir",
-    "picture": "Leída de una imagen — ábrela para decidir",
-    "pictureFor": "{{attribute}}: leída de una imagen — ábrela para decidir",
     "openAlone": "Abrir la que queda fuera",
     "openFirstAlone": "Abrir la primera que queda fuera",
+    "alone": {
+      "WeakSupport": "Apoyo débil — ábrela para decidir",
+      "ContradictsTheCatalogue": "El catálogo dice otra cosa — ábrela para decidir",
+      "ReadFromAPicture": "Leída de una imagen — ábrela para decidir"
+    },
+    "aloneFor": {
+      "WeakSupport": "{{attribute}}: apoyo débil — ábrela para decidir",
+      "ContradictsTheCatalogue": "{{attribute}}: el catálogo dice otra cosa — ábrela para decidir",
+      "ReadFromAPicture": "{{attribute}}: leída de una imagen — ábrela para decidir"
+    },
     "tally": "{{together}} de {{count}} pueden ir juntas · {{alone}} se abren una a una",
     "selected": "{{selected}} de {{count}} seleccionadas",
     "cancel": "Cancelar",
@@ -1261,6 +1272,7 @@
       "Approved": "Aprobada",
       "WeakSupport": "Apoyo débil — no aprobada",
       "ReadFromAPicture": "Leída de una imagen — no aprobada",
+      "ContradictsTheCatalogue": "El catálogo dice otra cosa — no aprobada",
       "NotWaiting": "Ya decidida",
       "NotFound": "No encontrada"
     },
@@ -1268,7 +1280,6 @@
     "loading": "Cargando las afirmaciones de {{product}}…",
     "capped": "Se muestran las {{shown}} primeras de {{total}}; el resto espera en la cola.",
     "tallyOne": "{{together}} de {{count}} pueden ir juntas · 1 se abre aparte",
-    "weakFor": "{{attribute}}: apoyo débil — ábrela para decidir",
     "approveFailed": "La aprobación no se completó. Lo decidido aparece en su fila; vuelve a intentar el resto.",
     "done": "{{approved}} aprobadas."
   }

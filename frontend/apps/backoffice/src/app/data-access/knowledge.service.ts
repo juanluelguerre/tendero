@@ -30,18 +30,21 @@ export class KnowledgeService {
     page = 1,
     pageSize = 20,
     product: string | null = null,
+    culture: string | null = null,
   ): Observable<ClaimsForReviewPage> {
     let params = new HttpParams().set('support', support).set('page', page).set('pageSize', pageSize);
+    // The reader's language: what the catalogue holds is worded in it beside a claim that says otherwise.
+    if (culture) params = params.set('culture', culture);
     // One product's: where a claim opened from its bulk review is on the first page.
     if (product) params = params.set('product', product);
     return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, { params });
   }
 
   /** One product's claims waiting for review, every one: its bulk review reads them all. */
-  claimsOf(productId: string): Observable<ClaimsForReviewPage> {
-    return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, {
-      params: new HttpParams().set('support', 'All').set('product', productId).set('page', 1).set('pageSize', 100),
-    });
+  claimsOf(productId: string, culture: string | null = null): Observable<ClaimsForReviewPage> {
+    let params = new HttpParams().set('support', 'All').set('product', productId).set('page', 1).set('pageSize', 100);
+    if (culture) params = params.set('culture', culture);
+    return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, { params });
   }
 
   /** Approves a product's claims together; the server refuses each weak one on its row. */

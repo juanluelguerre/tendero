@@ -10,7 +10,7 @@ import { ClaimsBulkReview } from './claims-bulk-review';
 
 const Claims = 'http://api/api/knowledge/claims';
 
-const claim = (claimId: string, isWeak = false, fromPicture = false) =>
+const claim = (claimId: string, isWeak = false, fromPicture = false, contradicts = false) =>
   ({
     claimId,
     productId: 'p1',
@@ -18,7 +18,14 @@ const claim = (claimId: string, isWeak = false, fromPicture = false) =>
     value: 'v',
     isWeak,
     picture: fromPicture ? { imageId: 'img', readBy: 'model', promptVersion: 'v1' } : null,
-    decidedAlone: isWeak ? 'WeakSupport' : fromPicture ? 'ReadFromAPicture' : null,
+    contradicts: contradicts ? { attributeCode: claimId, claimed: 'v', held: 'otro' } : null,
+    decidedAlone: isWeak
+      ? 'WeakSupport'
+      : contradicts
+        ? 'ContradictsTheCatalogue'
+        : fromPicture
+          ? 'ReadFromAPicture'
+          : null,
     statementSpanish: '',
     statementEnglish: '',
     quotes: [{ culture: 'es', text: `cita ${claimId}`, start: 0, end: 1, support: 0.5 }],
@@ -75,7 +82,10 @@ describe('the claims bulk review', () => {
     fixture.detectChanges();
     http
       .expectOne((req) => req.url === Claims)
-      .flush({ items: [claim('a'), claim('p', false, true), claim('w', true)], counts: [] });
+      .flush({
+        items: [claim('a'), claim('p', false, true), claim('c', false, false, true), claim('w', true)],
+        counts: [],
+      });
     for (const translations of http.match((req) => req.url.includes('/i18n/'))) translations.flush({});
     await TestBed.inject(ApplicationRef).whenStable();
     fixture.detectChanges();
@@ -86,9 +96,14 @@ describe('the claims bulk review', () => {
       [true, false],
       [false, true],
       [false, true],
+      [false, true],
     ]);
     // No translations are loaded here, so a label is its key: each reason has its own.
     const reasons = [...element.querySelectorAll('tbody button')].map((button) => button.textContent?.trim());
-    expect(reasons).toEqual(['claimsBulk.picture', 'claimsBulk.weak']);
+    expect(reasons).toEqual([
+      'claimsBulk.alone.ReadFromAPicture',
+      'claimsBulk.alone.ContradictsTheCatalogue',
+      'claimsBulk.alone.WeakSupport',
+    ]);
   });
 });

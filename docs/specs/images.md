@@ -300,9 +300,9 @@ review names the proposer (`docs/plans/2026-10-06-images-i3-alt-text.md`).
   measure with — that needs pictures of real products, which is its own
   question of rights and is the author's to open.
 
-*As built (2026-10-07), the first four steps of five* — a picture is read, claims
-are proposed from its reading, and the review queue shows them as read from a
-picture, with the picture; nothing is held against the catalogue's data yet.
+*As built (2026-10-07), the five steps* — a picture is read, claims are proposed
+from its reading, the review queue shows them as read from a picture, with the
+picture, and a claim that says another value than the catalogue holds names both.
 
 - **A reading is a `SourceDocument` of kind `ProductImage`**, made by
   `SourceDocument.Depict`: the text is the model's description, and it says which
@@ -376,6 +376,28 @@ picture, with the picture; nothing is held against the catalogue's data yet.
     thing to measure before these are proposed in number.
   - **The claims are in the development database**, proposed by the pipeline and
     decided by nobody.
+- **Against the catalogue** (step 5; for a claim from any source, by the
+  author's ruling): where a typed claim says one value and its product holds
+  another for the same attribute, `ClaimForReview.Contradicts` names both — the
+  claim's value as the claim writes it, the catalogue's as a person reads it in
+  the reviewer's language (the queue now takes `?culture=`, ADR 0013). A claim
+  that adds a value, agrees with it or types nothing contradicts nothing; numbers
+  are compared as numbers (`4` and `4.0`), everything else without regard to
+  case. It corrects neither. Approving replaces what the catalogue holds, so it
+  is a third reason a claim is decided on its own: the row does not approve it,
+  the bulk review leaves it out, and the server refuses it in bulk
+  (`ReviewOutcome.ContradictsTheCatalogue`). One reason is sent, the first that
+  applies: weak support, then the catalogue, then the picture — the picture and
+  the two values are still shown. Catalog's values reach Knowledge as values
+  (`ICatalogueValues`, a draft included, asked once for a page's products).
+  Captures `12` and `13`.
+- **On the development database, the first time it was asked: 10 of 87 waiting
+  claims say another value than the catalogue holds, and 9 of them were read
+  from a description**, not a picture — a material read as glass where the
+  product holds stainless steel, bamboo where it holds glass, 10 W where it
+  holds 15. They had been waiting with nothing to say so; approving one would
+  have replaced the value unseen. Which side is wrong in each is not judged
+  here: the author's to read.
 - **Not measured**: how often a picture proposes what the description already
   did (*three pans*, twice). Nothing merges the two; the reviewer would see both.
 - **Known and not solved**: a picture the model fails on stays at the head of the

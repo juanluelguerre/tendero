@@ -51,19 +51,20 @@
             }
             @if (row.claim.decidedAlone && !row.outcome) {
               <!-- Why it cannot go with the others, each reason in its own words:
-                   weak support, or read from a picture a person has to see. -->
+                   weak support, another value than the catalogue holds, or read
+                   from a picture a person has to see. -->
               <button
                 type="button"
                 class="mt-1 min-h-target text-xs text-warning underline"
                 [id]="headingId + '-alone-' + row.claim.claimId"
                 [attr.aria-label]="
-                  t(row.claim.decidedAlone === 'ReadFromAPicture' ? 'claimsBulk.pictureFor' : 'claimsBulk.weakFor', {
+                  t('claimsBulk.aloneFor.' + row.claim.decidedAlone, {
                     attribute: row.claim.attributeCode ?? statementIn(row.claim, culture.active()),
                   })
                 "
                 (click)="openOne(row.claim.claimId)"
               >
-                {{ row.claim.decidedAlone === 'ReadFromAPicture' ? t('claimsBulk.picture') : t('claimsBulk.weak') }}
+                {{ t('claimsBulk.alone.' + row.claim.decidedAlone) }}
               </button>
             }
           </td>

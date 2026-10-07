@@ -1528,7 +1528,7 @@ export interface components {
             updatedAt: string;
         };
         /** @enum {unknown} */
-        AloneReason: "WeakSupport" | "ReadFromAPicture" | null;
+        AloneReason: "WeakSupport" | "ContradictsTheCatalogue" | "ReadFromAPicture" | null;
         /** @enum {unknown} */
         AltTextStatus: "Ran" | "NothingToDescribe" | "NoModel";
         AlternateSlug: {
@@ -1633,7 +1633,7 @@ export interface components {
             searches: components["schemas"]["PastSearch"][];
         };
         /** @enum {unknown} */
-        BulkApprovalOutcome: "Approved" | "WeakSupport" | "ReadFromAPicture" | "NotWaiting" | "NotFound";
+        BulkApprovalOutcome: "Approved" | "WeakSupport" | "ReadFromAPicture" | "ContradictsTheCatalogue" | "NotWaiting" | "NotFound";
         /** @enum {unknown} */
         CampaignChange: "Created" | "Updated" | "Scheduled" | "Unscheduled" | "Ended" | "Unchanged" | "NotFound" | "AlreadyExists" | "UnknownPromotion" | "UnknownImage" | "WindowClosed" | "NotEditable" | "NotAllowed";
         CampaignChangeResponse: {
@@ -1728,6 +1728,11 @@ export interface components {
             expiresAt: string;
             lines: components["schemas"]["CartLineView"][];
         };
+        CatalogueContradiction: {
+            attributeCode: string;
+            claimed: string;
+            held: string;
+        };
         /** @enum {unknown} */
         CatalogueGap: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting";
         CatalogueGaps: {
@@ -1813,6 +1818,7 @@ export interface components {
             isWeak: boolean;
             picture: null | components["schemas"]["PictureForReview"];
             decidedAlone: null | components["schemas"]["AloneReason"];
+            contradicts: null | components["schemas"]["CatalogueContradiction"];
         };
         ClaimSupportCount: {
             support: components["schemas"]["ClaimSupportFilter"];
@@ -2723,7 +2729,7 @@ export interface components {
             outcome: components["schemas"]["ReviewOutcome"];
         };
         /** @enum {unknown} */
-        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "ReadFromAPicture" | "NotFound";
+        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "ReadFromAPicture" | "ContradictsTheCatalogue" | "NotFound";
         ReviewedImage: {
             id: string;
             alt: {
@@ -4090,6 +4096,7 @@ export interface operations {
                 page?: number;
                 pageSize?: number;
                 product?: string;
+                culture?: string;
             };
             header?: never;
             path?: never;

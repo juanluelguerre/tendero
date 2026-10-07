@@ -47,10 +47,10 @@ public sealed class ReviewClaimsReadFromPicturesTests
         Propose(SourceDocument.Describe(this.lamp, "es", "Flexo de doble brazo con pinza de escritorio.", this.clock), quote, support);
 
     private async Task<IReadOnlyList<ClaimForReview>> Queue() =>
-        (await new ListClaimsForReviewHandler(this.knowledge).HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken)).Items;
+        (await new ListClaimsForReviewHandler(this.knowledge, Held.Nothing).HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken)).Items;
 
     private Task<ReviewClaimResult> Decide(ProductClaim claim, bool inBulk, ReviewDecision decision = ReviewDecision.Approve) =>
-        new ReviewClaimHandler(this.knowledge, new Reviewer("Ana Tendera"), this.knowledge, this.clock)
+        new ReviewClaimHandler(this.knowledge, new Reviewer("Ana Tendera"), this.knowledge, this.clock, Held.Nothing)
             .HandleAsync(new ReviewClaimCommand(claim.Id, decision, inBulk), TestContext.Current.CancellationToken);
 
     [Fact]
@@ -132,6 +132,7 @@ public sealed class ReviewClaimsReadFromPicturesTests
         services.AddTenderoCqrs(typeof(ApproveClaimsCommand).Assembly);
         services.AddSingleton<IKnowledgeRepository>(this.knowledge);
         services.AddSingleton<IUnitOfWork>(this.knowledge);
+        services.AddSingleton<ICatalogueValues>(Held.Nothing);
         services.AddSingleton<TimeProvider>(this.clock);
         services.AddSingleton<IPrincipalAccessor>(new Reviewer("Ana Tendera"));
         services.AddSingleton<IAuditWriter>(new NoAudit());

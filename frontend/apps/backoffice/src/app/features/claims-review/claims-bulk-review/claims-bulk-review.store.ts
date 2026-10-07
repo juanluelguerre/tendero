@@ -4,6 +4,7 @@ import { patchState, signalStore, withComputed, withMethods, withProps, withStat
 import { extendResource } from '@ngrx/signals/resource';
 import type { BulkApprovalOutcome, ClaimForReview } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
+import { CultureStore } from '@tendero/shared-i18n';
 import { KnowledgeService } from '../../../data-access/knowledge.service';
 import { readStatus } from '../../../read-status';
 import { BackofficeUsage } from '../../../usage';
@@ -36,10 +37,14 @@ export const ClaimsBulkReviewStore = signalStore(
   }),
   withProps((store) => {
     const knowledge = inject(KnowledgeService);
+    const culture = inject(CultureStore);
     const claims = extendResource(
       rxResource({
-        params: () => store.productId() ?? undefined,
-        stream: ({ params }) => knowledge.claimsOf(params),
+        params: () => {
+          const productId = store.productId();
+          return productId ? { productId, culture: culture.active() } : undefined;
+        },
+        stream: ({ params }) => knowledge.claimsOf(params.productId, params.culture),
       }),
     );
     return { _knowledge: knowledge, _usage: inject(BackofficeUsage), _claims: claims, ...readStatus(claims) };

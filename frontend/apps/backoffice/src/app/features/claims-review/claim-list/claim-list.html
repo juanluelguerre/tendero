@@ -69,14 +69,21 @@
                     >{{ t('claims.fromPicture') }}</span
                   >
                 }
+                @if (claim.contradicts) {
+                  <span
+                    class="ms-1 mt-1 inline-block rounded-sm border border-hairline-strong px-2 py-px text-3xs text-warning"
+                    >{{ t('claims.contradicts') }}</span
+                  >
+                }
               </td>
               <td class="font-medium whitespace-nowrap">{{ store.productName(claim) }}</td>
               <td class="numeric"><backoffice-claim-support [claim]="claim" /></td>
               <td class="text-end whitespace-nowrap">
                 <!-- Quiet, both: one clay action per view, and a queue of rows has many. -->
-                <!-- Read from a picture: approved with the picture in front, so from
-                     the pane and never from the row. -->
-                @if (!claim.picture) {
+                <!-- Read from a picture, or saying another value than the catalogue
+                     holds: approved with both in front, so from the pane and never
+                     from the row. -->
+                @if (!claim.picture && !claim.contradicts) {
                   <button
                     type="button"
                     class="button button--small button--quiet"
@@ -108,6 +115,9 @@
             <span class="m-0 font-medium">{{ statement(claim) }}</span>
             @if (claim.picture) {
               <span class="text-3xs text-accent">{{ t('claims.fromPicture') }}</span>
+            }
+            @if (claim.contradicts) {
+              <span class="text-3xs text-warning">{{ t('claims.contradicts') }}</span>
             }
             <span class="worklist-card__line">
               <span class="muted font-medium whitespace-nowrap">{{ store.productName(claim) }}</span>

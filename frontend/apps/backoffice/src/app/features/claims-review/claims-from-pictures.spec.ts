@@ -14,7 +14,7 @@ import { ClaimsReviewStore } from './claims-review.store';
 const Claims = 'http://api/api/knowledge/claims';
 const Products = 'http://api/api/catalog/products';
 
-const claim = (claimId: string, fromPicture: boolean) =>
+const claim = (claimId: string, fromPicture: boolean, contradicts = false) =>
   ({
     claimId,
     productId: 'p1',
@@ -28,7 +28,8 @@ const claim = (claimId: string, fromPicture: boolean) =>
     extractor: 'chat',
     model: 'extractor-model',
     picture: fromPicture ? { imageId: 'lamp-front', readBy: 'vision-model', promptVersion: 'v1' } : null,
-    decidedAlone: fromPicture ? 'ReadFromAPicture' : null,
+    contradicts: contradicts ? { attributeCode: 'MATERIAL', claimed: 'CARBON_STEEL', held: 'acero inoxidable' } : null,
+    decidedAlone: contradicts ? 'ContradictsTheCatalogue' : fromPicture ? 'ReadFromAPicture' : null,
   }) as unknown as ClaimForReview;
 
 /** The list and the pane as the page holds them: one store, provided once. */
@@ -71,8 +72,8 @@ describe('claims read from a picture', () => {
       .match((req) => req.url === Claims)
       .forEach((req) =>
         req.flush({
-          items: [claim('written', false), claim('read', true)],
-          total: 2,
+          items: [claim('written', false), claim('read', true), claim('against', false, true)],
+          total: 3,
           page: 1,
           pageSize: 20,
           counts: [],
@@ -94,6 +95,7 @@ describe('claims read from a picture', () => {
   it('marks the row, and leaves approving it to the pane where the picture is', async () => {
     const page = await at('/?support=all');
     const [written, read] = [...page.querySelectorAll('tbody tr')];
+    expect(written.textContent).not.toContain('claims.contradicts');
 
     expect(written.textContent).not.toContain('claims.fromPicture');
     expect(labels(written)).toContain('claims.approve');
@@ -123,5 +125,32 @@ describe('claims read from a picture', () => {
 
     expect(pane.querySelector('figure')).toBeNull();
     expect(pane.textContent).not.toContain('claims.pictureNotice');
+  });
+
+  /**
+   * The catalogue holds another value for the attribute a claim types (I-4,
+   * *Picture against data*, and for a claim from any source): both are named,
+   * neither is corrected, and approving — which replaces the catalogue's — is
+   * done with the two in front, from the pane.
+   */
+  it('names what the catalogue holds beside a claim that says otherwise, and approves only from the pane', async () => {
+    const page = await at('/?support=all&claim=against');
+    const row = [...page.querySelectorAll('tbody tr')][2];
+    const pane = page.querySelector('backoffice-claim-pane') as HTMLElement;
+
+    expect(row.textContent).toContain('claims.contradicts');
+    expect(labels(row)).not.toContain('claims.approve');
+    expect(labels(row)).toContain('claims.reject');
+
+    const values = [...pane.querySelectorAll('dl dd')].map((value) => value.textContent?.trim());
+    expect(values).toEqual(['acero inoxidable', 'CARBON_STEEL']);
+    expect(pane.textContent).toContain('claims.contradictsNotice');
+    expect(labels(pane)).toContain('claims.approve');
+  });
+
+  it('says nothing of the catalogue for a claim that agrees with it', async () => {
+    const page = await at('/?support=all&claim=written');
+
+    expect(page.querySelector('backoffice-claim-pane dl')).toBeNull();
   });
 });
