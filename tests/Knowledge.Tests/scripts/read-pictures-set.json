@@ -1,0 +1,17 @@
+[
+  {
+    "when": "Describe the picture",
+    "pictures": 1,
+    "reply": {
+      "es": "Cuatro cuencos de cerámica apilados.",
+      "en": "Four stacked ceramic bowls."
+    }
+  },
+  {
+    "when": "how many separate items",
+    "pictures": 1,
+    "reply": {
+      "count": 4
+    }
+  }
+]

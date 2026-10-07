@@ -601,7 +601,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `extractor` | string | `rules`, `chat` | Which extractor read the description: the rules, or the model. |
+| `extractor` | string | `rules`, `chat`, `picture` | Which extractor read the source: the rules or the model for a description, and for a picture's reading the code that reads back what the picture answered. |
 
 ### `tendero.knowledge.claims.dropped`
 

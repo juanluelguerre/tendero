@@ -11,6 +11,13 @@
        This one reads two seed files and writes a picture. It touches no domain
        type, so giving it one would be inventing a dependency to look consistent. -->
   <ItemGroup>
+    <!-- One source file, and still no project: the closed questions the shop asks
+         of a picture are the ones this tool measures against its known-bad set,
+         so they are compiled from the shop's own file and cannot drift from it. -->
+    <Compile Include="..\..\src\Knowledge\Features\ReadPictures\PictureQuestions.cs" Link="Verification\PictureQuestions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" />
     <PackageReference Include="SkiaSharp" />
     <!-- The Linux binaries, which SkiaSharp does not carry: Windows and macOS

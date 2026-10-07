@@ -13,11 +13,12 @@ using Xunit;
 namespace ElGuerre.Tendero.Knowledge.Tests;
 
 /// <summary>
-/// Claims from what a model read in a picture (the phase 13a spec, I-4): the same
-/// slow half that reads a description reads a picture's reading — the extractor,
-/// the vetting, the scorer — and each claim rests on the documents it was taken
-/// from. A reading is a source of its own: it is proposed from once, by itself,
-/// and what the description says is neither mixed into it nor held back by it.
+/// Claims from what a model read in a picture (the phase 13a spec, I-4). **The
+/// model reads, code builds the claim**: a reading carries what the picture
+/// answered to a closed question — how many — and that answer becomes a typed
+/// claim without any model reading the reading's prose. A reading is a source of
+/// its own: it is proposed from once, by itself, and what the description says
+/// is neither mixed into it nor held back by it.
 /// </summary>
 public sealed class ClaimsFromPicturesTests
 {
@@ -31,21 +32,25 @@ public sealed class ClaimsFromPicturesTests
         new RecordDescriptionHandler(this.knowledge, this.knowledge, this.clock)
             .HandleAsync(new RecordDescriptionCommand(Pan, culture, text), TestContext.Current.CancellationToken);
 
-    private Task Read(PictureReading reading, string spanish, string english) =>
+    private Task Read(PictureReading reading, string spanish, string english, int count = 1) =>
         new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock)
-            .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english), TestContext.Current.CancellationToken);
+            .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english, count), TestContext.Current.CancellationToken);
 
-    private Task<ProposeClaimsResult> Propose(IClaimExtractor? model = null, ISupportScorer? scorer = null, Vocabulary? vocabulary = null)
+    private Task<ProposeClaimsResult> Propose(
+        IClaimExtractor? model = null, ISupportScorer? scorer = null, Vocabulary? vocabulary = null, Held? catalogue = null)
     {
         var services = new ServiceCollection();
         services.AddKeyedSingleton<IClaimExtractor, RulesClaimExtractor>(ClaimExtractors.Rules);
+        services.AddKeyedSingleton<IClaimExtractor, PictureAnswersExtractor>(ClaimExtractors.Picture);
         if (model is not null)
             services.AddKeyedSingleton(ClaimExtractors.Chat, model);
         if (scorer is not null)
             services.AddSingleton(scorer);
 
         using var provider = services.BuildServiceProvider();
-        return new ProposeClaimsHandler(this.knowledge, vocabulary ?? new Vocabulary(), provider, KnowledgeServiceCollectionExtensions.Extractor, this.knowledge, this.clock)
+        return new ProposeClaimsHandler(
+                this.knowledge, vocabulary ?? new Vocabulary(), catalogue ?? Held.Nothing, provider,
+                KnowledgeServiceCollectionExtensions.Extractor, this.knowledge, this.clock)
             .HandleAsync(new ProposeClaimsCommand(Pan), TestContext.Current.CancellationToken);
     }
 
@@ -92,19 +97,27 @@ public sealed class ClaimsFromPicturesTests
         }
     }
 
-    /// <summary>Types whatever it reads as a lamp's colour temperature, and says what it was offered.</summary>
-    private sealed class TypesEverythingAsLight : IClaimExtractor
+    /// <summary>Says what it was offered, and proposes nothing.</summary>
+    private sealed class SaysWhatItWasOffered : IClaimExtractor
     {
         public List<IReadOnlyList<string>> Offered { get; } = [];
 
         public Task<IReadOnlyList<ProposedClaim>> ExtractAsync(ProductText text, IReadOnlyList<AttributeSpec> attributes, CancellationToken cancellationToken)
         {
             Offered.Add([.. attributes.Select(attribute => attribute.Code)]);
-            var (spanish, english) = (text.Spanish.Split(' ')[0], text.English.Split(' ')[0]);
-            return Task.FromResult<IReadOnlyList<ProposedClaim>>(
-                [new ProposedClaim(spanish, english, $"Dice «{spanish}».", $"It says \"{english}\".", "COLOUR_TEMPERATURE", "gray", 0.9)]);
+            return Task.FromResult<IReadOnlyList<ProposedClaim>>([]);
         }
     }
+
+    /// <summary>The extractor is not there, whatever it is handed.</summary>
+    private sealed class IsDown : IClaimExtractor
+    {
+        public Task<IReadOnlyList<ProposedClaim>> ExtractAsync(ProductText text, IReadOnlyList<AttributeSpec> attributes, CancellationToken cancellationToken) =>
+            throw new HttpRequestException("The extractor is not there.");
+    }
+
+    private static Held Holding(string pieces) =>
+        new(new() { [Pan] = [new HeldValue("PIECES", pieces, pieces)] });
 
     [Fact]
     public async Task A_picture_that_was_read_waits_for_claims_as_a_description_does()
@@ -114,89 +127,133 @@ public sealed class ClaimsFromPicturesTests
         Assert.Equal([Pan], await this.knowledge.WaitingAsync(5, TestContext.Current.CancellationToken));
     }
 
-    /// <summary>The claim rests on the reading — both of its documents — and on nothing else, and the model that scored it heard the reading's own words.</summary>
+    /// <summary>
+    /// The claim is typed by code from the number the picture answered, and rests
+    /// on the reading — the line that says it, in both of its documents. No model
+    /// read the reading and none scored the claim: it is the document's own line.
+    /// </summary>
     [Fact]
-    public async Task A_claim_read_from_a_picture_rests_on_that_pictures_reading_and_is_scored_against_it()
+    public async Task What_a_picture_counted_is_a_typed_claim_built_by_code_that_rests_on_its_reading()
     {
-        await Read(Front, "Sartén negra con mango largo.", "Black pan with a long handle.");
-        var scorer = new Hears(0.91);
+        await Read(Front, "Sartenes negras apiladas.", "Stacked black pans.", count: 3);
+        var (model, scorer) = (new QuotesTheFirstWord(), new Hears(0.4));
 
-        var result = await Propose(new QuotesTheFirstWord(), scorer);
+        var result = await Propose(model, scorer);
 
-        Assert.Equal((1, ClaimExtractors.Chat), (result.Proposed, result.Extractor));
+        Assert.Equal(1, result.Proposed);
         var claim = Assert.Single(this.knowledge.Claims);
+        Assert.Equal(("PIECES", "3"), (claim.AttributeCode, claim.Value));
+        Assert.Equal(("piezas: 3", "pieces: 3"), (claim.Statement.In("es"), claim.Statement.In("en")));
         Assert.Equal([Document(Front, "es").Id, Document(Front, "en").Id], claim.Evidence.Select(evidence => evidence.Document));
-        Assert.Equal(["Sartén", "Black"], claim.Evidence.Select(evidence => evidence.Quote.Text));
-        Assert.Equal(0.91, claim.Support);
-        Assert.Equal([("Sartén negra con mango largo.", "Dice «Sartén».")], scorer.Heard);
+        Assert.Equal(
+            ["Elementos contados en la imagen: 3.", "Items counted in the picture: 3."],
+            claim.Evidence.Select(evidence => evidence.Quote.Text));
+        Assert.Equal(1.0, claim.Support);
+        Assert.Empty(model.Read);
+        Assert.Empty(scorer.Heard);
+        // Who answered: the model that read the picture, under the instructions it was read with.
+        Assert.Equal(
+            (ClaimExtractors.Picture, Front.Model, Front.PromptVersion),
+            (claim.Provenance.Extractor, claim.Provenance.ModelId, claim.Provenance.PromptVersion));
         Assert.Empty(await this.knowledge.WaitingAsync(5, TestContext.Current.CancellationToken));
     }
 
     /// <summary>
-    /// The description and two pictures: three sources, each read by itself. A
-    /// reading's claim never quotes the description, and the model is never handed
-    /// the two as one text — a claim would then rest on a document it was not in.
+    /// **No sentence is proposed from a reading's prose.** The same weights that
+    /// wrote it typed a strap's grey as a lamp's colour temperature when asked to
+    /// extract from it, and left some sixty untyped sentences for twelve pictures.
+    /// The prose stays as the document a reviewer reads; with or without a model,
+    /// nothing reads it for claims — not the rules either, which would take its
+    /// "2 L" for a capacity.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task No_sentence_is_proposed_from_a_readings_prose(bool withAModel)
+    {
+        await Read(Front, "Tres ollas de 2 L con correa gris.", "Three 2 L pots with a gray strap.");
+        var model = new QuotesTheFirstWord();
+
+        var result = withAModel ? await Propose(model, new Hears(0.9)) : await Propose();
+
+        Assert.Equal(0, result.Proposed);
+        Assert.Empty(this.knowledge.Claims);
+        Assert.Empty(model.Read);
+        Assert.False(Document(Front, "es").IsWaiting);
+    }
+
+    /// <summary>
+    /// A single item says nothing of a product that does not say how many it is:
+    /// every picture of one thing would otherwise propose "pieces: 1". Of a
+    /// product that does say, one is an answer — the catalogue's, or against it,
+    /// and the review queue puts the two side by side.
+    /// </summary>
+    [Theory]
+    [InlineData(null, 0)]
+    [InlineData("3", 1)]
+    [InlineData("1", 1)]
+    public async Task A_single_item_is_a_claim_only_of_a_product_that_says_how_many_it_is(string? held, int proposed)
+    {
+        await Read(Front, "Una sartén negra.", "A black pan.", count: 1);
+
+        var result = await Propose(catalogue: held is null ? Held.Nothing : Holding(held));
+
+        Assert.Equal(proposed, result.Proposed);
+        Assert.Equal(proposed, this.knowledge.Claims.Count(claim => claim is { AttributeCode: "PIECES", Value: "1" }));
+    }
+
+    /// <summary>More than one is said whatever the catalogue holds: that is how a set nobody typed gets its pieces.</summary>
+    [Fact]
+    public async Task More_than_one_is_proposed_of_a_product_that_holds_nothing()
+    {
+        await Read(Front, "Sartenes negras.", "Black pans.", count: 2);
+
+        Assert.Equal(1, (await Propose()).Proposed);
+    }
+
+    /// <summary>
+    /// The description and two pictures: three sources, each by itself. The model
+    /// is handed the description and never a reading; each picture's claim rests
+    /// on that picture's reading.
     /// </summary>
     [Fact]
     public async Task The_description_and_each_picture_are_read_apart_and_each_claim_rests_on_its_own_source()
     {
         await Describe("es", "Cazo pequeño.");
         await Describe("en", "Small saucepan.");
-        await Read(Front, "Sartén negra.", "Black pan.");
-        await Read(Side, "Mango de madera.", "Wooden handle.");
+        await Read(Front, "Sartenes negras.", "Black pans.", count: 3);
+        await Read(Side, "Mangos de madera.", "Wooden handles.", count: 2);
         var model = new QuotesTheFirstWord();
 
         var result = await Propose(model, new Hears(0.9));
 
         Assert.Equal(3, result.Proposed);
-        Assert.Equal(
-            [("Cazo pequeño.", "Small saucepan."), ("Sartén negra.", "Black pan."), ("Mango de madera.", "Wooden handle.")],
-            model.Read.Select(text => (text.Spanish, text.English)));
-        var quoted = this.knowledge.Claims.ToDictionary(claim => claim.Evidence[0].Quote.Text, claim => claim.Evidence[0].Document);
-        Assert.Equal(Document(Front, "es").Id, quoted["Sartén"]);
-        Assert.Equal(Document(Side, "es").Id, quoted["Mango"]);
-        Assert.Equal(SourceKind.ProductDescription, this.knowledge.Documents.Single(document => document.Id == quoted["Cazo"]).Kind);
+        Assert.Equal([("Cazo pequeño.", "Small saucepan.")], model.Read.Select(text => (text.Spanish, text.English)));
+        var counted = this.knowledge.Claims.Where(claim => claim.AttributeCode == "PIECES").ToDictionary(claim => claim.Value!, claim => claim.Evidence[0].Document);
+        Assert.Equal(Document(Front, "es").Id, counted["3"]);
+        Assert.Equal(Document(Side, "es").Id, counted["2"]);
+        var written = this.knowledge.Claims.Single(claim => claim.AttributeCode is null);
+        Assert.Equal(SourceKind.ProductDescription, this.knowledge.Documents.Single(document => document.Id == written.Evidence[0].Document).Kind);
         Assert.All(this.knowledge.Documents, document => Assert.False(document.IsWaiting));
     }
 
     /// <summary>
-    /// **A picture is offered only what a picture can show.** Handed the whole
-    /// vocabulary, the extractor typed a strap's grey as a lamp's colour
-    /// temperature: it fits what it reads into what it is given. Each source is
-    /// read with the vocabulary of its kind.
+    /// Each kind of source has its vocabulary — a picture's is what a picture can
+    /// show — and the model is offered the description's alone.
     /// </summary>
     [Fact]
     public async Task Each_source_is_read_with_the_vocabulary_of_its_kind()
     {
         await Describe("es", "Flexo blanco.");
         await Describe("en", "White lamp.");
-        await Read(Front, "Correa gris.", "Gray strap.");
-        var model = new TypesEverythingAsLight();
+        await Read(Front, "Correas grises.", "Gray straps.", count: 2);
+        var model = new SaysWhatItWasOffered();
         var vocabulary = new Vocabulary();
 
         await Propose(model, new Hears(0.9), vocabulary);
 
-        Assert.Equal([SourceKind.ProductDescription, SourceKind.ProductImage], vocabulary.Asked);
-        Assert.Equal<IEnumerable<string>>([["PIECES", "COLOUR_TEMPERATURE"], ["PIECES"]], model.Offered);
-    }
-
-    /// <summary>
-    /// And when the model types it anyway, code refuses the typing and keeps the
-    /// sentence: what it saw is still true, it is the drawer that was wrong.
-    /// </summary>
-    [Fact]
-    public async Task A_typing_a_picture_cannot_show_is_refused_and_the_sentence_is_kept()
-    {
-        await Describe("es", "Flexo blanco.");
-        await Read(Front, "Correa gris.", "Gray strap.");
-
-        await Propose(new TypesEverythingAsLight(), new Hears(0.9));
-
-        var written = this.knowledge.Claims.Single(claim => claim.Evidence[0].Quote.Text == "Flexo");
-        var read = this.knowledge.Claims.Single(claim => claim.Evidence[0].Quote.Text == "Correa");
-        Assert.Equal(("COLOUR_TEMPERATURE", "gray"), (written.AttributeCode, written.Value));
-        Assert.Equal(((string?)null, (string?)null), (read.AttributeCode, read.Value));
-        Assert.Equal("Dice «Correa».", read.Statement.In("es"));
+        Assert.Equal([SourceKind.ProductImage, SourceKind.ProductDescription], vocabulary.Asked);
+        Assert.Equal<IEnumerable<string>>([["PIECES", "COLOUR_TEMPERATURE"]], model.Offered);
     }
 
     /// <summary>What was proposed from is not proposed from again: a second pass finds only the picture read since.</summary>
@@ -205,76 +262,48 @@ public sealed class ClaimsFromPicturesTests
     {
         await Describe("es", "Cazo pequeño.");
         await Propose(new QuotesTheFirstWord(), new Hears(0.9));
-        await Read(Front, "Sartén negra.", "Black pan.");
+        await Read(Front, "Sartenes negras.", "Black pans.", count: 3);
         var model = new QuotesTheFirstWord();
 
         var result = await Propose(model, new Hears(0.9));
 
         Assert.Equal(1, result.Proposed);
-        Assert.Equal("Sartén negra.", Assert.Single(model.Read).Spanish);
+        Assert.Empty(model.Read);
     }
 
-    /// <summary>A picture read again to other words: the old reading is history, and only the new one is proposed from.</summary>
+    /// <summary>A picture read again to another answer: the old reading is history, and only the new one is proposed from.</summary>
     [Fact]
     public async Task A_reading_that_was_replaced_is_not_proposed_from()
     {
-        await Read(Front, "Sartén negra.", "Black pan.");
+        await Read(Front, "Sartenes negras.", "Black pans.", count: 2);
         this.clock.Advance(TimeSpan.FromMinutes(1));
-        await Read(Front, "Olla negra.", "Black pot.");
-        var model = new QuotesTheFirstWord();
+        await Read(Front, "Ollas negras.", "Black pots.", count: 3);
 
-        await Propose(model, new Hears(0.9));
+        await Propose();
 
-        Assert.Equal("Olla negra.", Assert.Single(model.Read).Spanish);
+        Assert.Equal("3", Assert.Single(this.knowledge.Claims).Value);
     }
 
     /// <summary>
-    /// With no model the rules read a reading as they read a description
-    /// (invariant 8): what a rule proposes is the text's own words, and here the
-    /// text is a model's — the claim says which picture and which model, and a
-    /// person reviews it as one read from a picture.
+    /// **The readings first, and each saved when it is done.** A reading asks no
+    /// model, so the extractor being down for the description neither holds a
+    /// picture's claim back nor takes it down: it is saved before the failure,
+    /// and only the description is left waiting, to be tried again.
     /// </summary>
     [Fact]
-    public async Task Without_a_model_the_rules_read_a_reading_too()
-    {
-        await Read(Front, "Tres sartenes apiladas.", "Three stacked pans.");
-
-        var result = await Propose();
-
-        Assert.Equal(ClaimExtractors.Rules, result.Extractor);
-        var claim = Assert.Single(this.knowledge.Claims);
-        Assert.Equal(("PIECES", "3"), (claim.AttributeCode, claim.Value));
-        Assert.Equal(Front, this.knowledge.Documents.Single(document => document.Id == claim.Evidence[0].Document).Reading);
-    }
-
-    /// <summary>
-    /// What was read before the failure is kept: the description's claim is saved
-    /// when the picture's reading brings the extractor down, and only the reading
-    /// is left waiting, to be tried again.
-    /// </summary>
-    [Fact]
-    public async Task A_source_that_fails_does_not_take_down_the_one_read_before_it()
+    public async Task A_description_that_fails_does_not_take_down_the_reading_proposed_before_it()
     {
         await Describe("es", "Cazo pequeño.");
-        await Read(Front, "Sartén negra.", "Black pan.");
+        await Read(Front, "Sartenes negras.", "Black pans.", count: 3);
         var saves = this.knowledge.SaveCount;
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => Propose(new FailsOnPictures(), new Hears(0.9)));
+        await Assert.ThrowsAsync<HttpRequestException>(() => Propose(new IsDown(), new Hears(0.9)));
 
         // Saved before the failure, not only added: in memory an unsaved claim looks the same.
         Assert.Equal(saves + 1, this.knowledge.SaveCount);
 
-        Assert.Equal("Cazo", Assert.Single(this.knowledge.Claims).Evidence[0].Quote.Text);
-        Assert.False(this.knowledge.Documents.Single(document => document.Kind == SourceKind.ProductDescription).IsWaiting);
-        Assert.True(Document(Front, "es").IsWaiting);
-    }
-
-    /// <summary>Reads a description and fails on a picture's reading.</summary>
-    private sealed class FailsOnPictures : IClaimExtractor
-    {
-        public Task<IReadOnlyList<ProposedClaim>> ExtractAsync(ProductText text, IReadOnlyList<AttributeSpec> attributes, CancellationToken cancellationToken) =>
-            text.Spanish.StartsWith("Cazo", StringComparison.Ordinal)
-                ? new QuotesTheFirstWord().ExtractAsync(text, attributes, cancellationToken)
-                : throw new HttpRequestException("The extractor is not there.");
+        Assert.Equal("PIECES", Assert.Single(this.knowledge.Claims).AttributeCode);
+        Assert.True(this.knowledge.Documents.Single(document => document.Kind == SourceKind.ProductDescription).IsWaiting);
+        Assert.False(Document(Front, "es").IsWaiting);
     }
 }

@@ -20,9 +20,9 @@ public sealed class RecordPictureReadingTests
     private static readonly ProductId Pan = ProductId.New();
     private static readonly PictureReading Front = new(new ImageId("front"), "Qwen/Qwen3.5-4B", "picture-2026-10-07");
 
-    private Task<RecordPictureReadingResult> Read(PictureReading reading, string spanish, string english) =>
+    private Task<RecordPictureReadingResult> Read(PictureReading reading, string spanish, string english, int count = 1) =>
         new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock)
-            .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english), TestContext.Current.CancellationToken);
+            .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english, count), TestContext.Current.CancellationToken);
 
     private Task<RecordDescriptionResult> Describe(string culture, string text) =>
         new RecordDescriptionHandler(this.knowledge, this.knowledge, this.clock)
@@ -56,6 +56,38 @@ public sealed class RecordPictureReadingTests
             Assert.True(document.IsWaiting);
         });
         Assert.Equal(1, this.knowledge.SaveCount);
+    }
+
+    /// <summary>
+    /// What the picture answered is part of the document: the count is written
+    /// under the model's words in each language, where a claim can quote it and a
+    /// reviewer reads it beside the picture.
+    /// </summary>
+    [Fact]
+    public async Task What_the_picture_answered_is_written_under_the_words_in_each_language()
+    {
+        await Read(Front, "Tres sartenes negras.", "Three black pans.", count: 3);
+
+        Assert.Equal(
+            ["Three black pans.\nItems counted in the picture: 3.", "Tres sartenes negras.\nElementos contados en la imagen: 3."],
+            this.knowledge.Documents.Select(document => document.Text).Order(StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    /// The same words and another count is another reading: the answer is in the
+    /// document's identity, so the claim that rested on the old count falls.
+    /// </summary>
+    [Fact]
+    public async Task The_same_words_with_another_count_are_a_new_reading_and_supersede_the_old_ones_claims()
+    {
+        await Read(Front, "Sartenes negras.", "Black pans.", count: 2);
+        var claim = ClaimOn(this.knowledge.Documents.First(document => document.Culture == "es"));
+
+        this.clock.Advance(TimeSpan.FromMinutes(1));
+        var again = await Read(Front, "Sartenes negras.", "Black pans.", count: 3);
+
+        Assert.Equal((RecordPictureReadingOutcome.Recorded, 1), (again.Outcome, again.Superseded));
+        Assert.Equal(ClaimStatus.Superseded, claim.Status);
     }
 
     /// <summary>The job reads a picture again and the model says the same: nothing to store, and nothing superseded.</summary>

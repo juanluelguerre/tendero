@@ -38,6 +38,9 @@ public static class KnowledgeServiceCollectionExtensions
 
         services.AddKeyedSingleton<IClaimExtractor, RulesClaimExtractor>(ClaimExtractors.Rules);
 
+        // What a picture answered, read back from its reading: code, so always there.
+        services.AddKeyedSingleton<IClaimExtractor, PictureAnswersExtractor>(ClaimExtractors.Picture);
+
         // What the storefront's assistant may read of the shop's knowledge (phase 12b,
         // ADR 0054): the sheet the product page reads, a shopper's.
         services.AddScoped<IReadTool, Features.ProductSpecs.ProductSpecsTool>();

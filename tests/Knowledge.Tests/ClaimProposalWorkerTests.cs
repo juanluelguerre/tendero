@@ -15,17 +15,17 @@ namespace ElGuerre.Tendero.Knowledge.Tests;
 
 /// <summary>
 /// The queue's passes, one product at a time (ADR 0018; the phase 13a spec, I-4):
-/// what a pass does when a source brings the extractor down — the sources read
-/// before it stay proposed, the one that failed is retried until its limit and
-/// then left with its reason, and the queue empties instead of looping.
+/// what a pass does when a source brings the extractor down — the sources
+/// proposed before it stay proposed, the one that failed is retried until its
+/// limit and then left with its reason, and the queue empties instead of looping.
 /// </summary>
 public sealed class ClaimProposalWorkerTests
 {
     private static readonly ProductId Pan = ProductId.New();
     private static readonly PictureReading Front = new(new ImageId("front"), "Qwen/Qwen3.5-4B", PictureReadingPrompt.Version);
 
-    /// <summary>Quotes the first word of a description, and is not there for a picture's reading.</summary>
-    private sealed class FailsOnPictures : IClaimExtractor
+    /// <summary>Quotes the first word of a description about a saucepan, and is not there for any other.</summary>
+    private sealed class ReadsOnlySaucepans : IClaimExtractor
     {
         public Task<IReadOnlyList<ProposedClaim>> ExtractAsync(ProductText text, IReadOnlyList<AttributeSpec> attributes, CancellationToken cancellationToken) =>
             text.Spanish.StartsWith("Cazo", StringComparison.Ordinal)
@@ -38,10 +38,11 @@ public sealed class ClaimProposalWorkerTests
         public Task<double> ScoreAsync(string text, string claim, CancellationToken cancellationToken) => Task.FromResult(0.9);
     }
 
-    private sealed class NoAttributes : IAttributeVocabulary
+    /// <summary>Only what a picture can show: how many.</summary>
+    private sealed class OnlyPieces : IAttributeVocabulary
     {
         public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<AttributeSpec>>([]);
+            Task.FromResult<IReadOnlyList<AttributeSpec>>([new AttributeSpec("PIECES", "Number", null, "pieces", [], "piezas")]);
     }
 
     private sealed class Nobody : IPrincipalAccessor
@@ -59,9 +60,10 @@ public sealed class ClaimProposalWorkerTests
         services.AddSingleton<IPrincipalAccessor>(new Nobody());
         services.AddSingleton<IKnowledgeRepository>(knowledge);
         services.AddSingleton<IUnitOfWork>(knowledge);
-        services.AddSingleton<IAttributeVocabulary>(new NoAttributes());
+        services.AddSingleton<IAttributeVocabulary>(new OnlyPieces());
+        services.AddSingleton<ICatalogueValues>(Held.Nothing);
         services.AddKnowledge(new ConfigurationBuilder().Build());
-        services.AddKeyedSingleton<IClaimExtractor>(ClaimExtractors.Chat, new FailsOnPictures());
+        services.AddKeyedSingleton<IClaimExtractor>(ClaimExtractors.Chat, new ReadsOnlySaucepans());
         services.AddSingleton<ISupportScorer>(new Supports());
         var provider = services.BuildServiceProvider();
 
@@ -72,32 +74,30 @@ public sealed class ClaimProposalWorkerTests
     }
 
     [Fact]
-    public async Task A_reading_that_keeps_failing_is_given_up_with_its_reason_and_the_description_read_before_it_stays_proposed()
+    public async Task A_description_that_keeps_failing_is_given_up_with_its_reason_and_the_reading_proposed_before_it_stays_proposed()
     {
         var clock = new TestClock();
         var (worker, knowledge, provider) = Compose(clock);
         await using var _ = provider;
         var ct = TestContext.Current.CancellationToken;
-        knowledge.Add(SourceDocument.Describe(Pan, "es", "Cazo pequeño.", clock));
-        knowledge.Add(SourceDocument.Depict(Pan, "es", "Sartén negra.", Front, clock));
-        knowledge.Add(SourceDocument.Depict(Pan, "en", "Black pan.", Front, clock));
+        knowledge.Add(SourceDocument.Describe(Pan, "es", "Sartenes de hierro.", clock));
+        knowledge.Add(SourceDocument.Depict(Pan, "es", PictureAnswers.Under("Sartenes negras.", "es", 3), Front, clock));
+        knowledge.Add(SourceDocument.Depict(Pan, "en", PictureAnswers.Under("Black pans.", "en", 3), Front, clock));
 
-        // Three passes fail on the reading; the first of them proposed from the description.
+        // Three passes fail on the description; the first of them proposed from the reading, which asks no model.
         for (var attempt = 1; attempt <= SourceDocument.MaxAttempts; attempt++)
             Assert.Equal(ClaimProposalWorker.Pass.Failed, await worker.ProposeNextAsync(ct));
 
         Assert.Equal(ClaimProposalWorker.Pass.Idle, await worker.ProposeNextAsync(ct));
 
         var claim = Assert.Single(knowledge.Claims);
-        Assert.Equal("Cazo", claim.Evidence[0].Quote.Text);
-        var description = knowledge.Documents.Single(document => document.Kind == SourceKind.ProductDescription);
-        Assert.Equal((0, true), (description.FailedAttempts, description.ProposedAt is not null));
+        Assert.Equal(("PIECES", "3"), (claim.AttributeCode, claim.Value));
         Assert.All(knowledge.Documents.Where(document => document.Kind == SourceKind.ProductImage), reading =>
-        {
-            Assert.Equal(SourceDocument.MaxAttempts, reading.FailedAttempts);
-            Assert.Contains("The extractor is not there.", reading.LastFailure);
-            Assert.False(reading.IsWaiting);
-        });
+            Assert.Equal((0, true), (reading.FailedAttempts, reading.ProposedAt is not null)));
+        var description = knowledge.Documents.Single(document => document.Kind == SourceKind.ProductDescription);
+        Assert.Equal(SourceDocument.MaxAttempts, description.FailedAttempts);
+        Assert.Contains("The extractor is not there.", description.LastFailure);
+        Assert.False(description.IsWaiting);
     }
 
     [Fact]

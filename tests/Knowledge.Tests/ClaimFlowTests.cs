@@ -191,7 +191,7 @@ public sealed class ClaimFlowTests
         }
 
         using var provider = services.BuildServiceProvider();
-        return new ProposeClaimsHandler(this.knowledge, new Vocabulary(), provider, KnowledgeServiceCollectionExtensions.Extractor, this.knowledge, this.clock)
+        return new ProposeClaimsHandler(this.knowledge, new Vocabulary(), Held.Nothing, provider, KnowledgeServiceCollectionExtensions.Extractor, this.knowledge, this.clock)
             .HandleAsync(new ProposeClaimsCommand(Pan), TestContext.Current.CancellationToken);
     }
 

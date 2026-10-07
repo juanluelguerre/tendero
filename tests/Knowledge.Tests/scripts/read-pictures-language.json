@@ -6,5 +6,12 @@
       "es": "A white mug with a handle on the side of it.",
       "en": "A white mug with a handle on the side of it."
     }
+  },
+  {
+    "when": "how many separate items",
+    "pictures": 1,
+    "reply": {
+      "count": 1
+    }
   }
 ]

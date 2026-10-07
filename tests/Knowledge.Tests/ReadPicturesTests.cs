@@ -122,7 +122,9 @@ public sealed class ReadPicturesTests
         Assert.Equal(4, shop.Knowledge.Documents.Count);
 
         var spanish = shop.Knowledge.Documents.Single(document => document.ProductId.Value == pot.ProductId && document.Culture == "es");
-        Assert.Equal("Una cafetera italiana de metal plateado. Tiene un mango negro y una tapa con pomo.", spanish.Text);
+        Assert.Equal(
+            "Una cafetera italiana de metal plateado. Tiene un mango negro y una tapa con pomo.\nElementos contados en la imagen: 1.",
+            spanish.Text);
         Assert.Equal(SourceKind.ProductImage, spanish.Kind);
         Assert.Equal(new PictureReading(new ImageId("pot-cover"), "scripted-model", PictureReadingPrompt.Version), spanish.Reading);
     }
@@ -156,7 +158,7 @@ public sealed class ReadPicturesTests
 
         Assert.Equal(PictureReadingStatus.NothingToRead, again.Status);
         Assert.Empty(shop.Store.Opened);
-        Assert.Single(shop.Metered());
+        Assert.Equal(2, shop.Metered().Count);
     }
 
     /// <summary>
@@ -199,6 +201,25 @@ public sealed class ReadPicturesTests
         await Assert.ThrowsAsync<FluentValidation.ValidationException>(() => shop.Ask(count));
     }
 
+    /// <summary>
+    /// **The model reads, code builds the claim.** Beside the description the
+    /// picture is asked a closed question — how many — with the wording the
+    /// known-bad set measures, and the number it answers is kept under the words.
+    /// </summary>
+    [Fact]
+    public async Task Each_picture_is_also_asked_how_many_and_the_number_is_kept_under_the_words()
+    {
+        var bowls = Picture("Cuencos", "bowls-cover");
+        await using var shop = Compose([bowls], script: "read-pictures-set.json");
+
+        var result = await shop.Ask();
+
+        Assert.Equal((PictureReadingStatus.Ran, 1, 0), (result.Status, result.Read, result.Failed));
+        Assert.Equal(
+            ["Cuatro cuencos de cerámica apilados.\nElementos contados en la imagen: 4.", "Four stacked ceramic bowls.\nItems counted in the picture: 4."],
+            shop.Knowledge.Documents.OrderByDescending(document => document.Culture).Select(document => document.Text));
+    }
+
     // ---------- every way a picture ends without a reading ----------
 
     /// <summary>
@@ -234,13 +255,15 @@ public sealed class ReadPicturesTests
 
     /// <summary>
     /// What a model wrote is data: prose where a shape was asked for, a language
-    /// missing, or English filed as Spanish is a failed picture — told by code,
-    /// and never stored as a document a claim could rest on.
+    /// missing, English filed as Spanish, or no number where it was asked how
+    /// many is a failed picture — told by code, and never stored as a document a
+    /// claim could rest on. A reading is its words and its answers, or nothing.
     /// </summary>
     [Theory]
     [InlineData("read-pictures-prose.json")]
     [InlineData("read-pictures-language.json")]
     [InlineData("read-pictures-empty.json")]
+    [InlineData("read-pictures-uncounted.json")]
     public async Task What_the_model_wrote_that_cannot_be_kept_is_a_failed_picture(string script)
     {
         await using var shop = Compose([Picture("Taza", "x")], script: script);
@@ -258,8 +281,9 @@ public sealed class ReadPicturesTests
 
         await shop.Ask();
 
+        // Two calls a picture: what it shows, and how many.
         var rows = shop.Metered();
-        Assert.Equal(2, rows.Count);
+        Assert.Equal(4, rows.Count);
         Assert.All(rows, row => Assert.Equal(
             (ReadPicturesHandler.Operation, PictureReadingPrompt.Version, "scripted", "lucía"),
             (row.Operation, row.PromptVersion, row.Profile, row.Subject)));

@@ -1,11 +1,13 @@
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Knowledge.Features.ReadPictures;
 
-/// <summary>What a model wrote about one picture of a product, in both languages.</summary>
-public sealed record RecordPictureReadingCommand(ProductId ProductId, PictureReading Reading, string Spanish, string English)
+/// <summary>What a model wrote about one picture of a product, in both languages, and what it answered.</summary>
+/// <param name="Count">How many items it counted in the picture.</param>
+public sealed record RecordPictureReadingCommand(ProductId ProductId, PictureReading Reading, string Spanish, string English, int Count)
     : ICommand<RecordPictureReadingResult>;
 
 public enum RecordPictureReadingOutcome
@@ -35,8 +37,13 @@ public sealed record RecordPictureReadingResult(RecordPictureReadingOutcome Outc
 /// are superseded. No model is called here; the one that read the picture ran
 /// before, off any request.
 ///
-/// A reading is kept in both languages or not at all: the extraction that
-/// follows reads the two, as it does a description's.
+/// A reading is kept in both languages or not at all: the claim that follows
+/// quotes the two, as a description's does.
+///
+/// **What the picture answered is written under the words**
+/// (<see cref="PictureAnswers"/>): the count is a line of the document, so it is
+/// in the document's identity — the same words with another count are another
+/// reading, and what rested on the old one falls.
 /// </summary>
 public sealed class RecordPictureReadingHandler(IKnowledgeRepository knowledge, IUnitOfWork unitOfWork, TimeProvider clock)
     : ICommandHandler<RecordPictureReadingCommand, RecordPictureReadingResult>
@@ -49,7 +56,11 @@ public sealed class RecordPictureReadingHandler(IKnowledgeRepository knowledge, 
         var current = await knowledge.CurrentReadingsAsync(command.ProductId, command.Reading.Picture, cancellationToken);
         List<SourceDocumentId> replaced = [];
 
-        (string Culture, string Text)[] words = [("es", command.Spanish), ("en", command.English)];
+        (string Culture, string Text)[] words =
+        [
+            ("es", PictureAnswers.Under(command.Spanish, "es", command.Count)),
+            ("en", PictureAnswers.Under(command.English, "en", command.Count)),
+        ];
 
         foreach (var (culture, text) in words)
         {

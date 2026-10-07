@@ -3,5 +3,12 @@
     "when": "Describe the picture",
     "pictures": 1,
     "reply": "I am sorry, I cannot describe that picture."
+  },
+  {
+    "when": "how many separate items",
+    "pictures": 1,
+    "reply": {
+      "count": 1
+    }
   }
 ]

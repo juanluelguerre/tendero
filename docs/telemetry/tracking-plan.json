@@ -1337,9 +1337,10 @@
           "type": "string",
           "values": [
             "rules",
-            "chat"
+            "chat",
+            "picture"
           ],
-          "description": "Which extractor read the description: the rules, or the model."
+          "description": "Which extractor read the source: the rules or the model for a description, and for a picture's reading the code that reads back what the picture answered."
         }
       }
     },

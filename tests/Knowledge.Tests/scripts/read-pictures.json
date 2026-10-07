@@ -13,5 +13,12 @@
     },
     "inputTokens": 1100,
     "outputTokens": 60
+  },
+  {
+    "when": "how many separate items",
+    "pictures": 1,
+    "reply": {
+      "count": 1
+    }
   }
 ]

@@ -24,20 +24,28 @@ public sealed record ProposeClaimsResult(int Proposed, IReadOnlyList<DropReason>
 /// left waits for a person. Run off the outbox, one product at a time.
 ///
 /// **A source at a time, and each by itself** (phase 13a, I-4). The description
-/// is one source and each picture's reading another: the extractor is handed one
-/// source's two languages and never two sources as one text, so a claim rests on
-/// the documents it was read from — a reading's claim on the reading, which says
+/// is one source and each picture's reading another: a claim rests on the
+/// documents it was read from — a reading's claim on the reading, which says
 /// which picture and which model wrote it. Each source is saved when it is done:
 /// one that brings the extractor down leaves the ones before it proposed, and is
 /// the only one tried again.
 ///
-/// The model when the AppHost started it, the rules otherwise — the path with no
-/// model (invariant 8). A rule's claim is the text's own words, so with no scorer
-/// it is supported by construction; a model's claim is never proposed unscored.
+/// **No model reads a picture's reading.** The picture answered a closed
+/// question when it was read, and <see cref="PictureAnswersExtractor"/> reads
+/// that answer back: the claim is typed by code, and no sentence is proposed
+/// from the reading's prose — the same weights typed twelve of seventeen wrong
+/// when asked to. Such a claim is the document's own line, so it is supported by
+/// construction, as a rule's is.
+///
+/// For the description: the model when the AppHost started it, the rules
+/// otherwise — the path with no model (invariant 8). A rule's claim is the
+/// text's own words, so with no scorer it is supported by construction; a
+/// model's claim is never proposed unscored.
 /// </summary>
 public sealed class ProposeClaimsHandler(
     IKnowledgeRepository knowledge,
     IAttributeVocabulary vocabulary,
+    ICatalogueValues catalogue,
     IServiceProvider services,
     ExtractorModel extractorModel,
     IUnitOfWork unitOfWork,
@@ -65,9 +73,14 @@ public sealed class ProposeClaimsHandler(
         // reading is offered only what a picture can show.
         Dictionary<SourceKind, IReadOnlyList<AttributeSpec>> offered = [];
 
+        var run = Guid.CreateVersion7().ToString();
         var provenance = name == ClaimExtractors.Chat
-            ? new Provenance(name, extractorModel.ModelId, extractorModel.Revision, ChatClaimExtractor.PromptVersion, Guid.CreateVersion7().ToString(), clock.GetUtcNow())
-            : new Provenance(name, null, null, null, Guid.CreateVersion7().ToString(), clock.GetUtcNow());
+            ? new Provenance(name, extractorModel.ModelId, extractorModel.Revision, ChatClaimExtractor.PromptVersion, run, clock.GetUtcNow())
+            : new Provenance(name, null, null, null, run, clock.GetUtcNow());
+
+        // What the catalogue holds of the product, asked once and only when a
+        // picture's answer has to be put beside it.
+        IReadOnlyList<HeldValue>? held = null;
 
         var proposedInAll = 0;
         List<DropReason> droppedInAll = [];
@@ -77,24 +90,39 @@ public sealed class ProposeClaimsHandler(
             if (!offered.TryGetValue(spanish.Kind, out var attributes))
                 offered[spanish.Kind] = attributes = await vocabulary.CurrentAsync(spanish.Kind, cancellationToken);
 
-            var proposed = await extractor.ExtractAsync(new ProductText(spanish.Text, english?.Text ?? ""), attributes, cancellationToken);
+            // A reading is read by code, whichever extractor reads the description.
+            var reading = spanish.Reading;
+            var (reader, readBy, from) = reading is null
+                ? (extractor, name, provenance)
+                : (services.GetRequiredKeyedService<IClaimExtractor>(ClaimExtractors.Picture), ClaimExtractors.Picture,
+                    new Provenance(ClaimExtractors.Picture, reading.Model, null, reading.PromptVersion, run, clock.GetUtcNow()));
+
+            var proposed = await reader.ExtractAsync(new ProductText(spanish.Text, english?.Text ?? ""), attributes, cancellationToken);
             var (kept, dropped) = ClaimVetting.Vet(proposed, spanish, english, attributes);
+
+            if (reading is not null && kept.Count > 0)
+            {
+                held ??= (await catalogue.OfAsync([command.ProductId], "es", cancellationToken)).GetValueOrDefault(command.ProductId) ?? [];
+                kept = [.. kept.Where(claim => SaysSomething(claim, held))];
+            }
 
             foreach (var claim in kept)
             {
-                var support = scorer is null ? 1.0 : await scorer.ScoreAsync(spanish.Text, claim.Statement.In("es"), cancellationToken);
+                var support = reading is not null || scorer is null
+                    ? 1.0
+                    : await scorer.ScoreAsync(spanish.Text, claim.Statement.In("es"), cancellationToken);
                 List<Evidence> evidence = [new(spanish.Id, claim.QuoteSpanish, support)];
                 if (english is not null && claim.QuoteEnglish is { } quoteEnglish)
                     evidence.Add(new Evidence(english.Id, quoteEnglish, support));
 
-                knowledge.Add(ProductClaim.Propose(command.ProductId, claim.Statement, claim.AttributeCode, claim.Value, evidence, provenance, clock));
+                knowledge.Add(ProductClaim.Propose(command.ProductId, claim.Statement, claim.AttributeCode, claim.Value, evidence, from, clock));
             }
 
             spanish.MarkProposed(clock);
             english?.MarkProposed(clock);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            ClaimsProposed.Record(name, kept.Count, dropped);
+            ClaimsProposed.Record(readBy, kept.Count, dropped);
             proposedInAll += kept.Count;
             droppedInAll.AddRange(dropped);
         }
@@ -106,10 +134,23 @@ public sealed class ProposeClaimsHandler(
     }
 
     /// <summary>
-    /// What waits of the product, a source at a time: its description first, then
-    /// each picture's reading by the picture's id — the same order on every run.
-    /// A source is its Spanish document and, when there is one, its English: it
-    /// waits when the Spanish one does, as the queue says.
+    /// Whether what a picture answered says anything of the product. A single
+    /// item does not, of a product that does not say how many it is — every
+    /// picture of one thing would propose "pieces: 1". Of a product that does
+    /// say, one is an answer: the catalogue's own, or one against it, which the
+    /// review queue shows side by side. More than one is always said.
+    /// </summary>
+    private static bool SaysSomething(VettedClaim claim, IReadOnlyList<HeldValue> held) =>
+        claim.Value != PictureAnswers.One
+        || held.Any(value => string.Equals(value.AttributeCode, claim.AttributeCode, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// What waits of the product, a source at a time: each picture's reading by
+    /// the picture's id, then its description — the same order on every run.
+    /// **The readings first**: they ask no model, so the extractor being down
+    /// for the description does not hold them back, and they are saved before it
+    /// can fail. A source is its Spanish document and, when there is one, its
+    /// English: it waits when the Spanish one does, as the queue says.
     /// </summary>
     private async Task<IReadOnlyList<(SourceDocument Spanish, SourceDocument? English)>> WaitingSourcesAsync(
         ProductId productId, CancellationToken cancellationToken)
@@ -119,7 +160,7 @@ public sealed class ProposeClaimsHandler(
             .GroupBy(document => document.PictureId, StringComparer.Ordinal)
             .OrderBy(picture => picture.Key, StringComparer.Ordinal);
 
-        IEnumerable<IEnumerable<SourceDocument>> all = [description, .. readings];
+        IEnumerable<IEnumerable<SourceDocument>> all = [.. readings, description];
 
         return
         [

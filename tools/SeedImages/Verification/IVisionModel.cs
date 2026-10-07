@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ElGuerre.Tendero.Knowledge.Features.ReadPictures;
 using SkiaSharp;
 
 namespace ElGuerre.Tendero.SeedImages;
@@ -173,29 +174,18 @@ public sealed class VisionChecks(IVisionModel model)
         return new RegisterVerdict(answer.SameStyle, answer.SameBackground, answer.Differs ?? "");
     }
 
-    private const string CountSchema = """
-        {
-          "type": "object",
-          "properties": { "count": { "type": "integer", "minimum": 0 } },
-          "required": ["count"],
-          "additionalProperties": false
-        }
-        """;
-
-    private const string CountQuestion =
-        "Look at this product illustration. "
-        + "count: how many separate items are drawn? Count each whole item once, wherever it is in the picture, "
-        + "and count the two shoes of a pair as two. Answer with the number only.";
-
     /// <summary>
     /// How many items are drawn — **a number, and nothing about whether it is the
     /// right one** (phase 13a, I-2b). Asked whether a picture matched "a set of
     /// three", the model passed one pan; what it is asked here it can only read,
     /// and the comparison with the product's pieces is code's
     /// (<see cref="PictureExaminer"/>).
+    ///
+    /// The question is the shop's own, compiled from its file: what is measured
+    /// here is what the shop asks of a product's picture (I-4).
     /// </summary>
     public int Count(byte[] image) =>
-        Read<CountAnswer>(model.Ask([AsPng(image)], CountQuestion, CountSchema)).Count;
+        Read<CountAnswer>(model.Ask([AsPng(image)], PictureQuestions.Count, PictureQuestions.CountSchema)).Count;
 
     private const string OthersSchema = """
         {

@@ -33,7 +33,7 @@ public sealed class PictureReadingOptions
     /// <summary>The profile that reads the pictures, by its name among the shop's model profiles.</summary>
     public string? Model { get; init; } = "local";
 
-    /// <summary>The answer at most: a few sentences, in each language.</summary>
+    /// <summary>The description at most: a few sentences, in each language. A closed question's answer is a number.</summary>
     public int MaxOutputTokens { get; init; } = 500;
 }
 
@@ -44,7 +44,7 @@ public sealed class PictureReadingOptions
 /// </summary>
 public static class PictureReadingPrompt
 {
-    public const string Version = "picture-reading-2026-10-07b";
+    public const string Version = "picture-reading-2026-10-07c";
 
     /// <summary>What the answer is held to: the description, in each language.</summary>
     public static readonly JsonElement Schema = JsonDocument.Parse("""
@@ -87,9 +87,14 @@ public static class PictureReadingPrompt
 /// Have the next pictures read that nobody has read under today's instructions
 /// (phase 13a, I-4). A batch a shopkeeper asks for, never a queue that drains on
 /// its own. It leaves documents — a model's description of each picture, in each
-/// language — and proposes nothing: claims are proposed from those documents by
-/// the step that proposes them from a description, and a person approves each
-/// (invariant 12).
+/// language, and under it what the picture answered — and proposes nothing:
+/// claims are proposed from those documents by the step that proposes them from
+/// a description, and a person approves each (invariant 12).
+///
+/// **Two questions a picture.** What it shows, in prose, for a person to read;
+/// and how many items are drawn (<see cref="PictureQuestions.Count"/>), a number
+/// code turns into a claim. The second is asked by itself, with the wording the
+/// known-bad set measures: nothing is extracted from the prose afterwards.
 /// </summary>
 /// <param name="Count">How many pictures, at most <see cref="PictureReadingOptions.MaxBatch"/>.</param>
 public sealed record ReadPicturesCommand(int Count) : ICommand<ReadPicturesResult>;
@@ -175,7 +180,10 @@ public sealed class ReadPicturesHandler(
                 continue;
             }
 
-            if (await DescribeAsync(model, picture, content, settings, cancellationToken) is not { } said)
+            // Its words and its answer, or nothing: a picture the model described
+            // and did not count is read again, whole, by the next batch.
+            if (await DescribeAsync(model, picture, content, settings, cancellationToken) is not { } said
+                || await CountAsync(model, picture, content, cancellationToken) is not { } count)
             {
                 failed++;
                 continue;
@@ -186,7 +194,8 @@ public sealed class ReadPicturesHandler(
                     new ProductId(picture.ProductId),
                     new PictureReading(new ImageId(picture.ImageId), reader, PictureReadingPrompt.Version),
                     said.Es,
-                    said.En),
+                    said.En,
+                    count),
                 cancellationToken);
             read++;
         }
@@ -251,34 +260,62 @@ public sealed class ReadPicturesHandler(
     private async Task<Said?> DescribeAsync(
         IChatClient model, ProductPicture picture, DataContent content, PictureReadingOptions settings, CancellationToken cancellationToken)
     {
+        var said = await AskAsync<Said>(
+            model, picture,
+            [
+                new ChatMessage(ChatRole.System, PictureReadingPrompt.Instructions),
+                new ChatMessage(ChatRole.User, [content, new TextContent(PictureReadingPrompt.Ask)]),
+            ],
+            PictureReadingPrompt.Schema, "picture_reading", settings.MaxOutputTokens, cancellationToken);
+
+        return said is { Es.Length: > 0, En.Length: > 0 }
+            && !string.IsNullOrWhiteSpace(said.Es) && !string.IsNullOrWhiteSpace(said.En)
+            && WrittenLanguage.Is(said.Es, "es") && WrittenLanguage.Is(said.En, "en")
+                ? new Said(said.Es.Trim(), said.En.Trim())
+                : null;
+    }
+
+    /// <summary>
+    /// How many items the model counts in the picture, or null when it answered no
+    /// number. The question alone, with no instructions before it: that is how it
+    /// was measured.
+    /// </summary>
+    private async Task<int?> CountAsync(IChatClient model, ProductPicture picture, DataContent content, CancellationToken cancellationToken)
+    {
+        var counted = await AskAsync<Counted>(
+            model, picture,
+            [new ChatMessage(ChatRole.User, [content, new TextContent(PictureQuestions.Count)])],
+            CountSchema, "picture_count", MaxCountTokens, cancellationToken);
+
+        return counted is { Count: >= 0 } ? counted.Count : null;
+    }
+
+    /// <summary>The model's answer to one question about the picture, held to a schema; null when it cannot be read as one.</summary>
+    private async Task<T?> AskAsync<T>(
+        IChatClient model, ProductPicture picture, IReadOnlyList<ChatMessage> messages, JsonElement schema, string schemaName, int maxOutputTokens,
+        CancellationToken cancellationToken)
+        where T : class
+    {
         try
         {
             var response = await model.GetResponseAsync(
-                [
-                    new ChatMessage(ChatRole.System, PictureReadingPrompt.Instructions),
-                    new ChatMessage(ChatRole.User, [content, new TextContent(PictureReadingPrompt.Ask)]),
-                ],
+                messages,
                 ModelCall.Options(Operation, promptVersion: PictureReadingPrompt.Version,
                     options: new ChatOptions
                     {
-                        ResponseFormat = ChatResponseFormat.ForJsonSchema(PictureReadingPrompt.Schema, "picture_reading"),
-                        MaxOutputTokens = settings.MaxOutputTokens,
+                        ResponseFormat = ChatResponseFormat.ForJsonSchema(schema, schemaName),
+                        MaxOutputTokens = maxOutputTokens,
                         Temperature = 0,
                     },
                     person: principal.Current.Subject),
                 cancellationToken);
 
-            var said = JsonSerializer.Deserialize<Said>(response.Text, Json);
-            return said is { Es.Length: > 0, En.Length: > 0 }
-                && !string.IsNullOrWhiteSpace(said.Es) && !string.IsNullOrWhiteSpace(said.En)
-                && WrittenLanguage.Is(said.Es, "es") && WrittenLanguage.Is(said.En, "en")
-                    ? new Said(said.Es.Trim(), said.En.Trim())
-                    : null;
+            return JsonSerializer.Deserialize<T>(response.Text, Json);
         }
         catch (Exception failure) when (failure is JsonException or HttpRequestException or InvalidOperationException or TaskCanceledException
             && !cancellationToken.IsCancellationRequested)
         {
-            logger.LogWarning(failure, "The picture-reading job's model did not describe a picture of {Code}.", picture.Code);
+            logger.LogWarning(failure, "The picture-reading job's model did not answer \"{Question}\" about a picture of {Code}.", schemaName, picture.Code);
             return null;
         }
     }
@@ -289,7 +326,20 @@ public sealed class ReadPicturesHandler(
             Taken.Add(count, new KeyValuePair<string, object?>("outcome", outcome));
     }
 
+    /// <summary>
+    /// A number and its braces are seven tokens, and the shop's 4B has spent
+    /// twenty-nine reaching them — it pads the object with white space the
+    /// schema allows. Capped at twenty, four pictures of twelve came back cut in
+    /// the middle of the word "count".
+    /// </summary>
+    private const int MaxCountTokens = 100;
+
+    private static readonly JsonElement CountSchema = JsonDocument.Parse(PictureQuestions.CountSchema).RootElement.Clone();
+
     private sealed record Said(string Es, string En);
+
+    /// <summary>Null when the answer carries no number: a missing one must not read as none counted.</summary>
+    private sealed record Counted(int? Count);
 }
 
 // ---------- The wire ----------

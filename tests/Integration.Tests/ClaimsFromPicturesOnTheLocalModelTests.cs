@@ -19,35 +19,43 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// <summary>
 /// What the shop's own model makes of a picture, end to end and against a real
 /// Postgres (the phase 13a spec, I-4): seed pictures read by the model with its
-/// vision projector, and claims proposed from each reading by the extractor — the
-/// same weights, on the same server — twice: offered the whole vocabulary, as a
-/// description is, and offered only what a picture can show.
+/// vision projector — described, and asked how many items are drawn — and claims
+/// built by code from what each answered, beside what the catalogue holds.
 ///
 /// A CI runner cannot hold the model, so with no such server the test skips. What
-/// it holds is small and structural: every picture is read, and with the
-/// picture's vocabulary no claim is typed with an attribute a picture cannot
-/// show. **What it is for is what it writes out**: each reading and each claim,
-/// under both vocabularies, for a person to count the wrong ones.
+/// it holds is small and structural: every picture is read, and every claim from
+/// a picture is typed with what a picture was asked. **What it is for is what it
+/// writes out**: each reading, each count beside the pieces the seed declares,
+/// and each claim, for a person to count the wrong ones. The same twelve
+/// pictures the extractor was measured on, and four shoes: a pair would count
+/// two where the catalogue does not call it two pieces, and the seed draws one.
 /// </summary>
 [Collection(PostgresCollection.Name)]
 public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postgres, ITestOutputHelper output)
 {
     private static readonly Uri Server = new("http://localhost:38085/");
 
-    private static readonly (string ItemId, string Name)[] Pictures =
+    /// <param name="Pieces">What the seed declares for the product, or null when it declares none.</param>
+    private sealed record Seeded(string ItemId, string Name, int? Pieces = null);
+
+    private static readonly Seeded[] Pictures =
     [
-        ("B05DEFG606", "Set of 3 frying pans"),
-        ("B10SHI0205", "Cycling jersey"),
-        ("B10SHO0106", "House slippers"),
-        ("B11COF0401", "Stovetop coffee maker"),
-        ("B11COF0407", "Toaster"),
-        ("B11COO0310", "Set of 3 kitchen knives"),
-        ("B11TAB0502", "Set of 4 breakfast bowls"),
-        ("B11TAB0504", "Set of 6 tumblers"),
-        ("B12LAM0601", "Desk lamp"),
-        ("B13BAG0708", "Hip pack"),
-        ("B13BAG0712", "Packing cubes, set of 3"),
-        ("B14HOM0806", "Set of 2 cushion covers"),
+        new("B05DEFG606", "Set of 3 frying pans", 3),
+        new("B10SHI0205", "Cycling jersey"),
+        new("B10SHO0106", "House slippers"),
+        new("B11COF0401", "Stovetop coffee maker"),
+        new("B11COF0407", "Toaster"),
+        new("B11COO0310", "Set of 3 kitchen knives", 3),
+        new("B11TAB0502", "Set of 4 breakfast bowls", 4),
+        new("B11TAB0504", "Set of 6 tumblers", 6),
+        new("B12LAM0601", "Desk lamp"),
+        new("B13BAG0708", "Hip pack"),
+        new("B13BAG0712", "Packing cubes, set of 3", 3),
+        new("B14HOM0806", "Set of 2 cushion covers", 2),
+        new("B10SHO0101", "Shoe, drawn alone"),
+        new("B10SHO0102", "Shoe, drawn alone"),
+        new("B10SHO0103", "Shoe, drawn alone"),
+        new("B15SHO1101", "Shoe, drawn alone"),
     ];
 
     private static bool ReadsPictures()
@@ -91,7 +99,19 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
         public CommercePrincipal Current { get; } = new(null, null, "lucía", "Lucía", ["shopkeeper"]);
     }
 
-    private static ServiceProvider Compose(string connectionString, IReadOnlyList<ProductPicture> pictures, bool wholeVocabulary)
+    /// <summary>The pieces the seed declares, as the catalogue would hold them: no product is imported here.</summary>
+    private sealed class DeclaredPieces(IReadOnlyDictionary<ProductId, int> pieces) : ICatalogueValues
+    {
+        public Task<IReadOnlyDictionary<ProductId, IReadOnlyList<HeldValue>>> OfAsync(
+            IReadOnlyCollection<ProductId> products, string culture, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyDictionary<ProductId, IReadOnlyList<HeldValue>>>(products
+                .Where(pieces.ContainsKey)
+                .ToDictionary(
+                    product => product,
+                    product => (IReadOnlyList<HeldValue>)[new HeldValue(PictureAnswers.Pieces, $"{pieces[product]}", $"{pieces[product]}")]));
+    }
+
+    private static ServiceProvider Compose(string connectionString, IReadOnlyList<ProductPicture> pictures, ICatalogueValues catalogue)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -101,10 +121,6 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
                 ["Steward:Models:local:Endpoint"] = new Uri(Server, "v1/").ToString(),
                 ["Steward:Models:local:Model"] = "qwen3.5-4b-q8_0",
                 ["Steward:Models:local:ReadsPictures"] = "true",
-                // The extractor is the same weights: here it is the same server.
-                [KnowledgeServiceCollectionExtensions.ExtractorEndpointKey] = Server.ToString(),
-                // What is measured is the typing, not the support: a fixed score, so the model's claims are proposed.
-                ["Support:Scripted"] = "0.9",
             })
             .Build();
 
@@ -118,33 +134,36 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
         services.AddSingleton<IPrincipalAccessor>(new Asker());
         services.AddSingleton<IProductPictures>(new Seed(pictures));
         services.AddSingleton<IImageStore>(new FromDisk());
-        if (wholeVocabulary)
-            services.Decorate();
+        services.AddSingleton(catalogue);
         return services.BuildServiceProvider();
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task Seed_pictures_are_read_and_claims_proposed_from_each_reading(bool wholeVocabulary)
+    [Fact]
+    public async Task Seed_pictures_are_read_and_counted_and_code_builds_the_claims()
     {
         Assert.SkipUnless(ReadsPictures(), "needs the local model started with its vision projector on port 38085");
         Assert.SkipUnless(Pictures.All(picture => File.Exists(SeedPicture(picture.ItemId))), "needs the seed's pictures");
         postgres.SkipIfUnavailable();
         var ct = TestContext.Current.CancellationToken;
-        var factory = await postgres.CreateDatabaseAsync(wholeVocabulary ? "pictures_whole_vocabulary" : "pictures_their_vocabulary");
+        var factory = await postgres.CreateDatabaseAsync("pictures_answers");
         await using (var migrate = factory.Create())
             await migrate.Database.MigrateAsync(ct);
 
         var pictures = Pictures.Select(picture => new ProductPicture(Guid.CreateVersion7(), picture.ItemId, picture.ItemId)).ToList();
-        await using var provider = Compose(factory.ConnectionString, pictures, wholeVocabulary);
+        var declared = pictures
+            .Select(picture => (picture.ProductId, Pictures.Single(known => known.ItemId == picture.Code).Pieces))
+            .Where(product => product.Pieces is not null)
+            .ToDictionary(product => new ProductId(product.ProductId), product => product.Pieces!.Value);
+        await using var provider = Compose(factory.ConnectionString, pictures, new DeclaredPieces(declared));
 
         var read = 0;
         for (var batch = 0; batch < 4; batch++)
         {
             await using var scope = provider.CreateAsyncScope();
-            read += (await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
-                .SendAsync(new ReadPicturesCommand(PictureReadingOptions.MaxBatch), ct)).Read;
+            var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
+                .SendAsync(new ReadPicturesCommand(PictureReadingOptions.MaxBatch), ct);
+            output.WriteLine($"batch {batch + 1}: {result.Status}, read {result.Read}, skipped {result.Skipped}, failed {result.Failed}");
+            read += result.Read;
         }
 
         foreach (var picture in pictures)
@@ -158,42 +177,32 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
         var documents = await reread.SourceDocuments.ToListAsync(ct);
         var claims = await reread.Claims.ToListAsync(ct);
 
-        output.WriteLine($"=== {(wholeVocabulary ? "the whole vocabulary, as for a description" : "what a picture can show")}");
+        var (sets, countedRight) = (0, 0);
         foreach (var picture in pictures)
         {
-            var name = Pictures.Single(known => known.ItemId == picture.Code).Name;
-            var reading = documents.Single(document => document.ProductId.Value == picture.ProductId && document.Culture == "en");
-            output.WriteLine($"{picture.Code} · {name} · READ: {reading.Text}");
-            foreach (var claim in claims.Where(claim => claim.ProductId.Value == picture.ProductId).OrderBy(claim => claim.AttributeCode is null))
+            var known = Pictures.Single(seeded => seeded.ItemId == picture.Code);
+            var reading = documents.SingleOrDefault(document => document.ProductId.Value == picture.ProductId && document.Culture == "en");
+            if (reading is null)
+            {
+                output.WriteLine($"{picture.Code} · {known.Name} · NOT READ");
+                continue;
+            }
+
+            var counted = PictureAnswers.CountIn(reading.Text, "en")?.Count;
+            if (known.Pieces is { } pieces)
+            {
+                sets++;
+                countedRight += counted == pieces ? 1 : 0;
+            }
+
+            output.WriteLine($"{picture.Code} · {known.Name} · declares {known.Pieces?.ToString() ?? "nothing"} · counted {counted} · READ: {reading.Text.ReplaceLineEndings(" | ")}");
+            foreach (var claim in claims.Where(claim => claim.ProductId.Value == picture.ProductId))
                 output.WriteLine($"{picture.Code} ·   {(claim.AttributeCode is null ? "(untyped)" : $"{claim.AttributeCode} = {claim.Value}")} · {claim.Statement.In("en")}");
         }
 
-        var typed = claims.Where(claim => claim.AttributeCode is not null).ToList();
-        output.WriteLine($"=== {claims.Count} claims, {typed.Count} typed: {string.Join(", ", typed.GroupBy(claim => claim.AttributeCode).Select(group => $"{group.Key} {group.Count()}"))}");
+        output.WriteLine($"=== {claims.Count} claims from {pictures.Count} pictures; {countedRight} of {sets} sets counted as the seed declares");
 
         Assert.Equal(Pictures.Length, read);
-        if (!wholeVocabulary)
-            Assert.All(typed, claim => Assert.Equal("PIECES", claim.AttributeCode));
-    }
-}
-
-/// <summary>Puts the vocabulary a description is offered in front of every source: the pipeline as it was.</summary>
-file static class Vocabularies
-{
-    extension(IServiceCollection services)
-    {
-        public void Decorate()
-        {
-            var registered = services.Last(service => service.ServiceType == typeof(IAttributeVocabulary));
-            services.Remove(registered);
-            services.AddScoped<IAttributeVocabulary>(provider =>
-                new Wrapped((IAttributeVocabulary)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!)));
-        }
-    }
-
-    private sealed class Wrapped(IAttributeVocabulary inner) : IAttributeVocabulary
-    {
-        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(SourceKind readFrom, CancellationToken cancellationToken = default) =>
-            inner.CurrentAsync(SourceKind.ProductDescription, cancellationToken);
+        Assert.All(claims, claim => Assert.Equal(PictureAnswers.Pieces, claim.AttributeCode));
     }
 }
