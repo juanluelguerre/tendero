@@ -435,6 +435,67 @@ picture, and a claim that says another value than the catalogue holds names both
     which of the catalogue's colours), code builds the typed claim or holds it
     against the catalogue, and no untyped sentence is proposed from a picture.
     The prose stays as the document a reviewer reads. The author's to decide.
+- **Built, on the author's yes (2026-10-07): the picture answers, code builds the
+  claim.** Prompt `picture-reading-2026-10-07c`.
+  - **Two questions a picture.** What it shows, in prose, as before; and *how
+    many separate items are drawn*, asked by itself and held to a schema of one
+    integer. The count's wording is the one `defects` measures: the question
+    lives in one file (`PictureQuestions.cs`) that `tools/SeedImages` compiles
+    by link, with no project reference, so the board that may not fall measures
+    the question the shop asks.
+  - **The answer is a line of the reading**, written by code under the prose in
+    each language (*Elementos contados en la imagen: 3.* / *Items counted in the
+    picture: 3.*). So it is in the document's identity — the same words with
+    another count are another reading, and what rested on the old one falls —
+    a claim quotes it as it quotes any text, and the reviewer reads it beside
+    the picture. No migration: a reading is still its text.
+  - **No model reads a reading.** `PictureAnswersExtractor` (keyed `picture`)
+    reads the line back as `PIECES`; the vetting states it from the attribute's
+    labels, as it does a rule's; its support is 1 by construction, and its
+    provenance is the model and the prompt that read the picture. Neither the
+    chat extractor nor the rules are handed a reading: no sentence is proposed
+    from its prose.
+  - **Held against the catalogue by code.** A count of one says nothing of a
+    product that does not say how many it is — every picture of one thing would
+    propose *pieces: 1* — and is a claim only when the catalogue holds a number
+    of pieces, which the review then shows beside it. More than one is always
+    proposed: that is how a set nobody typed gets its pieces.
+  - **The readings first.** They ask no model, so the extractor being down for
+    the description neither holds a picture's claim back nor takes it down.
+  - **A reading is its words and its answer, or nothing**: a picture described
+    and not counted is a failed picture, read again whole.
+- **Measured again, the same twelve pictures and four shoes**
+  (`ClaimsFromPicturesOnTheLocalModelTests`, 63 s for sixteen pictures, two
+  calls each):
+
+  | Twelve pictures | Whole vocabulary | A picture's | The picture answers |
+  |---|---|---|---|
+  | Claims proposed | 64 | 71 | **6** |
+  | Typed | 17 | 4 | 6 |
+  | Typed, and wrong | 12 | 2 | **0** |
+  | Typed, and right | 5 | 2 | **6** |
+  | Sentences with no attribute | 47 | 67 | **0** |
+
+  - Six sets of six counted as the seed declares (3, 3, 4, 6, 3, 2); the six
+    single products and the four shoes counted one, and proposed nothing.
+  - **The first run read eight pictures of sixteen.** The count's answer was
+    capped at twenty tokens — seven are enough for `{"count": 3}` — and the
+    shop's 4B spent twenty-five to twenty-nine on the sets, padding the object
+    with the white space a JSON schema allows; the answer came back cut in the
+    middle of the word *count*. The cap is a hundred. And the failures did what
+    *known and not solved* below says: four of them held the head of every
+    batch after.
+  - **Not measured: a pair.** The question counts the two shoes of a pair as
+    two, and the catalogue does not call a pair two pieces; such a claim would
+    be proposed and a person would reject it. The seed draws every shoe alone,
+    so none of its pictures says.
+  - **Still to do**: the colour, which the tool already asks from the
+    catalogue's own options — a variant's axis, so there is no product value to
+    hold it against until a picture belongs to a variant; and the questions by
+    kind of product, when the catalogue's new families bring attributes a
+    picture shows.
+  - The dev database's eight readings were made under the older prompt: the
+    next batch reads them again, and their claims are superseded.
 - **Not measured**: how often a picture proposes what the description already
   did (*three pans*, twice). Nothing merges the two; the reviewer would see both.
 - **Known and not solved**: a picture the model fails on stays at the head of the
@@ -462,6 +523,79 @@ picture, and a claim that says another value than the catalogue holds names both
   it fails.
 - **Decided with the author for the steps to come**: a reading is kept in both
   languages; the contradiction flag is for any claim, not only a picture's.
+
+### I-4b · The shop's model against somebody else's exam (measured 2026-10-08)
+
+Our pictures are a hundred drawings we made, and one attribute. **ImplicitAVE**
+(Zou et al., ACL 2024 Findings) is 1,610 test examples in five domains — a real
+product photograph, its title, an attribute and the value a person annotated,
+which the title does not state. `tools/SearchEval --suite implicit-ave` asks
+the shop's 4B each one as the shop asks its own: a closed question, the answer
+held by a schema to the attribute's options, compared by code.
+
+- **The data is not in the repository and must not be.** Its repository
+  declares no licence, and it derives from MAVE and Amazon's product data. It is
+  downloaded outside the tree and named with `--dataset`. Good for measuring;
+  **not for training** until the rights are clear. A measurement, not a gate.
+- **The base, three ways** (Qwen3.5-4B Q8 with its projector, the 8 GB card,
+  0.54 s an example; the same answers on a second run, 1,610 of 1,610):
+
+  | | Examples | Picture + title | Picture | Title |
+  |---|---|---|---|---|
+  | **All** | 1,610 | 67.1 % | **68.0 %** | 33.2 % |
+  | Clothing | 226 | 70.8 % | 71.7 % | 18.6 % |
+  | Food | 390 | 76.9 % | 76.4 % | 30.3 % |
+  | Footwear | 317 | 43.2 % | 48.3 % | 27.1 % |
+  | Home | 457 | 65.9 % | 67.8 % | 46.2 % |
+  | Jewellery and general apparel | 220 | 82.7 % | 77.7 % | 35.0 % |
+
+  - The value is in the picture: without it, half is lost. **The title adds
+    nothing overall, and costs five points on footwear.**
+  - Above 90 %: animal theme, a home object's shape, toe style, flavour.
+    Under 50 % with the picture: athletic shoe style (34 %), shaft height
+    (47 %), bed size (47 % — *Queen* 27 times of 30: a photograph does not say).
+  - The paper's table, for scale and still to be checked against the PDF:
+    GPT-4V 86.8 %, the open 7–13B models of early 2024 between 48 % and 72 %.
+- **Where the wrong answers went** (picture alone): a default the model falls
+  back on (*Running Shoe* 63 times of 119); neighbours on a scale (bootie, ankle
+  boot, mid calf; mid heel, high heel); what a picture cannot show (bed size,
+  *all seasons*, the room); and the exam's own noise (*Mint* and *Mints* are two
+  options).
+- **The target, set by the author: precision on what goes to bulk approval, not
+  accuracy on everything.** First ≥ 95 %, lowered the same night to **≥ 90 %**.
+  What clears it goes to a tray approved in bulk — a person still approves
+  (invariant 12); applying it with nobody is a later ADR, once weeks of bulk
+  approvals show the number holds. No paid arbiter for now.
+- **Three ways to get there, measured as a script before anything was built**
+  (picture alone; the model answers an option's letter, and the letter's token
+  carries a probability):
+  - **Definitions beside each option: refuted.** Footwear, 317 examples: 64.4 %
+    plain, **55.2 %** with a definition written for every option.
+  - **Two runs agreeing is not confidence.** Picture and picture-plus-title give
+    the same answer 86 % of the time and are right 73 % of those: the model is
+    wrong the same way twice.
+  - **The probability of the chosen option is.** All 1,610:
+
+    | Accepted at confidence ≥ | Covers | Right |
+    |---|---|---|
+    | 0.99 | 23.7 % | 95.8 % |
+    | 0.95 | 43.4 % | 92.6 % |
+    | 0.90 | 53.9 % | 87.6 % |
+    | 0.80 | 62.9 % | 82.8 % |
+
+    With the threshold chosen on half the examples and measured on the other
+    half: aimed at 95 %, it covers 37.9 % and is right 93.4 %; aimed at 90 %,
+    52.4 % and 86.7 %. **A threshold tuned to a target lands under it**: it needs
+    a margin. A threshold per attribute would need more than the 20 to 150
+    examples each has here.
+  - **The answer's format moves the score, and not in one direction.** A letter
+    instead of a value in JSON: footwear 48.3 % → 64.4 %, food 76.4 % → 58.2 %,
+    home 67.8 % → 51.4 %; overall 68.0 % → 62.6 %. Not yet separated: the
+    letter, or the grammar that holds the JSON.
+- **Next**: the probability taken from the answer the shop already asks for
+  (the value under its schema), so the better format keeps its accuracy and
+  gains a confidence; then the tray. In the suite, with tests — the three
+  probes above were scripts and are not in the repository.
 
 ### I-5 · Image embeddings, behind a gate
 
