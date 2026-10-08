@@ -860,3 +860,38 @@ synonym gap lexical search could not solve. It scores 1.000, and always did —
 the Spanish description literally begins "Flexo LED". The annotation was written
 from assumption instead of from the catalogue. That is precisely what the `why`
 field exists to make visible in review.
+
+## The catalogue grew to 120 products, and the set with it (2026-10-08)
+
+Twenty products were added in families the shop did not have — furniture,
+plants, decoration, the bathroom (`docs/specs/catalogue-growth.md`). **Nothing
+was replaced and nothing judged before was judged again**, which is what lets
+the numbers before and after sit in one table:
+
+| NDCG@10 | 100 products, 52 scored queries | The same 52, 120 products | 63 scored queries, 120 products | Floor now |
+|---|---:|---:|---:|---:|
+| lexical es | 0.692 | 0.685 | 0.714 | 0.69 |
+| lexical en | 0.748 | 0.744 | 0.773 | 0.75 |
+| hybrid + reranker es | 0.831 | 0.822 | 0.839 | 0.82 |
+| hybrid + reranker en | 0.843 | 0.834 | 0.855 | 0.83 |
+
+recall@50 over the 63: lexical 0.746 es / 0.806 en (floors 0.73 / 0.79), hybrid
+0.924 / 0.943 (floors 0.91 / 0.92, unmoved). Throwaway engines, the versions of
+the first measurement; 1256 (es) and 1273 (en) judgments, every strategy's first
+ten judged.
+
+- **The second column is what twenty more products cost** the queries that
+  were already there: four to nine thousandths. A coffee table for *coffee
+  maker*, a standing desk for *electric kettle*, a bed and two plants that want
+  light for *luz para leer en la cama*.
+- **The third is not search getting better.** Eleven queries joined — ten new
+  pairs and *house plant*, which had nothing to find until the shop sold a
+  monstera — and they are easy: one obvious product each. The floors were
+  re-derived from the whole set because the old ones, under a mean lifted by
+  easy queries, would pass a real regression. The test that says the lexical
+  bar does not move was changed on purpose, and says why.
+- **Seen once and not explained**: one gate run of six gave lexical es 0.706
+  with two results unjudged, while another program was starting a dozen
+  containers on the same machine. Five runs agree to the third decimal. If it
+  is the gate searching before its index has refreshed, a loaded CI runner
+  will find it again; recorded so that it is recognised.

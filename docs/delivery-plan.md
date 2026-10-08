@@ -932,6 +932,9 @@ what a microphone changes about the questions people ask. `#AIEngineering #RAG #
   three near-universal attributes are required too, which leaves five seed
   products incomplete on purpose. Still open there: a screen that edits the
   declarations.
+- **Built 2026-10-08, on the author's go-ahead: the catalogue is 120 products**
+  ([`docs/specs/catalogue-growth.md`](specs/catalogue-growth.md)) — the
+  proposal just below, as it was written the day before.
 - **Proposed by the author on 2026-10-07, not scheduled: the catalogue grows,
   it does not change.** Looking at the pictures, the shop reads as bags and
   shoes; he asked for chairs, tables, beds, wardrobes, plants. Replacing

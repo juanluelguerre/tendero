@@ -823,6 +823,16 @@
           "externalId": "B15APP1004",
           "relevance": 0,
           "why": "Waterproof jacket, not a coffee maker."
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 0,
+          "why": "una cama: nada que ver"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "juego de 3 macetas de barro cocido: no es lo que se pide"
         }
       ]
     },
@@ -1004,6 +1014,11 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "boles para mezclar"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "escritorio elevable eléctrico Vertical: no es lo que se pide"
         }
       ]
     },
@@ -1092,6 +1107,11 @@
           "externalId": "B15SHO1104",
           "relevance": 0,
           "why": "alpargata"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 0,
+          "why": "zapatillas de padel Pista: no es lo que se pide"
         }
       ]
     },
@@ -1459,6 +1479,11 @@
           "externalId": "B15APP1008",
           "relevance": 0,
           "why": "guantes tactiles"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "escritorio elevable eléctrico Vertical: no es lo que se pide"
         }
       ]
     },
@@ -2215,6 +2240,16 @@
           "externalId": "B12LAM0609",
           "relevance": 1,
           "why": "luz de paso con sensor: util para la casa, poco de regalo"
+        },
+        {
+          "externalId": "B16DEC1502",
+          "relevance": 2,
+          "why": "una alfombra de lana: un regalo para la casa"
+        },
+        {
+          "externalId": "B16DEC1501",
+          "relevance": 2,
+          "why": "un espejo de pared: un regalo decorativo para la casa"
         }
       ]
     },
@@ -2476,6 +2511,11 @@
           "externalId": "B15SHO1104",
           "relevance": 0,
           "why": "espadrilles: nothing says they are for travel"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 0,
+          "why": "una planta: se queda en casa"
         }
       ]
     },
@@ -2589,6 +2629,26 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "mixing bowls: for cooking, not tableware"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 1,
+          "why": "la mesa de comedor: donde se pone, no lo que se pone"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "una mesa auxiliar"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "una mesa de centro"
+        },
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 1,
+          "why": "las sillas alrededor de la mesa: no lo que se pone en ella"
         }
       ]
     },
@@ -2815,6 +2875,11 @@
           "externalId": "B15SHO1104",
           "relevance": 0,
           "why": "canvas espadrilles, no water protection"
+        },
+        {
+          "externalId": "B16BAT1602",
+          "relevance": 0,
+          "why": "estantería de baño de bambú de 3 baldas: no es lo que se pide"
         }
       ]
     },
@@ -2908,6 +2973,21 @@
           "externalId": "B14HOM0808",
           "relevance": 0,
           "why": "linen napkins, not a light"
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 0,
+          "why": "la cama, no una luz para ella"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 0,
+          "why": "una planta que quiere luz indirecta: la palabra, no la cosa"
+        },
+        {
+          "externalId": "B16PLA1402",
+          "relevance": 0,
+          "why": "un olivo que quiere sol: la palabra, no la cosa"
         }
       ]
     },
@@ -3257,6 +3337,21 @@
           "externalId": "B14HOM0808",
           "relevance": 0,
           "why": "linen napkins, not a lamp"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "una mesa, no una lampara"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "una mesa, no una lampara"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "una mesa, no una lampara"
         }
       ]
     },
@@ -3360,6 +3455,21 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "mixing bowls, not for chopping"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "juego de 3 macetas de barro cocido: no es lo que se pide"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 0,
+          "why": "regadera de acero de 5 litros: no es lo que se pide"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 0,
+          "why": "monstera deliciosa en maceta de 17 cm: no es lo que se pide"
         }
       ]
     },
@@ -3586,6 +3696,16 @@
           "externalId": "B15KIT1203",
           "relevance": 0,
           "why": "cake tin with a non-stick base, not a pan"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "juego de 4 tazones de desayuno: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "taburete alto de pino: no es lo que se pide"
         }
       ]
     },
@@ -3679,6 +3799,16 @@
           "externalId": "B15APP1002",
           "relevance": 0,
           "why": "Merino jumper, not a bum bag."
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 0,
+          "why": "monstera deliciosa en maceta de 17 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 0,
+          "why": "regadera de acero de 5 litros: no es lo que se pide"
         }
       ]
     },
@@ -3772,6 +3902,16 @@
           "externalId": "B15KIT1202",
           "relevance": 0,
           "why": "probe thermometer, does not heat water"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "electrico, y un escritorio"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 0,
+          "why": "regadera de acero de 5 litros: no es lo que se pide"
         }
       ]
     },
@@ -3890,6 +4030,31 @@
           "externalId": "B13BAG0712",
           "relevance": 0,
           "why": "packing cubes, not a backpack"
+        },
+        {
+          "externalId": "B11COF0405",
+          "relevance": 0,
+          "why": "un molinillo de cafe"
+        },
+        {
+          "externalId": "B11COF0406",
+          "relevance": 0,
+          "why": "un hervidor"
+        },
+        {
+          "externalId": "B11COF0407",
+          "relevance": 0,
+          "why": "una tostadora"
+        },
+        {
+          "externalId": "B11COF0408",
+          "relevance": 0,
+          "why": "una batidora"
+        },
+        {
+          "externalId": "B13BAG0711",
+          "relevance": 0,
+          "why": "alforja de bicicleta impermeable 20L: no es lo que se pide"
         }
       ]
     },
@@ -4003,6 +4168,11 @@
           "externalId": "B15APP1003",
           "relevance": 0,
           "why": "padded gilet from Lanar with recycled filling, not wool"
+        },
+        {
+          "externalId": "B16DEC1502",
+          "relevance": 1,
+          "why": "alfombra de lana tejida a mano: lana, pero no merino"
         }
       ]
     },
@@ -4186,6 +4356,16 @@
           "externalId": "B15SHO1102",
           "relevance": 0,
           "why": "women's leather ankle boots"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "juego de 3 macetas de barro cocido: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0804",
+          "relevance": 0,
+          "why": "cesta de almacenaje de fibra natural: no es lo que se pide"
         }
       ]
     },
@@ -4349,6 +4529,21 @@
           "externalId": "B15APP1003",
           "relevance": 0,
           "why": "Men's padded gilet: cut for the other gender."
+        },
+        {
+          "externalId": "B16DEC1501",
+          "relevance": 1,
+          "why": "un espejo de pared: decorativo, un regalo posible"
+        },
+        {
+          "externalId": "B16DEC1502",
+          "relevance": 1,
+          "why": "una alfombra de lana: para la casa, un regalo grande"
+        },
+        {
+          "externalId": "B14ORG0902",
+          "relevance": 0,
+          "why": "organizador de cubiertos extensible: no es lo que se pide"
         }
       ]
     },
@@ -4650,6 +4845,16 @@
           "externalId": "B15SHO1104",
           "relevance": 0,
           "why": "espadrilles, not a dish rack"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "juego de 4 tazones de desayuno: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 0,
+          "why": "sofá de dos plazas Tertulia: no es lo que se pide"
         }
       ]
     },
@@ -4939,6 +5144,16 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "A set of mixing bowls: shares the word set only."
+        },
+        {
+          "externalId": "B16BAT1601",
+          "relevance": 0,
+          "why": "un juego, de toallas"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "juego de 3 macetas de barro cocido: no es lo que se pide"
         }
       ]
     },
@@ -5037,6 +5252,11 @@
           "externalId": "B13BAG0712",
           "relevance": 0,
           "why": "Packing cubes at 32.00 EUR, not a backpack."
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "un escritorio elevable: ni mochila ni menos de 70"
         }
       ]
     },
@@ -5165,6 +5385,16 @@
           "externalId": "B15SHO1103",
           "relevance": 0,
           "why": "Padel shoes, not a pan."
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "juego de 3 macetas de barro cocido: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "taburete alto de pino: no es lo que se pide"
         }
       ]
     },
@@ -5268,6 +5498,11 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "Mixing bowls of 1 to 3 litres, not pots."
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 0,
+          "why": "regadera de acero de 5 litros: no es lo que se pide"
         }
       ]
     },
@@ -5680,6 +5915,11 @@
           "externalId": "B15SHO1104",
           "relevance": 0,
           "why": "espadrilles, not a Pulse Runner"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "acero al carbono, en una mesa auxiliar"
         }
       ]
     },
@@ -5706,10 +5946,81 @@
     },
     {
       "query": "planta para la casa",
-      "kind": "not-sold",
+      "kind": "product-type",
       "split": "holdout",
       "pair": "X04",
-      "judgments": []
+      "judgments": [
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 3,
+          "why": "una monstera en maceta: exactamente una planta de interior"
+        },
+        {
+          "externalId": "B16PLA1402",
+          "relevance": 2,
+          "why": "un olivo en maceta: una planta, pero de terraza y no de casa"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 1,
+          "why": "macetas de barro: para una planta, no una planta"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 1,
+          "why": "una regadera: para una planta, no una planta"
+        },
+        {
+          "externalId": "B10SHO0106",
+          "relevance": 0,
+          "why": "zapatillas de casa: la palabra casa"
+        },
+        {
+          "externalId": "B14HOM0804",
+          "relevance": 0,
+          "why": "cesta de almacenaje de fibra natural: no es lo que se pide"
+        },
+        {
+          "externalId": "B16BAT1602",
+          "relevance": 0,
+          "why": "estantería de baño de bambú de 3 baldas: no es lo que se pide"
+        },
+        {
+          "externalId": "B14ORG0901",
+          "relevance": 0,
+          "why": "estante especiero de bambú de dos alturas: no es lo que se pide"
+        },
+        {
+          "externalId": "B16DEC1502",
+          "relevance": 0,
+          "why": "alfombra de lana tejida a mano 160 x 230: no es lo que se pide"
+        },
+        {
+          "externalId": "B11COO0307",
+          "relevance": 0,
+          "why": "tabla de cortar de bambú con canal: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 0,
+          "why": "lámpara de pie de lectura Butaca: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1310",
+          "relevance": 0,
+          "why": "armario de dos puertas de pino: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0805",
+          "relevance": 0,
+          "why": "manta de lana de 130 x 180 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0503",
+          "relevance": 0,
+          "why": "jarra de agua de cristal de 1,2 litros: no es lo que se pide"
+        }
+      ]
     },
     {
       "query": "libro para aprender ingles",
@@ -5738,6 +6049,791 @@
       "split": "holdout",
       "pair": "X08",
       "judgments": []
+    },
+    {
+      "query": "silla de comedor",
+      "kind": "product-type",
+      "split": "tune",
+      "pair": "G01",
+      "judgments": [
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 3,
+          "why": "silla de comedor de roble: exactamente eso"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 1,
+          "why": "un taburete alto: un asiento, de barra y no de comedor"
+        },
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 1,
+          "why": "una silla de oficina: una silla, pero de escritorio"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 1,
+          "why": "la mesa de comedor: con lo que va la silla, no la silla"
+        },
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 0,
+          "why": "un sofa"
+        },
+        {
+          "externalId": "B14HOM0802",
+          "relevance": 0,
+          "why": "delantal de lino con peto: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "juego de 4 servilletas de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B11COO0307",
+          "relevance": 0,
+          "why": "tabla de cortar de bambú con canal: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 0,
+          "why": "cómoda de cuatro cajones de pino: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "mesa auxiliar redonda de acero: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "mesa de centro de roble con balda: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "silla de oficina",
+      "kind": "product-type",
+      "split": "holdout",
+      "pair": "G02",
+      "judgments": [
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 3,
+          "why": "silla de oficina ergonomica: exactamente eso"
+        },
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 1,
+          "why": "una silla de comedor: una silla, no para ocho horas de escritorio"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 1,
+          "why": "un escritorio elevable: mueble de oficina, no una silla"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "un taburete de barra"
+        },
+        {
+          "externalId": "B13BAG0704",
+          "relevance": 0,
+          "why": "una mochila llamada Oficina"
+        },
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 0,
+          "why": "un sofa: un asiento, no de escritorio"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "mesa de centro de roble con balda: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "mesa de comedor extensible de roble: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "mesa auxiliar redonda de acero: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "juego de 4 servilletas de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 0,
+          "why": "flexo LED articulado Taller: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0610",
+          "relevance": 0,
+          "why": "lámpara de arquitecto con lupa: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "sofa",
+      "kind": "product-type",
+      "split": "tune",
+      "pair": "G03",
+      "judgments": [
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 3,
+          "why": "un sofa de dos plazas: exactamente eso"
+        },
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 0,
+          "why": "una silla de comedor"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "una mesa de centro: va delante de uno"
+        },
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 0,
+          "why": "una silla de oficina"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "un taburete"
+        },
+        {
+          "externalId": "B12LAM0609",
+          "relevance": 0,
+          "why": "una luz de noche"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "juego de 4 servilletas de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "mesa de comedor extensible de roble: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 0,
+          "why": "cama de matrimonio de roble 150 x 190: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 1,
+          "why": "fundas de cojin: lo que va encima de uno"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "escritorio elevable eléctrico Vertical: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "mesa auxiliar redonda de acero: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0801",
+          "relevance": 0,
+          "why": "juego de 2 paños de cocina de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "lámpara de sobremesa de cerámica Cántaro: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "escritorio elevable",
+      "kind": "feature",
+      "split": "holdout",
+      "pair": "G04",
+      "judgments": [
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 3,
+          "why": "un escritorio elevable electrico: exactamente eso"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "una mesa de comedor"
+        },
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 0,
+          "why": "una lampara de escritorio: la palabra escritorio"
+        },
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 1,
+          "why": "una silla de oficina: lo que acompaña a un escritorio"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 0,
+          "why": "una lampara de escritorio: la palabra escritorio"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "una mesa auxiliar"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "una mesa de centro"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 0,
+          "why": "un flexo"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 0,
+          "why": "una lampara de pie"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "una lampara de sobremesa"
+        },
+        {
+          "externalId": "B12LAM0605",
+          "relevance": 0,
+          "why": "un aplique"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 0,
+          "why": "lámpara portátil recargable Vela: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0607",
+          "relevance": 0,
+          "why": "tira LED regulable de 3 metros: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "mesilla de noche",
+      "kind": "product-type",
+      "split": "tune",
+      "pair": "G05",
+      "judgments": [
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 3,
+          "why": "mesilla de noche de roble con cajon: exactamente eso"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 2,
+          "why": "una mesa auxiliar pequeña: hace el papel junto a una cama"
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 1,
+          "why": "la cama junto a la que va"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "una mesa de centro: demasiado baja y ancha"
+        },
+        {
+          "externalId": "B12LAM0609",
+          "relevance": 0,
+          "why": "una luz de noche: la palabra noche"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "lámpara de sobremesa de cerámica Cántaro: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 0,
+          "why": "sofá de dos plazas Tertulia: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "mesa de comedor extensible de roble: no es lo que se pide"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 0,
+          "why": "monstera deliciosa en maceta de 17 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0801",
+          "relevance": 0,
+          "why": "juego de 2 paños de cocina de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "juego de 4 servilletas de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 0,
+          "why": "lámpara de pie de lectura Butaca: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0803",
+          "relevance": 0,
+          "why": "manoplas de horno acolchadas, par: no es lo que se pide"
+        },
+        {
+          "externalId": "B11COO0306",
+          "relevance": 0,
+          "why": "bandeja de horno de cerámica: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0501",
+          "relevance": 0,
+          "why": "juego de 4 platos llanos de gres: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "juego de 4 tazones de desayuno: no es lo que se pide"
+        },
+        {
+          "externalId": "B15APP1005",
+          "relevance": 0,
+          "why": "pantalón de montaña desmontable: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "armario",
+      "kind": "product-type",
+      "split": "holdout",
+      "pair": "G06",
+      "judgments": [
+        {
+          "externalId": "B16FUR1310",
+          "relevance": 3,
+          "why": "un armario de pino de dos puertas: exactamente eso"
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 2,
+          "why": "una comoda de cuatro cajones: donde va la ropa sin armario"
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 0,
+          "why": "una cama"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 1,
+          "why": "una mesilla con cajon: mueble de dormitorio, no donde se cuelga la ropa"
+        },
+        {
+          "externalId": "B14ORG0901",
+          "relevance": 0,
+          "why": "un especiero"
+        },
+        {
+          "externalId": "B16DEC1501",
+          "relevance": 0,
+          "why": "espejo de pared redondo de 60 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "escritorio elevable eléctrico Vertical: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "mesa auxiliar redonda de acero: no es lo que se pide"
+        },
+        {
+          "externalId": "B14ORG0903",
+          "relevance": 0,
+          "why": "escurreplatos de acero con bandeja: no es lo que se pide"
+        },
+        {
+          "externalId": "B15APP1001",
+          "relevance": 0,
+          "why": "camisa de lino de manga larga: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "juego de 4 tazones de desayuno: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0804",
+          "relevance": 0,
+          "why": "cesta de almacenaje de fibra natural: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0807",
+          "relevance": 0,
+          "why": "alfombra de baño de algodón: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 0,
+          "why": "juego de 2 cojines de lino de 45 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 0,
+          "why": "chaqueta impermeable Aguacero 3 capas: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "macetas",
+      "kind": "product-type",
+      "split": "tune",
+      "pair": "G07",
+      "judgments": [
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 3,
+          "why": "un juego de tres macetas de barro: exactamente eso"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 1,
+          "why": "una monstera en su maceta: una planta, no una maceta"
+        },
+        {
+          "externalId": "B16PLA1402",
+          "relevance": 1,
+          "why": "un olivo en maceta: una planta, no una maceta"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 1,
+          "why": "una regadera: para lo que va en las macetas"
+        },
+        {
+          "externalId": "B10SHI0205",
+          "relevance": 0,
+          "why": "maillot de ciclismo Cadencia: no es lo que se pide"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 0,
+          "why": "zapatillas de montaña Roca 3: no es lo que se pide"
+        },
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 0,
+          "why": "set de 3 sartenes antiadherentes aptas para inducción: no es lo que se pide"
+        },
+        {
+          "externalId": "B10SHI0210",
+          "relevance": 0,
+          "why": "calcetines de lana merino, pack de 3: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0505",
+          "relevance": 0,
+          "why": "botes de cocina herméticos, juego de 3: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0804",
+          "relevance": 0,
+          "why": "cesta de almacenaje de fibra natural: no es lo que se pide"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 0,
+          "why": "chaqueta impermeable Aguacero 3 capas: no es lo que se pide"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 0,
+          "why": "camiseta técnica de manga larga Trail: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "taburete alto de pino: no es lo que se pide"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 0,
+          "why": "mallas largas de running Kilómetro: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "juego de 4 tazones de desayuno: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "toallas de baño",
+      "kind": "product-type",
+      "split": "holdout",
+      "pair": "G08",
+      "judgments": [
+        {
+          "externalId": "B16BAT1601",
+          "relevance": 3,
+          "why": "juego de cuatro toallas de algodon, dos de baño: exactamente eso"
+        },
+        {
+          "externalId": "B14HOM0807",
+          "relevance": 1,
+          "why": "una alfombra de baño de algodon: algodon de baño, no una toalla"
+        },
+        {
+          "externalId": "B14HOM0801",
+          "relevance": 1,
+          "why": "paños de cocina de lino: paños, pero de cocina"
+        },
+        {
+          "externalId": "B16BAT1602",
+          "relevance": 0,
+          "why": "una estanteria de baño: donde van las toallas"
+        },
+        {
+          "externalId": "B10SHO0108",
+          "relevance": 0,
+          "why": "sandalias de trekking Vado: no es lo que se pide"
+        },
+        {
+          "externalId": "B15APP1006",
+          "relevance": 0,
+          "why": "bufanda de lana de doble cara: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "juego de 4 tazones de desayuno: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 0,
+          "why": "juego de 2 cojines de lino de 45 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0802",
+          "relevance": 0,
+          "why": "delantal de lino con peto: no es lo que se pide"
+        },
+        {
+          "externalId": "B15APP1008",
+          "relevance": 0,
+          "why": "guantes técnicos táctiles: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "juego de 4 servilletas de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B15SHO1101",
+          "relevance": 0,
+          "why": "botas de agua cortas Charco: no es lo que se pide"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 0,
+          "why": "mallas largas de running Kilómetro: no es lo que se pide"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 0,
+          "why": "zapatillas de lona Puerto: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0803",
+          "relevance": 0,
+          "why": "manoplas de horno acolchadas, par: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "alfombra para el salon",
+      "kind": "use-case",
+      "split": "tune",
+      "pair": "G09",
+      "judgments": [
+        {
+          "externalId": "B16DEC1502",
+          "relevance": 3,
+          "why": "alfombra de lana para salon o dormitorio: exactamente eso"
+        },
+        {
+          "externalId": "B14HOM0807",
+          "relevance": 0,
+          "why": "una alfombra de baño: no es para un salon"
+        },
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 0,
+          "why": "un sofa: de salon, pero no una alfombra"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "una mesa de centro: de salon, pero no una alfombra"
+        },
+        {
+          "externalId": "B11TAB0506",
+          "relevance": 0,
+          "why": "mantel de lino lavado de 240 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0802",
+          "relevance": 0,
+          "why": "delantal de lino con peto: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 0,
+          "why": "cama de matrimonio de roble 150 x 190: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0801",
+          "relevance": 0,
+          "why": "juego de 2 paños de cocina de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 0,
+          "why": "silla de oficina ergonómica Postura: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 0,
+          "why": "juego de 2 cojines de lino de 45 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "juego de 4 servilletas de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B14ORG0902",
+          "relevance": 0,
+          "why": "organizador de cubiertos extensible: no es lo que se pide"
+        },
+        {
+          "externalId": "B16BAT1601",
+          "relevance": 0,
+          "why": "juego de 4 toallas de algodón: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 0,
+          "why": "mesilla de noche de roble con cajón: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "lámpara de sobremesa de cerámica Cántaro: no es lo que se pide"
+        }
+      ]
+    },
+    {
+      "query": "planta que no sea toxica para gatos",
+      "kind": "feature",
+      "split": "holdout",
+      "pair": "G10",
+      "judgments": [
+        {
+          "externalId": "B16PLA1402",
+          "relevance": 3,
+          "why": "un olivo, que no es toxico para mascotas: la respuesta"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 0,
+          "why": "una monstera, toxica para perros y gatos: la respuesta equivocada por bien que casen sus palabras"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "macetas: no una planta"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 0,
+          "why": "una regadera: no es una planta"
+        },
+        {
+          "externalId": "B11COO0308",
+          "relevance": 0,
+          "why": "juego de 5 utensilios de bambú: no es lo que se pide"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 0,
+          "why": "camiseta de tirantes Ligera: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0503",
+          "relevance": 0,
+          "why": "jarra de agua de cristal de 1,2 litros: no es lo que se pide"
+        },
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 0,
+          "why": "set de 3 sartenes antiadherentes aptas para inducción: no es lo que se pide"
+        },
+        {
+          "externalId": "B14HOM0801",
+          "relevance": 0,
+          "why": "juego de 2 paños de cocina de lino: no es lo que se pide"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "taburete alto de pino: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 0,
+          "why": "lámpara portátil recargable Vela: no es lo que se pide"
+        },
+        {
+          "externalId": "B11TAB0506",
+          "relevance": 0,
+          "why": "mantel de lino lavado de 240 cm: no es lo que se pide"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 0,
+          "why": "lámpara de pie de lectura Butaca: no es lo que se pide"
+        },
+        {
+          "externalId": "B11COO0307",
+          "relevance": 0,
+          "why": "tabla de cortar de bambú con canal: no es lo que se pide"
+        }
+      ]
     }
   ]
 }

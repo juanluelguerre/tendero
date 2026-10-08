@@ -157,8 +157,16 @@ public sealed class EvaluationSettingsTests
         // pooled from every strategy's first ten instead of lexical's alone, and
         // relevant products lexical never retrieved started to count against it
         // (docs/search-evaluation.md, "The pool, judged").
-        Assert.Equal(new CultureThresholds(0.67, 0.72), thresholds.For("lexical", "es"));
-        Assert.Equal(new CultureThresholds(0.73, 0.78), thresholds.For("lexical", "en"));
+        //
+        // And they moved once more on 2026-10-08, for the same allowed reason and
+        // upwards: the catalogue grew by twenty products and the golden set by
+        // eleven scored queries about them, which are easy (one obvious product
+        // each). The set scores 0.714 / 0.773 where it scored 0.692 / 0.748, so the
+        // floors went up with it — 0.67 and 0.73 would now pass a real regression.
+        // The 52 queries scored before give 0.685 / 0.744 over the larger
+        // catalogue: still above the floors they had (docs/specs/catalogue-growth.md).
+        Assert.Equal(new CultureThresholds(0.69, 0.73), thresholds.For("lexical", "es"));
+        Assert.Equal(new CultureThresholds(0.75, 0.79), thresholds.For("lexical", "en"));
     }
 
     [Fact]
@@ -177,7 +185,8 @@ public sealed class EvaluationSettingsTests
         var embedded = await EmbeddedEvaluation.GoldenSetsAsync(Ct);
 
         Assert.Equal(["en", "es"], embedded.Select(set => set.Culture));
-        Assert.All(embedded, set => Assert.Equal(60, set.Queries.Count));
+        // Sixty until the catalogue grew (2026-10-08): ten pairs for the families it gained.
+        Assert.All(embedded, set => Assert.Equal(70, set.Queries.Count));
     }
 
     [Fact]

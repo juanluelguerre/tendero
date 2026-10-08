@@ -60,7 +60,7 @@ code for a blog series on AI architecture.
 ## What runs today
 
 Phases 0–12 of [the board](docs/delivery-plan.md) are in, and so is most of a
-redesign of both frontends. The shop works end to end on a hundred-product
+redesign of both frontends. The shop works end to end on a 120-product
 catalogue; a browser agent can shop in it, and an external agent can read its
 catalogue and **buy** over MCP or UCP:
 

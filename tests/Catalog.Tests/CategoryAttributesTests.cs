@@ -241,7 +241,7 @@ public sealed class CategoryAttributesTests
     /// stops being, is a change somebody made on purpose.
     /// </summary>
     [Fact]
-    public async Task The_seed_requires_eight_attributes_and_five_products_are_known_to_lack_one()
+    public async Task The_seed_requires_twelve_attributes_and_five_products_are_known_to_lack_one()
     {
         var (tree, definitions) = await SeedCatalogue();
         using var products = JsonDocument.Parse(await File.ReadAllTextAsync(Seed("products.sample.json"), TestContext.Current.CancellationToken));
@@ -270,7 +270,10 @@ public sealed class CategoryAttributesTests
         Assert.Equal(
             [
                 "APPAREL: COLOR", "APPAREL: MATERIAL", "BAGS: COLOR", "BAGS: MATERIAL", "COFFEE_MAKER: CUPS",
-                "DESK_LAMP: COLOUR_TEMPERATURE", "DESK_LAMP: POWER_W", "KNIVES: PIECES",
+                "DESK_LAMP: COLOUR_TEMPERATURE", "DESK_LAMP: POWER_W",
+                // Furniture arrived with the catalogue's twenty new products (2026-10-08): a piece with no measures cannot be bought.
+                "FURNITURE: DEPTH_CM", "FURNITURE: HEIGHT_CM", "FURNITURE: WIDTH_CM",
+                "KNIVES: PIECES", "SEATING: SEATS",
             ],
             tree.All.SelectMany(category => category.Required.Select(code => $"{category.Code}: {code}")).Order(StringComparer.Ordinal));
     }

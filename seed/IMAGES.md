@@ -52,3 +52,36 @@ dos idiomas y la especificación (1400 × 1400, WebP, ≤ 120 KB), en
 | `B13BAG0711-NAVY_BLUE.webp` | La misma alforja en azul marino: la imagen de su tercera variante, hecha igual (`generate --variants-of`) |
 | `B13BAG0711-BACK.webp` | La misma alforja vista por detrás (`view`): una imagen de la galería que no es de ninguna variante |
 | `B13BAG0712.webp` | Organizadores de equipaje, juego de 3 |
+
+## Cuarenta imágenes más, pendientes de que el autor las acepte (2026-10-08)
+
+Veinte de las cuarenta y siete que faltaban y las veinte de los productos nuevos
+(`docs/specs/catalogue-growth.md`), dibujadas por el mismo modelo con el mismo
+prompt: unos 1,23 $, con un redibujo. **Van 2,88 $ de los 3 € aprobados**; las
+veintisiete que quedan y cualquier redibujo de estas necesitan subir el techo.
+
+El pase de visión (`verify`, el 4B de la tienda) da 23 de 40 sin ningún aviso.
+Lo que hay que mirar, con lo que dice el modelo y lo que se ve a ojo:
+
+| Imagen | Aviso |
+|---|---|
+| `B10SHI0209` cortavientos plegable | dibujado como su bolsa: el modelo ve una mochila verde |
+| `B11COO0302` cacerola de acero inoxidable | dibujada en azul |
+| `B11COF0408` batidora | lleva texto bajo los mandos; fuera de la zona segura |
+| `B11COF0405` molinillo | el modelo ve texto o un símbolo |
+| `B11COO0309` cuchillo de chef | fuera de la zona segura por poco |
+| `B12LAM0602` lámpara con carga | el modelo ve un símbolo impreso |
+| `B16FUR1307` mesa auxiliar | un tambor negro, no una bandeja con patas: el modelo ve un carrete |
+| `B16FUR1312` cómoda | cinco cajones donde dice cuatro, y un icono del anclaje a la pared |
+| `B16PLA1401` monstera | tres iconos en la maceta |
+| `B16DEC1502` alfombra | blanca con dibujo de ladrillo; el catálogo dice crema |
+| `B11TAB0506`, `B12LAM0606` | el catálogo dice crema y se ven blancos |
+| Muebles altos (`1301`–`1304`, `1309`, `1310`), `B16PLA1402` | fuera de la zona segura: ocupan más del 75 % del alto |
+
+El resto de avisos del modelo son la falsa alarma de siempre de la pregunta de
+escena, que lista las partes del propio objeto (la tapa de una cacerola, los
+platos de unas macetas).
+
+El tablero de defectos (`known-bad/baseline.json`) **no se ha vuelto a grabar**:
+se midió con estas imágenes dentro y todavía no son del catálogo. Toca
+regrabarlo cuando estén aceptadas o redibujadas.

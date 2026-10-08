@@ -1008,5 +1008,205 @@
     "sku": "B15KIT1204-DEFAULT",
     "warehouse": "BCN",
     "onHand": 5
+  },
+  {
+    "sku": "B16FUR1301-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16FUR1301-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16FUR1302-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16FUR1302-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16FUR1303-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 3
+  },
+  {
+    "sku": "B16FUR1303-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B16FUR1304-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16FUR1304-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16FUR1305-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 3
+  },
+  {
+    "sku": "B16FUR1305-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B16FUR1306-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16FUR1306-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16FUR1307-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16FUR1307-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16FUR1308-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16FUR1308-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16FUR1309-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B16FUR1309-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B16FUR1310-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B16FUR1310-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B16FUR1311-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16FUR1311-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16FUR1312-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16FUR1312-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16PLA1401-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B16PLA1401-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 9
+  },
+  {
+    "sku": "B16PLA1402-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16PLA1402-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16PLA1403-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 20
+  },
+  {
+    "sku": "B16PLA1403-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 14
+  },
+  {
+    "sku": "B16PLA1404-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16PLA1404-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16DEC1501-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16DEC1501-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16DEC1502-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16DEC1502-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B16BAT1601-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 18
+  },
+  {
+    "sku": "B16BAT1601-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 12
+  },
+  {
+    "sku": "B16BAT1602-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B16BAT1602-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
   }
 ]

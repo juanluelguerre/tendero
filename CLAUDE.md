@@ -57,8 +57,11 @@ are different axes. If promotions need real combination rules, build them. If
 checkout needs a saga with compensation, build it. But warehouses stay at two and
 roles at three.
 
-**The catalogue is 100 products** (raised from six on 2026-09-04). It is still
-laboratory scale — the full ABO set is 147k — and the reason for the raise is
+**The catalogue is 120 products** (raised from six to a hundred on 2026-09-04,
+and by twenty on 2026-10-08, in families the shop did not have — furniture,
+plants, decoration, the bathroom: added, never replacing, so no judgment and no
+quoted number moved; `docs/specs/catalogue-growth.md`). It is still
+laboratory scale — the full ABO set is 147k — and the reason for the first raise is
 that six was below the floor at which a *shop* can be judged: nothing to browse,
 a taxonomy with one product per leaf, and a search quality gate measuring
 ranking over a corpus small enough that everything retrieved was annotated. The

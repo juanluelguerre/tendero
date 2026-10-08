@@ -12,7 +12,7 @@ it go and why*; that one answers *what do I do next*.
 **Architectural completeness is total. Data volume is laboratory scale.** These
 are different axes and conflating them produces bad design. If a promotions
 engine needs real combination rules, it gets them. If checkout needs a saga with
-compensation, it gets one. But the catalogue stays at a hundred products (six until 2026-09-04), the warehouse
+compensation, it gets one. But the catalogue stays at 120 products (six until 2026-09-04, a hundred until 2026-10-08), the warehouse
 count stays at two, and the roles stay at three. Work that only exists because of
 scale — outbox coalescing, bulk indexing, background reindex jobs, image
 derivatives — is **deferred with its measured number recorded**, which is better

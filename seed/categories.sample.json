@@ -269,5 +269,106 @@
     "attributes": [
       "PIECES"
     ]
+  },
+  {
+    "code": "FURNITURE",
+    "parent": "HOME",
+    "name": {
+      "es": "Muebles",
+      "en": "Furniture"
+    },
+    "attributes": [
+      {
+        "code": "WIDTH_CM",
+        "required": true
+      },
+      {
+        "code": "DEPTH_CM",
+        "required": true
+      },
+      {
+        "code": "HEIGHT_CM",
+        "required": true
+      }
+    ]
+  },
+  {
+    "code": "SEATING",
+    "parent": "FURNITURE",
+    "name": {
+      "es": "Sillas y sofás",
+      "en": "Chairs and sofas"
+    },
+    "attributes": [
+      {
+        "code": "SEATS",
+        "required": true
+      }
+    ]
+  },
+  {
+    "code": "TABLES",
+    "parent": "FURNITURE",
+    "name": {
+      "es": "Mesas y escritorios",
+      "en": "Tables and desks"
+    },
+    "attributes": [
+      "POWER_W"
+    ]
+  },
+  {
+    "code": "BEDROOM",
+    "parent": "FURNITURE",
+    "name": {
+      "es": "Dormitorio y armarios",
+      "en": "Bedroom and wardrobes"
+    },
+    "attributes": [
+      "PIECES"
+    ]
+  },
+  {
+    "code": "PLANTS",
+    "parent": "HOME",
+    "name": {
+      "es": "Plantas y jardín",
+      "en": "Plants and garden"
+    },
+    "attributes": [
+      "LIGHT_NEEDS",
+      "PET_SAFE",
+      "HEIGHT_CM",
+      "CAPACITY_L",
+      "PIECES",
+      "DIAMETERS_CM"
+    ]
+  },
+  {
+    "code": "DECOR",
+    "parent": "HOME",
+    "name": {
+      "es": "Decoración",
+      "en": "Decoration"
+    },
+    "attributes": [
+      "WIDTH_CM",
+      "HEIGHT_CM",
+      "DIAMETERS_CM"
+    ]
+  },
+  {
+    "code": "BATHROOM",
+    "parent": "HOME",
+    "name": {
+      "es": "Baño",
+      "en": "Bathroom"
+    },
+    "attributes": [
+      "PIECES",
+      "WIDTH_CM",
+      "HEIGHT_CM",
+      "CAPACITY_L"
+    ]
   }
 ]

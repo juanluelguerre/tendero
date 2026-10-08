@@ -818,6 +818,11 @@
           "externalId": "B15KIT1202",
           "relevance": 0,
           "why": "kitchen thermometer"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table: the word, not the thing"
         }
       ]
     },
@@ -906,6 +911,11 @@
           "externalId": "B15KIT1201",
           "relevance": 0,
           "why": "kitchen scale"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table: the word, not the thing"
         }
       ]
     },
@@ -994,6 +1004,11 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "mixing bowls"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table: the word, not the thing"
         }
       ]
     },
@@ -1650,6 +1665,21 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "mixing bowl set"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "a set, of terracotta pots"
+        },
+        {
+          "externalId": "B16BAT1601",
+          "relevance": 0,
+          "why": "a set, of towels"
+        },
+        {
+          "externalId": "B11COF0406",
+          "relevance": 0,
+          "why": "temperature-controlled kettle: not what was asked"
         }
       ]
     },
@@ -2333,6 +2363,11 @@
           "externalId": "B15SHO1104",
           "relevance": 0,
           "why": "Esparto espadrilles, not for running."
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 0,
+          "why": "a chest of drawers: its runners are metal"
         }
       ]
     },
@@ -2579,6 +2614,41 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "Mixing bowls for cooking, not serving."
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 1,
+          "why": "the dining table itself: where it is set, not what sets it"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "a side table"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 0,
+          "why": "a bedside table"
+        },
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 1,
+          "why": "the chairs round the table: not what sets it"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "vertical electric standing desk: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "tall pine bar stool: not what was asked"
         }
       ]
     },
@@ -2712,6 +2782,11 @@
           "externalId": "B15KIT1202",
           "relevance": 0,
           "why": "A general probe thermometer; nothing says coffee, like the scale judged 0."
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table: where the cup goes, not what makes it"
         }
       ]
     },
@@ -2928,6 +3003,11 @@
           "externalId": "B15KIT1202",
           "relevance": 0,
           "why": "A kitchen thermometer, not a light."
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 0,
+          "why": "the bed, not a light for it"
         }
       ]
     },
@@ -3405,6 +3485,11 @@
           "externalId": "B15SHO1102",
           "relevance": 0,
           "why": "Leather ankle boots, unrelated."
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "set of 3 terracotta pots: not what was asked"
         }
       ]
     },
@@ -3827,6 +3912,11 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "Mixing bowls, not a kettle."
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "electric, and a desk"
         }
       ]
     },
@@ -4043,6 +4133,11 @@
           "externalId": "B15APP1003",
           "relevance": 0,
           "why": "padded gilet from Lanar with recycled filling, not wool"
+        },
+        {
+          "externalId": "B16DEC1502",
+          "relevance": 1,
+          "why": "a hand-woven wool rug: wool, and not merino"
         }
       ]
     },
@@ -4246,6 +4341,11 @@
           "externalId": "B15SHO1102",
           "relevance": 0,
           "why": "women's leather ankle boots"
+        },
+        {
+          "externalId": "B16PLA1402",
+          "relevance": 1,
+          "why": "a potted olive tree: only if he has a terrace"
         }
       ]
     },
@@ -4434,6 +4534,36 @@
           "externalId": "B15APP1003",
           "relevance": 0,
           "why": "Men's padded gilet: a garment cut for the other gender."
+        },
+        {
+          "externalId": "B16DEC1501",
+          "relevance": 1,
+          "why": "a wall mirror: decorative, a possible gift"
+        },
+        {
+          "externalId": "B16DEC1502",
+          "relevance": 1,
+          "why": "a wool rug: for the home, a large gift"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 2,
+          "why": "a house plant in its pot: a classic gift"
+        },
+        {
+          "externalId": "B16FUR1310",
+          "relevance": 0,
+          "why": "two-door pine wardrobe: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 0,
+          "why": "four-drawer pine chest: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 0,
+          "why": "sobremesa oak dining chair: not what was asked"
         }
       ]
     },
@@ -4632,6 +4762,16 @@
           "externalId": "B15APP1003",
           "relevance": 0,
           "why": "men's padded gilet"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 1,
+          "why": "a steel watering can: only if she gardens"
+        },
+        {
+          "externalId": "B16BAT1601",
+          "relevance": 1,
+          "why": "a set of towels: a household gift"
         }
       ]
     },
@@ -4745,6 +4885,31 @@
           "externalId": "B15KIT1202",
           "relevance": 0,
           "why": "A kitchen thermometer, not a dish rack."
+        },
+        {
+          "externalId": "B16BAT1602",
+          "relevance": 0,
+          "why": "a bathroom shelf rack: no dishes dry on it"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "round steel side table: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 0,
+          "why": "four-drawer pine chest: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "extendable oak dining table: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 0,
+          "why": "oak bedside table with drawer: not what was asked"
         }
       ]
     },
@@ -5079,6 +5244,21 @@
           "externalId": "B15KIT1204",
           "relevance": 0,
           "why": "A set of mixing bowls: shares the word set only."
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "a set, of terracotta pots"
+        },
+        {
+          "externalId": "B16BAT1601",
+          "relevance": 0,
+          "why": "a set, of towels"
+        },
+        {
+          "externalId": "B11COF0407",
+          "relevance": 0,
+          "why": "two wide-slot toaster: not what was asked"
         }
       ]
     },
@@ -5177,6 +5357,11 @@
           "externalId": "B15SHO1104",
           "relevance": 0,
           "why": "Esparto espadrilles, not a backpack."
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "a standing desk: neither a backpack nor under 70"
         }
       ]
     },
@@ -5491,6 +5676,11 @@
           "externalId": "B13BAG0712",
           "relevance": 0,
           "why": "Packing cubes for luggage, not a backpack."
+        },
+        {
+          "externalId": "B13BAG0711",
+          "relevance": 0,
+          "why": "20L waterproof bike pannier: not what was asked"
         }
       ]
     },
@@ -5672,6 +5862,11 @@
           "externalId": "B15KIT1202",
           "relevance": 0,
           "why": "A kitchen thermometer, not a coffee maker."
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table: the word, not the thing"
         }
       ]
     },
@@ -5790,6 +5985,16 @@
           "externalId": "B15SHO1104",
           "relevance": 0,
           "why": "Espadrilles, not a Pulse Runner."
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "carbon steel, on a side table"
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 0,
+          "why": "drawer runners"
         }
       ]
     },
@@ -5816,10 +6021,86 @@
     },
     {
       "query": "house plant",
-      "kind": "not-sold",
+      "kind": "product-type",
       "split": "holdout",
       "pair": "X04",
-      "judgments": []
+      "judgments": [
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 3,
+          "why": "a monstera in a pot: exactly a house plant"
+        },
+        {
+          "externalId": "B16PLA1402",
+          "relevance": 2,
+          "why": "a potted olive tree: a plant, for the patio and not the house"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 1,
+          "why": "terracotta pots: for a plant, not one"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 1,
+          "why": "a watering can: for a plant, not one"
+        },
+        {
+          "externalId": "B10SHO0106",
+          "relevance": 0,
+          "why": "house slippers: the word house"
+        },
+        {
+          "externalId": "B14HOM0804",
+          "relevance": 0,
+          "why": "natural fibre storage basket: not what was asked"
+        },
+        {
+          "externalId": "B16BAT1602",
+          "relevance": 0,
+          "why": "three-shelf bamboo bathroom rack: not what was asked"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 0,
+          "why": "butaca reading floor lamp: not what was asked"
+        },
+        {
+          "externalId": "B12LAM0610",
+          "relevance": 0,
+          "why": "architect lamp with magnifier: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0805",
+          "relevance": 0,
+          "why": "130 by 180 cm wool blanket: not what was asked"
+        },
+        {
+          "externalId": "B14ORG0901",
+          "relevance": 0,
+          "why": "two-tier bamboo spice rack: not what was asked"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 0,
+          "why": "1 litre glass french press: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0807",
+          "relevance": 0,
+          "why": "cotton bath mat: not what was asked"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 0,
+          "why": "aroma Compact drip coffee maker: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "vertical electric standing desk: not what was asked"
+        }
+      ]
     },
     {
       "query": "book to learn english",
@@ -5848,6 +6129,796 @@
       "split": "holdout",
       "pair": "X08",
       "judgments": []
+    },
+    {
+      "query": "dining chair",
+      "kind": "product-type",
+      "split": "tune",
+      "pair": "G01",
+      "judgments": [
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 3,
+          "why": "an oak dining chair: exactly that"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 1,
+          "why": "a tall stool: a seat, for a bar and not a dining table"
+        },
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 1,
+          "why": "an office chair: a chair, for a desk"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 1,
+          "why": "the dining table: what the chair goes with, not the chair"
+        },
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 0,
+          "why": "a sofa"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "round steel side table: not what was asked"
+        },
+        {
+          "externalId": "B14ORG0903",
+          "relevance": 0,
+          "why": "steel dish rack with tray: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0501",
+          "relevance": 0,
+          "why": "set of 4 stoneware dinner plates: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0803",
+          "relevance": 0,
+          "why": "padded oven mitts, pair: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "set of 4 linen napkins: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 0,
+          "why": "oak bedside table with drawer: not what was asked"
+        },
+        {
+          "externalId": "B11COO0307",
+          "relevance": 0,
+          "why": "bamboo chopping board with juice groove: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "vertical electric standing desk: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "office chair",
+      "kind": "product-type",
+      "split": "holdout",
+      "pair": "G02",
+      "judgments": [
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 3,
+          "why": "an ergonomic office chair: exactly that"
+        },
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 1,
+          "why": "a dining chair: a chair, not for eight hours at a desk"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 1,
+          "why": "a standing desk: office furniture, not a chair"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "a bar stool"
+        },
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 0,
+          "why": "a sofa: a seat, not one for a desk"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "round steel side table: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "extendable oak dining table: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 0,
+          "why": "oak bedside table with drawer: not what was asked"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 0,
+          "why": "desk lamp with wireless charging: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 0,
+          "why": "four-drawer pine chest: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "oak coffee table with shelf: not what was asked"
+        },
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 0,
+          "why": "dimmable LED desk lamp with USB port: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "sofa",
+      "kind": "product-type",
+      "split": "tune",
+      "pair": "G03",
+      "judgments": [
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 3,
+          "why": "a two-seater sofa: exactly that"
+        },
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 0,
+          "why": "a dining chair"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table: goes in front of one"
+        },
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 0,
+          "why": "an office chair"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "a bar stool"
+        },
+        {
+          "externalId": "B15APP1001",
+          "relevance": 0,
+          "why": "a linen shirt"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 0,
+          "why": "a running vest pack"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 0,
+          "why": "a bedside table"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 1,
+          "why": "cushion covers: what goes on one"
+        },
+        {
+          "externalId": "B10SHO0106",
+          "relevance": 0,
+          "why": "hogar house slippers: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0802",
+          "relevance": 0,
+          "why": "linen bib apron: not what was asked"
+        },
+        {
+          "externalId": "B10SHO0103",
+          "relevance": 0,
+          "why": "sendero everyday walking shoes: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "set of 4 linen napkins: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "round steel side table: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "standing desk",
+      "kind": "feature",
+      "split": "holdout",
+      "pair": "G04",
+      "judgments": [
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 3,
+          "why": "an electric height-adjustable desk: exactly that"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "a dining table"
+        },
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 0,
+          "why": "a desk lamp: the word desk"
+        },
+        {
+          "externalId": "B16FUR1302",
+          "relevance": 1,
+          "why": "an office chair: what goes with a desk"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 0,
+          "why": "a desk lamp: the word desk"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 0,
+          "why": "a desk lamp: the word desk"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 0,
+          "why": "a side table"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 0,
+          "why": "a floor lamp"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "a table lamp"
+        },
+        {
+          "externalId": "B12LAM0605",
+          "relevance": 0,
+          "why": "a wall light"
+        },
+        {
+          "externalId": "B14ORG0903",
+          "relevance": 0,
+          "why": "steel dish rack with tray: not what was asked"
+        },
+        {
+          "externalId": "B12LAM0607",
+          "relevance": 0,
+          "why": "3 metre dimmable LED strip: not what was asked"
+        },
+        {
+          "externalId": "B12LAM0609",
+          "relevance": 0,
+          "why": "night light with motion sensor: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1304",
+          "relevance": 0,
+          "why": "tall pine bar stool: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "bedside table",
+      "kind": "product-type",
+      "split": "tune",
+      "pair": "G05",
+      "judgments": [
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 3,
+          "why": "an oak bedside table with a drawer: exactly that"
+        },
+        {
+          "externalId": "B16FUR1307",
+          "relevance": 2,
+          "why": "a small round side table: it does the job beside a bed"
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 1,
+          "why": "the bed it stands beside"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table: too low and too wide"
+        },
+        {
+          "externalId": "B12LAM0609",
+          "relevance": 0,
+          "why": "a night light: the word night"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 1,
+          "why": "a table lamp: what stands on a bedside table, not one"
+        },
+        {
+          "externalId": "B16FUR1305",
+          "relevance": 0,
+          "why": "a dining table"
+        },
+        {
+          "externalId": "B16FUR1306",
+          "relevance": 0,
+          "why": "a standing desk"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "set of 4 linen napkins: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0501",
+          "relevance": 0,
+          "why": "set of 4 stoneware dinner plates: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0506",
+          "relevance": 0,
+          "why": "240 cm washed linen tablecloth: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1301",
+          "relevance": 0,
+          "why": "sobremesa oak dining chair: not what was asked"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 0,
+          "why": "desk lamp with wireless charging: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 0,
+          "why": "set of 2 45 cm linen cushion covers: not what was asked"
+        },
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 0,
+          "why": "dimmable LED desk lamp with USB port: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0802",
+          "relevance": 0,
+          "why": "linen bib apron: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "wardrobe",
+      "kind": "product-type",
+      "split": "holdout",
+      "pair": "G06",
+      "judgments": [
+        {
+          "externalId": "B16FUR1310",
+          "relevance": 3,
+          "why": "a two-door pine wardrobe: exactly that"
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 2,
+          "why": "a chest of four drawers: where clothes go when there is no wardrobe"
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 0,
+          "why": "a bed"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 1,
+          "why": "a bedside table with a drawer: bedroom furniture, not where clothes hang"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 0,
+          "why": "aguacero 3-layer waterproof jacket: not what was asked"
+        },
+        {
+          "externalId": "B15APP1001",
+          "relevance": 0,
+          "why": "long-sleeve linen shirt: not what was asked"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 0,
+          "why": "kilometro running tights: not what was asked"
+        },
+        {
+          "externalId": "B13BAG0710",
+          "relevance": 0,
+          "why": "14-inch laptop sleeve: not what was asked"
+        },
+        {
+          "externalId": "B10SHI0206",
+          "relevance": 0,
+          "why": "taller brushed cotton sweatshirt: not what was asked"
+        },
+        {
+          "externalId": "B13BAG0712",
+          "relevance": 0,
+          "why": "packing cubes, set of 3: not what was asked"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 0,
+          "why": "two-layer running shorts: not what was asked"
+        },
+        {
+          "externalId": "B10SHO0108",
+          "relevance": 0,
+          "why": "vado trekking sandals: not what was asked"
+        },
+        {
+          "externalId": "B15SHO1104",
+          "relevance": 0,
+          "why": "verano esparto espadrilles: not what was asked"
+        },
+        {
+          "externalId": "B10SHI0209",
+          "relevance": 0,
+          "why": "racha packable windbreaker: not what was asked"
+        },
+        {
+          "externalId": "B10SHO0106",
+          "relevance": 0,
+          "why": "hogar house slippers: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "plant pots",
+      "kind": "product-type",
+      "split": "tune",
+      "pair": "G07",
+      "judgments": [
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 3,
+          "why": "a set of three terracotta pots: exactly that"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 1,
+          "why": "a monstera sold in its pot: a plant, not a pot"
+        },
+        {
+          "externalId": "B16PLA1402",
+          "relevance": 1,
+          "why": "a potted olive tree: a plant, not a pot"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 1,
+          "why": "a watering can: for what goes in the pots"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 0,
+          "why": "a stovetop coffee maker: a pot of another kind"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 0,
+          "why": "a stovetop coffee maker: a pot of another kind"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 0,
+          "why": "puerto canvas trainers: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "set of 4 breakfast bowls: not what was asked"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 0,
+          "why": "1 litre glass french press: not what was asked"
+        },
+        {
+          "externalId": "B11COF0406",
+          "relevance": 0,
+          "why": "temperature-controlled kettle: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0504",
+          "relevance": 0,
+          "why": "set of 6 recycled glass tumblers: not what was asked"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 0,
+          "why": "pista padel shoes: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0505",
+          "relevance": 0,
+          "why": "airtight kitchen jars, set of 3: not what was asked"
+        },
+        {
+          "externalId": "B15SHO1102",
+          "relevance": 0,
+          "why": "adoquin leather ankle boots: not what was asked"
+        },
+        {
+          "externalId": "B11COO0308",
+          "relevance": 0,
+          "why": "set of 5 bamboo utensils: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "bath towels",
+      "kind": "product-type",
+      "split": "holdout",
+      "pair": "G08",
+      "judgments": [
+        {
+          "externalId": "B16BAT1601",
+          "relevance": 3,
+          "why": "a set of four cotton towels, two of them bath towels: exactly that"
+        },
+        {
+          "externalId": "B14HOM0807",
+          "relevance": 1,
+          "why": "a cotton bath mat: bathroom cotton, not a towel"
+        },
+        {
+          "externalId": "B14HOM0801",
+          "relevance": 1,
+          "why": "linen tea towels: towels, for the kitchen"
+        },
+        {
+          "externalId": "B16BAT1602",
+          "relevance": 0,
+          "why": "a bathroom rack: where towels go"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "set of 4 linen napkins: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0805",
+          "relevance": 0,
+          "why": "130 by 180 cm wool blanket: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0506",
+          "relevance": 0,
+          "why": "240 cm washed linen tablecloth: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0803",
+          "relevance": 0,
+          "why": "padded oven mitts, pair: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "set of 4 breakfast bowls: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0804",
+          "relevance": 0,
+          "why": "natural fibre storage basket: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 0,
+          "why": "set of 2 45 cm linen cushion covers: not what was asked"
+        },
+        {
+          "externalId": "B10SHI0210",
+          "relevance": 0,
+          "why": "merino wool socks, pack of 3: not what was asked"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 0,
+          "why": "puerto canvas trainers: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "rug for the living room",
+      "kind": "use-case",
+      "split": "tune",
+      "pair": "G09",
+      "judgments": [
+        {
+          "externalId": "B16DEC1502",
+          "relevance": 3,
+          "why": "a hand-woven wool rug for a living room or a bedroom: exactly that"
+        },
+        {
+          "externalId": "B14HOM0807",
+          "relevance": 0,
+          "why": "a bath mat: a rug only in name"
+        },
+        {
+          "externalId": "B16FUR1303",
+          "relevance": 0,
+          "why": "a sofa: living room, not a rug"
+        },
+        {
+          "externalId": "B16FUR1308",
+          "relevance": 0,
+          "why": "a coffee table: living room, not a rug"
+        },
+        {
+          "externalId": "B14HOM0805",
+          "relevance": 0,
+          "why": "130 by 180 cm wool blanket: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 0,
+          "why": "set of 2 45 cm linen cushion covers: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1310",
+          "relevance": 0,
+          "why": "two-door pine wardrobe: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1312",
+          "relevance": 0,
+          "why": "four-drawer pine chest: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0802",
+          "relevance": 0,
+          "why": "linen bib apron: not what was asked"
+        },
+        {
+          "externalId": "B15APP1003",
+          "relevance": 0,
+          "why": "refugio padded gilet: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1311",
+          "relevance": 0,
+          "why": "oak bedside table with drawer: not what was asked"
+        },
+        {
+          "externalId": "B16BAT1602",
+          "relevance": 0,
+          "why": "three-shelf bamboo bathroom rack: not what was asked"
+        },
+        {
+          "externalId": "B16FUR1309",
+          "relevance": 0,
+          "why": "oak double bed frame, 150 by 190: not what was asked"
+        },
+        {
+          "externalId": "B13BAG0712",
+          "relevance": 0,
+          "why": "packing cubes, set of 3: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "set of 4 linen napkins: not what was asked"
+        }
+      ]
+    },
+    {
+      "query": "plant that is safe for cats",
+      "kind": "feature",
+      "split": "holdout",
+      "pair": "G10",
+      "judgments": [
+        {
+          "externalId": "B16PLA1402",
+          "relevance": 3,
+          "why": "an olive tree, not toxic to pets: the answer"
+        },
+        {
+          "externalId": "B16PLA1401",
+          "relevance": 0,
+          "why": "a monstera, toxic to dogs and cats: the wrong answer however well its words match"
+        },
+        {
+          "externalId": "B16PLA1403",
+          "relevance": 0,
+          "why": "pots: not a plant"
+        },
+        {
+          "externalId": "B16PLA1404",
+          "relevance": 0,
+          "why": "a watering can: not a plant"
+        },
+        {
+          "externalId": "B11TAB0501",
+          "relevance": 0,
+          "why": "dinner plates"
+        },
+        {
+          "externalId": "B14HOM0804",
+          "relevance": 0,
+          "why": "natural fibre storage basket: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0807",
+          "relevance": 0,
+          "why": "cotton bath mat: not what was asked"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "cantaro ceramic table lamp: not what was asked"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 0,
+          "why": "puerto canvas trainers: not what was asked"
+        },
+        {
+          "externalId": "B14HOM0803",
+          "relevance": 0,
+          "why": "padded oven mitts, pair: not what was asked"
+        },
+        {
+          "externalId": "B11TAB0503",
+          "relevance": 0,
+          "why": "1.2 litre glass water jug: not what was asked"
+        },
+        {
+          "externalId": "B15SHO1101",
+          "relevance": 0,
+          "why": "charco short wellington boots: not what was asked"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 0,
+          "why": "6-cup stovetop coffee maker: not what was asked"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 0,
+          "why": "butaca reading floor lamp: not what was asked"
+        }
+      ]
     }
   ]
 }
