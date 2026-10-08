@@ -99,6 +99,16 @@ se cuenta qué pregunta lo ve:
 Falsas alarmas sobre las 95 imágenes tal cual: escena 19 (eran 5 de 28, la
 misma proporción), color 6, descripción 4, marca 3, texto 2, número 1.
 
+**Buena parte no son falsas.** De las seis de color, tres son las imágenes que
+la tabla de arriba ya señala como blancas donde el catálogo dice crema
+(`B11TAB0506`, `B12LAM0606`, `B16DEC1502`); las dos de texto (`B11COF0405`,
+`B11COF0408`), dos de las tres de marca (`B12LAM0602`, `B16PLA1401`) y una de
+descripción (`B16FUR1307`) también están en ella. Se aceptaron tal cual, así
+que el tablero cuenta como falsa alarma una duda acertada: no sabe decir
+«aceptada con un defecto conocido». Falsas de verdad quedan tres de color
+(`B11TAB0501`, `B13BAG0702`, `B13BAG0710`), una de marca, tres de descripción,
+una de número y las diecinueve de escena.
+
 Con el triple de imágenes el tablero es más exigente, no peor: aparecen los
 primeros fallos de texto y de marca (uno y tres), que con 28 imágenes no
 cabían, y la pregunta de escena sigue siendo la que más duda de una imagen

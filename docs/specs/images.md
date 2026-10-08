@@ -967,9 +967,19 @@ picture; a picture says the colour it shows, and a colour's gallery is derived
 
   False alarms over 95 right pictures: scene 19 (it was 5 of 28 — the same
   share), colour 6, description 4, mark 3, text 2, count 1. So the colour
-  line did not come down to the one false alarm expected: over three times
-  the pictures it is six, and they are to be looked at one by one before
-  anything is concluded from them. A board three times the size is a harder
+  line did not come down to the one false alarm expected — and, looked at
+  one by one, **half of the six are not false**: `B11TAB0506`, `B12LAM0606`
+  and `B16DEC1502` are the three pictures `seed/IMAGES.md` already lists as
+  drawn white where the catalogue says cream. They were accepted as they
+  are, so the board files a right doubt under *doubts about a right
+  picture*. The same holds for most of the rest: both text doubts
+  (`B11COF0405`, `B11COF0408`), two of the three mark doubts (`B12LAM0602`,
+  `B16PLA1401`) and one description doubt (`B16FUR1307`) are on that list
+  too. What is left as a false alarm in earnest is colour 3 (`B11TAB0501`,
+  `B13BAG0702`, `B13BAG0710`), mark 1, description 3, count 1 — and the
+  scene question's nineteen. **The board has no way to say "accepted with a
+  known flaw"**, and until it has, its false-alarm column counts the
+  reader's good eyesight against it. A board three times the size is a harder
   board, not a worse reader: the first misses of text and mark appear (one
   and three) where twenty-eight pictures had no room for them.
 The fourth decision, for uploads (I-6). And captures of the screen, parked
