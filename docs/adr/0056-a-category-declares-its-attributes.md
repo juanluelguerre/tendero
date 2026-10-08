@@ -75,8 +75,12 @@ one tree, and Shopify's shape is the one that fits with nothing added.
   vocabulary, as it did when its floors were set, and that stays its gate.
   **Measured by category the same day** (`--vocabulary category`, twenty
   products, the 4B): precision 0.91 → 0.94, recall 0.82 → 0.85, typed right
-  0.88 → 0.94, verbatim 0.984 → 1.000, one more spurious claim. Its own floors
-  are owed before it gates.
+  0.88 → 0.94, verbatim 0.984 → 1.000, one more spurious claim. **Its own floors
+  are set** (2026-10-08, `knowledge/gates.json`, `chat/category` and
+  `rules/category`): four identical runs, and the same margin under them as the
+  whole-vocabulary floor has — precision 0.90, recall 0.80, typed 0.89. What
+  the whole vocabulary measures no longer passes: typed 0.88 is under 0.89. CI
+  runs the deterministic extractor both ways.
 
 ## Amended 2026-10-08 — a declaration carries how much it is wanted
 

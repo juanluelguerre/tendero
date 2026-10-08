@@ -20,8 +20,9 @@ namespace ElGuerre.Tendero.SearchEval.Suites;
 /// **Two vocabularies.** `whole`, the default: every attribute offered for every
 /// product, which is how the floors in `gates.json` were measured. `category`:
 /// each product offered what its category's branch declares (ADR 0056), which is
-/// what the shop offers its extractor since phase 13a. The second is measured
-/// and not gated until its own floors are set.
+/// what the shop offers its extractor since phase 13a. Each has its own floors
+/// (`chat` and `chat/category`): the second is the higher one, because a model
+/// offered only what a product can have types more of it right.
 /// </summary>
 internal sealed class ClaimsSuite : IEvaluationSuite
 {
@@ -98,13 +99,16 @@ internal sealed class ClaimsSuite : IEvaluationSuite
 
         // The floor for this kind of extractor (P10-9); an extractor with none is measured, not judged.
         var gates = await KnowledgeGates.LoadAsync(options.ClaimsDirectory!, cancellationToken);
-        if (byCategory)
-            return score.Errors > 0 ? 2 : 0;
+        var key = GateKey(options.Extractor, byCategory);
 
-        return gates.Claims.TryGetValue(options.Extractor ?? "", out var gate)
-            ? GateVerdict.Report(Name, options.Extractor!, gate.Failures(score), options.FailUnderThresholds)
+        return gates.Claims.TryGetValue(key, out var gate)
+            ? GateVerdict.Report(Name, key, gate.Failures(score), options.FailUnderThresholds)
             : score.Errors > 0 ? 2 : 0;
     }
+
+    /// <summary>Which floor a run is held to: the extractor's kind, and the vocabulary it was offered.</summary>
+    internal static string GateKey(string? extractor, bool byCategory) =>
+        byCategory ? $"{extractor}/category" : extractor ?? "";
 
     /// <summary>
     /// What a product of this category is offered: of the attributes a

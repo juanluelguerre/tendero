@@ -18,6 +18,25 @@
       "language": 0.95,
       "maxTraps": 1,
       "maxErrors": 0
+    },
+    "rules/category": {
+      "measuredWith": "RulesClaimExtractor, deterministic, each product offered what its category's branch declares (ADR 0056); measured 2026-10-08: P 1.00, R 0.30, typing 0.94, verbatim 1.000, traps 0 — what the whole vocabulary gives, since the rules name an attribute only where the text does",
+      "precision": 0.95,
+      "recall": 0.28,
+      "typedAccuracy": 0.90,
+      "verbatim": 1.0,
+      "maxTraps": 0,
+      "maxErrors": 0
+    },
+    "chat/category": {
+      "measuredWith": "Qwen/Qwen3.5-4B at 851bf6e, Q8 GGUF, llama.cpp server-cuda v0.5.0, prompt claims-2026-09-26, each product offered what its category's branch declares (ADR 0056); measured 2026-10-08, four runs identical: P 0.94, R 0.85, typing 0.94, verbatim 1.000, language 1.00, traps 1. The same margin under the measurement as the whole-vocabulary floor. Another model or prompt is re-measured before these apply.",
+      "precision": 0.90,
+      "recall": 0.80,
+      "typedAccuracy": 0.89,
+      "verbatim": 0.98,
+      "language": 0.95,
+      "maxTraps": 1,
+      "maxErrors": 0
     }
   },
   "support": {

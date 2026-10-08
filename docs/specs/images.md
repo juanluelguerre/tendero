@@ -685,7 +685,10 @@ held by a schema to the attribute's options, compared by code.
   so each is one or two claims' worth. `whole` stays the default and the gate —
   the floors in `gates.json` were set with it — and by category is measured, not
   gated, until its own floors are written.
-- **Owed**: those floors; facets by category; a screen to edit the declarations.
+- **The floors are set** (2026-10-08): `chat/category` and `rules/category` in
+  `knowledge/gates.json`, from four identical runs; `--vocabulary category` is
+  held to them and CI runs the rules both ways.
+- **Owed**: facets by category; a screen to edit the declarations.
 
 **Amended the same day: required.** A declaration now says whether a product
 *must* have the attribute (ADR 0056's amendment;

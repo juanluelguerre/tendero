@@ -154,6 +154,11 @@ jobs:
       - name: Run the claims gate (rules)
         run: dotnet run --project tools/SearchEval -- --suite claims --extractor rules --ci
 
+      # And once more as the shop offers it since phase 13a: each product only
+      # what its category's branch declares (ADR 0056), held to its own floor.
+      - name: Run the claims gate (rules, by category)
+        run: dotnet run --project tools/SearchEval -- --suite claims --extractor rules --vocabulary category --ci
+
       # Everything below runs even when the gate fails, because a failed gate is
       # precisely when you want to read the per-query table.
       - name: Add the report to the job summary
