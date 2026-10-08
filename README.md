@@ -730,6 +730,7 @@ Each phase ships with an article, in English, on
 | # | Article | Tag |
 |---|---|---|
 | 00 | [From CocktailDev to Tendero: an AI-native ecommerce platform in .NET](https://elguerre.com/2026/09/16/tendero-ai-native-ecommerce-dotnet/) | `blog/00-from-cocktaildev-to-tendero` |
+| 01 | [Why design before code when an AI agent builds the screen in minutes: sketch, mockup and prototype](https://elguerre.com/2026/10/08/design-system-before-code/) | `blog/01-design-before-code` |
 
 Every article links a tag of this repository named after it, `blog/NN-slug`,
 cut once its snippets and numbers had been checked against the code. Clone that
