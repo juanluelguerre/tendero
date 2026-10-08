@@ -406,7 +406,7 @@
   },
   {
     "when": "How many returns were opened today?",
-    "say": "There are no returns opened today.",
+    "say": "The shop has no returns opened today.",
     "calls": [
       {
         "tool": "returns_summary",
@@ -415,5 +415,13 @@
         }
       }
     ]
+  },
+  {
+    "when": "Las ventas de la semana están leídas, y no hay ninguna.",
+    "say": "The week's sales are read, and there are none."
+  },
+  {
+    "when": "The shop has no returns opened today.",
+    "say": "En la tienda no hay devoluciones abiertas hoy."
   }
 ]

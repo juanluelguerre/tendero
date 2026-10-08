@@ -291,5 +291,31 @@ seventeen runs, so three clean runs since say nothing. Two different gap reads
 in one turn would overflow all the same, and the turn would end as it did:
 unavailable, said so, nothing stored.
 
-The dry run scores 27 of 28: `english-under-spanish` has no entry in the
-script and its default answer is in English. Older than today.
+**The dry run scored 27 of 28, and the one that passed was the wrong one**
+(corrected the same day; what was first written here — *the case has no entry in
+the script* — was not true). Both language cases had their entry, each answering
+in the message's language. The turn then asks for the answer again in the
+screen's, with the answer as the message, and the script had no step for *that*
+message: it said *I was not scripted for that*, in English. So
+`spanish-under-english`, which expects English, passed on a line nobody wrote
+for it, and `english-under-spanish` failed. Since 2026-10-06, when the ruling
+changed what the two cases expect.
+
+Putting it right took three tries, each a rule of the turn the script had to
+meet, and each now held by a test over the committed script
+(`The_dry_run_says_each_language_case_again_in_the_language_it_expects`):
+
+1. A step for the second message, saying the answer in the screen's language.
+2. A first answer **the turn can tell is in the wrong language**. Its detector
+   (`WrittenLanguage`) counts function words and is not the suite's: *There are
+   no returns opened today* holds none of them, so the turn let it stand.
+3. A second answer **the turn can tell is in the right one**: it keeps what was
+   said again only when that is plainly the screen's language, and *No hay
+   devoluciones abiertas hoy* holds none of its Spanish words either.
+
+28 of 28 on a new database. **What 2 and 3 say about the shop, not the script**:
+a short answer with none of some thirty function words is left as it came, in
+either direction. That is the cautious side to fail on — an answer is never
+replaced by one that cannot be vouched for — and no measured run of the 4B has
+shown it, its answers being longer. Not changed: the same detector vets claims
+(phase 10), and its word list is not to be moved without that suite.
