@@ -43,7 +43,8 @@ public sealed record EvaluationOptions(
     string? Dataset = null,
     string? Modality = null,
     int? Take = null,
-    string? Format = null)
+    string? Format = null,
+    string? Vocabulary = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -87,6 +88,8 @@ public sealed record EvaluationOptions(
           --onnx <dir>            Or a maker's ONNX model folder, run in process by ONNX Runtime GenAI
           --model <label>         What it serves, as it will appear in the report (e.g. qwen3.5-4b-q8)
           --attributes <file>     Attribute seed        (default seed/attributes.sample.json)
+          --vocabulary <name>     whole (default: every attribute, as the floors were set) or category:
+                                  what each product's category declares (ADR 0056), read from --categories
           --report <file>         Every prediction and its verdict, as JSON
           --ci                    With claims or support: exit 1 under the floors in knowledge/gates.json
 
@@ -191,6 +194,7 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("dataset"),
             values.GetValueOrDefault("modality"),
             int.TryParse(values.GetValueOrDefault("take"), out var take) ? take : null,
-            values.GetValueOrDefault("format"));
+            values.GetValueOrDefault("format"),
+            values.GetValueOrDefault("vocabulary"));
     }
 }

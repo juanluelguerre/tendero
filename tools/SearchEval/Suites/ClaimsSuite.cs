@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using ElGuerre.Tendero.AI.Chat;
+using ElGuerre.Tendero.Catalog.Adapters;
+using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.SearchEval.Claims;
@@ -14,6 +16,12 @@ namespace ElGuerre.Tendero.SearchEval.Suites;
 /// are the numbers of what ships. The candidates, the decisions and the
 /// hypotheses declared before any of this ran are in
 /// <c>docs/analysis/claim-extraction-models.md</c>.
+///
+/// **Two vocabularies.** `whole`, the default: every attribute offered for every
+/// product, which is how the floors in `gates.json` were measured. `category`:
+/// each product offered what its category's branch declares (ADR 0056), which is
+/// what the shop offers its extractor since phase 13a. The second is measured
+/// and not gated until its own floors are set.
 /// </summary>
 internal sealed class ClaimsSuite : IEvaluationSuite
 {
@@ -36,6 +44,17 @@ internal sealed class ClaimsSuite : IEvaluationSuite
         var products = await ProductTexts.ReadAsync(options.SeedPath, cancellationToken);
         var attributes = await ReadAttributesAsync(options.AttributesPath!, cancellationToken);
 
+        var byCategory = options.Vocabulary?.ToLowerInvariant() switch
+        {
+            null or "whole" => false,
+            "category" => true,
+            var other => throw new ArgumentException($"Unknown vocabulary '{other}'. Available: whole, category."),
+        };
+        var categories = byCategory
+            ? await CategorySeedFile.LoadAsync(options.CategoriesPath!, TimeProvider.System, cancellationToken)
+            : CategoryTree.Empty;
+        var types = byCategory ? await ProductTexts.TypesAsync(options.SeedPath, cancellationToken) : [];
+
         var (extractor, name) = options.Extractor switch
         {
             ClaimExtractors.Rules => ((IClaimExtractor)new RulesClaimExtractor(), "rules"),
@@ -56,7 +75,8 @@ internal sealed class ClaimsSuite : IEvaluationSuite
             string? error = null;
             try
             {
-                predicted = await extractor.ExtractAsync(text, attributes, cancellationToken);
+                predicted = await extractor.ExtractAsync(
+                    text, byCategory ? Offered(attributes, categories, types[product.Index]) : attributes, cancellationToken);
             }
             catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
             {
@@ -71,17 +91,30 @@ internal sealed class ClaimsSuite : IEvaluationSuite
         }
 
         var score = ClaimScoring.Summarise(golden, judged);
-        Console.WriteLine(Line(name, score));
+        Console.WriteLine(Line(byCategory ? $"{name} · by category" : name, score));
 
         if (options.ReportPath is { Length: > 0 } report)
             await File.WriteAllTextAsync(report, JsonSerializer.Serialize(new { extractor = name, score, products = judged }, Indented), cancellationToken);
 
         // The floor for this kind of extractor (P10-9); an extractor with none is measured, not judged.
         var gates = await KnowledgeGates.LoadAsync(options.ClaimsDirectory!, cancellationToken);
+        if (byCategory)
+            return score.Errors > 0 ? 2 : 0;
+
         return gates.Claims.TryGetValue(options.Extractor ?? "", out var gate)
             ? GateVerdict.Report(Name, options.Extractor!, gate.Failures(score), options.FailUnderThresholds)
             : score.Errors > 0 ? 2 : 0;
     }
+
+    /// <summary>
+    /// What a product of this category is offered: of the attributes a
+    /// description can state, those its branch declares — and all of them when
+    /// the branch has not said (ADR 0056).
+    /// </summary>
+    internal static IReadOnlyList<AttributeSpec> Offered(IReadOnlyList<AttributeSpec> attributes, CategoryTree categories, string? category) =>
+        categories.AttributesOf(category) is { } declared
+            ? [.. attributes.Where(attribute => declared.Contains(attribute.Code, StringComparer.OrdinalIgnoreCase))]
+            : attributes;
 
     internal static string Line(string name, ClaimScore s) => string.Create(CultureInfo.InvariantCulture,
         $"{name,-22} P {s.Precision:F2}  R {s.Recall:F2}  Rnew {s.RecallNew:F2}  typed {s.TypedAccuracy:F2}  spurious {s.Spurious,2}  " +
@@ -110,6 +143,13 @@ internal sealed class ClaimsSuite : IEvaluationSuite
 /// <summary>The seed catalogue's descriptions, by position — the golden sets name products by index and code.</summary>
 internal static class ProductTexts
 {
+    /// <summary>Each product's type, which is its category's code, in the same order.</summary>
+    public static async Task<IReadOnlyList<string?>> TypesAsync(string seedPath, CancellationToken cancellationToken)
+    {
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(seedPath, cancellationToken));
+        return [.. document.RootElement.EnumerateArray().Select(product => product.GetProperty("product_type").GetString())];
+    }
+
     public static async Task<IReadOnlyList<ProductText>> ReadAsync(string seedPath, CancellationToken cancellationToken)
     {
         using var document = JsonDocument.Parse(await File.ReadAllTextAsync(seedPath, cancellationToken));
