@@ -10,11 +10,16 @@ ones.
 
 ## What is in here, and what is not yet
 
-This folder holds mockups **whose article has published**. It is empty today,
-because the two that exist belong to the article *The wireframes designed a different shop* and are waiting in
+This folder holds mockups **whose article has published**. Those that belong to
+later articles wait in
 [`../unpublished/mockups/`](../unpublished/README.md), which the publication filter
-removes. They are promoted with one `git mv` on the day the article goes live — the
+removes. Each is promoted with one `git mv` on the day its article goes live — the
 rule the project already applies to the articles themselves.
+
+`design-system.pen` and `design-system.html` are the design system laid out on one
+sheet, promoted on 2026-10-08 with article 01, which links it. At the article's
+tag the sheet names every token as `tokens.css` named it then; here it carries
+the names the tokens have had since ADR 0050.
 
 The first one here is `storefront-home.excalidraw`, with `storefront-home-excalidraw.png`
 beside it (2026-10-02, article 01): the storefront home drawn in Excalidraw by
