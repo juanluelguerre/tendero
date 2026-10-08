@@ -950,9 +950,28 @@ picture; a picture says the colour it shows, and a colour's gallery is derived
   decisions change nothing, as before, and the screen says which is which.
   **Not built**: telling the person, on the screen, that Catalog refused.
 - **The picture tool reads `mistakenFor`** as the shop does: a stainless steel
-  coffee maker read as grey raises nothing. The board's colour line still
-  records the two false alarms it had; it is owed a re-recording, which should
-  leave one.
+  coffee maker read as grey raises nothing.
+- **The board, re-recorded over the catalogue it now has (2026-10-08).** The
+  forty new pictures were accepted, so the board went from 28 pictures to 96,
+  each spoilt on purpose in every way and asked every question (Qwen3.5-4B
+  with its projector, on the GPU, about ninety minutes):
+
+  | Defect | Pictures | Caught by its own question | By none | It was, of 28 |
+  |---|---|---|---|---|
+  | Lettering | 96 | 94 (text) | 1 | 28, 0 |
+  | Emblem | 96 | 91 (mark) | 3 | 27, 0 |
+  | Scene | 95 | 76 (scene); 87 by the register | 0 | 23 |
+  | Colour | 21 | 16 | 5 | — |
+  | Count | 20 | 17 | 2 | 3 of 3, 0 |
+  | Background | 95 | 93 (register) | 2 | — |
+
+  False alarms over 95 right pictures: scene 19 (it was 5 of 28 — the same
+  share), colour 6, description 4, mark 3, text 2, count 1. So the colour
+  line did not come down to the one false alarm expected: over three times
+  the pictures it is six, and they are to be looked at one by one before
+  anything is concluded from them. A board three times the size is a harder
+  board, not a worse reader: the first misses of text and mark appear (one
+  and three) where twenty-eight pictures had no room for them.
 The fourth decision, for uploads (I-6). And captures of the screen, parked
 until the page has stopped moving.
 

@@ -53,7 +53,7 @@ dos idiomas y la especificación (1400 × 1400, WebP, ≤ 120 KB), en
 | `B13BAG0711-BACK.webp` | La misma alforja vista por detrás (`view`): una imagen de la galería que no es de ninguna variante |
 | `B13BAG0712.webp` | Organizadores de equipaje, juego de 3 |
 
-## Cuarenta imágenes más, pendientes de que el autor las acepte (2026-10-08)
+## Cuarenta imágenes más, aceptadas por el autor el 2026-10-08
 
 Veinte de las cuarenta y siete que faltaban y las veinte de los productos nuevos
 (`docs/specs/catalogue-growth.md`), dibujadas por el mismo modelo con el mismo
@@ -82,6 +82,26 @@ El resto de avisos del modelo son la falsa alarma de siempre de la pregunta de
 escena, que lista las partes del propio objeto (la tapa de una cacerola, los
 platos de unas macetas).
 
-El tablero de defectos (`known-bad/baseline.json`) **no se ha vuelto a grabar**:
-se midió con estas imágenes dentro y todavía no son del catálogo. Toca
-regrabarlo cuando estén aceptadas o redibujadas.
+El tablero de defectos (`known-bad/baseline.json`) **se regrabó el 2026-10-08**,
+ya aceptadas, sobre las 96 imágenes (antes 28), con Qwen3.5-4B y su proyector
+de visión en la GPU. Cada imagen buena se estropea a propósito de cada manera y
+se cuenta qué pregunta lo ve:
+
+| Defecto | Imágenes | Lo ve su pregunta | No lo ve ninguna | Antes (de 28) |
+|---|---|---|---|---|
+| Rótulo | 96 | 94 (texto) | 1 | 28, 0 |
+| Emblema | 96 | 91 (marca) | 3 | 27, 0 |
+| Escena | 95 | 76 (escena); 87 el registro | 0 | 23 |
+| Color | 21 | 16 | 5 | — |
+| Número de piezas | 20 | 17 | 2 | 3 de 3, 0 |
+| Fondo | 95 | 93 (registro) | 2 | — |
+
+Falsas alarmas sobre las 95 imágenes tal cual: escena 19 (eran 5 de 28, la
+misma proporción), color 6, descripción 4, marca 3, texto 2, número 1.
+
+Con el triple de imágenes el tablero es más exigente, no peor: aparecen los
+primeros fallos de texto y de marca (uno y tres), que con 28 imágenes no
+cabían, y la pregunta de escena sigue siendo la que más duda de una imagen
+buena. La herramienta avisa de que varias líneas quedan *por debajo del
+tablero grabado*: compara cuentas de 96 con cuentas de 28, y por eso se
+regraba y no se da por regresión.
