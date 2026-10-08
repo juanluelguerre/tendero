@@ -319,3 +319,20 @@ either direction. That is the cautious side to fail on — an answer is never
 replaced by one that cannot be vouched for — and no measured run of the 4B has
 shown it, its answers being longer. Not changed: the same detector vets claims
 (phase 10), and its word list is not to be moved without that suite.
+
+### Over 120 products (2026-10-08, the same evening)
+
+The catalogue grew by twenty (`docs/specs/catalogue-growth.md`); the code
+Steward runs did not change. Three runs, each on a new database:
+
+| Run | Passed of 28 | Right tools | What failed |
+|---|---|---|---|
+| 20 | 25 | 96 % | `restock-barcelona`, `translate-beanie-spanish`, `spanish-under-english` (answered in Spanish) |
+| 21 | 24 | 96 % | `restock-barcelona`, `translate-beanie-spanish`, `withdraw-padel`, `withdraw-espadrilles` |
+| 22 | 25 | 100 % | `restock-barcelona`, `translate-beanie-spanish`, `translate-this-one` |
+
+One case under the three runs over a hundred products (26, 26, 26), and every
+case that failed is one this file has seen fail before. **Three runs against
+three do not say the catalogue did it**; they say it did not help. The reads
+return more rows — a hundred and twenty drafts where there were a hundred —
+and the largest call stayed under 6,400 tokens.

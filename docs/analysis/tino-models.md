@@ -341,3 +341,23 @@ The three that fail are the three that failed in runs 10 and 11, for the reasons
 written above; the fourth is one this file has seen before, in run 7. **Nothing
 moved.** The second run reused the first's laboratory, which this suite
 rebuilds its indexes over.
+
+### Over 120 products (2026-10-08, the same evening)
+
+Same prompt, same reads; a laboratory built from the larger seed
+(`docs/specs/catalogue-growth.md`).
+
+| Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+|---|---|---|---|---|---|---|
+| 14 | 22 of 28 | 3.3 s | 7.3 s | 33 | 6 | the three that always do, `order-of-an-account-by-nobody-es`, `backpack-laptop-en` (asked back) and **`shipping-unknown-es`** |
+| 15 | 24 of 28 | 3.6 s | 11.0 s | 36 | 6 | the three that always do, and **`shipping-unknown-es`** |
+
+- **`shipping-unknown-es` is new, twice of two.** *¿Hacéis envíos a Portugal?*
+  — the shop has no fact about it, and the case passes when Tino says so
+  without reading anybody's orders. In both runs it read `my_orders`; in the
+  second it still answered *no data*, in the first it answered about orders.
+  It passed in the five runs before. Nothing it reads to answer that question
+  comes from the catalogue, so why twenty products would move it is not
+  known; **not looked into yet**, and the first thing to look at in the next
+  run.
+- The rest is what the earlier runs showed.

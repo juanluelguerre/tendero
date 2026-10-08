@@ -124,9 +124,12 @@ piece; the attribute came off it and off the chest.
   and it is two more pictures.
 - Facets by category: `LIGHT_NEEDS` and `PET_SAFE` are facets everywhere, and
   mean something only among plants. ADR 0056 already lists it as owed.
-- The golden set for hybrid search was re-measured with the lexical one; Tino's
-  and Steward's suites were run again over the larger catalogue. Their results
-  are in their own documents.
+- **The assistants, measured over the larger catalogue and not better for it**
+  (their own documents carry the tables). Steward: 25, 24 and 25 of 28, where
+  three runs over a hundred products gave 26 each — every failure one seen
+  before. Tino: 22 and 24 of 28, where it gave 25 and 24; one case fails in
+  both runs that had not failed in five — *do you ship to Portugal?*, answered
+  after reading the shopper's orders — and why is not known yet.
 
 ## Evidence of use
 
