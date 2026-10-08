@@ -1178,6 +1178,19 @@ pictures, alone*, has the tables; the evaluation tool grew a diagnostic for it
   with eight. The adapter now takes half the logical processors and never more
   than eight: end to end, 267 ms a picture and 64 ms a text where it was 782
   and 334. Found only because the measured run was cancelled by its own budget.
+- **Seen running** (the whole stack, `Tendero__Vectors=true`, the export's
+  folder in place): the status answers *available*; the worker finds the
+  collection empty and embeds the development catalogue's 56 pictures in about
+  twenty seconds; a seed picture finds its own product at 1.000 and three bags
+  after it at 0.83; *mochila verde* finds four backpacks; a text file sent as a
+  PNG is a 400 that names the picture.
+- **The first search waited 18.7 s for the model to load; now nobody does.**
+  Each tower is loaded when it is first asked, so the first shopper paid for
+  it. The API asks one blank picture and one word in the background as it
+  starts (`WarmVisualSearchAtStartupWorker`): the first search by picture took
+  2.3 s with the worker still embedding beside it, and 0.26 to 0.31 s after.
+  The worker does not warm anything — it loads the vision tower when it has a
+  picture to embed, and never reads a text.
 
 ### I-7 · Close
 

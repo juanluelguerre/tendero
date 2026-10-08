@@ -70,6 +70,12 @@ builder.Services.AddLexicalSearch(
 // or failing. Lexical search above is required; none of this is.
 builder.Services.AddHybridSearch(builder.Configuration);
 
+// The picture model loaded in the background as the API starts, so the first
+// shopper to search with a picture does not wait for it (18.7 s, measured). The
+// API alone: the worker never reads a text and would hold that tower for nothing.
+// Without the model it does nothing.
+builder.Services.AddHostedService<WarmVisualSearchAtStartupWorker>();
+
 // Each stage's health through its own port, and the memory of when it last
 // changed, for the dashboard's search status (R-9, D-7). Private checks: the
 // open /health leaves them out.

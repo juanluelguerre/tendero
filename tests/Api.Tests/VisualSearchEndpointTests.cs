@@ -195,6 +195,13 @@ public sealed class VisualSearchEndpointTests
         var factory = root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
             var pictures = new Pictures(near) { Failure = failure };
+
+            // The API asks the model once as it starts, to load it. These tests
+            // count what a request asks, so the warm-up is left out of them; it
+            // has tests of its own.
+            foreach (var warmUp in services.Where(service => service.ImplementationType == typeof(WarmVisualSearchAtStartupWorker)).ToList())
+                services.Remove(warmUp);
+
             services.AddSingleton<IImageEmbeddingGenerator>(model);
             services.AddScoped<IPictureSearch>(_ => pictures);
             services.AddScoped<IPictureVectorIndexer>(_ => pictures);
