@@ -53,6 +53,39 @@ dos idiomas y la especificación (1400 × 1400, WebP, ≤ 120 KB), en
 | `B13BAG0711-BACK.webp` | La misma alforja vista por detrás (`view`): una imagen de la galería que no es de ninguna variante |
 | `B13BAG0712.webp` | Organizadores de equipaje, juego de 3 |
 
+## Las veintisiete últimas, pendientes de que el autor las acepte (2026-10-09)
+
+Con ellas **los 120 productos tienen imagen**. Mismo modelo y mismo prompt:
+28 llamadas en la tanda (una repetida por el propio generador, porque la tinta
+llegaba a los cuatro bordes) y cuatro más para tres redibujos — unos **0,96 $**,
+bajo el tope de 1,50 $ que se fijó para esta tanda. La hoja de contacto está en
+`docs/blog/reports/2026-10-06-phase-13a-images/screens/28-the-last-twenty-seven-pictures.png`.
+
+**Tres se redibujaron** antes de enseñarlas, cada una con una indicación:
+
+| Producto | Qué salió | Indicación |
+|---|---|---|
+| `B15KIT1201` báscula | un botón con la palabra *TARE* | botones y pantalla sin letras ni números |
+| `B14HOM0807` alfombrilla de baño | un cordón enrollado en un nudo | plana, rectangular, de algodón de rizo, vista desde arriba |
+| `B15KIT1204` cuencos de acero | tres cuencos de colores | acero cepillado, gris plata, sin color |
+
+**Lo que queda para mirar**, por el modelo (Qwen3.5-4B con su proyector: 20 de
+27 pasan todas las comprobaciones) y a ojo:
+
+| Producto | Aviso |
+|---|---|
+| `B14HOM0808` servilletas, juego de 4 | el modelo ve cuatro cojines: dobladas así lo parecen |
+| `B14HOM0807` alfombrilla de baño | redibujada; el modelo ve una bandeja de huevos en el rizo |
+| `B12LAM0608` bombillas, pack de 4 | el modelo cuenta cinco; a ojo son cuatro |
+| `B12LAM0610` flexo con lupa | el modelo no ve la lupa ni el aro de luz; a ojo están |
+| `B15SHO1104` alpargatas | el catálogo dice crema y se ven blancas |
+| `B15KIT1201` báscula | lleva un cuenco encima, que el modelo cuenta como otra cosa |
+| `B14ORG0903`, `B14ORG0904` | la falsa alarma de escena de siempre: lista las partes del propio objeto |
+| `B12LAM0608`, `B12LAM0610`, `B14HOM0802`, `B15APP1001`, `B15APP1004`, `B15APP1005`, `B15APP1006`, `B15APP1008` | fuera de la zona segura: ocupan más del 75 % del alto, como la ropa y los muebles altos de la tanda anterior |
+
+El tablero de defectos **no se ha regrabado** con estas veintisiete: se regraba
+cuando estén aceptadas o redibujadas, como la vez anterior.
+
 ## Cuarenta imágenes más, aceptadas por el autor el 2026-10-08
 
 Veinte de las cuarenta y siete que faltaban y las veinte de los productos nuevos

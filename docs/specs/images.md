@@ -1163,6 +1163,14 @@ store, a log or a trace — a span carries its dimensions and nothing else. `doc
 - Twenty-four hand mutations. One survived and was a real gap: nothing held
   the status to *no* with the model and no store. A test does now.
 
+**Every product has a picture (2026-10-09).** The last twenty-seven were drawn
+— about $0.96 with three redraws, under the ceiling the author set for the
+batch — so the picture collection covers the whole catalogue and no product is
+invisible to a search by picture. They wait for the author's acceptance, with
+the model's seven notes and the three redraws listed in `seed/IMAGES.md`; the
+board is re-recorded once they are accepted. The measurements in
+`docs/search-evaluation.md` were taken over 96 pictures and are not re-run here.
+
 **The storefront's control (2026-10-09)** — the mock-up first
 (`design/unpublished/mockups/storefront-visual-search.pen`, seven screens,
 in English), and the author settled where it sits: **a camera inside the

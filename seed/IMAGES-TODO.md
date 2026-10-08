@@ -1,5 +1,10 @@
 # Imágenes por generar
 
+> **2026-10-09: ya no falta ninguna.** Los 120 productos del catálogo tienen
+> imagen; las veintisiete últimas esperan a que el autor las acepte
+> (`IMAGES.md`). Lo que sigue se conserva como se escribió: es el registro de
+> cómo se decidió quién las dibuja, y las cuentas son las de entonces.
+
 Los 100 productos del catálogo de muestra, con el nombre y la descripción de
 cada uno para poder generar su imagen. **18 ya están hechas** y van marcadas;
 faltan 82.
