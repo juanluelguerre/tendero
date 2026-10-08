@@ -96,6 +96,35 @@
                   <span class="text-3xs text-danger" role="alert">{{ t('altText.notSaved') }}</span>
                 }
               </div>
+              <!-- Which of the product's variants the picture shows (ADR 0057): one
+                   value an axis, or none — a picture that says nothing is every
+                   variant's. Only the values a variant still sold holds are offered,
+                   which is the rule the catalogue applies. Chosen, it is written. -->
+              @for (axis of product.axes; track axis.code) {
+                <label class="grid gap-hair text-3xs text-muted">
+                  <span>{{ t('shows.label', { axis: axis.label }) }}</span>
+                  <select
+                    class="field"
+                    [disabled]="store.showing() === picture.id"
+                    (change)="show(product.productId, $index, axis.code, $any($event.target).value)"
+                  >
+                    <option value="" [selected]="!product.images[$index].shows[axis.code]">
+                      {{ t('shows.none') }}
+                    </option>
+                    @for (option of axis.options; track option.code) {
+                      <option
+                        [value]="option.code"
+                        [selected]="product.images[$index].shows[axis.code] === option.code"
+                      >
+                        {{ option.label }}
+                      </option>
+                    }
+                  </select>
+                </label>
+              }
+              @if (store.notShown() === picture.id) {
+                <span class="text-3xs text-danger" role="alert">{{ t('shows.notShown') }}</span>
+              }
             </div>
           </div>
         }

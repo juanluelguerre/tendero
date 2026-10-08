@@ -84,6 +84,7 @@
       "SetBrowsingCommand": "Switch a browsing history on or off",
       "SetCartLineCommand": "Change a cart line",
       "SetImageAltTextCommand": "Describe a product picture",
+      "SetImageShowsCommand": "Say what a product picture shows",
       "SetProductAttributeCommand": "Set a product attribute",
       "SetProductTranslationCommand": "Translate a product",
       "StewardTurnCommand": "Ask Steward",
@@ -1002,6 +1003,11 @@
       "save": "Save",
       "saving": "Saving…",
       "notSaved": "Not saved: both languages need a sentence, 300 characters at most."
+    },
+    "shows": {
+      "label": "Which {{axis}} it shows",
+      "none": "None in particular: it is every variant's",
+      "notShown": "Not saved: no variant on sale has that value."
     }
   },
   "palette": {

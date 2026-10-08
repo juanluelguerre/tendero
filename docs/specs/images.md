@@ -909,10 +909,29 @@ picture; a picture says the colour it shows, and a colour's gallery is derived
   given only when the gallery arrived whole had survived) and one written (a
   cover held to a colour the product once said of itself).
 
+- **The storefront shows a colour's gallery.** Choosing a colour puts that
+  colour's pictures on the page, then the ones that are every colour's; another
+  colour's are not there at all. A variant with none to show has the product's
+  own gallery, never an empty one.
+- **The backoffice says it, with no model** (`SetImageShows`,
+  `PUT /api/catalog/products/{id}/images/{imageId}/shows`). On a product's
+  review, beside each picture and its alt text, one control an axis the product
+  varies by, offering the values a variant still sold holds and *none in
+  particular*. Chosen, it is written; refused — the last variant of that colour
+  was discontinued meanwhile — the picture is named and the control goes back
+  to what is stored. The review read gains each picture's `shows` and the
+  product's `axes`.
+- **Evidence of use** (ADR 0036): no event of its own. The change is an audited
+  command — a row naming who said which picture shows what — and that row is
+  the count; a metric beside it would say the same thing twice. What would be
+  worth an event is the *doubt* this removes, and that one exists
+  (`tendero.knowledge.picture_doubts.decided`).
+- Twenty-one more hand mutations, all red: eleven on the slice and the review
+  read, seven on the backoffice's store and three on the storefront's.
+
 **Not built yet.** Applying *it belongs to another variant* from the doubt
 itself: it is now changing one tag, and needs its own ruling first — today a
-doubt changes nothing but itself. The storefront's gallery by colour and the
-backoffice control that says which colour a picture shows.
+doubt changes nothing but itself.
 The fourth decision, for uploads (I-6). And captures of the screen, parked
 until the page has stopped moving.
 

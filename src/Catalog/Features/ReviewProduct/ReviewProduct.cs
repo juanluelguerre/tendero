@@ -43,10 +43,22 @@ public sealed record ProductForReview(
     IReadOnlyList<string> MissingCultures,
     DateTimeOffset UpdatedAt,
     /// <summary>Each picture with what it says, in the gallery's order: where a shopkeeper reads and types its alt text.</summary>
-    IReadOnlyList<ReviewedImage> Images);
+    IReadOnlyList<ReviewedImage> Images,
+    /// <summary>
+    /// What a picture may be said to show (ADR 0057): the axes the product varies
+    /// by, each with the values a variant still sold holds. Empty for a product
+    /// bought one way — its pictures have nothing to tell apart.
+    /// </summary>
+    IReadOnlyList<ReviewedAxis> Axes);
 
 /// <param name="Alt">Culture to text, as stored: a culture that is absent is a picture not described in it.</param>
-public sealed record ReviewedImage(string Id, IReadOnlyDictionary<string, string> Alt);
+/// <param name="Shows">Axis code to the value the picture says it shows; empty for a picture of no variant in particular.</param>
+public sealed record ReviewedImage(string Id, IReadOnlyDictionary<string, string> Alt, IReadOnlyDictionary<string, string> Shows);
+
+/// <summary>An axis the product varies by, named in the culture asked for, with what a picture of it may show.</summary>
+public sealed record ReviewedAxis(string Code, string Label, IReadOnlyList<ReviewedOption> Options);
+
+public sealed record ReviewedOption(string Code, string Label);
 
 public sealed class ReviewProductValidator : AbstractValidator<ReviewProductQuery>
 {
@@ -122,9 +134,33 @@ public sealed class ReviewProductHandler(
             product.UpdatedAt,
             [
                 .. product.Images.OrderBy(image => image.SortOrder).Select(image => new ReviewedImage(
-                    image.Id.Value, image.Alt is { } alt ? AsStored(alt) : new Dictionary<string, string>())),
-            ]);
+                    image.Id.Value,
+                    image.Alt is { } alt ? AsStored(alt) : new Dictionary<string, string>(),
+                    image.Shows.ToDictionary(shown => shown.Axis, shown => shown.Value, StringComparer.Ordinal))),
+            ],
+            [.. product.VariantAxes.Select(axis => Axis(axis, attributes.ByCode(axis), product, query.Culture))]);
     }
+
+    /// <summary>
+    /// An axis with the values a picture may be said to show: the ones a variant
+    /// still sold holds, in the order the variants first hold them — the rule
+    /// <c>Product.Show</c> applies, so the screen offers nothing it would refuse.
+    /// A value the catalogue has no option for is named by its code.
+    /// </summary>
+    private static ReviewedAxis Axis(string code, AttributeDefinition? definition, Product product, string culture) =>
+        new(
+            code,
+            definition?.Label.In(culture) ?? code,
+            [
+                .. product.Variants
+                    .Where(variant => variant.Status != VariantStatus.Discontinued)
+                    .Select(variant => variant.AxisValues.GetValueOrDefault(code))
+                    .OfType<string>()
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Select(value => new ReviewedOption(
+                        value,
+                        definition?.Options.FirstOrDefault(option => string.Equals(option.Code, value, StringComparison.OrdinalIgnoreCase))?.Label.In(culture) ?? value)),
+            ]);
 
     /// <summary>The texts as stored, per culture, with no fallback: an absence is the finding.</summary>
     private static Dictionary<string, string> AsStored(LocalizedText text) =>

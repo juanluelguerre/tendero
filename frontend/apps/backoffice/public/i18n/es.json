@@ -84,6 +84,7 @@
       "SetBrowsingCommand": "Activar o desactivar un historial de navegación",
       "SetCartLineCommand": "Cambiar una línea del carrito",
       "SetImageAltTextCommand": "Describir una imagen de producto",
+      "SetImageShowsCommand": "Decir qué muestra una imagen de producto",
       "SetProductAttributeCommand": "Fijar un atributo de producto",
       "SetProductTranslationCommand": "Traducir un producto",
       "StewardTurnCommand": "Preguntar a Steward",
@@ -1002,6 +1003,11 @@
       "save": "Guardar",
       "saving": "Guardando…",
       "notSaved": "No se guardó: hace falta una frase en cada idioma, de 300 caracteres como mucho."
+    },
+    "shows": {
+      "label": "Qué {{axis}} muestra",
+      "none": "Ninguno en particular: es de todas las variantes",
+      "notShown": "No se guardó: ninguna variante en venta tiene ese valor."
     }
   },
   "palette": {

@@ -590,6 +590,68 @@
         }
       }
     },
+    "/api/catalog/products/{id}/images/{imageId}/shows": {
+      "put": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "SetImageShows",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetImageShowsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetImageShowsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetImageShowsConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{id}/images/{imageId}/alt": {
       "put": {
         "tags": [
@@ -6028,6 +6090,16 @@
           "NotFound"
         ]
       },
+      "ImageShowsOutcome": {
+        "enum": [
+          "Shown",
+          "Unchanged",
+          "NoSuchImage",
+          "NotSold",
+          "Archived",
+          "NotFound"
+        ]
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -7594,7 +7666,8 @@
           "attributes",
           "missingCultures",
           "updatedAt",
-          "images"
+          "images",
+          "axes"
         ],
         "type": "object",
         "properties": {
@@ -7664,6 +7737,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ReviewedImage"
+            }
+          },
+          "axes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewedAxis"
             }
           }
         }
@@ -9284,10 +9363,33 @@
           "NotFound"
         ]
       },
+      "ReviewedAxis": {
+        "required": [
+          "code",
+          "label",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewedOption"
+            }
+          }
+        }
+      },
       "ReviewedImage": {
         "required": [
           "id",
-          "alt"
+          "alt",
+          "shows"
         ],
         "type": "object",
         "properties": {
@@ -9299,6 +9401,27 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "shows": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ReviewedOption": {
+        "required": [
+          "code",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
           }
         }
       },
@@ -9804,6 +9927,54 @@
           },
           "outcome": {
             "$ref": "#/components/schemas/ImageAltOutcome"
+          }
+        }
+      },
+      "SetImageShowsConflict": {
+        "required": [
+          "title",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "SetImageShowsRequest": {
+        "required": [
+          "shows"
+        ],
+        "type": "object",
+        "properties": {
+          "shows": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SetImageShowsResponse": {
+        "required": [
+          "productId",
+          "imageId",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "imageId": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/ImageShowsOutcome"
           }
         }
       },

@@ -244,6 +244,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/products/{id}/images/{imageId}/shows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetImageShows"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{id}/images/{imageId}/alt": {
         parameters: {
             query?: never;
@@ -1955,6 +1971,8 @@ export interface components {
         IFormFile: string;
         /** @enum {unknown} */
         ImageAltOutcome: "Described" | "Unchanged" | "NoSuchImage" | "Archived" | "NotFound";
+        /** @enum {unknown} */
+        ImageShowsOutcome: "Shown" | "Unchanged" | "NoSuchImage" | "NotSold" | "Archived" | "NotFound";
         ImportProductsCommand: {
             source: string;
         };
@@ -2380,6 +2398,7 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
             images: components["schemas"]["ReviewedImage"][];
+            axes: components["schemas"]["ReviewedAxis"][];
         };
         ProductImageView: {
             imageId: string;
@@ -2800,11 +2819,23 @@ export interface components {
         };
         /** @enum {unknown} */
         ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "ReadFromAPicture" | "ContradictsTheCatalogue" | "NotFound";
+        ReviewedAxis: {
+            code: string;
+            label: string;
+            options: components["schemas"]["ReviewedOption"][];
+        };
         ReviewedImage: {
             id: string;
             alt: {
                 [key: string]: string;
             };
+            shows: {
+                [key: string]: string;
+            };
+        };
+        ReviewedOption: {
+            code: string;
+            label: string;
         };
         SalesFigures: {
             /** Format: double */
@@ -2940,6 +2971,20 @@ export interface components {
             productId: string;
             imageId: string;
             outcome: components["schemas"]["ImageAltOutcome"];
+        };
+        SetImageShowsConflict: {
+            title: string;
+            detail: string;
+        };
+        SetImageShowsRequest: {
+            shows: {
+                [key: string]: string;
+            };
+        };
+        SetImageShowsResponse: {
+            productId: string;
+            imageId: string;
+            outcome: components["schemas"]["ImageShowsOutcome"];
         };
         SetProductTranslationConflict: {
             title: string;
@@ -3669,6 +3714,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetProductTranslationConflict"];
+                };
+            };
+        };
+    };
+    SetImageShows: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                imageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetImageShowsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImageShowsResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImageShowsConflict"];
                 };
             };
         };

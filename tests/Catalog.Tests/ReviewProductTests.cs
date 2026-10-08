@@ -79,6 +79,52 @@ public sealed class ReviewProductTests
         Assert.Equal(review.Images.Select(image => image.Id), review.ImageIds);
     }
 
+    /// <summary>
+    /// What each picture says it shows, and what it may be said to show (ADR
+    /// 0057): the product's axes, each with the values a variant still sold
+    /// holds, named in the culture asked for — the colour by its option's label,
+    /// a size with no definition by its code. A discontinued colour is not on
+    /// offer: the aggregate would refuse it.
+    /// </summary>
+    [Fact]
+    public async Task Shows_what_each_picture_shows_and_what_a_picture_may_be_said_to_show()
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", "Mochila"), new Money(49m, "EUR"));
+        product.DefineAxes(Clock, ["COLOR", "SIZE"]);
+        foreach (var (shade, size) in new[] { ("GREY", "L"), ("BLACK", "L"), ("BLACK", "S"), ("OLIVE", "S") })
+            product.AddVariant(Clock, $"PACK-{shade}-{size}", new Money(49m, "EUR"), new Dictionary<string, string> { ["COLOR"] = shade, ["SIZE"] = size });
+        product.DiscontinueVariant(Clock, "PACK-OLIVE-S");
+        product.AddImage(Clock, new ImageId("black"));
+        product.AddImage(Clock, new ImageId("back"));
+        product.Show(Clock, new ImageId("black"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+        var colour = AttributeDefinition.Define(Clock, "COLOR", LocalizedText.Both("colour", "color"), AttributeKind.Option, isVariantAxis: true);
+        colour.AddOption(Clock, "BLACK", LocalizedText.Both("black", "negro"));
+        colour.AddOption(Clock, "GREY", LocalizedText.Both("grey", "gris"));
+        colour.AddOption(Clock, "OLIVE", LocalizedText.Both("olive", "oliva"));
+        var handler = new ReviewProductHandler(new InMemoryProductCatalogReader(product), new DefinitionsOf(colour), new Categories());
+
+        var review = (await handler.HandleAsync(new ReviewProductQuery(product.Code, "es"), TestContext.Current.CancellationToken))!;
+
+        Assert.Equal(new Dictionary<string, string> { ["COLOR"] = "BLACK" }, review.Images[0].Shows);
+        Assert.Empty(review.Images[1].Shows);
+        Assert.Equal([("COLOR", "color"), ("SIZE", "SIZE")], review.Axes.Select(axis => (axis.Code, axis.Label)));
+        Assert.Equal([("GREY", "gris"), ("BLACK", "negro")], review.Axes[0].Options.Select(option => (option.Code, option.Label)));
+        Assert.Equal([("L", "L"), ("S", "S")], review.Axes[1].Options.Select(option => (option.Code, option.Label)));
+    }
+
+    [Fact]
+    public async Task A_product_bought_one_way_has_no_axes_for_a_picture_to_show()
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", "Taza"), new Money(9m, "EUR"));
+        product.AddVariant(Clock, "MUG-DEFAULT", new Money(9m, "EUR"));
+        product.AddImage(Clock, new ImageId("cover"));
+
+        var review = (await Handler(product).HandleAsync(new ReviewProductQuery(product.Code, "es"), TestContext.Current.CancellationToken))!;
+
+        Assert.Empty(review.Axes);
+        Assert.Empty(Assert.Single(review.Images).Shows);
+    }
+
     [Fact]
     public async Task Names_a_defined_attribute_by_its_label_in_the_culture_asked_for()
     {

@@ -21,12 +21,15 @@ recommended answer for each **as a starting point, to be corrected**:
 Each slice ends green and can be committed alone. Tests first; a hand mutation
 for whatever is written beside its test.
 
-**Where it is (2026-10-08): slices 1 to 4 built**, and the tag ruled by the
+**Where it is (2026-10-08): slices 1 to 6 built**, and the tag ruled by the
 author over the level (ADR 0057). One thing came out differently from what is
 written below: the import tells a picture what it shows **whether or not every
 image arrived** — a tag travels with its picture, where a place in a list did
-not — and a tag the aggregate refuses is logged and skipped. Slices 5 to 7 and
-proposal 2 are next.
+not — and a tag the aggregate refuses is logged and skipped. Slice 5 is the
+product store's `gallery`: the chosen variant's `imageIds`, the product's own
+when it has none. Slice 6 is a slice of its own, `SetImageShows`, and a control
+an axis beside each picture of the product's review, offering only what a
+variant still sold holds. Slice 7 waits for its ruling; proposal 2 is next.
 
 1. **The aggregate.** `ProductImage.Shows` — the axis values a picture shows, at
    most one an axis. `Product.Show(picture, values)` refuses an axis the product

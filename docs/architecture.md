@@ -110,6 +110,7 @@ Everything the API exposes today. Each is one vertical slice.
 | `GET /api/catalog/categories` | `Catalog/Features/ListCategories` |
 | `GET /api/catalog/skus` | `Catalog/Features/DescribeSkus` — names for the stock grid, across the Inventory boundary |
 | `POST /api/catalog/products/{id}/variants` | `Catalog/Features/DefineVariants` |
+| `PUT /api/catalog/products/{id}/images/{imageId}/shows` | `Catalog/Features/SetImageShows` — which of the product's variants a picture shows (ADR 0057) |
 | `POST /api/pricing/quote` | `Pricing/Features/QuoteCart` |
 | `GET /api/pricing/promotions` | `Pricing/Features/ListPromotions` |
 | `GET /api/pricing/offers` | `Pricing/Features/ListOffers` — what the home page shows |

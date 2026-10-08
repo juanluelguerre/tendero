@@ -29,6 +29,7 @@ export type ProductForReview = Schemas['ProductForReview'];
 /** A picture's alt text as a person types it, and what writing it came to. */
 export type SetImageAltTextRequest = Schemas['SetImageAltTextRequest'];
 export type SetImageAltTextResponse = Schemas['SetImageAltTextResponse'];
+export type SetImageShowsResponse = Schemas['SetImageShowsResponse'];
 export type ImportResult = Schemas['ImportProductsResult'];
 export type DefineVariantsResponse = Schemas['DefineVariantsResponse'];
 

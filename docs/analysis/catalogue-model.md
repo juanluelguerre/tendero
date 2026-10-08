@@ -195,9 +195,11 @@ record.
 The aggregate, persistence with its migration, the four read paths, the import,
 the seed and the picture tool: `Variant.Image` is gone and nothing reads a
 variant's picture except through `Product.PictureOf` and `PicturesOf`. A
-variant in the API keeps `imageId` and gains `imageIds`. Still to build: the
-storefront showing a colour's gallery, the backoffice saying which colour a
-picture shows, and *it belongs to another variant* applied from the doubt.
+variant in the API keeps `imageId` and gains `imageIds`. The storefront's
+gallery is the chosen colour's, and the backoffice says which colour a picture
+shows, beside the picture, on the product's review (`SetImageShows`). Still to
+build: *it belongs to another variant* applied from the doubt, which needs its
+own ruling.
 
 ---
 

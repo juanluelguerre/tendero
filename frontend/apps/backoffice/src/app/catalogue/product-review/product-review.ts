@@ -5,7 +5,7 @@ import { form, FormField } from '@angular/forms/signals';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { ProductImageUrls } from '@tendero/shared-util';
-import { ProductReviewStore } from './product-review.store';
+import { ProductReviewStore, withAxis } from './product-review.store';
 
 /** One picture's alt text while a person types it. */
 interface AltDraft {
@@ -22,8 +22,10 @@ const Cultures = ['es', 'en'] as const;
  * redesign's R-4.3): the images, the name and description in every culture as
  * stored, with a missing one said to be missing rather than filled from the
  * other, the attributes and the price — and, under them, what each picture says in
- * each language, in boxes: where a shopkeeper types alt text with no model at all. The review queue and the products screen
- * both open it in their pane; the actions are theirs.
+ * each language, in boxes: where a shopkeeper types alt text with no model at all.
+ * Beside each, for a product sold in several colours, which of them the picture
+ * shows (ADR 0057). The review queue and the products screen both open it in
+ * their pane; the actions are theirs.
  */
 @Component({
   selector: 'backoffice-product-review',
@@ -65,6 +67,12 @@ export class ProductReview {
   protected save(productId: string, index: number): void {
     const draft = this.alts()[index];
     if (draft) this.store.describe(productId, draft.id, { es: draft.es, en: draft.en });
+  }
+
+  /** A value chosen for one axis of one picture; the empty one takes that axis off. */
+  protected show(productId: string, index: number, axis: string, value: string): void {
+    const picture = this.store.review.value()?.images[index];
+    if (picture) this.store.show(productId, picture.id, withAxis(picture.shows, axis, value));
   }
 
   constructor() {
