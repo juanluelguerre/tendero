@@ -695,8 +695,16 @@ var pictureModels = Path.Combine(repositoryRoot, "models", "siglip2");
 var pictures = vectors && new[] { "vision.onnx", "text.onnx", "tokenizer.model" }
     .All(file => File.Exists(Path.Combine(pictureModels, file)));
 
+// And where the pictures are, they are a third leg of the search (the author's
+// ruling, 2026-10-09, on the measurement in `docs/search-evaluation.md`): ten
+// products from the pictures fused with the words and their meaning, +0.005 /
+// +0.016 of NDCG@10 and +0.024 / +0.060 of recall@50, for 100 to 150 ms a
+// search. Zero in the code, which is what a shop without the picture model
+// runs and what the gate's floors are held against; ten here, where the model
+// is already loaded for visual search.
 if (pictures)
-    api.WithEnvironment("Search__Images__Models", pictureModels);
+    api.WithEnvironment("Search__Images__Models", pictureModels)
+        .WithEnvironment("Search__Hybrid__PictureDepth", "10");
 
 // The reranker by the same rule, one step narrower: `rerank` is `vectors` on a
 // GPU. It has no equivalent of the vector layer's read-time check before its

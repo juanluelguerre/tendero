@@ -1058,9 +1058,11 @@ the reranker, three runs of each, identical to the third decimal:
 - **It costs a hundred to a hundred and fifty milliseconds a search**, the text
   tower on the CPU — more than the rest of the search together. Ten is the
   depth: twenty buys nothing in NDCG and starts returning unjudged products.
-- **It stays off.** Whether the search every shopper uses should run a second
-  model on every query for a point of NDCG is the author's decision, with this
-  table. Turned on, it is a setting; nothing else changes, a shop without the
+- **Off in the code, on where the pictures are** (the author, 2026-10-09). The
+  default stays zero — what a shop without the picture model runs, and what
+  the floors above are held against — and the AppHost sets ten for the API
+  wherever visual search is already running, so the model it needs is the one
+  already loaded. It is a setting; nothing else changes, a shop without the
   picture model searches on two legs, and a picture leg that fails or is slow
   costs only itself — counted as its own stage, `pictures`.
 - Eleven hand mutations of the leg, ten red. The survivor is equivalent: asking
