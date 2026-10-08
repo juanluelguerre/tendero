@@ -1860,7 +1860,9 @@
     },
     "images": [
       "images/B13BAG0711.webp",
-      "images/B13BAG0711-BLACK.webp"
+      "images/B13BAG0711-BLACK.webp",
+      "images/B13BAG0711-NAVY_BLUE.webp",
+      "images/B13BAG0711-BACK.webp"
     ],
     "attributes": {
       "material": "ripstop reciclado",
@@ -1881,6 +1883,13 @@
           "color": "negro"
         },
         "image": 1
+      },
+      {
+        "sku": "NAVY",
+        "attributes": {
+          "color": "azul marino"
+        },
+        "image": 2
       }
     ]
   },

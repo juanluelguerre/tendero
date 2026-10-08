@@ -299,4 +299,27 @@ public sealed class PromptTests
         Assert.Contains("Only the surfaces that are the main colour change", instruction, StringComparison.Ordinal);
         Assert.EndsWith("The handle stays black.", instruction.TrimEnd(), StringComparison.Ordinal);
     }
+    /// <summary>
+    /// Another view is the same object turned: the instruction names the angle
+    /// as the one thing that changes and everything the object is as what stays
+    /// — and that no part is invented, which is what a model does with a side
+    /// it has never seen.
+    /// </summary>
+    [Theory]
+    [InlineData(PictureView.Back, "seen from behind")]
+    [InlineData(PictureView.Side, "seen from the side")]
+    public void Another_view_names_the_angle_and_that_the_object_is_the_same(PictureView view, string angle)
+    {
+        var instruction = PromptTemplate.View(view);
+
+        Assert.Contains(angle, instruction, StringComparison.Ordinal);
+        foreach (var kept in new[] { "the same colours", "the same materials", "Do not invent a part", "the same plain light background", "second object" })
+            Assert.Contains(kept, instruction, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Another_view_ends_with_what_the_last_drawing_got_wrong_when_there_is_something()
+    {
+        Assert.EndsWith("The hooks are at the top.", PromptTemplate.View(PictureView.Back, "The hooks are at the top.").TrimEnd(), StringComparison.Ordinal);
+    }
 }

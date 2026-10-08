@@ -710,6 +710,16 @@
     "onHand": 2
   },
   {
+    "sku": "B13BAG0711-NAVY",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B13BAG0711-NAVY",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
     "sku": "B13BAG0712-DEFAULT",
     "warehouse": "MAD",
     "onHand": 5

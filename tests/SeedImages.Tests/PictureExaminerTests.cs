@@ -47,8 +47,18 @@ public sealed class PictureExaminerTests
             if (schema.Contains("\"same_style\"", StringComparison.Ordinal))
                 return $$"""{"same_style": {{Json(SameRegister)}}, "same_background": {{Json(SameRegister)}}, "differs": "a gradient"}""";
 
-            return $$"""{"has_text": {{Json(Text)}}, "dominant_colour": "{{Colour}}", "has_scene": {{Json(Scene)}}}""";
+            // The look's schema still carries a colour, and it is not the one that counts:
+            // it says another, so a check that read it from here would be seen.
+            return $$"""{"has_text": {{Json(Text)}}, "dominant_colour": "white", "has_scene": {{Json(Scene)}}}""";
         }
+
+        public string Answer(byte[] png, string question)
+        {
+            Answered.Add(question);
+            return Colour;
+        }
+
+        public List<string> Answered { get; } = [];
 
         public string Describe(byte[] png) => "";
 
@@ -161,7 +171,7 @@ public sealed class PictureExaminerTests
         Assert.True(Examine(new Sees { Colour = "navy blue" }, Product(colour: "gris")).Raises(Question.Colour));
         Assert.False(Examine(new Sees { Colour = "grey" }, Product(colour: "gris")).Raises(Question.Colour));
         // "other" is the model saying it is none of the nine: nothing to hold against the catalogue.
-        Assert.False(Examine(new Sees { Colour = "other" }, Product(colour: "gris")).Raises(Question.Colour));
+        Assert.False(Examine(new Sees { Colour = "mauve" }, Product(colour: "gris")).Raises(Question.Colour));
         // Thirty-five products declare no colour.
         Assert.False(Examine(new Sees { Colour = "navy blue" }, Product(colour: null)).Raises(Question.Colour));
     }
@@ -187,5 +197,25 @@ public sealed class PictureExaminerTests
         var examination = Examine(model, product: null, beside: false);
 
         Assert.Empty(examination.Doubts);
+    }
+    /// <summary>
+    /// **The colour is its own question, in plain text** (phase 13a, I-4d): asked
+    /// inside the look's schema, with two other answers, the model called a
+    /// terracotta pannier black. The examiner asks it once, alone, with the
+    /// catalogue's colours listed — and what the look's schema says of the
+    /// colour is not what is held against the catalogue.
+    /// </summary>
+    [Fact]
+    public void The_colour_is_asked_by_itself_in_plain_text_and_not_read_from_the_looks_schema()
+    {
+        var model = new Sees { Colour = "grey" };
+
+        var examination = Examine(model, Product(colour: "gris"));
+
+        Assert.False(examination.Raises(Question.Colour));
+        Assert.Equal("grey", examination.Colour);
+        var asked = Assert.Single(model.Answered);
+        Assert.Contains("What is the main colour of the product itself?", asked, StringComparison.Ordinal);
+        Assert.Contains("grey", asked, StringComparison.Ordinal);
     }
 }

@@ -58,6 +58,37 @@ Two ways in: `recolour --only <id> --colour <colour>` for any picture, and
 (`variants`, with its `image`) and the cover exists. Only the hosted generator
 can; the local one draws from noise and falls back to drawing.
 
+### What else it does for a product's variants
+
+- **Every variant at once.** `generate --variants-of <id>` makes each picture
+  the seed names for that product's variants that is not there yet (all of
+  them with `--force`), and never the cover — the cover is what they are made
+  from.
+- **Is it still the same drawing?** A recolour says how much of the original's
+  shape it kept, and fails under `SameShape.Enough`; `same --only <id> --against
+  <id>` asks it of any two files. Pixels only: where something is drawn, never
+  what colour. Measured on the finished files: the black and the navy pannier
+  share 94.0 % with the olive they were made from; its view from behind 86.7 %;
+  two different bags 63.2 % and 42.4 %. The line is 90 %, and it is close to
+  the view from behind — a redraw of the same object from another side is
+  nearly the same silhouette.
+- **Is it the colour that was asked for?** `recolour --check` asks a vision
+  model, in plain text and with the shop's own question
+  (`VisionChecks.ColourOf`). `verify` holds a variant's picture to its
+  variant's colour as it holds a product's to the product's. **The plain
+  question matters**: the colour inside a schema with two other answers
+  (`Look`) called a terracotta pannier *black*; asked alone, the same model
+  says terracotta. `Look` is what the recorded board measures, so it was not
+  changed here — moving it to the plain question is owed, with the board
+  re-recorded.
+- **Another view.** `view --only <id> --view back|side` is the same technique
+  and a different act: a recolour moves nothing and is held to the original
+  pixel by pixel; a view is a redraw, and the model invents what it has never
+  seen — the pannier's back came back first with a backpack's shoulder straps.
+  Told what the object is (`--hint`), it drew a rail and hooks. So it is held
+  to a person's eye, and `FloatingHaze` only clears what is pale and floats
+  above the object, which every edit so far has come back with.
+
 ## State
 
 Working. Both generators draw, and the vision pass reviews:

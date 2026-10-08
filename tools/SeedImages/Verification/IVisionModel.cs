@@ -29,6 +29,14 @@ public interface IVisionModel
 
     /// <summary>Free text about one picture: for finding out whether a model is looking at it at all.</summary>
     string Describe(byte[] png);
+
+    /// <summary>
+    /// The model's answer to a question about one picture, **as it writes it**:
+    /// no schema, a few tokens. For a question whose answer is one of a few
+    /// words — held to a schema, the shop's 4B is right 68 % of the time where
+    /// in plain text it is right 80 % (phase 13a, I-4b).
+    /// </summary>
+    string Answer(byte[] png, string question);
 }
 
 /// <summary>What a vision model says about one illustration.</summary>
@@ -204,6 +212,24 @@ public sealed class VisionChecks(IVisionModel model)
         + "product: name the product drawn, in a few words. "
         + "others: list every other thing drawn that is not that product, not a part of it and not its shadow — "
         + "a shape, a bar, a surface, a second object, however small or plain. An empty list when there is nothing else.";
+
+    /// <summary>
+    /// The colour of the product, chosen among the catalogue's — **asked in
+    /// plain text, the way the shop asks it** (phase 13a, I-4d), with the shop's
+    /// own question. <see cref="Look"/> asks the colour too, inside a schema with
+    /// two other answers, and called a terracotta pannier *black*; asked alone
+    /// and in plain text, the same model says terracotta. Null when what it
+    /// wrote is none of the colours.
+    /// </summary>
+    public string? ColourOf(byte[] image, IReadOnlyList<string> colours)
+    {
+        // The sentence the shop's closed question ends with (ClosedQuestion, in
+        // the model port), written again here: this tool references no project.
+        var asked = $"{PictureQuestions.Colour} Answer with exactly one of these options, written as it is here, and nothing else: {string.Join("; ", colours)}.";
+        var said = model.Answer(AsPng(image), asked).Trim().Trim('"', '\'', '.').Trim();
+
+        return colours.FirstOrDefault(colour => string.Equals(colour, said, StringComparison.OrdinalIgnoreCase));
+    }
 
     /// <summary>
     /// What is drawn besides the product, **as a list and not as a yes or no**

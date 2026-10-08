@@ -78,14 +78,19 @@ public sealed class PictureExaminer(VisionChecks vision, ColourLexicon colours)
         else if (look.HasScene)
             doubts.Add(new(Question.Scene, "something else is drawn beside the product"));
 
-        // "other" is the model saying it is none of the catalogue's colours:
-        // nothing to hold against the one declared.
+        // **The colour is asked by itself and in plain text** (phase 13a, I-4d),
+        // not read from the look's schema, where it travelled with two other
+        // answers: there the model called a terracotta pannier black. An answer
+        // that is none of the catalogue's colours is nothing to hold against the
+        // one declared.
+        var colour = vision.ColourOf(picture, colours.EnglishLabels);
+
         if (product?.SpanishColour is { } spanish
             && colours.English(spanish) is { } declared
-            && !string.Equals(declared, look.Colour, StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(look.Colour, "other", StringComparison.OrdinalIgnoreCase))
+            && colour is not null
+            && !string.Equals(declared, colour, StringComparison.OrdinalIgnoreCase))
         {
-            doubts.Add(new(Question.Colour, $"catalogue says {declared}, the picture looks {look.Colour}"));
+            doubts.Add(new(Question.Colour, $"catalogue says {declared}, the picture looks {colour}"));
         }
 
         // Asked only of a product that says how many it is: a pair of shoes
@@ -99,6 +104,6 @@ public sealed class PictureExaminer(VisionChecks vision, ColourLexicon colours)
         if (reference is not null && vision.Beside(picture, reference) is { } beside && !(beside.SameStyle && beside.SameBackground))
             doubts.Add(new(Question.Register, $"it is not drawn as {referenceName} is: {beside.Differs}"));
 
-        return new Examination(look.Colour, doubts);
+        return new Examination(colour ?? "none of the catalogue's", doubts);
     }
 }

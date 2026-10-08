@@ -2,7 +2,7 @@
   "good": 28,
   "false_alarms": {
     "Scene": 5,
-    "Colour": 4
+    "Colour": 2
   },
   "kinds": {
     "Lettering": {
@@ -34,9 +34,9 @@
     "Colour": {
       "pictures": 11,
       "caught": {
-        "Colour": 9
+        "Colour": 8
       },
-      "by_none": 2
+      "by_none": 3
     },
     "Count": {
       "pictures": 3,
@@ -49,7 +49,6 @@
       "pictures": 28,
       "caught": {
         "Scene": 1,
-        "Colour": 1,
         "Register": 27
       },
       "by_none": 1

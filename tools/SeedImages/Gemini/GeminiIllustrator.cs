@@ -30,7 +30,7 @@ namespace ElGuerre.Tendero.SeedImages;
 /// 3. **A key and a network.** Both are read from the environment and neither is
 ///    ever written anywhere: `GEMINI_API_KEY`, and nothing else.
 /// </summary>
-public sealed class GeminiIllustrator(string model, int size, string? apiKey = null) : IIllustrationGenerator, IRecolourer
+public sealed class GeminiIllustrator(string model, int size, string? apiKey = null) : IIllustrationGenerator, IPictureEditor
 {
     private const string Host = "https://generativelanguage.googleapis.com/v1beta/models/";
 
@@ -79,37 +79,36 @@ public sealed class GeminiIllustrator(string model, int size, string? apiKey = n
     }
 
     /// <summary>
-    /// The same picture in another colour: the model is shown the reference and
-    /// told what to change. One call and no retry — what comes back is held to
-    /// the same arithmetic as a drawing, and a person accepts it or not.
+    /// The picture given back changed: the model is shown the reference and told
+    /// what to change. One call and no retry — what comes back is held to the
+    /// same arithmetic as a drawing, and a person accepts it or not.
     /// </summary>
-    public GeneratedImage Recolour(string itemId, byte[] reference, string instruction, Action<string> say)
+    public GeneratedImage Edit(string itemId, byte[] reference, string instruction, bool sameFrame, Action<string> say)
     {
         var clock = Stopwatch.StartNew();
         say($"  {itemId}  (from its product's cover)");
 
         var (rgb, drawn) = Ask(Key(), instruction, reference);
+        double? same = null;
 
-        // What the reference has as background, the result has as background:
-        // the model keeps the object and not what is around it.
-        rgb = ReferenceBackground.Restore(ScaledTo(reference, drawn), rgb, drawn);
+        if (sameFrame)
+        {
+            // What the reference has as background, the result has as background:
+            // the model keeps the object and not what is around it. And then how
+            // much of the reference's shape is still there.
+            var original = Pixels.SquareOf(reference, drawn);
+            rgb = ReferenceBackground.Restore(original, rgb, drawn);
+            same = SameShape.Overlap(original, rgb, drawn);
+        }
+        else
+        {
+            // Another view has no original to be cleaned against: what is pale
+            // and floats above the object is not the picture's.
+            rgb = FloatingHaze.Clear(rgb, drawn);
+        }
 
         clock.Stop();
-        return Finished.From(itemId, rgb, drawn, clock.Elapsed);
-    }
-
-    /// <summary>The reference as the square the answer came back as: a hosted model returns the size it feels like.</summary>
-    private static byte[] ScaledTo(byte[] reference, int side)
-    {
-        using var decoded = SKBitmap.Decode(reference)
-            ?? throw new InvalidDataException("The reference is not an image.");
-        using var scaled = decoded.Width == side && decoded.Height == side
-            ? decoded.Copy()
-            : decoded.Resize(new SKImageInfo(side, side), new SKSamplingOptions(SKFilterMode.Linear));
-        using var stream = new MemoryStream();
-        scaled.Encode(stream, SKEncodedImageFormat.Png, 100);
-
-        return ToSquareRgb(stream.ToArray()).Rgb;
+        return Finished.From(itemId, rgb, drawn, clock.Elapsed) with { SameAsReference = same };
     }
 
     private string Key() =>
@@ -224,38 +223,7 @@ public sealed class GeminiIllustrator(string model, int size, string? apiKey = n
 
         var encoded = inline.GetProperty("inlineData").GetProperty("data").GetString() ?? string.Empty;
 
-        return ToSquareRgb(Convert.FromBase64String(encoded));
-    }
-
-    /// <summary>
-    /// Whatever came back, as the square of interleaved bytes the rest of the
-    /// pipeline works in. A hosted model returns the size it feels like, so the
-    /// shorter side wins and the picture is centre-cropped — the object is
-    /// centred by instruction, so a crop takes background.
-    /// </summary>
-    private static (byte[] Rgb, int Size) ToSquareRgb(byte[] encoded)
-    {
-        using var bitmap = SKBitmap.Decode(encoded)
-            ?? throw new InvalidDataException("The answer carried something that is not an image.");
-
-        var side = Math.Min(bitmap.Width, bitmap.Height);
-        var left = (bitmap.Width - side) / 2;
-        var top = (bitmap.Height - side) / 2;
-
-        var rgb = new byte[side * side * 3];
-
-        for (var row = 0; row < side; row++)
-            for (var column = 0; column < side; column++)
-            {
-                var pixel = bitmap.GetPixel(left + column, top + row);
-                var at = ((row * side) + column) * 3;
-
-                rgb[at] = pixel.Red;
-                rgb[at + 1] = pixel.Green;
-                rgb[at + 2] = pixel.Blue;
-            }
-
-        return (rgb, side);
+        return Pixels.Square(Convert.FromBase64String(encoded));
     }
 
     public void Dispose() => _client.Dispose();

@@ -106,6 +106,21 @@ public sealed class OllamaVision(string url, string model) : IVisionModel
             }
             """) ?? "(empty)";
 
+    public string Answer(byte[] png, string question) =>
+        Chat($$"""
+            {
+              "model": "{{model}}",
+              "messages": [{
+                "role": "user",
+                "content": {{JsonSerializer.Serialize(question)}},
+                "images": [{{Images([png])}}]
+              }],
+              "stream": false,
+              "think": false,
+              "options": { "temperature": 0, "seed": 0, "num_predict": 16 }
+            }
+            """) ?? string.Empty;
+
     private static string Images(IReadOnlyList<byte[]> pngs) =>
         string.Join(", ", pngs.Select(png => $"\"{Convert.ToBase64String(png)}\""));
 

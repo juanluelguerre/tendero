@@ -3,9 +3,12 @@ using System.Diagnostics;
 namespace ElGuerre.Tendero.SeedImages;
 
 /// <summary>What one product cost to draw.</summary>
+/// <param name="SameAsReference">For a picture made from another that was to stay the
+/// same drawing: how much of the two shapes is shared (<see cref="SameShape"/>).
+/// Null for a picture that was drawn, or that is another view on purpose.</param>
 public sealed record GeneratedImage(
     string ItemId, byte[] Webp, int Quality, SafeAreaProbe.Result SafeArea,
-    string Background, TimeSpan Took);
+    string Background, TimeSpan Took, double? SameAsReference = null);
 
 /// <summary>
 /// The whole of Stable Diffusion XL, in phases, on one card with eight

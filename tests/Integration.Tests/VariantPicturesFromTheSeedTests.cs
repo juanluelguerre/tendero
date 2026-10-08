@@ -11,12 +11,13 @@ using Xunit;
 namespace ElGuerre.Tendero.Integration.Tests;
 
 /// <summary>
-/// The seed's product in two colours, imported for real (phase 13a, I-4d): the
-/// seed file as it is committed, its pictures stored, a real Postgres. What only
-/// the whole path proves — the file's <c>variants</c> become two variants on the
-/// colour axis, each with the picture the file says is its own, and the
+/// The seed's product in three colours, imported for real (phase 13a, I-4d):
+/// the seed file as it is committed, its pictures stored, a real Postgres. What
+/// only the whole path proves — the file's <c>variants</c> become variants on
+/// the colour axis, each with the picture the file says is its own, and the
 /// pictures' reader then holds each picture to its own variant's colour. That is
-/// what a doubt of *it belongs to another variant* is raised against.
+/// what a doubt of *it belongs to another variant* is raised against. Its fourth
+/// picture, the back, is no variant's: it is held to no colour at all.
 /// </summary>
 [Collection(PostgresCollection.Name)]
 public sealed class VariantPicturesFromTheSeedTests(PostgresFixture postgres)
@@ -33,12 +34,12 @@ public sealed class VariantPicturesFromTheSeedTests(PostgresFixture postgres)
 
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task The_seeds_product_in_two_colours_has_a_variant_and_a_picture_of_each_and_each_picture_is_held_to_its_own()
+    public async Task The_seeds_product_in_three_colours_has_a_variant_and_a_picture_of_each_and_each_picture_is_held_to_its_own()
     {
         postgres.SkipIfUnavailable();
         Assert.SkipUnless(
-            File.Exists(Seed(Path.Combine("images", $"{Pannier}.webp"))) && File.Exists(Seed(Path.Combine("images", $"{Pannier}-BLACK.webp"))),
-            "needs both of the pannier's pictures in the seed");
+            new[] { "", "-BLACK", "-NAVY_BLUE", "-BACK" }.All(picture => File.Exists(Seed(Path.Combine("images", $"{Pannier}{picture}.webp")))),
+            "needs the pannier's four pictures in the seed");
         var ct = TestContext.Current.CancellationToken;
         var factory = await postgres.CreateDatabaseAsync("seed_variant_pictures");
         await using (var migrate = factory.Create())
@@ -77,13 +78,16 @@ public sealed class VariantPicturesFromTheSeedTests(PostgresFixture postgres)
 
             Assert.Equal(["COLOR"], pannier.VariantAxes);
             Assert.Equal(
-                [($"{Pannier}-OLIVE", "OLIVE"), ($"{Pannier}-BLACK", "BLACK")],
-                pannier.Variants.OrderByDescending(variant => variant.Sku).Select(variant => (variant.Sku, variant.AxisValues["COLOR"])));
-            Assert.Equal(2, pannier.Images.Count);
+                [($"{Pannier}-BLACK", "BLACK"), ($"{Pannier}-NAVY", "NAVY_BLUE"), ($"{Pannier}-OLIVE", "OLIVE")],
+                pannier.Variants.OrderBy(variant => variant.Sku, StringComparer.Ordinal).Select(variant => (variant.Sku, variant.AxisValues["COLOR"])));
+            Assert.Equal(4, pannier.Images.Count);
+
+            // The gallery in the file's order: the cover, the black one, the navy one, the back.
+            ImageId[] gallery = [.. pannier.Images.OrderBy(image => image.SortOrder).Select(image => image.Id)];
             var cover = pannier.PrimaryImage!.Id;
-            var other = pannier.Images.Single(image => image.Id != cover).Id;
-            Assert.Equal(cover, pannier.Variants.Single(variant => variant.Sku.EndsWith("OLIVE", StringComparison.Ordinal)).Image);
-            Assert.Equal(other, pannier.Variants.Single(variant => variant.Sku.EndsWith("BLACK", StringComparison.Ordinal)).Image);
+            Assert.Equal(cover, gallery[0]);
+            ImageId? PictureOf(string sku) => pannier.Variants.Single(variant => variant.Sku.EndsWith(sku, StringComparison.Ordinal)).Image;
+            Assert.Equal((gallery[0], gallery[1], gallery[2]), (PictureOf("OLIVE"), PictureOf("BLACK"), PictureOf("NAVY")));
             // The colour is the variants' to say: the product says none of its own.
             Assert.Null(pannier.AttributeFor("COLOR"));
 
@@ -92,7 +96,9 @@ public sealed class VariantPicturesFromTheSeedTests(PostgresFixture postgres)
                 .Where(picture => picture.ProductId == pannier.Id.Value)
                 .ToDictionary(picture => picture.ImageId, picture => picture.Colour);
 
-            Assert.Equal(new() { [cover.Value] = "OLIVE", [other.Value] = "BLACK" }, pictures);
+            Assert.Equal(
+                new() { [gallery[0].Value] = "OLIVE", [gallery[1].Value] = "BLACK", [gallery[2].Value] = "NAVY_BLUE", [gallery[3].Value] = null },
+                pictures);
         }
         finally
         {

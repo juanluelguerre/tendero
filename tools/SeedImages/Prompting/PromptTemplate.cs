@@ -1,5 +1,15 @@
 namespace ElGuerre.Tendero.SeedImages;
 
+/// <summary>Another view of a product that already has a picture.</summary>
+public enum PictureView
+{
+    /// <summary>From behind.</summary>
+    Back,
+
+    /// <summary>From the side.</summary>
+    Side,
+}
+
 /// <summary>
 /// What the model is asked for, built from the register published in
 /// <c>seed/IMAGES-TODO.md</c>.
@@ -113,6 +123,38 @@ public static class PromptTemplate
          in a lighter grey, so that it still reads as a detailed illustration and
          never as a flat silhouette.{(string.IsNullOrWhiteSpace(hint) ? string.Empty : " " + hint.Trim())}
          """;
+
+    /// <summary>
+    /// What a picture is told to become when it is another view of the same
+    /// product (phase 13a, I-4d): the same object, turned. **This is a redraw,
+    /// and says so** — a recolour moves nothing and can be held to the original
+    /// pixel by pixel; a view from behind is a different shape on purpose, and
+    /// what it is held to is a person's eye. So everything the object is — its
+    /// colours, its materials, its parts, the way it is drawn — is named as what
+    /// stays, and the angle as the one thing that changes.
+    /// </summary>
+    public static string View(PictureView view, string? hint = null) =>
+        $"""
+         This is a product illustration from a shop's catalogue. Draw the same
+         product again, {Angle(view)}.
+
+         It is the same object: the same colours, the same materials, the same
+         proportions, and every part it has — seams, pockets, straps, buckles,
+         handles, hooks — where it would be from this side. Do not invent a part
+         the object does not have, and do not leave out one it has.
+
+         Draw it the same way: a flat illustration with clean outlines and flat
+         colours, the same plain light background with a soft shadow, the object
+         alone, centred, the same size in the frame, with wide empty margins. No
+         text, logo, label or second object anywhere.{(string.IsNullOrWhiteSpace(hint) ? string.Empty : " " + hint.Trim())}
+         """;
+
+    private static string Angle(PictureView view) => view switch
+    {
+        PictureView.Back => "seen from behind: the side that faces away in this picture",
+        PictureView.Side => "seen from the side: turned a quarter turn, so its side faces the viewer",
+        _ => throw new ArgumentOutOfRangeException(nameof(view)),
+    };
 
     /// <param name="hint">For a redraw: what was wrong with the last drawing, said as what the object is. It follows the description.</param>
     public static string Positive(SeedProduct product, ColourLexicon colours, string? hint = null)

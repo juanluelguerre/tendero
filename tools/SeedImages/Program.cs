@@ -45,10 +45,19 @@ switch (command)
             // local one is the offline path and asks to be named.
             Value("--provider") ?? "gemini",
             Value("--model"),
-            Value("--hint"));
+            Value("--hint"),
+            Value("--variants-of"));
 
     case "recolour":
-        return Recolour(Value("--only"), Value("--colour"), Value("--as"), Value("--out"), Value("--model"), Value("--hint"));
+        return Recolour(
+            Value("--only"), Value("--colour"), Value("--as"), Value("--out"), Value("--illustrator"), Value("--hint"),
+            args.Contains("--check") ? Vision() : null);
+
+    case "view":
+        return View(Value("--only"), Value("--view"), Value("--as"), Value("--out"), Value("--illustrator"), Value("--hint"));
+
+    case "same":
+        return Same(Value("--only"), Value("--against"), Value("--in"));
 
     case "verify":
         return Verify(
@@ -96,21 +105,32 @@ switch (command)
 
               inspect --models <dir> [--ep dml|cpu]   print what the ONNX graphs declare
               generate [--provider gemini|sdxl] [--only <id> [--hint "<what the last drawing got wrong>"]] [--take <n>]
-                       [--out <dir>] [--force] [--size <px>] [--model <hosted id>]
+                       [--variants-of <id>] [--out <dir>] [--force] [--size <px>] [--model <hosted id>]
                        [--models <dir>] [--steps <n>] [--guidance <f>]
                        [--ep dml|cpu] [--rng-seed <n>]
                                                       draw the missing illustrations.
                                                       gemini by default and needs
                                                       GEMINI_API_KEY; sdxl needs --models
               recolour --only <id> --colour <a colour of the catalogue> [--as <file id>] [--hint "<what to mind>"]
-                       [--out <dir>] [--model <hosted id>]
+                       [--out <dir>] [--illustrator <hosted id>]
+                       [--check [--provider ollama|llama] [--url <url>] [--model <name>]]
                                                       the same picture in another colour: the model is
                                                       shown the one that exists and changes only the
                                                       colour, and the background is restored from the
                                                       original. Writes <id>-<COLOUR>.webp unless --as
-                                                      names it. Needs GEMINI_API_KEY. A variant's
-                                                      picture named in the seed is made this way by
-                                                      generate, with no need to ask
+                                                      names it, and says how much of the original's
+                                                      shape it kept. --check asks a vision model what
+                                                      colour the result is. Needs GEMINI_API_KEY.
+                                                      generate --variants-of <id> makes every picture
+                                                      the seed names for that product's variants
+              view --only <id> --view back|side [--as <file id>] [--hint "<what to mind>"] [--out <dir>]
+                   [--illustrator <hosted id>]
+                                                      another view of the same product, made from its
+                                                      picture. A redraw: held to a person's eye, not
+                                                      to the original's pixels. Writes <id>-<VIEW>.webp
+              same --only <id> --against <id> [--in <dir>]
+                                                      how much of one picture's shape the other has:
+                                                      whether a recolour is still the same drawing
               verify [--in <dir>] [--only <id,id>] [--provider ollama|llama] [--url <url>]
                      [--model <name>] [--reference <id>] [--ci]
                                                       ask a vision model what it sees: text, a mark
@@ -317,7 +337,7 @@ static int Tokens(string? models)
 static int Generate(
     string? models, string? only, int take, int steps, float guidance,
     string? outDirectory, string provider, bool force, ulong? rngSeed, int size,
-    string illustrator, string? hostedModel, string? hint)
+    string illustrator, string? hostedModel, string? hint, string? variantsOf = null)
 {
     // Only the local generator needs a model folder. The hosted one needs a key,
     // and it says so itself when it does not find one.
@@ -341,12 +361,18 @@ static int Generate(
     var destination = outDirectory ?? Path.Combine(root, "seed", "images");
     Directory.CreateDirectory(destination);
 
-    var wanted = products
-        .Where(product => only is null || String.Equals(product.ItemId, only, StringComparison.OrdinalIgnoreCase))
-        .Where(product => force || only is not null
-            || !File.Exists(Path.Combine(destination, $"{product.ItemId}.webp")))
-        .Take(take)
-        .ToArray();
+    // --variants-of <id>: every picture the seed names for that product's
+    // variants, and never its cover -- the cover is what they are made from.
+    var wanted = variantsOf is not null
+        ? [.. products
+            .Where(product => String.Equals(product.VariantOf, variantsOf, StringComparison.OrdinalIgnoreCase))
+            .Where(product => force || !File.Exists(Path.Combine(destination, $"{product.ItemId}.webp")))]
+        : products
+            .Where(product => only is null || String.Equals(product.ItemId, only, StringComparison.OrdinalIgnoreCase))
+            .Where(product => force || only is not null
+                || !File.Exists(Path.Combine(destination, $"{product.ItemId}.webp")))
+            .Take(take)
+            .ToArray();
 
     if (wanted.Length == 0)
     {
@@ -383,18 +409,19 @@ static int Generate(
     {
         List<GeneratedImage> made = [.. jobs.Length == 0 ? [] : generator.Draw(jobs, PromptTemplate.Negative, Console.WriteLine)];
 
-        if (generator is IRecolourer recolourer)
+        if (generator is IPictureEditor editor)
         {
             foreach (var variant in wanted.Where(product => CoverOf(product) is not null))
             {
                 var cover = products.First(product => product.ItemId == variant.VariantOf);
-                made.Add(recolourer.Recolour(
+                made.Add(editor.Edit(
                     variant.ItemId,
                     CoverOf(variant)!,
                     PromptTemplate.Recolour(
                         cover.SpanishColour is { } was ? colours.English(was) : null,
                         variant.SpanishColour is { } becomes ? colours.English(becomes) ?? becomes : "another colour",
                         hint),
+                    sameFrame: true,
                     Console.WriteLine));
             }
         }
@@ -422,19 +449,29 @@ static int Generate(
 
         Console.WriteLine($"{image.ItemId}  {kilobytes} KB{quality}  {image.Took.TotalSeconds:F1}s  bg {image.Background}  -> {path}");
         Console.WriteLine($"    {image.SafeArea.Detail}{(image.SafeArea.Passed ? "" : "  OUTSIDE THE SAFE AREA")}");
+        if (StillTheSame(image) is { } same)
+            Console.WriteLine($"    {same}");
 
-        if (!image.SafeArea.Passed)
+        if (!image.SafeArea.Passed || image.SameAsReference < SameShape.Enough)
             failures++;
     }
 
     return failures == 0 ? 0 : 1;
 }
 
+// What a picture made from another says of how much it kept, or null for one that was drawn.
+static string? StillTheSame(GeneratedImage image) =>
+    image.SameAsReference is { } overlap
+        ? string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"{overlap:P1} of the original's shape{(overlap < SameShape.Enough ? "  NOT THE SAME DRAWING" : "")}")
+        : null;
+
 // The same picture in another colour (phase 13a, I-4d). A product sold in two
 // colours is one object photographed twice, and two drawings from the same
 // words are two different objects -- so the second colour is made from the
 // first picture, by a model that is shown it and told to change only that.
-static int Recolour(string? only, string? colour, string? asId, string? outDirectory, string? hostedModel, string? hint)
+static int Recolour(
+    string? only, string? colour, string? asId, string? outDirectory, string? hostedModel, string? hint, IVisionModel? checker)
 {
     if (only is null || colour is null)
     {
@@ -444,10 +481,6 @@ static int Recolour(string? only, string? colour, string? asId, string? outDirec
 
     var root = RepositoryRoot.Find();
     var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
-    // Read from the catalogue's pictures; written there too unless --out says elsewhere.
-    var destination = outDirectory ?? Path.Combine(root, "seed", "images");
-    var source = Path.Combine(root, "seed", "images", $"{only}.webp");
-    Directory.CreateDirectory(destination);
 
     // The colour as the catalogue says it, in either of its languages.
     var to = colours.English(colour)
@@ -459,30 +492,81 @@ static int Recolour(string? only, string? colour, string? asId, string? outDirec
         return 2;
     }
 
-    if (!File.Exists(source))
-    {
-        Console.Error.WriteLine($"No picture at {source}: there is nothing to recolour.");
-        return 2;
-    }
-
     var product = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"))
         .FirstOrDefault(known => String.Equals(known.ItemId, only, StringComparison.OrdinalIgnoreCase));
     var from = product?.SpanishColour is { } was ? colours.English(was) : null;
-    var id = asId ?? $"{only}-{to.ToUpperInvariant().Replace(' ', '_')}";
 
+    var made = Edited(
+        only, asId ?? $"{only}-{to.ToUpperInvariant().Replace(' ', '_')}", outDirectory, hostedModel,
+        PromptTemplate.Recolour(from, to, hint), sameFrame: true, $"{from ?? "its colour"} -> {to}");
+    if (made is not { } image)
+        return 2;
+
+    var failed = !image.SafeArea.Passed || image.SameAsReference < SameShape.Enough;
+
+    // What colour is it now? Asked of a model that looks, as the shop will ask it.
+    if (checker is not null)
+    {
+        checker.EnsureReachable();
+        var seen = new VisionChecks(checker).ColourOf(image.Webp, colours.EnglishLabels);
+        var agrees = String.Equals(seen, to, StringComparison.OrdinalIgnoreCase);
+        Console.WriteLine($"    {checker.Name} sees {seen ?? "none of the catalogue's colours"}{(agrees ? "" : $"  NOT {to.ToUpperInvariant()}")}");
+        failed |= !agrees;
+    }
+
+    return failed ? 1 : 0;
+}
+
+// Another view of the same product, made from its picture (phase 13a, I-4d).
+// A redraw, and held to a person's eye: a view from behind is a different shape
+// on purpose, so nothing here compares it with the original's pixels.
+static int View(string? only, string? view, string? asId, string? outDirectory, string? hostedModel, string? hint)
+{
+    if (only is null || !Enum.TryParse<PictureView>(view, ignoreCase: true, out var angle) || !Enum.IsDefined(angle))
+    {
+        Console.Error.WriteLine("view needs --only <id> (the picture to start from) and --view back|side.");
+        return 2;
+    }
+
+    var made = Edited(
+        only, asId ?? $"{only}-{angle.ToString().ToUpperInvariant()}", outDirectory, hostedModel,
+        PromptTemplate.View(angle, hint), sameFrame: false, $"seen from the {angle.ToString().ToLowerInvariant()}");
+
+    return made is not { } image ? 2 : image.SafeArea.Passed ? 0 : 1;
+}
+
+// One picture of the catalogue, shown to the hosted model with an instruction,
+// and what comes back written beside it. Null when there was nothing to start
+// from or the model refused: it has said why.
+static GeneratedImage? Edited(
+    string only, string id, string? outDirectory, string? hostedModel, string instruction, bool sameFrame, string what)
+{
+    var root = RepositoryRoot.Find();
+
+    // Read from the catalogue's pictures; written there too unless --out says elsewhere.
+    var destination = outDirectory ?? Path.Combine(root, "seed", "images");
+    var source = Path.Combine(root, "seed", "images", $"{only}.webp");
+
+    if (!File.Exists(source))
+    {
+        Console.Error.WriteLine($"No picture at {source}: there is nothing to start from.");
+        return null;
+    }
+
+    Directory.CreateDirectory(destination);
     using var generator = new GeminiIllustrator(hostedModel ?? "gemini-2.5-flash-image", 1024);
-    Console.WriteLine($"recolouring with {generator.Name} · {from ?? "its colour"} -> {to}");
+    Console.WriteLine($"editing with {generator.Name} · {what}");
 
     GeneratedImage image;
     try
     {
-        image = generator.Recolour(id, VisionChecks.AsPng(File.ReadAllBytes(source)), PromptTemplate.Recolour(from, to, hint), Console.WriteLine);
+        image = generator.Edit(id, VisionChecks.AsPng(File.ReadAllBytes(source)), instruction, sameFrame, Console.WriteLine);
     }
     catch (InvalidOperationException refusal)
     {
         Console.Error.WriteLine();
         Console.Error.WriteLine(refusal.Message);
-        return 2;
+        return null;
     }
 
     var path = Path.Combine(destination, $"{image.ItemId}.webp");
@@ -491,8 +575,38 @@ static int Recolour(string? only, string? colour, string? asId, string? outDirec
     Console.WriteLine();
     Console.WriteLine($"{image.ItemId}  {image.Webp.Length / 1024} KB  {image.Took.TotalSeconds:F1}s  bg {image.Background}  -> {path}");
     Console.WriteLine($"    {image.SafeArea.Detail}{(image.SafeArea.Passed ? "" : "  OUTSIDE THE SAFE AREA")}");
+    if (StillTheSame(image) is { } same)
+        Console.WriteLine($"    {same}");
 
-    return image.SafeArea.Passed ? 0 : 1;
+    return image;
+}
+
+// How much of one picture's shape another has: whether a recolour is still the
+// same drawing. Pixels only -- no model, no key, milliseconds.
+static int Same(string? only, string? against, string? input)
+{
+    input ??= Path.Combine(RepositoryRoot.Find(), "seed", "images");
+
+    if (only is null || against is null)
+    {
+        Console.Error.WriteLine("same needs --only <id> and --against <id>: the two pictures to compare.");
+        return 2;
+    }
+
+    var (first, second) = (Path.Combine(input, $"{only}.webp"), Path.Combine(input, $"{against}.webp"));
+    if (!File.Exists(first) || !File.Exists(second))
+    {
+        Console.Error.WriteLine($"Both pictures have to be there: {first} and {second}.");
+        return 2;
+    }
+
+    var (pixels, size) = Pixels.Square(File.ReadAllBytes(first));
+    var overlap = SameShape.Overlap(pixels, Pixels.SquareOf(File.ReadAllBytes(second), size), size);
+
+    Console.WriteLine(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+        $"{only} and {against} share {overlap:P1} of their shape: {(overlap >= SameShape.Enough ? "the same drawing" : "NOT the same drawing")}"));
+
+    return overlap >= SameShape.Enough ? 0 : 1;
 }
 
 // Where the object sits in images that already exist. It decodes rather than

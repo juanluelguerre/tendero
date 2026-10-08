@@ -47,6 +47,8 @@ public sealed class LlamaVision(string url, string model) : IVisionModel
     public string Describe(byte[] png) =>
         Chat([png], "Describe what you see in this image in two sentences.", 200, "") ?? "(empty)";
 
+    public string Answer(byte[] png, string question) => Chat([png], question, 16, "") ?? string.Empty;
+
     private string? Chat(IReadOnlyList<byte[]> pngs, string question, int maxTokens, string format)
     {
         var pictures = string.Join(", ", pngs.Select(png =>

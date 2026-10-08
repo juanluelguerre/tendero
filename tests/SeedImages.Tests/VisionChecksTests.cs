@@ -29,6 +29,14 @@ public sealed class VisionChecksTests
             return answer;
         }
 
+        public string Answer(byte[] png, string question)
+        {
+            Answered = question;
+            return answer;
+        }
+
+        public string? Answered { get; private set; }
+
         public string Describe(byte[] png) => answer;
     }
 
@@ -110,5 +118,39 @@ public sealed class VisionChecksTests
 
         Assert.Throws<InvalidDataException>(() => new VisionChecks(model).Look([1, 2, 3], ["grey"]));
         Assert.Empty(model.Asked);
+    }
+    // ---------- the colour, in plain text (phase 13a, I-4d) ----------
+
+    /// <summary>The smallest picture there is: the checks decode what they are given before they send it.</summary>
+    private static readonly byte[] APicture = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==");
+
+    private static readonly string[] Colours = ["black", "navy blue", "terracotta"];
+
+    /// <summary>
+    /// The colour is the one of the catalogue's the model wrote, however it
+    /// wrapped it — and it was asked the shop's own question, with the options
+    /// listed, in plain text.
+    /// </summary>
+    [Theory]
+    [InlineData("terracotta", "terracotta")]
+    [InlineData(" \"Navy Blue\".\n", "navy blue")]
+    public void The_colour_is_the_catalogues_colour_the_model_wrote(string said, string colour)
+    {
+        var model = new Told(said);
+
+        Assert.Equal(colour, new VisionChecks(model).ColourOf(APicture, Colours));
+        Assert.Contains("What is the main colour of the product itself?", model.Answered, StringComparison.Ordinal);
+        Assert.Contains("black; navy blue; terracotta.", model.Answered, StringComparison.Ordinal);
+    }
+
+    /// <summary>What is none of the catalogue's colours is no colour: not the nearest, and not the first.</summary>
+    [Theory]
+    [InlineData("burnt orange")]
+    [InlineData("black or navy blue")]
+    [InlineData("")]
+    public void What_is_none_of_the_catalogues_colours_is_no_colour(string said)
+    {
+        Assert.Null(new VisionChecks(new Told(said)).ColourOf(APicture, Colours));
     }
 }
