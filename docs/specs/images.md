@@ -687,7 +687,7 @@ held by a schema to the attribute's options, compared by code.
   gated, until its own floors are written.
 - **Owed**: those floors; facets by category; a screen to edit the declarations.
 
-### I-4d · What a picture is of — a variant's colour, and a doubt that is not a claim (spec, not built; 2026-10-08)
+### I-4d · What a picture is of — a variant's colour, and a doubt that is not a claim (spec and built, 2026-10-08)
 
 **The question.** A product's colour is its variants' (`COLOR` is an axis), and
 a picture shows one colour. So "is this picture the colour the catalogue says"
@@ -749,12 +749,48 @@ options the catalogue defines, 40 seed pictures, the 4B):
    already shows a picture with its alt text (I-3) — one place where a picture
    is looked at, with everything said about it.
 
-**Open, the author's.** Whether a doubt blocks anything (publishing the
-product, using the picture as the cover) or only informs. Whether the three
-decisions above are the right ones for an uploaded picture too (I-6). And
-whether the seed should gain a product with two colours and a picture of each,
-which is what would exercise *it belongs to another variant* — three or four
-pictures to draw.
+**Ruled by the author (2026-10-08).** A doubt **informs and blocks nothing**: a
+product with an open doubt is published and sold as any other. The three
+decisions are the ones for a drawn picture; an uploaded one (I-6) gains a
+fourth, *the catalogue is wrong*, because a photograph of the real product is
+better evidence than the colour somebody typed. And the seed gains a product
+with two colours and a picture of each.
+
+**As built.**
+
+- `ProductPicture.Colour`: the colour a picture is held to, read by Catalog's
+  pictures reader from what the catalogue already holds — no field was added.
+  The colours a picture chooses among cross with it, and with what the
+  catalogue declares may be taken for what (`mistakenFor` on an option, in the
+  seed: stainless steel and grey), read in both directions.
+- The reading asks the colour with `ClosedQuestion` and keeps the answer under
+  its prose, in each language, with how sure the model was. Prompt
+  `picture-reading-2026-10-08b`.
+- `PictureDoubt`, in Knowledge: its own aggregate and table. Raised when the
+  reading is recorded and the model is sure — `SureDifference`, **0.90** — of a
+  colour the catalogue neither holds nor relates to the one it holds. Open →
+  decided, or withdrawn when the next reading no longer says it; one already
+  open is not raised twice, and one a person decided is not put to them again.
+- `GET /api/knowledge/picture-doubts` and `POST …/{id}/decide`, the
+  shopkeeper's, the decision audited. It records what the person said and
+  changes nothing else.
+- The backoffice's *Picture doubts* (`/doubts`): each row is the picture
+  itself, what the model sees and what the catalogue says, and the three
+  decisions — all quiet, because none is the one to be led to.
+- Evidence of use: `tendero.knowledge.picture_doubts.decided`, by decision.
+  Mostly *the picture is fine* means the line is too low, or two colours are
+  one to the shop and should be declared so.
+- **End to end on the forty seed pictures of one colour** (the local model,
+  202 s with the sixteen of the count): 37 show the colour the catalogue
+  holds; grey for stainless steel is related and raises nothing; olive for
+  forest green came at 0.62 and raises nothing; **grey for the black felt
+  sleeve at 0.94 is the one doubt**.
+
+**Not built yet.** The seed's product with two colours: an import brings one
+way of being bought, so the seed has no way to say two variants and a picture
+of each — it needs the connector's format to carry variants, and three or four
+pictures drawn and accepted by a person. Until then *it belongs to another
+variant* is a decision no data exercises. And captures of the screen.
 
 **Not in scope**: merging what several pictures of one product answer (three
 pictures of the same set propose *pieces: 3* three times); it is the same
