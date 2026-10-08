@@ -323,3 +323,21 @@ day on prompt `tino-2026-10-06`, local 4B on the GPU:
   *sin dato* sentence or in the search; the cases that accept `Products` there
   will tell. **Seen once**: `pan-induction-en` in run 11 ended as *did not answer*
   and the search, where it used to end as *We don't have that information*.
+
+### After the catalogue's model moved (2026-10-08)
+
+Phase 13a changed what Tino's laboratory is built from, not what Tino is told:
+a seed product now has three variants and four pictures, a picture says which
+colour it shows (ADR 0057), categories say what is required (ADR 0056,
+amended). Its prompt and its five reads are the same. Run again at the author's
+ask, on prompt `tino-2026-10-06`, local 4B on the GPU, a new laboratory:
+
+| Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+|---|---|---|---|---|---|---|
+| 12 | 25 of 28 | 3.8 s | 8.5 s | 35 | 6 | `spanish-under-english`, `english-under-spanish`, `dishwasher-sin-dato-es` (did not answer) |
+| 13 | 24 of 28 | 3.3 s | 7.3 s | 39 | 4 | the same three, and `order-of-an-account-by-nobody-es` (asked back) |
+
+The three that fail are the three that failed in runs 10 and 11, for the reasons
+written above; the fourth is one this file has seen before, in run 7. **Nothing
+moved.** The second run reused the first's laboratory, which this suite
+rebuilds its indexes over.

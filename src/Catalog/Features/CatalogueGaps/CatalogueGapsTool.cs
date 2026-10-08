@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Catalog.Features.CatalogueGaps;
@@ -11,8 +12,15 @@ public sealed record CatalogueGapsArguments(
 public sealed record Gaps(string Kind, string? Culture, int Total, IReadOnlyList<GapItem> Items);
 
 /// <param name="ProductId">What a translation proposal needs.</param>
-/// <param name="Lacks">For MissingRequiredAttribute: the attributes it lacks, by their labels. Null for the other kinds.</param>
-public sealed record GapItem(string ProductId, string Code, string Name, IReadOnlyList<string>? Lacks = null);
+/// <param name="Lacks">
+/// For MissingRequiredAttribute: the attributes it lacks, by their labels. Null
+/// for the other kinds, and then **not written at all**: a model reads every
+/// field of every row, and fifty rows of <c>"lacks":null</c> were 350 tokens of
+/// an 8,192 window — measured, on a read that had already overflowed it once.
+/// </param>
+public sealed record GapItem(
+    string ProductId, string Code, string Name,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<string>? Lacks = null);
 
 /// <summary><c>catalogue_gaps</c> (phase 12, S-3b): what the catalogue lacks, fifty at most with the total.</summary>
 public sealed class CatalogueGapsTool(IQueryDispatcher queries) : ReadTool<CatalogueGapsArguments, Gaps>(queries)
@@ -22,7 +30,7 @@ public sealed class CatalogueGapsTool(IQueryDispatcher queries) : ReadTool<Catal
     public override string Name => "catalogue_gaps";
 
     public override string Description =>
-        "What the catalogue lacks: products with no name in a language, with no picture, with a picture not described in a language, drafts waiting for review, or products missing an attribute their category requires. Returns each product's id, code and name, fifty at most, with the total.";
+        "What the catalogue lacks: products with no name in a language, with no picture, with a picture not described in a language, or drafts waiting for review. Returns each product's id, code and name, fifty at most, with the total.";
 
     protected override async Task<(Gaps Data, int Rows, int? Total)> ReadAsync(
         CatalogueGapsArguments arguments, IQueryDispatcher queries, CancellationToken cancellationToken)

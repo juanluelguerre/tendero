@@ -226,3 +226,38 @@ the two language cases**: they reused the first run's database, against this
 file's own rule above, and failed 2 to 4 cases of the kind that leaves
 (`withdraw-padel`, `translate-this-one`, `restock-barcelona`). The language cases
 only read, so their eight results stand.
+
+## A fifth kind of gap, and what a longer description cost (2026-10-08)
+
+Phase 13a gave `catalogue_gaps` a kind, *missing a required attribute* (ADR
+0056, amended), and the suite was run again at the author's ask. Local 4B on
+the GPU, prompt unchanged, **every run on a database created for it**:
+
+| Code | Runs, passed of 26 | Right tools | What failed beyond the two known |
+|---|---|---|---|
+| Before the kind | 22 · 25 · 23 | 100 % · 100 % · 100 % | `withdraw-espadrilles` twice; once `gaps-drafts`, the model's window overflowed (9,577 tokens of 8,192) |
+| With the kind, as first written | 22 · 22 · 23 · 22 | 92 % · 96 % · 96 % · 96 % | in **every** run a case that proposed without reading first — `propose_withdraw_product` or `propose_set_product_translation` on a name, never `find_products` |
+| With the kind, as it is now | **24 · 24 · 25** | 100 % · 100 % · 100 % | none: only `restock-barcelona` and `translate-beanie-spanish`, the two this file has always had |
+
+Two things had changed in what the model reads, and each was undone without
+losing the kind:
+
+- **The tool's description had grown a clause**, naming the new kind. With it,
+  four runs of four had a case where the model went straight to proposing;
+  without it, none of six. The description is back to the words it was measured
+  with; the kind is named where an argument's values are — its own description
+  and the schema's enum. Seven runs are not a proof of cause, and the direction
+  was the same in all of them.
+- **Every row of every kind carried `"lacks":null`**: fifty rows, about 350
+  tokens, on the read that had already overflowed the window once before any of
+  this. The field is now written only by the kind that has something to say
+  there, and a test holds it.
+
+The five gap cases passed in every run of every row — the kind itself was never
+what failed. **No case asks for the new kind yet**; one is owed, and it needs a
+laboratory product that lacks a required attribute, which the seed, complete on
+purpose, does not have.
+
+`gaps-drafts` at 9,577 tokens is its own finding and older than this change: a
+hundred drafts in a fresh laboratory, fifty rows of them read twice in one turn.
+It passed in nine runs of ten.

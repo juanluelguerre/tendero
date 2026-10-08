@@ -116,6 +116,11 @@ day, on the proposed answers).
   12 of 13: the packing cubes are three colours and say none).
 - **Evidence of use** (ADR 0036): the gap is read through `catalogue_gaps`,
   whose calls are already counted by tool and argument; nothing new is emitted.
-- **Not measured**: Steward's suite was not run again after its tool's
-  description gained the kind. It needs the GPU and is owed before the phase
-  closes.
+- **Measured, and it found something** (`docs/analysis/steward-models.md`, the
+  same day): with the kind named in the tool's description, Steward's suite
+  fell from about 24 of 26 to 22 — in every run a case that proposed without
+  reading first — and every row of every kind carried an empty `lacks`, 350
+  tokens a read. The description went back to its measured words, the kind is
+  named in the argument and the enum, the empty field is not written, and three
+  runs gave 24, 24 and 25. Tino's suite, whose prompt did not change, did not
+  move. **Owed**: a case that asks Steward for the new kind.
