@@ -21,4 +21,11 @@
     <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
   </ItemGroup>
 
+  <!-- What the maker's own tokenizer gives for the texts SigLIP 2's is held to
+       (phase 13a, P13-1): written by src/AppHost/scripts/siglip-tokenizer-fixture.py,
+       committed, and read by the test beside it. -->
+  <ItemGroup>
+    <Content Include="Images/siglip-tokenizer-fixture.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

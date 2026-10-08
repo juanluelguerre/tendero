@@ -99,6 +99,12 @@
          Microsoft.Extensions.VectorData.Abstractions 10.10.0, Microsoft.ML.Tokenizers
          2.0.0 and Microsoft.Extensions.FileSystemGlobbing 10.0.12. Tier 1. -->
     <PackageVersion Include="Microsoft.Agents.AI" Version="1.23.0" />
+    <!-- Microsoft.ML.Tokenizers 2.0.0 — MIT, the licence expression in the nuspec of
+         that exact version (checked 2026-10-08). Already in the graph through
+         Microsoft.Agents.AI; referenced directly by Search for SigLIP 2's text
+         tokenizer — SentencePiece over Gemma's vocabulary (phase 13a, P13-1).
+         Approved by the author on 2026-10-06 (docs/specs/images.md). Tier 1. -->
+    <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <!-- Qdrant.Client 1.19.0 — Apache-2.0, a licence EXPRESSION in the nuspec.
          The version is not a choice: Aspire.Hosting.Qdrant 13.6.0 pins it, and a
          newer client in a project the AppHost references is a downgrade NuGet

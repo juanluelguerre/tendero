@@ -967,6 +967,32 @@ tokenization must reproduce the reference outputs exactly, or text-to-image
 degrades without a sign. Until that test is green, nothing else in this step is
 written.
 
+**Green (2026-10-08).** `SiglipTextTokenizer` (`src/Search/Images`), over
+`Microsoft.ML.Tokenizers` 2.0.0 (MIT at that version; it was already in the
+graph), against what the maker's own tokenizer gives at the pinned revision
+`75de2d5`: twenty-three texts — shop queries in both languages, accents,
+digits, capitals, runs of spaces and a tab, an emoji, the empty text, one
+longer than the window — **id for id, first run**. The reference is written by
+a script in a throwaway Python container (the evaluation side of the
+repository), committed beside the test, and never typed.
+
+- The vocabulary's file is the maker's, 4 MB, and stays out of git
+  (`models/siglip2/`); without it the test says how to fetch it and skips, as
+  the other model-held tests do. **So CI does not run this gate**: it is run
+  where the model is, and again whenever the revision moves.
+- **Open, and found by the fixture**: the model's configuration says
+  `do_lower_case: true` and the maker's tokenizer at this revision does not
+  lower-case — *ZAPATILLAS* and *zapatillas* get different ids. Ours is
+  faithful to the tokenizer. Whether a text is lower-cased before it is
+  tokenized is to be settled by measuring retrieval both ways once the towers
+  are exported (`P13-2`), not assumed from a flag.
+- Five hand mutations red. The first, a cut one piece too short, was caught
+  only by a shape test of ours and not by the reference — whose *long* text
+  turned out to fit the window. It was lengthened, the script now refuses a
+  long text that is not, and the mutation fails against the maker's ids.
+- The open fork *SigLIP 2 in-process or sidecar* (roadmap, fork 6) had this
+  test as its gate: **in process** stands.
+
 Then `IImageEmbeddingGenerator`, a port with an in-process adapter: SigLIP 2
 (`google/siglip2-base-patch16-224`, Apache-2.0, pinned revision) on ONNX Runtime,
 **exported by us** from the maker's weights. No Python sidecar. A collection

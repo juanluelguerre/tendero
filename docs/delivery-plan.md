@@ -954,7 +954,7 @@ what a microphone changes about the questions people ask. `#AIEngineering #RAG #
 **Voice is not in this phase** (the author, the same day): `P12b-5` and `P12b-6`
 wait for a phase of their own, 14, after the images.
 
-- [ ] `P13-1` Tokenizer-fidelity fixture test **before** committing to in-process ONNX — **S**
+- [x] `P13-1` Tokenizer-fidelity fixture test **before** committing to in-process ONNX — **S** · **done 2026-10-08**: `SiglipTextTokenizer` reproduces the maker's ids for twenty-three texts, id for id, at revision `75de2d5`; the reference is written by the maker's tokenizer and committed. Found on the way: the configuration says to lower-case and the maker's tokenizer does not — to be measured in `P13-2`. In process stands
 - [ ] `P13-2` SigLIP 2 via ONNX Runtime; `IImageEmbeddingGenerator` — **L**
 - [ ] `P13-3` Image collection keyed on `ImageId`; dedup for free — **M**
 - [ ] `P13-4` `POST /api/search/by-image`; then text→image — **M**
