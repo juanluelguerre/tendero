@@ -106,14 +106,26 @@
   </div>
 
   @if (image(); as source) {
-    <img
-      class="campaign__image aspect-16/9 h-auto w-full rounded-lg object-cover"
-      [ngSrc]="source"
-      [priority]="priority()"
-      [alt]="campaign().imageAlt ?? ''"
-      width="720"
-      height="400"
-    />
+    <!-- `priority` written on one of two elements, never bound: NgOptimizedImage
+         refuses one that changes after it started (see storefront-product-image). -->
+    @if (priority()) {
+      <img
+        class="campaign__image aspect-16/9 h-auto w-full rounded-lg object-cover"
+        [ngSrc]="source"
+        priority
+        [alt]="campaign().imageAlt ?? ''"
+        width="720"
+        height="400"
+      />
+    } @else {
+      <img
+        class="campaign__image aspect-16/9 h-auto w-full rounded-lg object-cover"
+        [ngSrc]="source"
+        [alt]="campaign().imageAlt ?? ''"
+        width="720"
+        height="400"
+      />
+    }
   } @else if (shownProducts().length > 0) {
     <!-- On a phone the words are the card: the products are one tap away. -->
     <ul

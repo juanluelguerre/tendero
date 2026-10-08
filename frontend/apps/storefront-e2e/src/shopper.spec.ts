@@ -85,11 +85,20 @@ test.describe('the storefront', () => {
    * Layer A (ADR 0032): when nothing sold matches a query exactly, the page
    * says so above the results rather than presenting the closest neighbours as
    * if they were the answer.
+   *
+   * *Juguetes para niños de 6 años*, and not *regalo abuela* as it was until
+   * 2026-10-08: no product says *regalo* or *abuela*, so only the vector layer
+   * has neighbours for that one, and on a stack started without it — the
+   * default, and the lexical fallback every search must survive on — the page
+   * rightly says it found nothing and this spec failed. Toys the shop does not
+   * sell, but *6* and *de* it does: there are neighbours either way.
    */
   test('a query nothing matches exactly says so above the closest products', async ({ page }) => {
-    await page.goto('/es?q=regalo%20abuela');
+    await page.goto('/es?q=juguetes%20para%20ni%C3%B1os%20de%206%20a%C3%B1os');
     await expect(
-      page.getByRole('heading', { name: 'No tenemos nada que coincida exactamente con «regalo abuela»' }),
+      page.getByRole('heading', {
+        name: 'No tenemos nada que coincida exactamente con «juguetes para niños de 6 años»',
+      }),
     ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Lo más parecido que vendemos' })).toBeVisible();
   });

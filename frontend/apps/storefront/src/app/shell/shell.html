@@ -45,7 +45,10 @@
           height="40"
         />
         <span class="flex flex-col leading-tight">
-          <span class="brand__wordmark">{{ t('brand.name') }}</span>
+          <!-- On the narrowest phones the mark stands for the name (read out all the
+               same): with Tino's door in the row, the name pushed the basket off a
+               360 px screen. -->
+          <span class="brand__wordmark max-3xs:sr-only">{{ t('brand.name') }}</span>
           <span class="text-2xs text-muted max-md:hidden">{{ t('brand.tagline') }}</span>
         </span>
       </a>

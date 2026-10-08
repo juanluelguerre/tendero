@@ -338,6 +338,10 @@ node tools/api-map.mjs --schema CartView
 - **Pictures are `NgOptimizedImage`**: `ngSrc` with their size, or `fill` in a
   box the caller sizes; lazy by default, `priority` on the picture that is the
   page's LCP (the product's, a listing's first row, the home's lead campaign).
+  **`priority` is written on the element, never bound to something that can
+  change**: the directive throws when it does, and the throw cuts the page's
+  rendering short — a listing narrowed by a filter kept its old counts. Where
+  it depends on a value, two elements behind an `@if`.
 - **Angular 22's defaults are not written**: no `changeDetection: OnPush` (the
   default), no `withFetch()`, no zone.js (ADR 0051).
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.
