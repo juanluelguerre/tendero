@@ -56,7 +56,8 @@ public sealed record VariantView(
     string? ImageId,
     bool Discontinued,
     bool InStock,
-    int? Remaining);
+    int? Remaining,
+    IReadOnlyList<string> ImageIds);
 
 public sealed record ProductImageView(string ImageId, string? Alt, int SortOrder);
 
@@ -327,13 +328,15 @@ public sealed class GetProductHandler(
             // line and a frozen label must not depend on a translation somebody
             // can edit afterwards. What a page shows is the other thing.
             Label(variant, product, definitions, culture),
-            // A variant with no photo of its own borrows the product's: size does
-            // not change what a thing looks like, colour does, and only the ones
-            // that differ carry an image.
-            (variant.Image ?? product.PrimaryImage?.Id)?.Value,
+            // The picture a list shows for it: the first of its own, which the
+            // aggregate derives from what each picture says it shows.
+            product.PictureOf(variant)?.Id.Value,
             variant.Status == VariantStatus.Discontinued,
             remaining > 0,
-            remaining is > 0 and <= LowStock ? remaining : null);
+            remaining is > 0 and <= LowStock ? remaining : null,
+            // And its whole gallery — its colour's pictures, then the ones that are
+            // every variant's — for the page to show when it is chosen.
+            [.. product.PicturesOf(variant).Select(image => image.Id.Value)]);
     }
 
     private static string Label(

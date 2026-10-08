@@ -14,10 +14,11 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// The seed's product in three colours, imported for real (phase 13a, I-4d):
 /// the seed file as it is committed, its pictures stored, a real Postgres. What
 /// only the whole path proves — the file's <c>variants</c> become variants on
-/// the colour axis, each with the picture the file says is its own, and the
-/// pictures' reader then holds each picture to its own variant's colour. That is
-/// what a doubt of *it belongs to another variant* is raised against. Its fourth
-/// picture, the back, is no variant's: it is held to no colour at all.
+/// the colour axis, each picture says the colour the file says it shows, and
+/// the pictures' reader then holds each picture to that colour. That is what a
+/// doubt of *it belongs to another variant* is raised against. Its fourth
+/// picture, the back, says nothing: it is every colour's, after their own, and
+/// held to no colour at all.
 /// </summary>
 [Collection(PostgresCollection.Name)]
 public sealed class VariantPicturesFromTheSeedTests(PostgresFixture postgres)
@@ -86,8 +87,14 @@ public sealed class VariantPicturesFromTheSeedTests(PostgresFixture postgres)
             ImageId[] gallery = [.. pannier.Images.OrderBy(image => image.SortOrder).Select(image => image.Id)];
             var cover = pannier.PrimaryImage!.Id;
             Assert.Equal(cover, gallery[0]);
-            ImageId? PictureOf(string sku) => pannier.Variants.Single(variant => variant.Sku.EndsWith(sku, StringComparison.Ordinal)).Image;
+            Variant Of(string sku) => pannier.Variants.Single(variant => variant.Sku.EndsWith(sku, StringComparison.Ordinal));
+            ImageId? PictureOf(string sku) => pannier.PictureOf(Of(sku))?.Id;
             Assert.Equal((gallery[0], gallery[1], gallery[2]), (PictureOf("OLIVE"), PictureOf("BLACK"), PictureOf("NAVY")));
+            // A colour's gallery: its own picture, then the back, which is every colour's.
+            Assert.Equal([gallery[1], gallery[3]], pannier.PicturesOf(Of("BLACK")).Select(image => image.Id));
+            Assert.Equal(
+                [[new AxisValue("COLOR", "OLIVE")], [new AxisValue("COLOR", "BLACK")], [new AxisValue("COLOR", "NAVY_BLUE")], []],
+                pannier.Images.OrderBy(image => image.SortOrder).Select(image => image.Shows));
             // The colour is the variants' to say: the product says none of its own.
             Assert.Null(pannier.AttributeFor("COLOR"));
 

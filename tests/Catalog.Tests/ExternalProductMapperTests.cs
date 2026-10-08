@@ -132,8 +132,8 @@ public sealed class ExternalProductMapperTests
         Attributes = new Dictionary<string, string>(),
         Variants =
         [
-            new ExternalVariant("OLIVE", new Dictionary<string, string> { ["color"] = "oliva" }, Image: 0),
-            new ExternalVariant("BLACK", new Dictionary<string, string> { ["color"] = "negro" }, Image: 1),
+            new ExternalVariant("OLIVE", new Dictionary<string, string> { ["color"] = "oliva" }),
+            new ExternalVariant("BLACK", new Dictionary<string, string> { ["color"] = "negro" }),
         ],
     };
 
@@ -155,6 +155,23 @@ public sealed class ExternalProductMapperTests
             [("B073WXYZ01-OLIVE", "OLIVE"), ("B073WXYZ01-BLACK", "BLACK")],
             product.Variants.Select(variant => (variant.Sku, variant.AxisValues["COLOR"])));
         Assert.All(product.Variants, variant => Assert.Equal((external.Price, VariantStatus.Available), (variant.Price, variant.Status)));
+    }
+
+    /// <summary>
+    /// What a picture shows arrives in the same words a variant's colour does,
+    /// and lands on the same value: the attribute's code and the option's. A word
+    /// the catalogue has no option for stays as the source wrote it — which no
+    /// variant holds, and the aggregate then refuses.
+    /// </summary>
+    [Fact]
+    public void The_sources_words_for_what_a_picture_shows_resolve_as_a_variants_do()
+    {
+        var black = InTwoColours().ToNewProduct("seed", Clock, Colours.Defined()).Variants.Single(variant => variant.Sku.EndsWith("BLACK", StringComparison.Ordinal));
+
+        var shown = ExternalProductMapper.Coordinates(new Dictionary<string, string> { ["color"] = "negro" }, Colours.Defined());
+
+        Assert.Equal(black.AxisValues, shown);
+        Assert.Equal("BLACK", shown["color"]);
     }
 
     [Fact]

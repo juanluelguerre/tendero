@@ -9,15 +9,12 @@ namespace ElGuerre.Tendero.Catalog.Adapters;
 /// product still in the catalogue, by product code and then by its place in the
 /// gallery — and, for each, the colour it has to be held to.
 ///
-/// **What a picture is of** (phase 13a, I-4d). Nothing is stored about it: it is
-/// read from what the catalogue already holds. A variant's own picture
-/// (<see cref="Variant.Image"/>) shows that variant; the cover shows every
-/// variant that has no picture of its own; any other picture of the gallery — a
-/// detail, the back — shows the product and no variant in particular. A
-/// variant's colour is its place on the colour axis, or the product's own colour
-/// when it has no such axis, which is every product an import brought with one
-/// colour. A picture has a colour to be held to when the variants it shows all
-/// hold the same one.
+/// **What a picture is of** (phase 13a, I-4d): what the picture says it shows
+/// (<see cref="ProductImage.Shows"/>). A picture that shows a colour is held to
+/// that colour. One that says nothing shows the product and no variant in
+/// particular — the back, a detail — and is held to none; except the cover of a
+/// product that does not vary by colour and says its own, which is every product
+/// an import brought in one colour: that cover is the product, in its colour.
 ///
 /// In memory over the live catalogue: a hundred products (the scale rule's
 /// "deferred with its number"); the full catalogue makes it SQL.
@@ -76,19 +73,14 @@ public sealed class ProductPicturesReader(IProductCatalogReader products, IAttri
         ];
     }
 
-    /// <summary>The one colour the variants a picture shows hold, or null when it shows none in particular or more than one.</summary>
+    /// <summary>The colour a picture is held to: the one it says it shows, or the product's own for the cover of a product of one colour.</summary>
     private static string? ColourShown(Product product, ProductImage picture)
     {
-        var isCover = product.PrimaryImage?.Id == picture.Id;
-        string?[] colours =
-        [
-            .. product.Variants
-                .Where(variant => variant.Status != VariantStatus.Discontinued)
-                .Where(variant => variant.Image == picture.Id || (isCover && variant.Image is null))
-                .Select(variant => variant.AxisValues.GetValueOrDefault(Colour) ?? product.AttributeFor(Colour)?.OptionCode)
-                .Distinct(StringComparer.OrdinalIgnoreCase),
-        ];
+        if (picture.Shows.FirstOrDefault(shown => string.Equals(shown.Axis, Colour, StringComparison.OrdinalIgnoreCase)) is { } shown)
+            return shown.Value;
 
-        return colours is [{ } one] ? one : null;
+        return !product.VariantAxes.Contains(Colour, StringComparer.OrdinalIgnoreCase) && product.PrimaryImage?.Id == picture.Id
+            ? product.AttributeFor(Colour)?.OptionCode
+            : null;
     }
 }

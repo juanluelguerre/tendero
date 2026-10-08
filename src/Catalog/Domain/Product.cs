@@ -519,8 +519,7 @@ public sealed class Product : AggregateRoot
         string sku,
         Money price,
         IReadOnlyDictionary<string, string>? axisValues = null,
-        string? taxClass = null,
-        ImageId? image = null)
+        string? taxClass = null)
     {
         if (VariantBySku(sku) is { } existing)
             return existing;
@@ -546,7 +545,7 @@ public sealed class Product : AggregateRoot
                 $"A variant already exists for {string.Join(", ", values.Select(v => $"{v.Key}={v.Value}"))}.");
         }
 
-        var variant = Variant.Create(sku, price, values, taxClass, image);
+        var variant = Variant.Create(sku, price, values, taxClass);
         this.variants.Add(variant);
         Touch(clock);
         return variant;
@@ -562,12 +561,6 @@ public sealed class Product : AggregateRoot
     {
         Required(sku).Discontinue();
         ForgetWhatNobodySells();
-        Touch(clock);
-    }
-
-    public void SetVariantImage(TimeProvider clock, string sku, ImageId? image)
-    {
-        Required(sku).SetImage(image);
         Touch(clock);
     }
 

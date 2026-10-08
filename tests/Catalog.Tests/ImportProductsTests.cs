@@ -28,6 +28,7 @@ public sealed class ImportProductsTests
 
     private static readonly Uri Placeholder = new("file:///seed/placeholder.png");
     private static readonly Uri Illustration = new("file:///seed/illustration.webp");
+    private static readonly Uri Back = new("file:///seed/back.webp");
     private static readonly Uri Missing = new("file:///seed/missing.webp");
 
     [Fact]
@@ -71,47 +72,79 @@ public sealed class ImportProductsTests
         Assert.Contains(shop.Product.Images, image => image.Id == Shop.IdOf(Illustration));
     }
 
-    // ---------- a variant's own picture (phase 13a, I-4d) ----------
+    // ---------- what a picture shows (phase 13a, I-4d; docs/analysis/catalogue-model.md) ----------
 
-    private static readonly ExternalVariant[] TwoColours =
+    private static readonly ExternalVariant[] ThreeColours =
     [
-        new("OLIVE", new Dictionary<string, string> { ["color"] = "oliva" }, Image: 0),
-        new("BLACK", new Dictionary<string, string> { ["color"] = "negro" }, Image: 1),
+        new("OLIVE", new Dictionary<string, string> { ["color"] = "oliva" }),
+        new("BLACK", new Dictionary<string, string> { ["color"] = "negro" }),
         new("GREY", new Dictionary<string, string> { ["color"] = "gris" }),
     ];
 
+    private static Dictionary<string, string> Colour(string word) => new() { ["color"] = word };
+
+    private static ImageId? PictureOf(Shop shop, string colour) =>
+        shop.Product.PictureOf(shop.Product.Variants.Single(variant => variant.Sku.EndsWith(colour, StringComparison.Ordinal)))?.Id;
+
     /// <summary>
-    /// A variant names its picture by its place in the source's list, and gets
-    /// the picture that was stored for that place. One that names none has none
-    /// of its own: the cover stands for it.
+    /// The source says which colour a picture shows, in its own words, and the
+    /// picture then shows what the variant of that colour holds — so it is that
+    /// variant's. A picture that says nothing is every variant's, after their
+    /// own; a colour with no picture of its own has those.
     /// </summary>
     [Fact]
-    public async Task A_variant_gets_the_picture_the_source_says_is_its_own()
+    public async Task A_picture_shows_what_the_source_says_it_shows_and_is_that_variants()
     {
-        var shop = new Shop { Variants = TwoColours };
+        var shop = new Shop { Variants = ThreeColours };
+        shop.Shows(Placeholder, Colour("oliva"));
+        shop.Shows(Illustration, Colour("negro"));
 
-        await shop.ImportAsync(Placeholder, Illustration);
+        await shop.ImportAsync(Placeholder, Illustration, Back);
 
         Assert.Equal(
-            [("B000000001-OLIVE", (ImageId?)Shop.IdOf(Placeholder)), ("B000000001-BLACK", Shop.IdOf(Illustration)), ("B000000001-GREY", null)],
-            shop.Product.Variants.Select(variant => (variant.Sku, variant.Image)));
+            (Shop.IdOf(Placeholder), Shop.IdOf(Illustration), Shop.IdOf(Back)),
+            (PictureOf(shop, "OLIVE"), PictureOf(shop, "BLACK"), PictureOf(shop, "GREY")));
+        var black = shop.Product.Variants.Single(variant => variant.Sku.EndsWith("BLACK", StringComparison.Ordinal));
+        Assert.Equal([Shop.IdOf(Illustration), Shop.IdOf(Back)], shop.Product.PicturesOf(black).Select(image => image.Id));
+        Assert.Empty(shop.Product.Images.Single(image => image.Id == Shop.IdOf(Back)).Shows);
     }
 
     /// <summary>
-    /// With an image missing, the list has no places to go by: no variant is
-    /// given a picture that may be another's, and the next complete import sets
-    /// them.
+    /// A picture carries what it shows, not its place in a list: with another
+    /// image missing, the one that arrived is still told its colour, and the
+    /// next complete import tells the other.
     /// </summary>
     [Fact]
-    public async Task With_an_image_missing_no_variant_is_given_a_picture_until_the_gallery_is_whole()
+    public async Task With_an_image_missing_the_pictures_that_arrived_still_say_what_they_show()
     {
-        var shop = new Shop { Variants = TwoColours };
+        var shop = new Shop { Variants = ThreeColours };
+        shop.Shows(Illustration, Colour("negro"));
+        shop.Shows(Missing, Colour("oliva"));
 
-        await shop.ImportAsync(Placeholder, Missing);
-        Assert.All(shop.Product.Variants, variant => Assert.Null(variant.Image));
+        // The back arrives first and is the cover: black's picture is its own only if it was told so.
+        await shop.ImportAsync(Back, Missing, Illustration);
+        Assert.Equal((Shop.IdOf(Illustration), Shop.IdOf(Back)), (PictureOf(shop, "BLACK"), PictureOf(shop, "OLIVE")));
 
-        await shop.ImportAsync(Placeholder, Illustration);
-        Assert.Equal(Shop.IdOf(Illustration), shop.Product.Variants.Single(variant => variant.Sku.EndsWith("BLACK", StringComparison.Ordinal)).Image);
+        shop.Shows(Placeholder, Colour("oliva"));
+        await shop.ImportAsync(Back, Placeholder, Illustration);
+        Assert.Equal((Shop.IdOf(Placeholder), Shop.IdOf(Illustration)), (PictureOf(shop, "OLIVE"), PictureOf(shop, "BLACK")));
+    }
+
+    /// <summary>
+    /// A source that says a picture shows a colour nobody sells is wrong about
+    /// the picture, not about the product: it is imported, with the picture, and
+    /// the picture says nothing.
+    /// </summary>
+    [Fact]
+    public async Task A_picture_said_to_show_a_colour_no_variant_holds_is_imported_and_shows_nothing()
+    {
+        var shop = new Shop { Variants = ThreeColours };
+        shop.Shows(Placeholder, Colour("rojo"));
+
+        await shop.ImportAsync(Placeholder);
+
+        Assert.Empty(Assert.Single(shop.Product.Images).Shows);
+        Assert.Equal(3, shop.Product.Variants.Count);
     }
 
     private sealed class Shop
@@ -126,6 +159,9 @@ public sealed class ImportProductsTests
         {
             set => this.connector.Variants = value;
         }
+
+        /// <summary>What the source says the picture at this location shows, from the next import on.</summary>
+        public void Shows(Uri location, IReadOnlyDictionary<string, string> shows) => this.connector.Shows[location] = shows;
 
         /// <summary>The same product, from the same source, with this gallery.</summary>
         public async Task ImportAsync(params Uri[] images)
@@ -164,6 +200,8 @@ public sealed class ImportProductsTests
 
         public IReadOnlyList<ExternalVariant>? Variants { get; set; }
 
+        public Dictionary<Uri, IReadOnlyDictionary<string, string>> Shows { get; } = [];
+
         public string Source => Key;
 
         public async IAsyncEnumerable<ExternalProduct> StreamProductsAsync(
@@ -179,7 +217,7 @@ public sealed class ImportProductsTests
                 Category: null,
                 PriceAmount: 49.90m,
                 PriceCurrency: "EUR",
-                [.. Images.Select(location => new ExternalImage(location))],
+                [.. Images.Select(location => new ExternalImage(location, Shows: Shows.GetValueOrDefault(location)))],
                 new Dictionary<string, string>(),
                 Variants: Variants);
         }

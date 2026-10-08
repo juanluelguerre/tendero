@@ -55,7 +55,8 @@ is the object alone.
 
 Two ways in: `recolour --only <id> --colour <colour>` for any picture, and
 `generate`, which makes a variant's picture this way whenever the seed names one
-(`variants`, with its `image`) and the cover exists. Only the hosted generator
+(an entry of `images` after the cover that says the colour it shows —
+`{ "file": …, "shows": { "color": "negro" } }`) and the cover exists. Only the hosted generator
 can; the local one draws from noise and falls back to drawing.
 
 ### What else it does for a product's variants

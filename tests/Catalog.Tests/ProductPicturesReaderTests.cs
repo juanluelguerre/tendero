@@ -96,22 +96,25 @@ public sealed class ProductPicturesReaderTests
     }
 
     /// <summary>
-    /// Two colours and a picture of each: a variant's own picture shows that
-    /// variant, whatever its size. The cover is nobody's who has a picture.
+    /// Two colours and a picture of each: a picture is held to the colour it
+    /// says it shows, whatever the sizes that colour comes in. One that says
+    /// nothing — the back — is held to none.
     /// </summary>
     [Fact]
-    public async Task A_variants_own_picture_is_held_to_that_variants_colour()
+    public async Task A_picture_is_held_to_the_colour_it_says_it_shows()
     {
-        var pack = AProduct("Mochila", null, ("black-pack", null), ("grey-pack", null));
+        var pack = AProduct("Mochila", null, ("black-pack", null), ("grey-pack", null), ("back", null));
         pack.DefineAxes(Clock, ["COLOR", "SIZE"]);
-        foreach (var (colour, picture) in new[] { ("BLACK", "black-pack"), ("GREY", "grey-pack") })
+        foreach (var colour in new[] { "BLACK", "GREY" })
             foreach (var size in new[] { "S", "L" })
-                pack.AddVariant(Clock, $"PACK-{colour}-{size}", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = colour, ["SIZE"] = size }, image: new ImageId(picture));
+                pack.AddVariant(Clock, $"PACK-{colour}-{size}", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = colour, ["SIZE"] = size });
+        pack.Show(Clock, new ImageId("black-pack"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+        pack.Show(Clock, new ImageId("grey-pack"), new Dictionary<string, string> { ["COLOR"] = "GREY" });
 
-        Assert.Equal(new() { ["black-pack"] = "BLACK", ["grey-pack"] = "GREY" }, await ColoursOf(pack));
+        Assert.Equal(new() { ["black-pack"] = "BLACK", ["grey-pack"] = "GREY", ["back"] = null }, await ColoursOf(pack));
     }
 
-    /// <summary>One picture for two colours has no colour to be held to: it cannot be both.</summary>
+    /// <summary>One picture for two colours, saying nothing, has no colour to be held to: it cannot be both.</summary>
     [Fact]
     public async Task A_cover_shared_by_variants_of_two_colours_is_held_to_none()
     {
@@ -123,9 +126,14 @@ public sealed class ProductPicturesReaderTests
         Assert.Equal(new() { ["cover"] = null }, await ColoursOf(pack));
     }
 
-    /// <summary>A colour that is no longer sold does not decide what a picture is held to.</summary>
+    /// <summary>
+    /// **A picture is not held to a colour by elimination.** With the grey one
+    /// discontinued, black is the only colour still sold — and the cover has
+    /// still said nothing, so it is held to none. It was held to black before
+    /// pictures said what they show, which was a guess that happened to hold.
+    /// </summary>
     [Fact]
-    public async Task A_discontinued_variant_does_not_count()
+    public async Task A_cover_that_says_nothing_is_held_to_none_even_when_one_colour_is_left()
     {
         var pack = AProduct("Mochila", null, ("cover", null));
         pack.DefineAxes(Clock, ["COLOR"]);
@@ -133,7 +141,25 @@ public sealed class ProductPicturesReaderTests
         pack.AddVariant(Clock, "PACK-GREY", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "GREY" });
         pack.DiscontinueVariant(Clock, "PACK-GREY");
 
-        Assert.Equal(new() { ["cover"] = "BLACK" }, await ColoursOf(pack));
+        Assert.Equal(new() { ["cover"] = null }, await ColoursOf(pack));
+    }
+
+    /// <summary>
+    /// A product that said one colour before its source told two apart still
+    /// carries it. Its variants are who say the colour now: the cover is not held
+    /// to what the product once said of itself.
+    /// </summary>
+    [Fact]
+    public async Task A_colour_the_product_still_says_does_not_hold_the_cover_once_it_varies_by_colour()
+    {
+        var pack = AProduct("Mochila", null, ("cover", null));
+        pack.SetAttribute(Clock, AttributeValue.Option("COLOR", "BLACK"));
+        pack.DefineAxes(Clock, ["COLOR"]);
+        pack.AddVariant(Clock, "PACK-BLACK", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+        pack.AddVariant(Clock, "PACK-GREY", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "GREY" });
+
+        Assert.NotNull(pack.AttributeFor("COLOR"));
+        Assert.Equal(new() { ["cover"] = null }, await ColoursOf(pack));
     }
 
     [Fact]
@@ -171,8 +197,10 @@ public sealed class ProductPicturesReaderTests
     {
         var pack = AProduct("Mochila", null, ("black-pack", null), ("grey-pack", null), ("detail", null));
         pack.DefineAxes(Clock, ["COLOR"]);
-        pack.AddVariant(Clock, "PACK-BLACK", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK" }, image: new ImageId("black-pack"));
-        pack.AddVariant(Clock, "PACK-GREY", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "GREY" }, image: new ImageId("grey-pack"));
+        pack.AddVariant(Clock, "PACK-BLACK", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+        pack.AddVariant(Clock, "PACK-GREY", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "GREY" });
+        pack.Show(Clock, new ImageId("black-pack"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+        pack.Show(Clock, new ImageId("grey-pack"), new Dictionary<string, string> { ["COLOR"] = "GREY" });
         // A colour that is no longer sold is nobody's picture to be mistaken for.
         pack.AddVariant(Clock, "PACK-STEEL", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "STAINLESS_STEEL" });
         pack.DiscontinueVariant(Clock, "PACK-STEEL");

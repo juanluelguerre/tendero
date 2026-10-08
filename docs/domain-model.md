@@ -132,7 +132,6 @@ classDiagram
         +Money Price
         +Map~string, string~ AxisValues
         +string? TaxClass
-        +ImageId? Image
         +VariantStatus Status
     }
     class VariantStatus {

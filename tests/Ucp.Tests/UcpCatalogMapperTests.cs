@@ -40,7 +40,8 @@ public sealed class UcpCatalogMapperTests
                 ImageId: "abc123",
                 Discontinued: false,
                 InStock: true,
-                Remaining: 4),
+                Remaining: 4,
+                ImageIds: ["abc123"]),
             new VariantView(
                 VariantId: "0199a1f0-0000-7000-8000-000000000003",
                 Sku: "B13BAG0710-GREY",
@@ -51,7 +52,8 @@ public sealed class UcpCatalogMapperTests
                 ImageId: null,
                 Discontinued: false,
                 InStock: false,
-                Remaining: 0)
+                Remaining: 0,
+                ImageIds: [])
         ],
         PriceFrom: 39.00m,
         PriceTo: 41.50m,

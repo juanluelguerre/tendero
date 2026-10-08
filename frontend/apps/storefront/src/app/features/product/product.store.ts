@@ -137,7 +137,7 @@ export const ProductStore = signalStore(
       const current = product();
       return current ? initialSelection(current) : {};
     },
-    /** Which image the gallery is showing, by id. Null means the cover. */
+    /** Which image the gallery has in front, by id. Null means the first of the chosen variant's. */
     shown: (): string | null => {
       product();
       return null;
@@ -148,15 +148,20 @@ export const ProductStore = signalStore(
     return {
       /** The one the picker is currently on, or null when the combination is not sold. */
       chosen,
-      /** The gallery's images, cover first, with the chosen variant's promoted. */
+      /**
+       * The gallery: the chosen variant's pictures — its colour's, then the ones
+       * that are every variant's, as the API orders them (ADR 0057) — with the
+       * thumbnail pressed in front. Another colour's pictures are not in it. A
+       * variant with none to show, or a combination that is not sold, has the
+       * product's own gallery: never an empty one.
+       */
       gallery: computed(() => {
         const current = product();
         if (!current) return [];
-        const promotedId = shown();
-        const images = [...current.images];
-        if (!promotedId) return images;
-        const promoted = images.filter((image) => image.imageId === promotedId);
-        return promoted.length > 0 ? [...promoted, ...images.filter((image) => image.imageId !== promotedId)] : images;
+        const own = (chosen()?.imageIds ?? []).flatMap((id) => current.images.filter((image) => image.imageId === id));
+        const images = own.length > 0 ? own : [...current.images];
+        const promoted = images.filter((image) => image.imageId === shown());
+        return promoted.length > 0 ? [...promoted, ...images.filter((image) => image.imageId !== shown())] : images;
       }),
       /** The notice, if it is about the variant on screen. */
       notice: computed(() => {
@@ -177,9 +182,10 @@ export const ProductStore = signalStore(
     },
     choose(axis: string, option: string): void {
       patchState(store, { selection: select(store.variants(), store.selection(), axis, option) });
-      // A colour has its own photo; a size does not. Moving the gallery back to
-      // the variant's image is what makes the picker feel connected to it.
-      patchState(store, { shown: store.chosen()?.imageId ?? null });
+      // A colour has its own pictures; a size does not. The gallery is the
+      // chosen variant's, so going back to its first is forgetting the
+      // thumbnail pressed — which is what makes the picker feel connected to it.
+      patchState(store, { shown: null });
     },
     /** A thumbnail pressed: its image goes in front. */
     show(imageId: string): void {

@@ -298,6 +298,40 @@ public sealed class GetProductTests
     }
 
     /// <summary>
+    /// A variant's gallery is what the page shows when it is chosen
+    /// (`docs/analysis/catalogue-model.md`): the pictures that say they show its
+    /// colour, then the ones that are every variant's — and its one picture, for
+    /// a list, is the first of them.
+    /// </summary>
+    [Fact]
+    public async Task A_variant_carries_the_pictures_of_its_colour_and_then_the_ones_that_are_every_variants()
+    {
+        var shirt = AShirt();
+        var colour = shirt.Variants.First(variant => variant.AxisValues.ContainsKey("COLOR")).AxisValues["COLOR"];
+        shirt.AddImage(Clock, new ImageId("of-the-colour"));
+        shirt.Show(Clock, new ImageId("of-the-colour"), new Dictionary<string, string> { ["COLOR"] = colour });
+        string[] everyVariants = [.. shirt.Images.Where(image => image.Shows.Count == 0).OrderBy(image => image.SortOrder).Select(image => image.Id.Value)];
+
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
+
+        var (ofTheColour, others) = (
+            result!.Variants.Where(variant => variant.AxisValues.GetValueOrDefault("COLOR") == colour).ToList(),
+            result.Variants.Where(variant => variant.AxisValues.GetValueOrDefault("COLOR") != colour).ToList());
+        Assert.Equal((2, 1), (ofTheColour.Count, others.Count));
+        Assert.All(ofTheColour, variant =>
+        {
+            Assert.Equal(["of-the-colour", .. everyVariants], variant.ImageIds);
+            Assert.Equal("of-the-colour", variant.ImageId);
+        });
+        Assert.All(others, variant =>
+        {
+            Assert.Equal(everyVariants, variant.ImageIds);
+            Assert.Equal("cover", variant.ImageId);
+        });
+    }
+
+    /// <summary>
     /// The range comes from the AVAILABLE variants, which is what a card promises
     /// and what a page has to agree with.
     /// </summary>

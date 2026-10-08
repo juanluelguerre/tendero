@@ -21,6 +21,13 @@ recommended answer for each **as a starting point, to be corrected**:
 Each slice ends green and can be committed alone. Tests first; a hand mutation
 for whatever is written beside its test.
 
+**Where it is (2026-10-08): slices 1 to 4 built**, and the tag ruled by the
+author over the level (ADR 0057). One thing came out differently from what is
+written below: the import tells a picture what it shows **whether or not every
+image arrived** — a tag travels with its picture, where a place in a list did
+not — and a tag the aggregate refuses is logged and skipped. Slices 5 to 7 and
+proposal 2 are next.
+
 1. **The aggregate.** `ProductImage.Shows` — the axis values a picture shows, at
    most one an axis. `Product.Show(picture, values)` refuses an axis the product
    does not vary by and a value no live variant holds. `PicturesOf(variant)`:
@@ -50,7 +57,8 @@ for whatever is written beside its test.
    ruling before it is built: today a doubt changes nothing but itself.
 
 Deferred, with its reason: pictures' roles and kinds; a level between product
-and variant.
+and variant (ADR 0057, *Deferred, on purpose*, and the delivery plan's standing
+backlog).
 
 ## Proposal 2 · A category says what is required
 

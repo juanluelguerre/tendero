@@ -11003,7 +11003,8 @@
           "imageId",
           "discontinued",
           "inStock",
-          "remaining"
+          "remaining",
+          "imageIds"
         ],
         "type": "object",
         "properties": {
@@ -11047,6 +11048,12 @@
               "integer"
             ],
             "format": "int32"
+          },
+          "imageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

@@ -68,7 +68,7 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
         string? Brand,
         [property: JsonPropertyName("product_type")] string? ProductType,
         SeedPrice Price,
-        IReadOnlyList<string>? Images,
+        IReadOnlyList<SeedImageRow>? Images,
         IReadOnlyDictionary<string, string>? Attributes,
         [property: JsonPropertyName("available_from")] DateOnly? AvailableFrom,
         IReadOnlyList<SeedVariantRow>? Variants = null)
@@ -81,20 +81,47 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
             Category: ProductType,
             PriceAmount: Price.Amount,
             PriceCurrency: Price.Currency,
-            Images: (Images ?? []).Select(resolveImage).Select(location => new ExternalImage(location)).ToList(),
+            Images: (Images ?? []).Select(image => new ExternalImage(resolveImage(image.File), Shows: image.Shows)).ToList(),
             Attributes: Attributes ?? new Dictionary<string, string>(),
             AvailableFrom: AvailableFrom,
             Variants: Variants is { Count: > 0 }
-                ? [.. Variants.Select(variant => new ExternalVariant(variant.Sku, variant.Attributes ?? new Dictionary<string, string>(), variant.Image))]
+                ? [.. Variants.Select(variant => new ExternalVariant(variant.Sku, variant.Attributes ?? new Dictionary<string, string>()))]
                 : null);
     }
 
     /// <summary>
-    /// A way of buying the product: <c>sku</c> is what tells it apart, its
-    /// <c>attributes</c> are what it varies by in the file's own words, and
-    /// <c>image</c> is the place of its picture among the product's <c>images</c>.
+    /// A way of buying the product: <c>sku</c> is what tells it apart, and its
+    /// <c>attributes</c> are what it varies by in the file's own words.
     /// </summary>
-    private sealed record SeedVariantRow(string Sku, IReadOnlyDictionary<string, string>? Attributes, int? Image = null);
+    private sealed record SeedVariantRow(string Sku, IReadOnlyDictionary<string, string>? Attributes);
+
+    /// <summary>
+    /// One of the product's <c>images</c>: its file, and — when it is a picture
+    /// of some of its variants — what it <c>shows</c>, in the file's own words
+    /// (<c>{ "color": "negro" }</c>). Most are just a file, and the file may
+    /// still say so with a plain string.
+    /// </summary>
+    [JsonConverter(typeof(SeedImageRowConverter))]
+    private sealed record SeedImageRow(string File, IReadOnlyDictionary<string, string>? Shows = null);
+
+    /// <summary>Reads an image written either way: <c>"images/x.webp"</c> or <c>{ "file": "images/x.webp", "shows": { … } }</c>.</summary>
+    private sealed class SeedImageRowConverter : JsonConverter<SeedImageRow>
+    {
+        public override SeedImageRow Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.String)
+                return new SeedImageRow(reader.GetString()!);
+
+            using var document = JsonDocument.ParseValue(ref reader);
+            var image = document.RootElement;
+            return new SeedImageRow(
+                image.GetProperty("file").GetString()!,
+                image.TryGetProperty("shows", out var shows) ? shows.Deserialize<Dictionary<string, string>>(options) : null);
+        }
+
+        public override void Write(Utf8JsonWriter writer, SeedImageRow value, JsonSerializerOptions options) =>
+            throw new NotSupportedException("The seed is read, never written.");
+    }
 
     private sealed record SeedPrice(decimal Amount, string Currency);
 

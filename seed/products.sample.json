@@ -1859,9 +1859,24 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0711.webp",
-      "images/B13BAG0711-BLACK.webp",
-      "images/B13BAG0711-NAVY_BLUE.webp",
+      {
+        "file": "images/B13BAG0711.webp",
+        "shows": {
+          "color": "oliva"
+        }
+      },
+      {
+        "file": "images/B13BAG0711-BLACK.webp",
+        "shows": {
+          "color": "negro"
+        }
+      },
+      {
+        "file": "images/B13BAG0711-NAVY_BLUE.webp",
+        "shows": {
+          "color": "azul marino"
+        }
+      },
       "images/B13BAG0711-BACK.webp"
     ],
     "attributes": {
@@ -1874,22 +1889,19 @@
         "sku": "OLIVE",
         "attributes": {
           "color": "oliva"
-        },
-        "image": 0
+        }
       },
       {
         "sku": "BLACK",
         "attributes": {
           "color": "negro"
-        },
-        "image": 1
+        }
       },
       {
         "sku": "NAVY",
         "attributes": {
           "color": "azul marino"
-        },
-        "image": 2
+        }
       }
     ]
   },

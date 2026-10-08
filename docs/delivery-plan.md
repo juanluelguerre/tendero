@@ -918,6 +918,13 @@ what a microphone changes about the questions people ask. `#AIEngineering #RAG #
   ones a person rejects from now on), questions whose answers code compares with
   the product's attributes, and a recorded board per question that may not fall
   (`defects --ci`). It found the scene question blind, 0 of 28, and repaired it.
+  Added and built 2026-10-08, from the author's question about the model
+  itself ([`docs/analysis/catalogue-model.md`](analysis/catalogue-model.md)):
+  **a category declares its attributes** (ADR 0056) and **a picture says what
+  it shows** (ADR 0057) — a variant has no picture of its own, a colour's
+  gallery is derived, and the seed, the import, the API and a migration all
+  moved with it. Still open there: the storefront's gallery by colour, the
+  backoffice control, and *required* attributes by category (proposal 2).
 - **Proposed by the author on 2026-10-07, not scheduled: the catalogue grows,
   it does not change.** Looking at the pictures, the shop reads as bags and
   shoes; he asked for chairs, tables, beds, wardrobes, plants. Replacing
@@ -1016,6 +1023,7 @@ oversight, and each is a paragraph in some future article.
 
 | Item | Measured today | Enters when |
 |---|---|---|
+| **A level between product and variant** — the colour as a row of its own (`Product → Colour → Size`), as Zalando and Akeneo have | deferred by the author on 2026-10-08 (ADR 0057): the pictures of a colour are what that level was wanted for, and a tag on the picture gives them; one seed product in three colours, no colour with a price, a URL or a description of its own | A colour needs something of its own that is not a picture — its own page and SEO, price or promotion, description, or to be what a search result shows. The tags are the data it would be built from |
 | Outbox coalescing | 47 rows for 6 products (~8 events each); ~1.2M for the full 147k ABO set | A real import, or the outbox lag metric turns bad |
 | Bulk indexing | one HTTP call per product per culture | Same |
 | Reindex as a background job | fine for 6 products; the wrong shape for 147k | Same |

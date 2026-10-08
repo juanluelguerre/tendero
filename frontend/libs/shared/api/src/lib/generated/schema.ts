@@ -3247,6 +3247,7 @@ export interface components {
             inStock: boolean;
             /** Format: int32 */
             remaining: null | number;
+            imageIds: string[];
         };
         VectorLayerReport: {
             isConfigured: boolean;

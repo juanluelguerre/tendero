@@ -38,10 +38,6 @@ internal sealed class VariantConfiguration : IEntityTypeConfiguration<Variant>
         builder.Property(variant => variant.TaxClass).HasMaxLength(50);
         builder.Property(variant => variant.Status).HasConversion<string>().HasMaxLength(20);
 
-        builder.Property(variant => variant.Image)
-            .HasColumnName("ImageId")
-            .HasMaxLength(64);
-
         // The axes are a dictionary, which has no complex equivalent in EF: the
         // same jsonb converter as the product's attributes.
         builder.Property<Dictionary<string, string>>("axisValues")

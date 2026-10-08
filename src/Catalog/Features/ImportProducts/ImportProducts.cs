@@ -139,14 +139,14 @@ public sealed class ImportProductsHandler(
         if (existing is null)
         {
             var product = external.ToNewProduct(source, clock, definitions);
-            await IngestImagesAsync(product, external, cancellationToken);
+            await IngestImagesAsync(product, external, definitions, cancellationToken);
             repository.Add(product);
             tally.Created++;
         }
         else
         {
             external.ApplyTo(existing, clock, definitions);
-            await IngestImagesAsync(existing, external, cancellationToken);
+            await IngestImagesAsync(existing, external, definitions, cancellationToken);
             tally.Updated++;
         }
 
@@ -199,14 +199,20 @@ public sealed class ImportProductsHandler(
     /// lists arrived; a partial read only adds, because a CDN that times out
     /// once must not strip the photos off a live product.
     ///
-    /// **A variant's own picture is set here too** (phase 13a, I-4d), and only
-    /// when every image arrived: a variant names its picture by its place in the
-    /// source's list, and a list with one missing has no places to go by.
+    /// **What a picture shows is set here too** (phase 13a, I-4d;
+    /// `docs/analysis/catalogue-model.md`): each picture the source says shows a
+    /// variant — <c>color: negro</c> — is told so, by the catalogue's own words
+    /// for it. Each on its own, whether or not every image arrived: the picture
+    /// carries what it shows, not its place in a list. What the source does not
+    /// say, the product keeps, as with the alt text; and a picture said to show
+    /// what no variant is sold in is imported untagged, with a warning — a
+    /// source's mistake costs the tag, never the product.
     /// </summary>
     private async Task IngestImagesAsync(
-        Product product, ExternalProduct external, CancellationToken cancellationToken)
+        Product product, ExternalProduct external, AttributeDefinitions definitions, CancellationToken cancellationToken)
     {
         var ingested = new List<(ImageId Id, LocalizedText? Alt)>(external.Images.Count);
+        var shown = new List<(ImageId Id, IReadOnlyDictionary<string, string> Shows)>();
 
         foreach (var image in external.Images)
         {
@@ -215,24 +221,34 @@ public sealed class ImportProductsHandler(
                 continue;
 
             await using var stream = content.Content;
-            ingested.Add((await imageStore.SaveAsync(stream, content.ContentType, cancellationToken), image.LocalizedAlt));
+            var id = await imageStore.SaveAsync(stream, content.ContentType, cancellationToken);
+            ingested.Add((id, image.LocalizedAlt));
+            if (image.Shows is { Count: > 0 } shows)
+                shown.Add((id, shows));
         }
 
         if (ingested.Count == external.Images.Count)
         {
             product.ReplaceImages(clock, ingested);
-
-            foreach (var variant in external.Variants ?? [])
-            {
-                if (variant.Image is { } place && place >= 0 && place < ingested.Count)
-                    product.SetVariantImage(clock, ExternalProductMapper.SkuOf(external, variant), ingested[place].Id);
-            }
-
-            return;
+        }
+        else
+        {
+            foreach (var (id, alt) in ingested)
+                product.AddImage(clock, id, alt);
         }
 
-        foreach (var (id, alt) in ingested)
-            product.AddImage(clock, id, alt);
+        foreach (var (id, shows) in shown)
+        {
+            try
+            {
+                product.Show(clock, id, ExternalProductMapper.Coordinates(shows, definitions));
+            }
+            catch (InvalidOperationException refused)
+            {
+                logger.LogWarning(
+                    "A picture of {ExternalId} was imported without what it shows: {Reason}", external.ExternalId, refused.Message);
+            }
+        }
     }
 
     /// <summary>

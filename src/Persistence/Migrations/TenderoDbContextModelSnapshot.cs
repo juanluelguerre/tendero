@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261008090131_ProductImageShows";
+    public override string LastMigrationId => "20261008092743_VariantImageBecomesWhatAPictureShows";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -490,11 +490,6 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("uuid")
                     .HasColumnName("id");
-
-                b.Property<string>("Image")
-                    .HasMaxLength(64)
-                    .HasColumnType("character varying(64)")
-                    .HasColumnName("image_id");
 
                 b.Property<Guid?>("ProductId")
                     .HasColumnType("uuid")

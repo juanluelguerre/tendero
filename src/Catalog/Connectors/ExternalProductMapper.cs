@@ -66,6 +66,18 @@ public static class ExternalProductMapper
     public static string SkuOf(ExternalProduct external, ExternalVariant variant) => $"{external.ExternalId}-{variant.Key}";
 
     /// <summary>
+    /// The source's words for what a variant varies by, or for what a picture
+    /// shows, as the catalogue says them: the attribute's code and, for an
+    /// option, the option's. One place, so a variant and the picture of it land
+    /// on the same value.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> Coordinates(
+        IReadOnlyDictionary<string, string> words, AttributeDefinitions? definitions) =>
+        words
+            .Select(word => Resolve(word.Key, word.Value, definitions))
+            .ToDictionary(value => value.Code, value => value.Key, StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// The ways the product is bought. A source that tells none apart gets the
     /// default variant; one that does gets each of them, placed on the axes it
     /// varies by — the attribute codes its own words resolve to, in the order
@@ -89,9 +101,7 @@ public static class ExternalProductMapper
         var placed = declared
             .Select(variant => (
                 Sku: SkuOf(external, variant),
-                Coordinates: variant.Attributes
-                    .Select(attribute => Resolve(attribute.Key, attribute.Value, definitions))
-                    .ToDictionary(value => value.Code, value => value.Key, StringComparer.OrdinalIgnoreCase)))
+                Coordinates: Coordinates(variant.Attributes, definitions)))
             .ToList();
 
         string[] axes = [.. placed.SelectMany(variant => variant.Coordinates.Keys).Distinct(StringComparer.OrdinalIgnoreCase)];

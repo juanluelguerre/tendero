@@ -693,14 +693,19 @@ held by a schema to the attribute's options, compared by code.
 a picture shows one colour. So "is this picture the colour the catalogue says"
 can only be asked of a picture that is known to be *of* some variants.
 
-**What already exists.** The model is there and nothing reads it:
-`Variant.Image` is a variant's own picture, and null means *the product's*.
-So every picture already has an answer to "which variants does it show":
+**What it stands on — and it moved the same day** (ADR 0057). As first built,
+this read a model that was there and that nothing read: `Variant.Image`, a
+variant's own picture, with null meaning *the product's* — so a picture showed
+the variants that named it, and the cover those that named none. That answered
+the question backwards and guessed for the cover. **Now a picture says what it
+shows** (`ProductImage.Shows`, `COLOR: BLACK`):
 
-- a picture that is some variants' `Image` shows those variants;
-- the product's cover shows every variant that has no picture of its own;
-- any other picture of the gallery shows the product and no variant in
-  particular (a detail, the back, the box).
+- a picture that says a colour is held to that colour;
+- a picture that says nothing shows the product and no variant in particular (a
+  detail, the back, the box) and is held to none — the cover included, when the
+  product varies by colour;
+- the cover of a product that does not vary by colour and says its own is held
+  to it: that is every product an import brought in one colour.
 
 A picture **has a colour to be held to** when the variants it shows all hold
 the same `COLOR`. The seed today: 65 products declare one colour and have one
@@ -885,9 +890,29 @@ seen is one of them says so (`SeenOnAnotherVariant`), and the screen tells the
 person the picture may be that variant's. It informs the third decision and
 makes none.
 
+**The model under it, changed** (2026-10-08, ADR 0057;
+`docs/analysis/catalogue-model.md`, proposal 1). A variant no longer has a
+picture; a picture says the colour it shows, and a colour's gallery is derived
+— its own pictures, then the ones that say nothing.
+
+- The seed says it on the image: `{ "file": "images/B13BAG0711-BLACK.webp",
+  "shows": { "color": "negro" } }`, in the file's own words, and a plain string
+  is still an image that says nothing. `variants[].image` is gone.
+- The pannier, imported for real: olive, black and navy each say their colour,
+  the back says nothing, and black's gallery is its own picture and then the
+  back.
+- A database from before is migrated, not reset: each picture a variant named
+  now says that variant's colour — except a colour no longer sold and a picture
+  two colours both named, which say nothing (`VariantImageMigrationTests`).
+- The product's response keeps a variant's `imageId` and gains `imageIds`.
+- Thirteen hand mutations, all red — after one test was strengthened (a tag
+  given only when the gallery arrived whole had survived) and one written (a
+  cover held to a colour the product once said of itself).
+
 **Not built yet.** Applying *it belongs to another variant* from the doubt
-itself — it waits for the model to change: `docs/analysis/catalogue-model.md`
-proposes that a picture say what it shows, and then that decision is one tag.
+itself: it is now changing one tag, and needs its own ruling first — today a
+doubt changes nothing but itself. The storefront's gallery by colour and the
+backoffice control that says which colour a picture shows.
 The fourth decision, for uploads (I-6). And captures of the screen, parked
 until the page has stopped moving.
 

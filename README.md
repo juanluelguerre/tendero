@@ -101,6 +101,17 @@ catalogue and **buy** over MCP or UCP:
   stored with what it should have — no judge model
   ([docs/analysis/steward-models.md](docs/analysis/steward-models.md)). With no
   model answering, the backoffice is unchanged.
+- **Pictures, and a catalogue model that can hold them** (phase 13a, in
+  progress). The local model answers closed questions about a product's picture
+  — how many pieces, what colour — and code, not the model, writes the claim a
+  person approves; a colour it is sure does not match raises a *doubt* about the
+  picture, which is not a claim about the product. Two things in the model moved
+  to make that honest: **a category declares its products' attributes**, so a
+  bag is never offered a lamp's (ADR 0056), and **a picture says what it shows**
+  — `COLOR: BLACK` — so a variant has no picture of its own, a colour has as
+  many as say so, and every size of it shares them (ADR 0057;
+  [docs/analysis/catalogue-model.md](docs/analysis/catalogue-model.md) sets the
+  model beside Shopify's, Amazon's and Zalando's).
 - **The redesign.** The backoffice is organised by job — a side rail, one
   index-and-pane pattern for every list, a command palette — and its home is a
   dashboard of the whole shop at a glance: tabs per area, a full-screen wall,
@@ -720,7 +731,8 @@ deferred with its measured number — is
 | R | The redesign: backoffice by job, storefront navigation, the dashboard | 🚧 measured against a baseline walkthrough |
 | 12 | **Steward**, the backoffice copilot | ✅ it proposes commands a person approves, never prose; six typed reads owned by their contexts; a local model measured by a suite with no judge. The hosted profiles and the AI panel wait |
 | 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
-| 13 | Multimodal search and the kit solver | 🔜 |
+| 13a | Images: a model that reads a picture, claims and doubts from it, and the catalogue's model under them | 🚧 a category declares its attributes; a picture says what it shows |
+| 13 | Visual search and the kit solver | 🔜 |
 
 ## Blog series
 

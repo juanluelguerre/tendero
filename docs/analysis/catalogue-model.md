@@ -7,7 +7,11 @@ two changes — because the rest of the phase's work (a picture held to its
 variant's colour, attributes offered by category) sits on this model, and it is
 cheaper to move it now than after more is built on it.
 
-Nothing here is decided. Each proposal ends with what the author has to rule.
+**Ruled since** (2026-10-08): proposal 1 is taken as the tag on the picture and
+is built as far as the API — ADR 0057, which also records the level between
+product and variant as **deferred, not rejected**, and what would bring it back.
+Proposal 2 goes ahead on its proposed answers. Each proposal still ends with
+what was the author's to rule, and now says how it was ruled.
 
 ## The model as it is
 
@@ -147,7 +151,7 @@ Why this and not the alternatives:
 
 | Where | Today | After |
 |---|---|---|
-| `Product`, `Variant` | `Variant.Image`, `SetVariantImage` | `ProductImage.Shows`, `ShowIn(picture, values)`; `PicturesOf(variant)` |
+| `Product`, `Variant` | `Variant.Image`, `SetVariantImage` | `ProductImage.Shows`, `Show(picture, values)`; `PicturesOf(variant)`, `PictureOf(variant)` |
 | Persistence | a column on the variant | `shows` inside the gallery's JSON; a migration that turns each variant's `Image` into a tag of its colour on that picture, and drops the column |
 | Import (`ExternalVariant.Image`, added this week) | a variant names a place in the list | an image says what it shows (`ExternalImage.Shows`); the seed's `variants[].image` becomes `images[].shows` |
 | `GetProduct`, the cart, search's variant document, UCP's media | `variant.Image ?? cover` | `product.PictureOf(variant)` — one method, four callers |
@@ -174,11 +178,26 @@ record.
 ### The author's to rule
 
 1. Go with the tag on the picture, or the level between product and variant?
+   **Ruled 2026-10-08: the tag.** The level is deferred for a later phase —
+   ADR 0057 says why, what would bring it back (a colour needing a URL, a
+   price, a description or a search result of its own), and that a tag is
+   already the data such a level would be built from.
 2. A picture may show **one** value of an axis, or several (*navy and black
    together*)? One is simpler and is what every catalogue picture here is.
+   **Taken: one.**
 3. With pictures of a colour **and** untagged ones, does a colour's gallery end
    with the untagged, or are those shown only when the colour has none of its
    own? Proposed: it ends with them — a detail of the sole is every colour's.
+   **Taken: it ends with them.**
+
+### Built (2026-10-08)
+
+The aggregate, persistence with its migration, the four read paths, the import,
+the seed and the picture tool: `Variant.Image` is gone and nothing reads a
+variant's picture except through `Product.PictureOf` and `PicturesOf`. A
+variant in the API keeps `imageId` and gains `imageIds`. Still to build: the
+storefront showing a colour's gallery, the backoffice saying which colour a
+picture shows, and *it belongs to another variant* applied from the doubt.
 
 ---
 

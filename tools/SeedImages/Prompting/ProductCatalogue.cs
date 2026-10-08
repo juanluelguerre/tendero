@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ElGuerre.Tendero.SeedImages;
 
@@ -60,24 +61,28 @@ public static class ProductCatalogue
 
     /// <summary>
     /// What a row has to be drawn: the product, and one more picture for each
-    /// variant that names a picture of its own other than the cover. A product
-    /// sold in two colours says its colours on its variants and not on itself,
-    /// so the cover's colour is the colour of the variant that shows it.
+    /// picture after the cover that says it shows a colour. A product sold in
+    /// several colours says none on itself: each picture says the one it shows
+    /// (<c>"shows": { "color": "negro" }</c>), so the cover's colour is the
+    /// cover's own. A picture that says nothing — the back — is another view,
+    /// not a colour to make.
     /// </summary>
     private static IEnumerable<SeedProduct> Pictures(Row row)
     {
         var pieces = int.TryParse(row.Attributes?.GetValueOrDefault(PiecesKey), out var count) ? count : (int?)null;
-        string? ColourOf(int place) => row.Variants?.FirstOrDefault(variant => (variant.Image ?? 0) == place)?.Attributes?.GetValueOrDefault(ColourKey);
+        var images = row.Images ?? [];
+        static string? ColourOf(ImageRow image) => image.Shows?.GetValueOrDefault(ColourKey);
 
         yield return new SeedProduct(
-            row.ItemId, Text(row.Name), Text(row.Description), row.Attributes?.GetValueOrDefault(ColourKey) ?? ColourOf(0), pieces);
+            row.ItemId, Text(row.Name), Text(row.Description),
+            row.Attributes?.GetValueOrDefault(ColourKey) ?? (images is [var cover, ..] ? ColourOf(cover) : null), pieces);
 
-        foreach (var place in (row.Variants ?? []).Select(variant => variant.Image ?? 0).Where(place => place > 0).Distinct())
+        foreach (var image in images.Skip(1))
         {
-            if (row.Images is { } images && place < images.Count)
+            if (ColourOf(image) is { } colour)
             {
                 yield return new SeedProduct(
-                    Path.GetFileNameWithoutExtension(images[place]), Text(row.Name), Text(row.Description), ColourOf(place), pieces, VariantOf: row.ItemId);
+                    Path.GetFileNameWithoutExtension(image.File), Text(row.Name), Text(row.Description), colour, pieces, VariantOf: row.ItemId);
             }
         }
     }
@@ -90,8 +95,28 @@ public static class ProductCatalogue
         Dictionary<string, string>? Name,
         Dictionary<string, string>? Description,
         Dictionary<string, string>? Attributes,
-        List<string>? Images = null,
-        List<VariantRow>? Variants = null);
+        List<ImageRow>? Images = null);
 
-    private sealed record VariantRow(string Sku, Dictionary<string, string>? Attributes, int? Image = null);
+    /// <summary>One of a product's <c>images</c>: its file and, for a picture of some of its variants, what it shows.</summary>
+    [JsonConverter(typeof(ImageRowConverter))]
+    private sealed record ImageRow(string File, Dictionary<string, string>? Shows = null);
+
+    /// <summary>The seed writes an image either way: <c>"images/x.webp"</c> or <c>{ "file": "images/x.webp", "shows": { … } }</c>.</summary>
+    private sealed class ImageRowConverter : JsonConverter<ImageRow>
+    {
+        public override ImageRow Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.String)
+                return new ImageRow(reader.GetString()!);
+
+            using var document = JsonDocument.ParseValue(ref reader);
+            var image = document.RootElement;
+            return new ImageRow(
+                image.GetProperty("file").GetString()!,
+                image.TryGetProperty("shows", out var shows) ? shows.Deserialize<Dictionary<string, string>>(options) : null);
+        }
+
+        public override void Write(Utf8JsonWriter writer, ImageRow value, JsonSerializerOptions options) =>
+            throw new NotSupportedException("The seed is read, never written.");
+    }
 }

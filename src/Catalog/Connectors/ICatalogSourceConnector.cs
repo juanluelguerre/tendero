@@ -74,10 +74,7 @@ public sealed record ExternalProduct(
 /// <param name="Attributes">What it varies by, in the source's words — the same
 /// keys and values a product's attributes arrive in (<c>color: negro</c>), and
 /// resolved against the same definitions.</param>
-/// <param name="Image">Which of the product's <see cref="ExternalProduct.Images"/>
-/// shows this one, by its place in that list — or null when it has no picture of
-/// its own and the product's cover stands for it.</param>
-public sealed record ExternalVariant(string Key, IReadOnlyDictionary<string, string> Attributes, int? Image = null);
+public sealed record ExternalVariant(string Key, IReadOnlyDictionary<string, string> Attributes);
 
 /// <summary>
 /// An image as the source offers it. <see cref="Location"/> is a Uri on purpose:
@@ -89,9 +86,17 @@ public sealed record ExternalVariant(string Key, IReadOnlyDictionary<string, str
 /// it in our own store. The source may delete its copy whenever it likes (see
 /// docs/adr/0011-product-images.md).
 /// </summary>
+/// <param name="Shows">
+/// Which of the product's variants the picture shows, in the source's words —
+/// <c>color: negro</c> — or null when it shows the product and no variant in
+/// particular. **The picture says it, not the variant**
+/// (`docs/analysis/catalogue-model.md`): a colour may then have several, and
+/// every size of the colour has them.
+/// </param>
 public sealed record ExternalImage(
     Uri Location,
-    IReadOnlyDictionary<string, string>? Alt = null)
+    IReadOnlyDictionary<string, string>? Alt = null,
+    IReadOnlyDictionary<string, string>? Shows = null)
 {
     public LocalizedText? LocalizedAlt =>
         Alt is { Count: > 0 } ? new LocalizedText(Alt) : null;
