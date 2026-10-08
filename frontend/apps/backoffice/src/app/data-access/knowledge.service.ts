@@ -4,6 +4,9 @@ import type {
   ClaimApprovalsResponse,
   ClaimsForReviewPage,
   ClaimSupportFilter,
+  DecidePictureDoubtResponse,
+  PictureDoubtDecision,
+  PictureDoubtsPage,
   ReviewClaimResponse,
 } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
@@ -58,5 +61,22 @@ export class KnowledgeService {
    */
   decide(claimId: string, decision: ClaimDecision): Observable<ReviewClaimResponse> {
     return this.http.post<ReviewClaimResponse>(`${this.baseUrl}/api/knowledge/claims/${claimId}/${decision}`, {});
+  }
+
+  /** A page of the doubts about pictures that wait for a person, the oldest first, worded in the reader's language. */
+  pictureDoubts(page = 1, pageSize = 20, culture: string | null = null): Observable<PictureDoubtsPage> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (culture) params = params.set('culture', culture);
+    return this.http.get<PictureDoubtsPage>(`${this.baseUrl}/api/knowledge/picture-doubts`, { params });
+  }
+
+  /** What a person says of a doubted picture. It changes nothing but the doubt: the catalogue is theirs to correct. */
+  decideDoubt(doubtId: string, decision: PictureDoubtDecision): Observable<DecidePictureDoubtResponse> {
+    return this.http.post<DecidePictureDoubtResponse>(
+      `${this.baseUrl}/api/knowledge/picture-doubts/${doubtId}/decide`,
+      {
+        decision,
+      },
+    );
   }
 }

@@ -159,6 +159,7 @@
     "search": "Search quality",
     "stock": "Stock",
     "claims": "Claims",
+    "doubts": "Picture doubts",
     "dashboard": "Dashboard",
     "groups": {
       "home": "Home",
@@ -575,6 +576,21 @@
     "generating": "Generating…",
     "created": "{{count}} variants created",
     "back": "Back to the queue"
+  },
+  "doubts": {
+    "title": "Picture doubts",
+    "hint": "Pictures the model is sure show another colour than the catalogue holds. Nothing you decide here changes the catalogue or holds the product back: you say what is the matter with the picture, and replacing or moving it is done on its product.",
+    "loading": "Loading the doubts…",
+    "failed": "The doubts could not be loaded.",
+    "empty": "No picture is in doubt.",
+    "pictureAlt": "The doubted picture of {{product}}",
+    "seen": "The model sees {{seen}}; the catalogue says {{held}}.",
+    "sure": "Read by {{model}}, {{confidence}} sure.",
+    "decision": {
+      "PictureIsFine": "The picture is fine",
+      "ReplaceThePicture": "Replace the picture",
+      "BelongsToAnotherVariant": "It is of another variant"
+    }
   },
   "claims": {
     "title": "Claims to review",

@@ -211,7 +211,9 @@
       "question": "When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?",
       "decision": "Mostly 'the picture is fine' means the line is too low or two colours are one to the shop: raise PictureDoubt.SureDifference, or declare the two as mistaken for each other. A share of 'replace the picture' worth having is what would justify a doubt holding a picture back from being the cover.",
       "signals": [
-        "tendero.knowledge.picture_doubts.decided"
+        "tendero.knowledge.picture_doubts.decided",
+        "backoffice_view_opened",
+        "backoffice_action_taken"
       ]
     },
     {
@@ -580,6 +582,7 @@
             "review",
             "catalogue",
             "claims",
+            "doubts",
             "attributes",
             "search",
             "promotions",
@@ -608,6 +611,7 @@
             "review",
             "catalogue",
             "claims",
+            "doubts",
             "attributes",
             "search",
             "promotions",
@@ -630,6 +634,7 @@
             "import",
             "claim_approve",
             "claim_reject",
+            "doubt_decide",
             "order_ship",
             "order_deliver",
             "order_cancel",
@@ -815,6 +820,7 @@
             "review",
             "catalogue",
             "claims",
+            "doubts",
             "attributes",
             "search",
             "promotions",

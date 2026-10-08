@@ -132,6 +132,13 @@ export const appRoutes: Route[] = [
         loadComponent: () => import('./features/claims-review/claims-review-page').then((m) => m.ClaimsReviewPage),
       },
       {
+        // Pictures the model is sure show another colour than the catalogue holds (phase 13a, I-4d).
+        path: 'doubts',
+        title: 'doubts.title',
+        canActivate: [shopkeeper],
+        loadComponent: () => import('./features/picture-doubts/picture-doubts-page').then((m) => m.PictureDoubtsPage),
+      },
+      {
         // What Steward proposed (phase 12): the list of work behind the panel's
         // "Kept in Proposals", so nothing proposed is lost when the panel closes.
         path: 'steward/proposals',

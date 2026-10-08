@@ -1,0 +1,72 @@
+<ng-container *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('doubts.title') }}</h1>
+  </header>
+  <p class="page-hint">{{ t('doubts.hint') }}</p>
+
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [empty]="store.doubts().length === 0"
+    [loadingText]="t('doubts.loading')"
+    [failedText]="t('doubts.failed')"
+    [emptyText]="t('doubts.empty')"
+  >
+    <ul class="worklist-cards" role="list">
+      @for (doubt of store.doubts(); track doubt.doubtId) {
+        <li class="worklist-card">
+          <div class="col-span-2 flex flex-wrap items-start gap-4">
+            <figure
+              class="relative m-0 aspect-square w-col-xl flex-none overflow-hidden rounded-lg border border-hairline bg-raised"
+            >
+              <img
+                class="object-contain"
+                [ngSrc]="images.of(doubt.imageId)"
+                fill
+                [alt]="t('doubts.pictureAlt', { product: store.productName(doubt) })"
+              />
+            </figure>
+
+            <div class="grid min-w-0 flex-1 gap-2">
+              <p class="m-0 font-medium">{{ store.productName(doubt) }}</p>
+              <p class="m-0 text-sm">
+                {{ t('doubts.seen', { seen: doubt.seenLabel, held: doubt.heldLabel }) }}
+              </p>
+              <p class="m-0 text-xs text-muted">
+                {{ t('doubts.sure', { model: doubt.readBy, confidence: doubt.confidence | percent: '1.0-0' }) }}
+              </p>
+
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  class="button button--small button--quiet"
+                  [disabled]="store.busy() === doubt.doubtId"
+                  (click)="store.decide(doubt, 'PictureIsFine')"
+                >
+                  {{ t('doubts.decision.PictureIsFine') }}
+                </button>
+                <button
+                  type="button"
+                  class="button button--small button--quiet"
+                  [disabled]="store.busy() === doubt.doubtId"
+                  (click)="store.decide(doubt, 'ReplaceThePicture')"
+                >
+                  {{ t('doubts.decision.ReplaceThePicture') }}
+                </button>
+                <button
+                  type="button"
+                  class="button button--small button--quiet"
+                  [disabled]="store.busy() === doubt.doubtId"
+                  (click)="store.decide(doubt, 'BelongsToAnotherVariant')"
+                >
+                  {{ t('doubts.decision.BelongsToAnotherVariant') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+    <backoffice-pager [page]="store.page()" [pageSize]="pageSize" [total]="store.total()" (go)="store.go($event)" />
+  </backoffice-list-state>
+</ng-container>

@@ -159,6 +159,7 @@
     "search": "Calidad de búsqueda",
     "stock": "Stock",
     "claims": "Afirmaciones",
+    "doubts": "Dudas de imagen",
     "dashboard": "Panel",
     "groups": {
       "home": "Inicio",
@@ -575,6 +576,21 @@
     "generating": "Generando…",
     "created": "{{count}} variantes creadas",
     "back": "Volver a la cola"
+  },
+  "doubts": {
+    "title": "Dudas de imagen",
+    "hint": "Imágenes que el modelo está seguro de que muestran otro color que el del catálogo. Nada de lo que decidas aquí cambia el catálogo ni detiene el producto: dices qué pasa con la imagen y, si hay que cambiarla o moverla, se hace en su ficha.",
+    "loading": "Cargando las dudas…",
+    "failed": "No se han podido cargar las dudas.",
+    "empty": "Ninguna imagen está en duda.",
+    "pictureAlt": "Imagen en duda de {{product}}",
+    "seen": "El modelo ve {{seen}}; el catálogo dice {{held}}.",
+    "sure": "Leída por {{model}}, con una confianza del {{confidence}}.",
+    "decision": {
+      "PictureIsFine": "La imagen está bien",
+      "ReplaceThePicture": "Hay que sustituirla",
+      "BelongsToAnotherVariant": "Es de otra variante"
+    }
   },
   "claims": {
     "title": "Afirmaciones por revisar",

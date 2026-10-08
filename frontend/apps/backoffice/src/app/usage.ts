@@ -35,6 +35,7 @@ const Views: readonly BackofficeView[] = [
   'review',
   'catalogue',
   'claims',
+  'doubts',
   'attributes',
   'search',
   'promotions',
