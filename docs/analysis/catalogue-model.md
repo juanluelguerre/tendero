@@ -276,6 +276,38 @@ No migration: categories are read from their file.
    completeness and Google's feed have)? Proposed: two. A third level is a
    number nobody acts on until there is a channel that needs it.
 
+**Taken, all three as proposed** (2026-10-08, the author's *go ahead with
+proposals 1 and 2*): an incomplete product publishes with what it lacks shown,
+required starts from what every seed product of the category holds, and there
+are two levels.
+
+### Built (2026-10-08)
+
+ADR 0056 carries the amendment. `Category.Required`, `CategoryTree.RequiredOf`
+and `Product.MissingRequired`; the seed's declarations read as a code or as a
+code and its level; the gap `MissingRequiredAttribute`, each row saying what it
+lacks in the reader's language; the review's note before publishing.
+
+**What the rule gave on the seed** — an attribute a category declares, and how
+many of that category's seed products hold it:
+
+| Category | Required (all hold it) | Left expected (nearly all) |
+|---|---|---|
+| Clothing | colour 32/32 | size range 30, material 29, gender 26 |
+| Bags | material 13/13 | colour 12, capacity 11 |
+| Coffee makers | cups 5/5 | power 2 |
+| Desk lamps | colour temperature 11/11 | power 10 |
+| Knives | pieces 3/3 | — |
+
+Five required, and no seed product incomplete. The middle column is the
+author's to prune or extend: marking a bag's colour required would make the
+packing cubes — three colours, and so none — the catalogue's first incomplete
+product, which may be exactly what is wanted to see the screen work.
+
+Not built: a backoffice screen that edits the declarations; ordering the claims
+queue by what would complete a product; publishing held behind completeness —
+a ruling, not an omission.
+
 ---
 
 ## Order, and what it does to the phase

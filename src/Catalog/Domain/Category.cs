@@ -21,10 +21,16 @@ public sealed record CategoryChanged(string Code, DateTimeOffset OccurredAt) : I
 /// its own. That is what a product of the category is offered — to the extractor
 /// that reads its description, to the questions its picture is asked — and it
 /// is not a rule: a product may hold an attribute its category never declared.
+///
+/// **And which of them a product must have** (ADR 0056, amended): a declared
+/// attribute is *expected* or *required*. Required is still not a rule an
+/// import is refused by — a product without one is kept, and shown as
+/// incomplete (<see cref="Product.MissingRequired"/>).
 /// </summary>
 public sealed class Category : AggregateRoot
 {
     private readonly List<string> attributes = [];
+    private readonly List<string> required = [];
 
     public string Code { get; private set; } = default!;
     public LocalizedText Name { get; private set; } = default!;
@@ -48,11 +54,20 @@ public sealed class Category : AggregateRoot
     /// </summary>
     public IReadOnlyList<string> Attributes => this.attributes;
 
+    /// <summary>
+    /// Those of <see cref="Attributes"/> a product of this category must have,
+    /// as this category says it. What a product must have is these and its
+    /// ancestors': <see cref="CategoryTree.RequiredOf"/>.
+    /// </summary>
+    public IReadOnlyList<string> Required => this.required;
+
     private Category() { } // EF Core
 
+    /// <param name="required">The declared attributes a product must have. One named here and not in
+    /// <paramref name="attributes"/> is declared by being required: nothing is required that is not offered.</param>
     public static Category Define(
         TimeProvider clock, string code, LocalizedText name, Category? parent = null, int sortOrder = 0,
-        IEnumerable<string>? attributes = null)
+        IEnumerable<string>? attributes = null, IEnumerable<string>? required = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
 
@@ -69,7 +84,9 @@ public sealed class Category : AggregateRoot
             UpdatedAt = now
         };
 
-        category.attributes.AddRange((attributes ?? []).Select(AttributeDefinition.Normalise).Distinct(StringComparer.Ordinal));
+        category.required.AddRange((required ?? []).Select(AttributeDefinition.Normalise).Distinct(StringComparer.Ordinal));
+        category.attributes.AddRange(
+            (attributes ?? []).Select(AttributeDefinition.Normalise).Concat(category.required).Distinct(StringComparer.Ordinal));
 
         category.Raise(new CategoryChanged(normalised, now));
         return category;
@@ -126,6 +143,21 @@ public sealed class CategoryTree(IReadOnlyList<Category> categories)
 
         return declared.Length == 0 ? null : declared;
     }
+
+    /// <summary>
+    /// The attributes a product of this category must have: what its whole
+    /// branch says is required, root first, each code once (ADR 0056, amended).
+    ///
+    /// A category below can raise what an ancestor only expects, by requiring
+    /// it, and cannot lower what an ancestor requires — there is no way to say
+    /// *not required*, so the union is the rule. Empty, not null, when nobody
+    /// requires anything: unlike what is offered, *nothing is required* is an
+    /// answer, and it is what a catalogue with no declarations means.
+    /// </summary>
+    public IReadOnlyList<string> RequiredOf(string? code) =>
+        ByCode(code) is { } category
+            ? [.. category.Ancestry.SelectMany(ancestor => ByCode(ancestor)?.Required ?? []).Distinct(StringComparer.Ordinal)]
+            : [];
 
     /// <summary>
     /// A category's searchable text in one culture: the names of its whole

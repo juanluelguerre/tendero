@@ -49,7 +49,13 @@ public sealed record ProductForReview(
     /// by, each with the values a variant still sold holds. Empty for a product
     /// bought one way — its pictures have nothing to tell apart.
     /// </summary>
-    IReadOnlyList<ReviewedAxis> Axes);
+    IReadOnlyList<ReviewedAxis> Axes,
+    /// <summary>
+    /// What its category requires and it has no value for (ADR 0056, amended):
+    /// what a person sees before publishing an incomplete product. It does not
+    /// stop them.
+    /// </summary>
+    IReadOnlyList<MissingAttributeView> MissingRequired);
 
 /// <param name="Alt">Culture to text, as stored: a culture that is absent is a picture not described in it.</param>
 /// <param name="Shows">Axis code to the value the picture says it shows; empty for a picture of no variant in particular.</param>
@@ -138,7 +144,8 @@ public sealed class ReviewProductHandler(
                     image.Alt is { } alt ? AsStored(alt) : new Dictionary<string, string>(),
                     image.Shows.ToDictionary(shown => shown.Axis, shown => shown.Value, StringComparer.Ordinal))),
             ],
-            [.. product.VariantAxes.Select(axis => Axis(axis, attributes.ByCode(axis), product, query.Culture))]);
+            [.. product.VariantAxes.Select(axis => Axis(axis, attributes.ByCode(axis), product, query.Culture))],
+            ProductAttributes.Missing(product, tree, attributes, query.Culture));
     }
 
     /// <summary>

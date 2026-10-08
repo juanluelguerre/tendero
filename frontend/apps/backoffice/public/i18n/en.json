@@ -1008,6 +1008,10 @@
       "label": "Which {{axis}} it shows",
       "none": "None in particular: it is every variant's",
       "notShown": "Not saved: no variant on sale has that value."
+    },
+    "missingRequired": {
+      "title": "Missing what its category requires",
+      "hint": "It can still be published: it stays as incomplete in the catalogue's gaps."
     }
   },
   "palette": {
@@ -1186,6 +1190,7 @@
       "status": "Status",
       "price": "Price",
       "missingCultures": "No name in",
+      "lacks": "Lacks",
       "period": "Period",
       "revenue": "Revenue",
       "orders": "Orders",

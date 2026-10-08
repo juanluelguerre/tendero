@@ -1782,7 +1782,7 @@ export interface components {
             held: string;
         };
         /** @enum {unknown} */
-        CatalogueGap: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting";
+        CatalogueGap: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting" | "MissingRequiredAttribute";
         CatalogueGaps: {
             kind: components["schemas"]["CatalogueGap"];
             culture: null | string;
@@ -1963,6 +1963,7 @@ export interface components {
             code: string;
             name: string;
             status: components["schemas"]["ProductStatus"];
+            lacks: string[];
         };
         HistorySettingsRequest: {
             enabled: boolean;
@@ -2087,6 +2088,10 @@ export interface components {
         MergeHistoryRequest: {
             views: null | components["schemas"]["ViewedProduct"][];
             searches: null | components["schemas"]["PastSearch"][];
+        };
+        MissingAttributeView: {
+            code: string;
+            label: string;
         };
         MoveOrderRequest: {
             move: components["schemas"]["OrderMove"];
@@ -2399,6 +2404,7 @@ export interface components {
             updatedAt: string;
             images: components["schemas"]["ReviewedImage"][];
             axes: components["schemas"]["ReviewedAxis"][];
+            missingRequired: components["schemas"]["MissingAttributeView"][];
         };
         ProductImageView: {
             imageId: string;
@@ -4086,7 +4092,7 @@ export interface operations {
     ListCatalogueGaps: {
         parameters: {
             query: {
-                kind: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting";
+                kind: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting" | "MissingRequiredAttribute";
                 culture?: string;
                 limit?: number;
             };

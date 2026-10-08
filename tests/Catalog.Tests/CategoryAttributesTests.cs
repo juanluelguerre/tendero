@@ -61,6 +61,115 @@ public sealed class CategoryAttributesTests
         Assert.Null(Tree().AttributesOf(category));
     }
 
+    // ---------- required (ADR 0056, amended) ----------
+
+    /// <summary>
+    /// Home requires a material and expects a colour; cookware, below it,
+    /// requires its pieces and — raising what its ancestor only expects — a
+    /// colour; bags declare and require nothing of their own.
+    /// </summary>
+    private static CategoryTree Requiring()
+    {
+        var home = Category.Define(Clock, "HOME", Text("Hogar", "Home"), attributes: ["COLOR"], required: ["material"]);
+        var kitchen = Category.Define(Clock, "KITCHEN", Text("Cocina", "Kitchen"), home);
+        var cookware = Category.Define(Clock, "COOKWARE", Text("Menaje", "Cookware"), kitchen, required: ["PIECES", "COLOR"]);
+        var bags = Category.Define(Clock, "BAGS", Text("Bolsas", "Bags"), attributes: ["MATERIAL"]);
+        return new CategoryTree([home, kitchen, cookware, bags]);
+    }
+
+    /// <summary>A required attribute is a declared one: nothing is required that is not offered.</summary>
+    [Fact]
+    public void A_category_says_which_of_its_attributes_a_product_must_have()
+    {
+        var home = Requiring().ByCode("HOME")!;
+
+        Assert.Equal(["MATERIAL"], home.Required);
+        Assert.Equal(["COLOR", "MATERIAL"], home.Attributes);
+        Assert.Empty(Requiring().ByCode("BAGS")!.Required);
+    }
+
+    /// <summary>
+    /// Inherited down the branch, root first, each code once. A category below
+    /// raises what an ancestor only expects and cannot lower what it requires.
+    /// And *nothing is required* is an answer, not an absence: empty, never null.
+    /// </summary>
+    [Fact]
+    public void What_is_required_is_the_whole_branchs_and_a_descendant_only_raises_it()
+    {
+        var tree = Requiring();
+
+        Assert.Equal(["MATERIAL", "PIECES", "COLOR"], tree.RequiredOf("COOKWARE"));
+        Assert.Equal(["MATERIAL"], tree.RequiredOf("KITCHEN"));
+        Assert.Empty(tree.RequiredOf("BAGS"));
+        Assert.Empty(tree.RequiredOf("NOT_A_CATEGORY"));
+        Assert.Empty(tree.RequiredOf(null));
+    }
+
+    private static Product In(string? category, params string[] holds)
+    {
+        var product = Product.Create(Clock, Text("Sartén", "Pan"), new Money(10m, "EUR"), category: category);
+        foreach (var code in holds)
+            product.SetAttribute(Clock, AttributeValue.Plain(code, "x"));
+        return product;
+    }
+
+    [Fact]
+    public void A_product_lacks_what_its_category_requires_and_it_has_no_value_for()
+    {
+        var tree = Requiring();
+
+        Assert.Equal(["MATERIAL", "PIECES", "COLOR"], In("COOKWARE").MissingRequired(tree));
+        Assert.Equal(["PIECES"], In("COOKWARE", "material", "COLOR").MissingRequired(tree));
+        Assert.Empty(In("COOKWARE", "MATERIAL", "PIECES", "COLOR").MissingRequired(tree));
+        // Nothing is asked of a product with no category, or of one whose category nobody declared.
+        Assert.Empty(In(null).MissingRequired(tree));
+        Assert.Empty(In("GIFTS").MissingRequired(tree));
+        Assert.Empty(In("COOKWARE").MissingRequired(CategoryTree.Empty));
+    }
+
+    /// <summary>
+    /// A pan in two colours says no colour of its own: its variants say it, and
+    /// it is not missing one. Once nobody sells a colour any more, it is.
+    /// </summary>
+    [Fact]
+    public void An_axis_counts_as_held_while_a_variant_still_sold_holds_it()
+    {
+        var pan = In("COOKWARE", "MATERIAL", "PIECES");
+        pan.DefineAxes(Clock, ["COLOR"]);
+        pan.AddVariant(Clock, "PAN-BLACK", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+
+        Assert.Empty(pan.MissingRequired(Requiring()));
+
+        pan.DiscontinueVariant(Clock, "PAN-BLACK");
+
+        Assert.Equal(["COLOR"], pan.MissingRequired(Requiring()));
+    }
+
+    /// <summary>The file says it either way: a plain code is expected, as it always was; an object may say required.</summary>
+    [Fact]
+    public async Task The_file_declares_an_attribute_as_a_code_or_as_a_code_and_its_level()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"tendero-categories-{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(file,
+            """
+            [
+              { "code": "HOME", "name": { "es": "Hogar" },
+                "attributes": [ "COLOR", { "code": "MATERIAL", "required": true }, { "code": "PIECES" }, { "code": "CUPS", "required": false } ] }
+            ]
+            """, TestContext.Current.CancellationToken);
+        try
+        {
+            var home = (await CategorySeedFile.LoadAsync(file, Clock, TestContext.Current.CancellationToken)).ByCode("HOME")!;
+
+            Assert.Equal(["COLOR", "MATERIAL", "PIECES", "CUPS"], home.Attributes);
+            Assert.Equal(["MATERIAL"], home.Required);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
     // ---------- the seed the repository ships ----------
 
     private static string Seed(string file)
@@ -118,6 +227,37 @@ public sealed class CategoryAttributesTests
         }
 
         Assert.Empty(undeclared.Distinct());
+    }
+
+    /// <summary>
+    /// **The seed starts complete.** What a seed category requires is what every
+    /// seed product of it already holds — on itself or on its variants — so the
+    /// first incomplete product the shop sees is a real one, and a declaration
+    /// that no seed product could meet is caught here and not on a dashboard.
+    /// </summary>
+    [Fact]
+    public async Task No_seed_product_lacks_what_its_category_requires_and_the_seed_does_require()
+    {
+        var (tree, definitions) = await SeedCatalogue();
+        using var products = JsonDocument.Parse(await File.ReadAllTextAsync(Seed("products.sample.json"), TestContext.Current.CancellationToken));
+
+        List<string> lacking = [];
+        foreach (var product in products.RootElement.EnumerateArray())
+        {
+            var type = product.GetProperty("product_type").GetString();
+            var words = product.GetProperty("attributes").EnumerateObject().Select(attribute => attribute.Name).ToList();
+            if (product.TryGetProperty("variants", out var variants))
+                words.AddRange(variants.EnumerateArray().SelectMany(variant => variant.GetProperty("attributes").EnumerateObject()).Select(attribute => attribute.Name));
+            var held = words.Select(word => definitions.ForSourceKey(word)?.Code).ToHashSet();
+
+            lacking.AddRange(tree.RequiredOf(type).Where(code => !held.Contains(code)).Select(code => $"{product.GetProperty("item_id").GetString()}: {code}"));
+        }
+
+        Assert.Empty(lacking);
+        // And it is not empty by saying nothing: five attributes are required today.
+        Assert.Equal(
+            ["APPAREL: COLOR", "BAGS: MATERIAL", "COFFEE_MAKER: CUPS", "DESK_LAMP: COLOUR_TEMPERATURE", "KNIVES: PIECES"],
+            tree.All.SelectMany(category => category.Required.Select(code => $"{category.Code}: {code}")).Order(StringComparer.Ordinal));
     }
 
     /// <summary>The reason this exists (phase 13a): a pair of shoes is not two pieces, and footwear does not declare them.</summary>

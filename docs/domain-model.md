@@ -81,6 +81,7 @@ classDiagram
         +int SortOrder
         +DateTimeOffset UpdatedAt
         +string[] Attributes
+        +string[] Required
         +string[] Ancestry
     }
     class CategoryTree {

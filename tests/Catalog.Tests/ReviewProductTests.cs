@@ -112,6 +112,28 @@ public sealed class ReviewProductTests
         Assert.Equal([("L", "L"), ("S", "S")], review.Axes[1].Options.Select(option => (option.Code, option.Label)));
     }
 
+    /// <summary>
+    /// What a draft lacks of what its category requires (ADR 0056, amended), by
+    /// its label in the culture asked for: what a person sees before publishing
+    /// an incomplete product. A product that has it all lacks nothing.
+    /// </summary>
+    [Fact]
+    public async Task Says_what_the_product_lacks_of_what_its_category_requires()
+    {
+        var shirt = Product.Create(Clock, LocalizedText.From("es", "Camiseta"), new Money(24m, "EUR"), category: "CLOTHING");
+        var whole = Product.Create(Clock, LocalizedText.From("es", "Sudadera"), new Money(40m, "EUR"), category: "CLOTHING");
+        whole.SetAttribute(Clock, AttributeValue.Plain("MATERIAL", "algodón"));
+        var material = AttributeDefinition.Define(Clock, "MATERIAL", LocalizedText.Both("material", "tejido"), AttributeKind.Text);
+        var handler = new ReviewProductHandler(
+            new InMemoryProductCatalogReader(shirt, whole), new DefinitionsOf(material), new Categories(required: ["MATERIAL"]));
+
+        var lacking = (await handler.HandleAsync(new ReviewProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken))!;
+        var complete = (await handler.HandleAsync(new ReviewProductQuery(whole.Code, "es"), TestContext.Current.CancellationToken))!;
+
+        Assert.Equal([("MATERIAL", "tejido")], lacking.MissingRequired.Select(missing => (missing.Code, missing.Label)));
+        Assert.Empty(complete.MissingRequired);
+    }
+
     [Fact]
     public async Task A_product_bought_one_way_has_no_axes_for_a_picture_to_show()
     {
@@ -164,13 +186,13 @@ public sealed class ReviewProductTests
             Task.FromResult(new AttributeDefinitions(definitions));
     }
 
-    private sealed class Categories : ICategoryReader
+    private sealed class Categories(string[]? required = null) : ICategoryReader
     {
         public Task<CategoryTree> AllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(new CategoryTree(
             [
                 Category.Define(Clock, "CLOTHING",
-                    new LocalizedText(new Dictionary<string, string> { ["es"] = "Ropa", ["en"] = "Clothing" })),
+                    new LocalizedText(new Dictionary<string, string> { ["es"] = "Ropa", ["en"] = "Clothing" }), required: required),
             ]));
     }
 }

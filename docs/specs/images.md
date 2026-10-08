@@ -687,6 +687,14 @@ held by a schema to the attribute's options, compared by code.
   gated, until its own floors are written.
 - **Owed**: those floors; facets by category; a screen to edit the declarations.
 
+**Amended the same day: required.** A declaration now says whether a product
+*must* have the attribute (ADR 0056's amendment;
+`docs/analysis/catalogue-model.md`, proposal 2). Nothing a picture is asked
+changes — it is still asked what its category declares and a picture shows —
+but a product can now be *incomplete*: a kind of catalogue gap, a note on the
+review, never a refusal. Five attributes are required in the seed, the ones
+every product of the category already holds.
+
 ### I-4d · What a picture is of — a variant's colour, and a doubt that is not a claim (spec and built, 2026-10-08)
 
 **The question.** A product's colour is its variants' (`COLOR` is an axis), and

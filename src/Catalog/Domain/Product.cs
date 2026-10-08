@@ -275,6 +275,28 @@ public sealed class Product : AggregateRoot
         this.attributes.FirstOrDefault(value =>
             string.Equals(value.Code, code, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>
+    /// The attributes its category requires and it has no value for (ADR 0056,
+    /// amended) — what makes it *incomplete*. It is told, never refused: an
+    /// incomplete product is imported, kept and may be published, with what it
+    /// lacks shown.
+    ///
+    /// **An axis counts as held when a variant still sold holds it.** A shirt in
+    /// two colours says no colour of its own — its variants say it — and it is
+    /// not missing one.
+    /// </summary>
+    public IReadOnlyList<string> MissingRequired(CategoryTree tree)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+
+        return
+        [
+            .. tree.RequiredOf(Category).Where(code =>
+                AttributeFor(code) is null &&
+                !Sold.Any(variant => variant.AxisValues.Keys.Contains(code, StringComparer.OrdinalIgnoreCase))),
+        ];
+    }
+
     // Idempotent by content identity: re-importing the same photo does not
     // duplicate it, because the content hash IS the key.
     public void AddImage(TimeProvider clock, ImageId id, LocalizedText? alt = null)

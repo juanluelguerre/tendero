@@ -107,7 +107,9 @@ catalogue and **buy** over MCP or UCP:
   person approves; a colour it is sure does not match raises a *doubt* about the
   picture, which is not a claim about the product. Two things in the model moved
   to make that honest: **a category declares its products' attributes**, so a
-  bag is never offered a lamp's (ADR 0056), and **a picture says what it shows**
+  bag is never offered a lamp's, and says which of them a product must have —
+  a product without one is *incomplete*, shown and never refused (ADR 0056) —
+  and **a picture says what it shows**
   — `COLOR: BLACK` — so a variant has no picture of its own, a colour has as
   many as say so, and every size of it shares them (ADR 0057;
   [docs/analysis/catalogue-model.md](docs/analysis/catalogue-model.md) sets the

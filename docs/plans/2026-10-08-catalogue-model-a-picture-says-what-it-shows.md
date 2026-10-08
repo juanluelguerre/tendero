@@ -29,7 +29,7 @@ not — and a tag the aggregate refuses is logged and skipped. Slice 5 is the
 product store's `gallery`: the chosen variant's `imageIds`, the product's own
 when it has none. Slice 6 is a slice of its own, `SetImageShows`, and a control
 an axis beside each picture of the product's review, offering only what a
-variant still sold holds. Slice 7 waits for its ruling; proposal 2 is next.
+variant still sold holds. Slice 7 waits for its ruling.
 
 1. **The aggregate.** `ProductImage.Shows` — the axis values a picture shows, at
    most one an axis. `Product.Show(picture, values)` refuses an axis the product
@@ -64,6 +64,10 @@ and variant (ADR 0057, *Deferred, on purpose*, and the delivery plan's standing
 backlog).
 
 ## Proposal 2 · A category says what is required
+
+**Built 2026-10-08, all four slices**, on the proposed answers. The seed's rule
+marked five attributes; the review's note and the gap's third column were added
+to what is listed below.
 
 1. **The declaration.** A declared attribute is a code and a level; a plain
    code in the seed still reads as *expected*. `CategoryTree.RequiredOf`,

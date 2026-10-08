@@ -6,7 +6,10 @@
       "en": "Clothing"
     },
     "attributes": [
-      "COLOR",
+      {
+        "code": "COLOR",
+        "required": true
+      },
       "SIZE",
       "SIZE_RANGE",
       "GENDER",
@@ -92,7 +95,10 @@
       "en": "Coffee makers"
     },
     "attributes": [
-      "CUPS",
+      {
+        "code": "CUPS",
+        "required": true
+      },
       "POWER_W",
       "INDUCTION",
       "CAPACITY_L"
@@ -114,7 +120,10 @@
       "en": "Desk and reading lamps"
     },
     "attributes": [
-      "COLOUR_TEMPERATURE",
+      {
+        "code": "COLOUR_TEMPERATURE",
+        "required": true
+      },
       "POWER_W",
       "PIECES"
     ]
@@ -127,7 +136,10 @@
     },
     "attributes": [
       "COLOR",
-      "MATERIAL",
+      {
+        "code": "MATERIAL",
+        "required": true
+      },
       "CAPACITY_L",
       "LAPTOP_MAX_IN"
     ]
@@ -188,7 +200,10 @@
       "en": "Knives"
     },
     "attributes": [
-      "PIECES"
+      {
+        "code": "PIECES",
+        "required": true
+      }
     ]
   },
   {

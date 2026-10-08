@@ -1,4 +1,4 @@
-# 0056 — A category declares its products' attributes: inherited down the branch, offered and never enforced
+# 0056 — A category declares its products' attributes: inherited down the branch, offered and never enforced — and, since its amendment, which of them a product must have
 
 **Status**: accepted (phase 13a, 2026-10-08; proposed to the author on 2026-10-07 after the extractor typed a strap's grey as a lamp's colour temperature, and built on his go-ahead)
 
@@ -77,3 +77,45 @@ one tree, and Shopify's shape is the one that fits with nothing added.
   products, the 4B): precision 0.91 → 0.94, recall 0.82 → 0.85, typed right
   0.88 → 0.94, verbatim 0.984 → 1.000, one more spurious claim. Its own floors
   are owed before it gates.
+
+## Amended 2026-10-08 — a declaration carries how much it is wanted
+
+*Offered, never enforced* could not say that a pan with no material is
+**incomplete**: every declared attribute was equally optional, so the catalogue
+could not tell a finished product from one that arrived half described, and the
+review showed a draft without saying what it lacked
+(`docs/analysis/catalogue-model.md`, proposal 2; the author's go-ahead the same
+day, on the proposed answers).
+
+- **Two levels: required and expected.** A declared attribute is *expected*, as
+  it was; a category may say it is *required*
+  (`{ "code": "MATERIAL", "required": true }` in the seed, a plain code still
+  meaning expected). Not three: *recommended* is a number nobody acts on until
+  there is a channel that needs it.
+- **Inherited, and only raised.** `CategoryTree.RequiredOf` is what the whole
+  branch requires. A category below raises what an ancestor only expects by
+  requiring it; there is no way to say *not required*, so nothing an ancestor
+  requires is lowered. A required attribute is declared by being required:
+  nothing is required that is not offered.
+- **Still never enforced.** A product without a required attribute is imported,
+  kept and **may be published** — it is *incomplete*, and said to be:
+  `Product.MissingRequired(tree)`, a new kind of catalogue gap
+  (`MissingRequiredAttribute`, which Steward's `catalogue_gaps` reads, each row
+  saying what it lacks), and a note on the product's review before it is
+  published. Amazon's answer — refuse the listing — is a guard on
+  `PublishProduct`, one line and a different product: a shop whose imports
+  arrive wrong needs to see them, not lose them.
+- **An axis counts as held while a variant still sold holds it.** A shirt in two
+  colours says no colour of its own.
+- **The seed starts complete.** What a seed category requires is what every one
+  of its seed products already holds — five attributes today: a garment's
+  colour, a bag's material, a coffee maker's cups, a lamp's colour temperature,
+  a knife set's pieces — and a test holds it. The first incomplete product the
+  shop sees is then a real one. The list is the author's to prune or extend;
+  the nearly-universal ones were left *expected* on purpose (a bag's colour,
+  12 of 13: the packing cubes are three colours and say none).
+- **Evidence of use** (ADR 0036): the gap is read through `catalogue_gaps`,
+  whose calls are already counted by tool and argument; nothing new is emitted.
+- **Not measured**: Steward's suite was not run again after its tool's
+  description gained the kind. It needs the GPU and is owed before the phase
+  closes.

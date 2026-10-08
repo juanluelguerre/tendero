@@ -41,6 +41,21 @@
       </div>
     </dl>
 
+    @if (product.missingRequired.length > 0) {
+      <!-- What its category requires and it has no value for (ADR 0056, amended).
+           It is said before publishing and does not stop it: an incomplete
+           product is the shopkeeper's call, and the catalogue's gaps keep it. -->
+      <section class="grid gap-1" role="note" data-test="missing-required">
+        <h3 class="eyebrow text-warning">{{ t('missingRequired.title') }}</h3>
+        <ul class="m-0 flex list-none flex-wrap gap-1 p-0">
+          @for (missing of product.missingRequired; track missing.code) {
+            <li class="tag">{{ missing.label }}</li>
+          }
+        </ul>
+        <p class="m-0 text-3xs text-muted">{{ t('missingRequired.hint') }}</p>
+      </section>
+    }
+
     @for (culture of cultures; track culture) {
       <section class="grid gap-1">
         <h3 class="eyebrow">{{ t('culture.' + culture) }}</h3>
@@ -66,8 +81,10 @@
       <section class="grid gap-2">
         <h3 class="eyebrow">{{ t('altText.title') }}</h3>
         <p class="m-0 text-3xs text-muted">{{ t('altText.hint') }}</p>
-        @for (draft of altsForm; track $index) {
+        @for (draft of altsForm; track $index; let at = $index) {
           @let picture = alts()[$index];
+          <!-- The picture as stored, by its place: inside the axes' loop `$index` is the axis's. -->
+          @let stored = product.images[at];
           <div class="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
             <span class="relative size-control-xl overflow-hidden rounded-md border border-hairline bg-raised">
               <img class="object-contain" [ngSrc]="images.of(picture.id)" fill alt="" />
@@ -106,16 +123,13 @@
                   <select
                     class="field"
                     [disabled]="store.showing() === picture.id"
-                    (change)="show(product.productId, $index, axis.code, $any($event.target).value)"
+                    (change)="show(product.productId, at, axis.code, $any($event.target).value)"
                   >
-                    <option value="" [selected]="!product.images[$index].shows[axis.code]">
+                    <option value="" [selected]="!stored.shows[axis.code]">
                       {{ t('shows.none') }}
                     </option>
                     @for (option of axis.options; track option.code) {
-                      <option
-                        [value]="option.code"
-                        [selected]="product.images[$index].shows[axis.code] === option.code"
-                      >
+                      <option [value]="option.code" [selected]="stored.shows[axis.code] === option.code">
                         {{ option.label }}
                       </option>
                     }

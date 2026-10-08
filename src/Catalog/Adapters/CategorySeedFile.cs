@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
@@ -53,7 +54,10 @@ public static class CategorySeedFile
         foreach (var entry in raw)
         {
             var parent = entry.Parent is null ? null : built.GetValueOrDefault(entry.Parent);
-            var category = Category.Define(clock, entry.Code, new LocalizedText(entry.Name), parent, attributes: entry.Attributes);
+            var category = Category.Define(
+                clock, entry.Code, new LocalizedText(entry.Name), parent,
+                attributes: entry.Attributes.Select(declared => declared.Code),
+                required: entry.Attributes.Where(declared => declared.Required).Select(declared => declared.Code));
             built[category.Code] = category;
         }
 
@@ -63,6 +67,32 @@ public static class CategorySeedFile
     private sealed record SeedCategory(string Code, Dictionary<string, string> Name, string? Parent = null)
     {
         /// <summary>The attributes this category declares for itself (ADR 0056); its ancestors' are not repeated.</summary>
-        public List<string> Attributes { get; init; } = [];
+        public List<SeedDeclaration> Attributes { get; init; } = [];
+    }
+
+    /// <summary>
+    /// One declared attribute: a plain code, which is *expected*, or
+    /// <c>{ "code": "MATERIAL", "required": true }</c>. The plain form stays
+    /// valid, so a file written before there were levels means what it meant.
+    /// </summary>
+    [JsonConverter(typeof(SeedDeclarationConverter))]
+    private sealed record SeedDeclaration(string Code, bool Required = false);
+
+    private sealed class SeedDeclarationConverter : JsonConverter<SeedDeclaration>
+    {
+        public override SeedDeclaration Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.String)
+                return new SeedDeclaration(reader.GetString()!);
+
+            using var document = JsonDocument.ParseValue(ref reader);
+            var declared = document.RootElement;
+            return new SeedDeclaration(
+                declared.GetProperty("code").GetString()!,
+                declared.TryGetProperty("required", out var required) && required.GetBoolean());
+        }
+
+        public override void Write(Utf8JsonWriter writer, SeedDeclaration value, JsonSerializerOptions options) =>
+            throw new NotSupportedException("The seed is read, never written.");
     }
 }

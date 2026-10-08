@@ -1008,6 +1008,10 @@
       "label": "Qué {{axis}} muestra",
       "none": "Ninguno en particular: es de todas las variantes",
       "notShown": "No se guardó: ninguna variante en venta tiene ese valor."
+    },
+    "missingRequired": {
+      "title": "Le falta lo que su categoría pide",
+      "hint": "Se puede publicar igualmente: queda como incompleto en los huecos del catálogo."
     }
   },
   "palette": {
@@ -1186,6 +1190,7 @@
       "status": "Estado",
       "price": "Precio",
       "missingCultures": "Sin nombre en",
+      "lacks": "Le falta",
       "period": "Periodo",
       "revenue": "Ingresos",
       "orders": "Pedidos",
