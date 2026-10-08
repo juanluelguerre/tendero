@@ -48,4 +48,5 @@ dos idiomas y la especificación (1400 × 1400, WebP, ≤ 120 KB), en
 | `B13BAG0709.webp` | Neceser de viaje Aseo |
 | `B13BAG0710.webp` | Funda para portatil de 14 pulgadas |
 | `B13BAG0711.webp` | Alforja de bicicleta impermeable 20L |
+| `B13BAG0711-BLACK.webp` | Alforja de bicicleta impermeable 20L, en negro: la imagen de su variante, hecha a partir de la oliva cambiando solo el color (`recolour`) |
 | `B13BAG0712.webp` | Organizadores de equipaje, juego de 3 |

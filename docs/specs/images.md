@@ -786,11 +786,58 @@ with two colours and a picture of each.
   forest green came at 0.62 and raises nothing; **grey for the black felt
   sleeve at 0.94 is the one doubt**.
 
-**Not built yet.** The seed's product with two colours: an import brings one
-way of being bought, so the seed has no way to say two variants and a picture
-of each — it needs the connector's format to carry variants, and three or four
-pictures drawn and accepted by a person. Until then *it belongs to another
-variant* is a decision no data exercises. And captures of the screen.
+**The seed's product in two colours (built the same day).**
+
+- **A source can tell its variants apart.** `ExternalProduct.Variants`: what
+  tells each apart in the source's SKU, what it varies by in the source's own
+  words, and which of the product's images is its own, by its place in the
+  list. The mapper places each on the axes those words resolve to and declares
+  the axes first; a product whose source tells none apart still gets its
+  default variant. A default variant an earlier import left is retired when the
+  source starts telling colours apart — the aggregate already did that for the
+  shopkeeper's own matrix. A variant's picture is set only when every image
+  arrived: with one missing, the list has no places to go by.
+- **The seed file says it** (`variants`, in `products.sample.json`): the bike
+  pannier `B13BAG0711`, olive and black, each with its picture. The colour is
+  the variants' to say, so the product no longer says one of its own; its stock
+  and both tariffs carry a row for each SKU. Chosen for being the least judged
+  of the candidates in the search golden set — and the relevance gate still
+  passes (lexical: en 0.748 against 0.730, es 0.692 against 0.670).
+- **The catalogue is still a hundred products.** One of them now has two
+  pictures; the picture tool reads a variant's picture as one more to draw,
+  named for its file and in that variant's colour.
+- **The black picture is the olive one in another colour, not a second
+  drawing** (the author's ruling: *the two have to be the same and only the
+  colour change*). Drawn from the description, the first was a flat silhouette
+  and the second a detailed bag — another bag. So the tool gained what the
+  hosted model is in fact for: it is shown the picture that exists and told to
+  give it back with one change (`PromptTemplate.Recolour`, `IRecolourer`).
+  - The model keeps the object and not what is around it: twice the black one
+    came back with a grey haze above it, in the same place. `ReferenceBackground`
+    restores the original's background — wherever the original has nothing
+    drawn, the result gets background, and in a ten-pixel margin round the
+    object only what is clearly drawn stays (the first version kept the margin
+    whole, and the bag had a halo).
+  - The result: the same pannier, rows 135–888 against the olive's 133–888,
+    inside the safe area, on a clean background.
+  - `generate` makes a variant's picture this way whenever the seed names one;
+    `recolour --only <id> --colour <colour>` does it for any picture — tried on
+    the same pannier in navy blue.
+  - Not for the whole catalogue: for the products that test variants. Seven
+    images in all, about twenty cents; some $1.50 of the three euros spent.
+  - **It waits for the author to accept it**, as every picture does.
+- **Imported for real** (`VariantPicturesFromTheSeedTests`: the committed seed,
+  its pictures stored, Postgres, twice): two variants on the colour axis, each
+  with its own picture, and the reader holds the cover to olive and the other
+  picture to black. Asked directly, the model says *olive* at 0.996 and *black*
+  at 0.977 — so the two pictures as filed raise nothing, and either of them
+  filed under the other variant would raise a doubt.
+
+**Not built yet.** A doubt that says *which* other variant the picture looks
+like — it is one comparison away, since the colours of the product's other
+variants are known — and applying *it belongs to another variant* from the
+doubt itself (today the person moves the picture in the catalogue). The fourth
+decision, for uploads (I-6). And captures of the screen.
 
 **Not in scope**: merging what several pictures of one product answer (three
 pictures of the same set propose *pieces: 3* three times); it is the same
