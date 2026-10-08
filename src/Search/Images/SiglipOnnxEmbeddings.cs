@@ -40,9 +40,28 @@ public sealed class SiglipOnnxEmbeddings : IImageEmbeddingGenerator, IDisposable
                 throw new FileNotFoundException($"No {file} in '{folder}': run the export (src/AppHost/scripts/prepare-siglip.py).", Path.Combine(folder, file));
         }
 
-        this.vision = new(() => new InferenceSession(Path.Combine(folder, VisionFile)));
-        this.text = new(() => new InferenceSession(Path.Combine(folder, TextFile)));
+        this.vision = new(() => Tower(Path.Combine(folder, VisionFile)));
+        this.text = new(() => Tower(Path.Combine(folder, TextFile)));
         this.tokenizer = new(() => SiglipTextTokenizer.Load(Path.Combine(folder, SiglipTextTokenizer.FileName)));
+    }
+
+    /// <summary>
+    /// The threads one inference may use: half the logical processors, and never
+    /// more than eight.
+    ///
+    /// Left to its default the runtime takes every logical processor, and on the
+    /// machine this was measured on — sixteen, of two kinds — that is the slowest
+    /// setting there is: the vision tower took 695 ms a picture by default and
+    /// 786 ms told sixteen, against 166 ms with four threads and **121 ms with
+    /// eight** (2026-10-08, ten runs each after a warm-up). A server that takes
+    /// every core for one picture also takes them from every other request.
+    /// </summary>
+    internal static int Threads => Math.Clamp(Environment.ProcessorCount / 2, 1, 8);
+
+    private static InferenceSession Tower(string path)
+    {
+        using var options = new SessionOptions { IntraOpNumThreads = Threads };
+        return new InferenceSession(path, options);
     }
 
     public EmbeddingModelDescriptor Model => EmbeddingModelDescriptor.Siglip2Base;

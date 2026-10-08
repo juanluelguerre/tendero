@@ -1153,6 +1153,32 @@ store, a log or a trace — a span carries its dimensions and nothing else. `doc
 - Twenty-four hand mutations. One survived and was a real gap: nothing held
   the status to *no* with the model and no store. A test does now.
 
+**Measured (2026-10-08)** — `docs/search-evaluation.md`, *Words against the
+pictures, alone*, has the tables; the evaluation tool grew a diagnostic for it
+(`--siglip`).
+
+- **Words against the pictures, alone, rank about as well as the lexical
+  index**: NDCG@10 0.742 en / 0.713 es against 0.770 / 0.715, as a lower bound
+  — 24 of the 120 products have no picture, and a quarter to a third of what
+  the pictures return was never judged. For a *kind* of product they rank
+  better than the fused search (0.900 / 0.889 against 0.881 / 0.863); for an
+  exact name or a compatibility they are the worst in the table.
+- **Whether it helps as a leg is still open**, and now worth asking. It needs
+  the newly returned products judged first.
+- **No floor for a picture can be chosen from the seed**: a page of text is as
+  near a catalogue picture (0.743) as the least alike pair of real products
+  (0.724). The catalogue's pictures share a painter and a background, and the
+  seed has no photograph of something the shop does not sell. **For words
+  there is a direction** — nothing the shop does not sell scores above 0.092,
+  nine in ten right answers are above 0.093 — on seven queries a culture. Both
+  floors stay unset; they are the author's to set.
+- **The runtime's default thread count was the slowest setting there is.** On
+  sixteen logical processors of two kinds the vision tower took 695 ms a
+  picture by default, 786 ms told sixteen threads, 166 ms with four and 121 ms
+  with eight. The adapter now takes half the logical processors and never more
+  than eight: end to end, 267 ms a picture and 64 ms a text where it was 782
+  and 334. Found only because the measured run was cancelled by its own budget.
+
 ### I-7 · Close
 
 The phase's ADRs, Stryker over every project it touched with its survivors

@@ -895,3 +895,92 @@ ten judged.
   containers on the same machine. Five runs agree to the third decimal. If it
   is the gate searching before its index has refreshed, a loaded CI runner
   will find it again; recorded so that it is recognised.
+
+## Words against the pictures, alone (2026-10-08)
+
+The images spec keeps text against pictures out of `/api/search` *until its
+effect on NDCG@10 is known*. This is the first half of that: what the pictures
+rank **on their own**, over the same golden set, as a diagnostic strategy of
+the tool (`--strategy hybrid --siglip models/siglip2`) that gates nothing.
+SigLIP 2 at revision `75de2d5`, our export, in process on the CPU; a throwaway
+Qdrant v1.18.0; the query embedded as text, the nearest catalogue pictures,
+each product once.
+
+| NDCG@10, 63 scored queries | lexical | hybrid, fused only | words' vectors alone | **pictures alone** |
+|---|---:|---:|---:|---:|
+| en | 0.770 | 0.830 | 0.833 | **0.742** |
+| es | 0.715 | 0.800 | 0.788 | **0.713** |
+| recall@50 en / es | 0.806 / 0.746 | 0.943 / 0.924 | 0.982 / 0.967 | 0.821 / 0.811 |
+
+Read with three cautions, each of which makes the pictures' number a **lower
+bound**:
+
+- **Only 96 of the 120 products have a picture.** Twenty-four cannot be found
+  this way at all, whatever is asked.
+- **A quarter to a third of its first ten are unjudged** (`judged@10` 0.760 en,
+  0.679 es, where the other strategies are at 0.99): the golden set was judged
+  from what the words' strategies returned, and an unjudged result scores as
+  irrelevant. The pictures bring back products nobody graded.
+- The hybrid column is **without the reranker** — fused by rank only — so it is
+  not the 0.839 / 0.855 of the table above and its *FAIL* against floors set
+  with the reranker means nothing here. The run was not a gate.
+
+By the kind of query, where it stops being one number:
+
+| kind | queries en / es | lexical en / es | hybrid en / es | pictures en / es |
+|---|---|---|---|---|
+| product-type | 21 / 20 | 0.815 / 0.808 | 0.881 / 0.863 | **0.900 / 0.889** |
+| feature | 17 / 18 | 0.897 / 0.855 | 0.897 / 0.845 | 0.732 / 0.706 |
+| use-case | 13 / 13 | 0.466 / 0.303 | 0.629 / 0.603 | 0.618 / 0.533 |
+| symptom | 3 / 3 | 0.545 / 0.347 | 0.519 / 0.435 | 0.428 / **0.513** |
+| exact | 3 / 3 | 1.000 / 1.000 | 1.000 / 1.000 | 0.639 / 0.639 |
+| compatibility | 3 / 3 | 0.990 / 0.985 | 0.991 / 0.987 | 0.652 / 0.626 |
+| abbreviation | 3 / 3 | 0.828 / 0.850 | 0.934 / 0.935 | 0.734 / 0.712 |
+
+- **A picture knows what a thing is, and nothing written on its box.** Asked
+  for a *kind* of product — *kettle*, *sofa*, *zapatillas* — the pictures alone
+  rank better than the fused search, in both languages, with a quarter of their
+  answers ungraded. Asked for a product by its exact name or for what fits what,
+  they are the worst thing in the table: a model number is not visible.
+- **Spanish costs the pictures almost nothing** (0.713 against 0.742), where it
+  costs the lexical index five points. One model reads both languages and a
+  picture has neither.
+- So the second half of the question — whether it helps **as a leg** — is worth
+  asking, and it is not answered here: it needs the pictures fused with the
+  other two and the newly returned products judged first, or the fusion would
+  be scored against a ruler that cannot see a third of what it adds.
+
+**What a floor would separate.** A nearest neighbour always exists, so each
+question needs a similarity below which it answers nothing. Cosine of the
+nearest catalogue picture:
+
+| Asked with | n | Least | Tenth | Median | Ninth tenth | Most |
+|---|---:|---:|---:|---:|---:|---:|
+| a catalogue picture — its nearest *other* product | 96 | 0.724 | 0.806 | 0.863 | 0.927 | 0.971 |
+| a drawn shape that is no product (blank, noise, gradient, a page of text) | 4 | 0.638 | 0.638 | 0.688 | 0.743 | 0.743 |
+| words (en) — the first picture is a right answer | 43 | 0.075 | 0.093 | 0.136 | 0.155 | 0.167 |
+| words (en) — the first picture is not | 20 | 0.077 | 0.080 | 0.113 | 0.135 | 0.142 |
+| words (en) — for something the shop does not sell | 7 | 0.069 | 0.069 | 0.074 | 0.077 | 0.092 |
+| words (es) — the first picture is a right answer | 45 | 0.073 | 0.095 | 0.133 | 0.152 | 0.162 |
+| words (es) — the first picture is not | 18 | 0.074 | 0.081 | 0.102 | 0.133 | 0.138 |
+| words (es) — for something the shop does not sell | 7 | 0.061 | 0.063 | 0.066 | 0.082 | 0.086 |
+
+- **For a picture there is no floor to be had from this.** A page of text is
+  as near a catalogue picture (0.743) as the least similar pair of real
+  products (0.724): the catalogue's pictures share a painter, a background and
+  a light, and that alone is most of the similarity. And the seed holds no
+  photograph of something the shop does not sell, so the lower distribution is
+  four shapes — a lower bound for *nothing*, not what a shopper photographs.
+  `MinPictureSimilarity` stays unset, and the storefront has to say *the
+  nearest things we have* rather than *we found these*.
+- **For words there is the beginning of one.** What the shop does not sell tops
+  out at 0.092 (en) and 0.086 (es); nine in ten right answers are above 0.093.
+  A floor near 0.08 would have silenced five or six of the seven and cost a few
+  right answers in a hundred — on seven queries a culture, which is a
+  direction and not a number. `MinTextSimilarity` stays unset too; it is the
+  author's to set with these beside it.
+
+**What it costs**, on the CPU of the machine it was measured on: 64 ms to embed
+a text and 267 ms a picture, decoding and resizing included, the first call's
+model load amortised over 96 — after the runtime was told how many threads to
+use. Left to its default it was 334 ms and 782 ms (see the images spec, *I-6*).

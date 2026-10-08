@@ -5,10 +5,12 @@ using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Embeddings;
 using ElGuerre.Tendero.Search.Evaluation;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.Search.Qdrant;
 using ElGuerre.Tendero.Search.Reranking;
 using ElGuerre.Tendero.Search.Strategies;
 using ElGuerre.Tendero.SearchEval.Diagnostics;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -43,6 +45,14 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
 
     public string Description => "Relevance per strategy: NDCG@10 and recall@50 per culture.";
 
+    /// <summary>
+    /// With <c>--siglip</c> every picture of the seed is embedded on the CPU,
+    /// twice — once into the collection and once to measure the floors — and
+    /// every golden query once more as text: minutes, where the gate is seconds.
+    /// </summary>
+    public TimeSpan BudgetFor(EvaluationOptions options) =>
+        options.Siglip is null ? ((IEvaluationSuite)this).Budget : TimeSpan.FromMinutes(20);
+
     public async Task<int> RunAsync(EvaluationOptions options, CancellationToken cancellationToken)
     {
         var indexNames = SearchCultures.IndexNames.ToArray();
@@ -64,6 +74,12 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         {
             ["Catalog:Connectors:Seed:FilePath"] = options.SeedPath
         });
+
+        // The seed's pictures in memory, before the catalogue registers its folder:
+        // only a run that measures the pictures reads them (--siglip).
+        var held = new HeldPictures();
+        if (options.Siglip is not null)
+            builder.Services.AddSingleton<IImageStore>(held);
 
         builder.Services.AddCatalog(builder.Configuration);
         builder.Services.AddLexicalSearch(options.Elasticsearch);
@@ -101,6 +117,20 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
             builder.Services.AddKeyedScoped<ISearchStrategy, VectorOnlyStrategy>(VectorOnlyStrategy.Name);
         }
 
+        // The pictures' collection in the same store, through the registration the
+        // application uses: the folder of our export and the store's address.
+        if (options.Siglip is { } siglip)
+        {
+            builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [ImageEmbeddingServiceCollectionExtensions.FolderKey] = siglip,
+                ["ConnectionStrings:" + QdrantServiceCollectionExtensions.ConnectionName] =
+                    $"Endpoint={options.Qdrant}" + (options.QdrantKey is { } key ? $";Key={key}" : ""),
+            });
+            builder.Services.AddPictureVectors(builder.Configuration);
+            builder.Services.AddKeyedScoped<ISearchStrategy, PicturesByTextStrategy>(PicturesByTextStrategy.Name);
+        }
+
         using var host = builder.Build();
 
         // Starts the hosted service that creates products_es and products_en if they are missing.
@@ -121,11 +151,17 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
             }
         }
 
-        var corpus = await new SeedCorpus(host.Services).IndexAsync("seed", options.IsHybrid, cancellationToken);
+        if (options.Siglip is not null)
+            await host.Services.GetRequiredService<IPictureVectorIndexer>().RecreateAsync(cancellationToken);
+
+        var indexing = System.Diagnostics.Stopwatch.StartNew();
+        var corpus = await new SeedCorpus(host.Services).IndexAsync("seed", options.IsHybrid, options.Siglip is not null, cancellationToken);
+        indexing.Stop();
         await IndexAdmin.RefreshAsync(options.Elasticsearch, indexNames, cancellationToken);
 
         Console.WriteLine($"Indexed {corpus.Count} seed products into {options.Elasticsearch}" +
-                          (options.IsHybrid ? $" and {options.Qdrant}" : ""));
+                          (options.IsHybrid ? $" and {options.Qdrant}" : "") +
+                          (options.Siglip is not null ? $", with {held.All.Count} pictures embedded on the CPU, in {indexing.Elapsed.TotalSeconds:F1}s all told" : ""));
 
         var thresholds = await EvaluationThresholds.LoadAsync(options.ThresholdsPath, cancellationToken);
         var goldenSets = new List<GoldenSet>();
@@ -145,7 +181,8 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         }
 
         (string Name, bool Gated)[] strategies = options.IsHybrid
-            ? [(SearchStrategies.Lexical, true), (SearchStrategies.Hybrid, true), (VectorOnlyStrategy.Name, false)]
+            ? [(SearchStrategies.Lexical, true), (SearchStrategies.Hybrid, true), (VectorOnlyStrategy.Name, false),
+                .. options.Siglip is not null ? new[] { (PicturesByTextStrategy.Name, false) } : []]
             : [(SearchStrategies.Lexical, true)];
 
         var results = new List<StrategyScores>();
@@ -164,6 +201,14 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         }
 
         var report = EvaluationReport.Render(results, thresholds, rerank: options.IsHybrid && options.Reranker is not null);
+
+        if (options.Siglip is not null)
+        {
+            report += Environment.NewLine + await PictureFloors.RenderAsync(
+                host.Services.GetRequiredService<IImageEmbeddingGenerator>(), host.Services.GetRequiredService<IPictureSearch>(),
+                held, goldenSets, corpus, cancellationToken);
+        }
+
         Console.WriteLine();
         Console.WriteLine(report);
 

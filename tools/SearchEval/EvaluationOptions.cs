@@ -44,7 +44,8 @@ public sealed record EvaluationOptions(
     string? Modality = null,
     int? Take = null,
     string? Format = null,
-    string? Vocabulary = null)
+    string? Vocabulary = null,
+    string? Siglip = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -61,6 +62,8 @@ public sealed record EvaluationOptions(
           --embeddings <url>      Text Embeddings Inference serving bge-m3, for hybrid (default http://localhost:8080)
           --reranker <url>        Text Embeddings Inference serving bge-reranker-v2-m3; reranks hybrid when given
           --reranker-model <m@sha> A candidate reranker the --reranker endpoint serves instead, pinned by full commit SHA
+          --siglip <dir>          With hybrid: our SigLIP 2 export (models/siglip2). Also scores words against the
+                                  catalogue's pictures, ungated, and prints what a similarity floor would separate
           --golden <dir>          Golden set directory  (default tools/SearchEval/golden)
           --thresholds <file>     Committed thresholds  (default tools/SearchEval/eval.thresholds.json)
           --seed <file>           Seed catalogue        (default seed/products.sample.json)
@@ -157,6 +160,11 @@ public sealed record EvaluationOptions(
         if (rerankerModel is not null && rerankerModel.Split('@') is not [{ Length: > 0 }, { Length: > 0 }])
             throw new ArgumentException($"--reranker-model is <model id>@<full commit SHA>, and '{rerankerModel}' is not.");
 
+        // The pictures share the words' vector store, so they are measured where it is.
+        var siglip = values.GetValueOrDefault("siglip");
+        if (siglip is not null && strategy is not SearchStrategies.Hybrid)
+            throw new ArgumentException("--siglip measures the pictures in the vector store, and needs --strategy hybrid.");
+
         return new EvaluationOptions(
             values.GetValueOrDefault("suite", "search"),
             values.GetValueOrDefault("elasticsearch", "http://localhost:9200"),
@@ -195,6 +203,7 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("modality"),
             int.TryParse(values.GetValueOrDefault("take"), out var take) ? take : null,
             values.GetValueOrDefault("format"),
-            values.GetValueOrDefault("vocabulary"));
+            values.GetValueOrDefault("vocabulary"),
+            siglip);
     }
 }

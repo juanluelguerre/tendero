@@ -34,5 +34,5 @@ if (suite is null)
     return 2;
 }
 
-using var cancellation = new CancellationTokenSource(suite.Budget);
+using var cancellation = new CancellationTokenSource(suite.BudgetFor(options));
 return await suite.RunAsync(options, cancellation.Token);

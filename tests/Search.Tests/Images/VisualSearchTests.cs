@@ -216,6 +216,18 @@ public sealed class VisualSearchTests
             new SearchPicturesByTextHandler(model, Search(), Floors()).HandleAsync(new SearchPicturesByTextQuery("lamp", "en", 12), Ct));
     }
 
+    /// <summary>
+    /// Measured: every logical processor is the slowest setting there is (695 ms a
+    /// picture against 121 ms with eight threads). The rule is held here; that a
+    /// session is given it is not something a test without the model can see.
+    /// </summary>
+    [Fact]
+    public void One_inference_takes_half_the_processors_and_never_more_than_eight()
+    {
+        Assert.Equal(Math.Clamp(Environment.ProcessorCount / 2, 1, 8), SiglipOnnxEmbeddings.Threads);
+        Assert.InRange(SiglipOnnxEmbeddings.Threads, 1, 8);
+    }
+
     private static VisualSearch Search(params PictureMatch[] near) =>
         new(new Nearest(near), new Index([.. near.Select(match => match.ProductId)]));
 

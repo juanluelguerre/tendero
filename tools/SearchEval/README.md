@@ -151,3 +151,37 @@ la primera vez: 68,0 % frente a 80,5 % con solo la imagen.
 declara licencia y derivan de MAVE y de datos de producto de Amazon. Se
 descargan fuera del árbol. Es una medida, no una puerta: no tiene umbral y CI no
 la ejecuta. Resultados y lectura en `docs/specs/images.md` (I-4b).
+
+## Las imágenes, medidas solas (`--siglip`, fase 13a)
+
+Con `--strategy hybrid --siglip <carpeta>` la suite `search` añade una cuarta
+estrategia, `pictures`, **de diagnóstico y sin umbral**: la consulta se embebe
+como texto con SigLIP 2 (nuestra exportación, `models/siglip2`, fuera de git) y
+se ordena por las imágenes del catálogo más cercanas, cada producto una vez. Usa
+el mismo Qdrant que los vectores de las palabras, en una colección propia.
+
+```bash
+L="--label com.docker.compose.project=tendero"
+docker start tendero-eval-es                       # el Elasticsearch desechable, :39210
+docker run -d --name tendero-eval-qdrant $L --memory 1g --cpus 2 \
+  -p 39334:6334 -p 39333:6333 -e QDRANT__TELEMETRY_DISABLED=true qdrant/qdrant:v1.18.0
+docker run -d --name tendero-eval-tei $L --gpus all --memory 4g --memory-swap 4g --cpus 4 \
+  -p 39380:80 -v tendero-tei-models:/data \
+  ghcr.io/huggingface/text-embeddings-inference:120-sha-4150561 \
+  --model-id BAAI/bge-m3 --revision 5617a9f61b028005a4858fdac845db406aefb181
+
+dotnet run --project tools/SearchEval -- --strategy hybrid \
+  --elasticsearch http://localhost:39210 --qdrant http://localhost:39334 \
+  --embeddings http://localhost:39380 --siglip models/siglip2 --report artifacts/pictures-eval.md
+```
+
+Además del informe de siempre escribe **qué separaría un umbral de parecido**:
+lo cerca que queda la imagen más cercana cuando la respuesta existe y cuando no
+(para una imagen y para palabras), y lo que cuesta embeber una imagen y un
+texto en la CPU. No elige el umbral: lo imprime para que se elija.
+
+Tarda unos tres minutos — embebe las imágenes de la semilla dos veces y cada
+consulta una — y por eso esta ejecución tiene veinte minutos de presupuesto en
+vez de cinco. Sin reranker (`--reranker`) la fila de `hybrid` no es comparable
+con sus umbrales, que se fijaron con él: esta ejecución no es la puerta. Lectura
+en `docs/search-evaluation.md`, *Words against the pictures, alone*.
