@@ -114,6 +114,17 @@ catalogue and **buy** over MCP or UCP:
   many as say so, and every size of it shares them (ADR 0057;
   [docs/analysis/catalogue-model.md](docs/analysis/catalogue-model.md) sets the
   model beside Shopify's, Amazon's and Zalando's).
+- **Searching with a picture** (phase 13a, the API; the storefront's control
+  is next). SigLIP 2, exported by us and run inside the process, embeds the
+  catalogue's pictures into a collection of their own — one point a picture,
+  keyed on the hash of its bytes, so a shared picture is embedded once and a
+  price change embeds nothing. `POST /api/search/by-image` takes a photograph
+  and `GET /api/search/pictures` takes words; neither is a leg of the search
+  the gate measures, and a shopper's picture is never kept (ADR 0058). Measured
+  alone, words against the pictures rank about as the lexical index and, for a
+  *kind* of product, above the fused search
+  ([docs/search-evaluation.md](docs/search-evaluation.md)). Without the model's
+  folder the shop has no visual search, says so, and is otherwise unchanged.
 - **The redesign.** The backoffice is organised by job — a side rail, one
   index-and-pane pattern for every list, a command palette — and its home is a
   dashboard of the whole shop at a glance: tabs per area, a full-screen wall,
@@ -733,7 +744,7 @@ deferred with its measured number — is
 | R | The redesign: backoffice by job, storefront navigation, the dashboard | 🚧 measured against a baseline walkthrough |
 | 12 | **Steward**, the backoffice copilot | ✅ it proposes commands a person approves, never prose; six typed reads owned by their contexts; a local model measured by a suite with no judge. The hosted profiles and the AI panel wait |
 | 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
-| 13a | Images: a model that reads a picture, claims and doubts from it, and the catalogue's model under them | 🚧 a category declares its attributes; a picture says what it shows |
+| 13a | Images: a model that reads a picture, claims and doubts from it, the catalogue's model under them, and visual search | 🚧 a category declares its attributes; a picture says what it shows; the shop is searched with a picture through the API — the storefront's control is next |
 | 13 | Visual search and the kit solver | 🔜 |
 
 ## Blog series
