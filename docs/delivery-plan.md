@@ -956,7 +956,7 @@ wait for a phase of their own, 14, after the images.
 
 - [x] `P13-1` Tokenizer-fidelity fixture test **before** committing to in-process ONNX — **S** · **done 2026-10-08**: `SiglipTextTokenizer` reproduces the maker's ids for twenty-three texts, id for id, at revision `75de2d5`; the reference is written by the maker's tokenizer and committed. Found on the way: the configuration says to lower-case and the maker's tokenizer does not — to be measured in `P13-2`. In process stands
 - [x] `P13-2` SigLIP 2 via ONNX Runtime; `IImageEmbeddingGenerator` — **L** · **done 2026-10-08**: our own export of both towers (0.99999994 against PyTorch), the adapter in process on the CPU, held to the maker's embeddings — a picture at 0.999998 once the resize was Pillow's arithmetic and not a library's (0.983). Lower-casing measured and applied: Spanish names find their picture first 88 % of the time against 65 %
-- [ ] `P13-3` Image collection keyed on `ImageId`; dedup for free — **M**
+- [x] `P13-3` Image collection keyed on `ImageId`; dedup for free — **M** · **done 2026-10-08**: one point a picture in a collection named for the picture model, naming every product that shows it; fed by the outbox without ever failing a message, rebuilt when empty, `reindex?target=pictures`; the folder of our export is the opt-in. Sixteen hand mutations red, ten of them against a real Qdrant (the images spec, *I-5*).
 - [ ] `P13-4` `POST /api/search/by-image`; then text→image — **M**
 - [ ] `P13-5` `IKitSolver`, pure: branch-and-bound with a solver trace — **M**
 - [ ] `P13-6` CsCheck properties: budget never exceeded, order-stable, monotone in candidates — **M**

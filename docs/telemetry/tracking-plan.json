@@ -172,7 +172,8 @@
       "decision": "Whether the AI stages can be on by default, which service to fix first, and when a reindex is due.",
       "signals": [
         "tendero.search.degraded",
-        "tendero.search.vector_projection.failed"
+        "tendero.search.vector_projection.failed",
+        "tendero.search.picture_projection.failed"
       ]
     },
     {
@@ -1066,6 +1067,13 @@
       "instrument": "counter",
       "unit": "{change}",
       "description": "Product changes the vector layer could not take; the lexical index took them.",
+      "attributes": {}
+    },
+    {
+      "name": "tendero.search.picture_projection.failed",
+      "instrument": "counter",
+      "unit": "{change}",
+      "description": "Product changes the picture vectors could not take; the lexical index took them.",
       "attributes": {}
     },
     {

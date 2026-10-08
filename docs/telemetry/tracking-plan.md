@@ -74,7 +74,7 @@ everything here that is not *planned* is emitted.
 
 | Feature | Question | Decision it changes | Signals | Status |
 |---|---|---|---|---|
-| AI search layer | How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss? | Whether the AI stages can be on by default, which service to fix first, and when a reindex is due. | `tendero.search.degraded`, `tendero.search.vector_projection.failed` | emitted |
+| AI search layer | How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss? | Whether the AI stages can be on by default, which service to fix first, and when a reindex is due. | `tendero.search.degraded`, `tendero.search.vector_projection.failed`, `tendero.search.picture_projection.failed` | emitted |
 | Outbox | Is eventual consistency still eventual? | When a second worker replica, and the row locking it needs, is worth building. | `tendero.outbox.lag` | emitted |
 | Model-call metering | Are model-call rows being lost before they reach telemetry.ai_invocations? | Whether the in-process log needs a larger bound, or a durable queue, before the cost line and the AI usage dashboard can be trusted. | `tendero.ai.invocations.dropped` | emitted |
 | AI usage and cost | What do the models cost per day and per model, how fast do they answer, and how often does no model answer Steward? | Which profile is Steward's default and which its fallback, and whether a hosted model is worth its price over the local one (S-7). | `tendero.ai.calls`, `tendero.ai.cost`, `tendero.steward.turns` | emitted |
@@ -439,6 +439,16 @@ Answers:
 ### `tendero.search.vector_projection.failed`
 
 counter, unit `{change}`. Product changes the vector layer could not take; the lexical index took them.
+
+Answers:
+
+- **AI search layer** — How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss?
+
+No attributes.
+
+### `tendero.search.picture_projection.failed`
+
+counter, unit `{change}`. Product changes the picture vectors could not take; the lexical index took them.
 
 Answers:
 

@@ -22,8 +22,9 @@ public static class HybridSearchServiceCollectionExtensions
 
         services.AddVectorLayer(configuration);
         services.AddRerankerIfConfigured(configuration);
-        // Pictures as vectors (phase 13a): the model where a folder was given, a named stand-in where not.
-        services.AddImageEmbeddings(configuration);
+        // Pictures as vectors (phase 13a): the model and its collection where a
+        // folder and a store were given, a named stand-in for each where not.
+        services.AddPictureVectors(configuration);
 
         services.AddOptions<HybridSearchOptions>().Bind(configuration.GetSection(HybridSearchOptions.Section));
 

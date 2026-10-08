@@ -139,6 +139,10 @@ public static class WorkerServices
         // layer that may be downloading its model, and nothing waits for it.
         builder.Services.AddHostedService<RebuildVectorIndexAtStartupWorker>();
 
+        // And the pictures' (phase 13a): in the background too, because the first
+        // rebuild embeds the whole catalogue's pictures on the CPU.
+        builder.Services.AddHostedService<RebuildPictureVectorsAtStartupWorker>();
+
         // After the migrations, like the index rebuilds: the claims layer's tables
         // must exist before the catalogue's descriptions are recorded into them.
         builder.Services.AddHostedService<RecordDescriptionsAtStartupWorker>();

@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Embeddings;
+using ElGuerre.Tendero.Search.Images;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -42,11 +43,7 @@ public static class QdrantServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(endpoint);
 
-        // Five seconds per call: a stopped container refuses at once, and this is
-        // for the one that accepts a connection and never answers. The client does
-        // not connect on construction, so a process with no Qdrant still starts.
-        services.AddSingleton(provider => new QdrantClient(
-            endpoint, apiKey, TimeSpan.FromSeconds(5), provider.GetService<ILoggerFactory>()));
+        services.AddQdrantClient(endpoint, apiKey);
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<QdrantVectorLayer>();
@@ -59,6 +56,45 @@ public static class QdrantServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// The pictures' collection (phase 13a, P13-3), registered only when there is
+    /// a store to reach AND the picture model's folder: the model runs in this
+    /// process, so its folder is what "there is a model" means. It asks nothing of
+    /// the words' layer — a shop may have either without the other.
+    /// </summary>
+    public static IServiceCollection AddQdrantPictureVectorsIfConfigured(
+        this IServiceCollection services, IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        if (configuration.GetConnectionString(ConnectionName) is not { Length: > 0 } connection
+            || configuration[ImageEmbeddingServiceCollectionExtensions.FolderKey] is not { Length: > 0 })
+        {
+            return services;
+        }
+
+        var (endpoint, key) = QdrantConnection.Parse(connection);
+        services.AddQdrantClient(endpoint, key);
+
+        services.AddScoped<QdrantPictureVectors>();
+        services.AddScoped<IPictureVectorIndexer>(provider => provider.GetRequiredService<QdrantPictureVectors>());
+        services.AddScoped<IPictureSearch>(provider => provider.GetRequiredService<QdrantPictureVectors>());
+
+        return services;
+    }
+
+    /// <summary>
+    /// One client for the process, whichever layer asked first: the words and the
+    /// pictures are two collections of the same store.
+    ///
+    /// Five seconds per call: a stopped container refuses at once, and this is
+    /// for the one that accepts a connection and never answers. The client does
+    /// not connect on construction, so a process with no Qdrant still starts.
+    /// </summary>
+    private static void AddQdrantClient(this IServiceCollection services, Uri endpoint, string? apiKey) =>
+        services.TryAddSingleton(provider => new QdrantClient(
+            endpoint, apiKey, TimeSpan.FromSeconds(5), provider.GetService<ILoggerFactory>()));
 }
 
 /// <summary>

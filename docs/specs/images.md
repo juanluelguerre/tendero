@@ -1033,6 +1033,42 @@ repository), committed beside the test, and never typed.
 - **CI does not run the model-held tests** (1.5 GB that are not the
   repository's); it does run the preprocessing's, which need no model.
 
+**The collection (`P13-3`, 2026-10-08).**
+
+- **One point a picture, keyed on the picture's id** (`QdrantPictureVectors`,
+  behind `IPictureVectorIndexer` and `IPictureSearch`). The id is the hash of
+  the bytes, so the same file under two products is one point whose payload
+  names both and is embedded once; and a product that raises `ProductUpserted`
+  for a price or a stock count finds its pictures already there — the model is
+  not asked and the store is not read. The dedup is free because of how the
+  store is keyed, not because anything compares anything.
+- **A collection of its own**, `pictures_siglip2-base-patch16-224_75de2d5_768`:
+  named for the model, its revision and its size, never the words' collection,
+  and every point says again which model wrote it — a point that disagrees is
+  refused when it is read, not ranked.
+- **Fed by the outbox**, by the rule every projection of a product keeps
+  (`ProductIndexProjection`: on sale is in, anything else is out), and **it
+  never fails a message**: a store that is down, or a file the model cannot
+  decode, is a warning and `tendero.search.picture_projection.failed`, never a
+  price change dead-lettered. A picture taken out of a gallery leaves its
+  point; the point goes when no product shows it.
+- **The answer is products, each once**, by the nearest of its pictures, with
+  the picture that matched: a product with four pictures would otherwise take
+  four of the nearest places.
+- **Rebuilt when it is empty** — Qdrant keeps no volume — by a worker in the
+  background, and by hand with `POST /api/search/reindex?target=pictures`.
+  `target=all` stays the two projections of the words: a shop without visual
+  search can still rebuild everything it has, and one that asks for the
+  pictures without having them is told why rather than answered with a count.
+- **No switch of its own.** The model is not a container; the folder our export
+  leaves is the opt-in. Where the vector store runs (`Tendero__Vectors=true`)
+  and `models/siglip2` is whole, the AppHost tells the API and the worker where
+  it is; where either is missing they get `NoPictureVectors` — writing is a
+  no-op, reading says the stage is not there.
+- Sixteen hand mutations, sixteen red: ten against a real Qdrant
+  (Testcontainers, a fake model — words hashed into buckets, as the words'
+  layer is tested), six against fakes.
+
 Then `IImageEmbeddingGenerator`, a port with an in-process adapter: SigLIP 2
 (`google/siglip2-base-patch16-224`, Apache-2.0, pinned revision) on ONNX Runtime,
 **exported by us** from the maker's weights. No Python sidecar. A collection

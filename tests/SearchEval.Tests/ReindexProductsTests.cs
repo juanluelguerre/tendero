@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
@@ -84,7 +85,7 @@ public sealed class ReindexProductsTests
         var product = AnActiveProduct();
         var (lexical, vectors) = (new RecordingIndexer(), new RecordingVectors());
 
-        await new ReindexProductsHandler(new InMemoryProductReader(product), lexical, vectors, Layer(available: true))
+        await new ReindexProductsHandler(new InMemoryProductReader(product), lexical, vectors, Layer(available: true), new NoPictureVectors())
             .HandleAsync(new ReindexProductsCommand(), Ct);
 
         Assert.Equal([product.Id], lexical.Indexed);
@@ -98,7 +99,7 @@ public sealed class ReindexProductsTests
         var draft = ADraftProduct();
         var (lexical, vectors) = (new RecordingIndexer(), new RecordingVectors());
 
-        var result = await new ReindexProductsHandler(new InMemoryProductReader(product, draft), lexical, vectors, Layer(available: true))
+        var result = await new ReindexProductsHandler(new InMemoryProductReader(product, draft), lexical, vectors, Layer(available: true), new NoPictureVectors())
             .HandleAsync(new ReindexProductsCommand(Target: ReindexTargets.Vector), Ct);
 
         Assert.Equal((1, 1), (result.Indexed, result.Removed));
@@ -114,7 +115,7 @@ public sealed class ReindexProductsTests
         var product = AnActiveProduct();
         var (lexical, vectors) = (new RecordingIndexer(), new RecordingVectors());
 
-        var result = await new ReindexProductsHandler(new InMemoryProductReader(product), lexical, vectors, Layer(available: true))
+        var result = await new ReindexProductsHandler(new InMemoryProductReader(product), lexical, vectors, Layer(available: true), new NoPictureVectors())
             .HandleAsync(new ReindexProductsCommand(Recreate: true, Target: ReindexTargets.All), Ct);
 
         Assert.Equal(1, result.Indexed);
@@ -135,7 +136,7 @@ public sealed class ReindexProductsTests
         var (lexical, vectors) = (new RecordingIndexer(), new RecordingVectors());
 
         var refusal = await Assert.ThrowsAsync<SearchUnavailableException>(() =>
-            new ReindexProductsHandler(new InMemoryProductReader(product), lexical, vectors, Layer(available: false))
+            new ReindexProductsHandler(new InMemoryProductReader(product), lexical, vectors, Layer(available: false), new NoPictureVectors())
                 .HandleAsync(new ReindexProductsCommand(Target: ReindexTargets.All), Ct));
 
         Assert.Contains("the model server is downloading", refusal.Message);
@@ -154,25 +155,75 @@ public sealed class ReindexProductsTests
         var product = AnActiveProduct();
         var vectors = new RecordingVectors();
 
-        await new ReindexProductsHandler(new InMemoryProductReader(product), new RecordingIndexer(), vectors, Layer(available: false))
+        await new ReindexProductsHandler(new InMemoryProductReader(product), new RecordingIndexer(), vectors, Layer(available: false), new NoPictureVectors())
             .HandleAsync(new ReindexProductsCommand(Recreate: true, Target: ReindexTargets.Vector), Ct);
 
         Assert.True(vectors.Recreated);
 
         await Assert.ThrowsAsync<SearchUnavailableException>(() =>
             new ReindexProductsHandler(new InMemoryProductReader(product), new RecordingIndexer(), new RecordingVectors(),
-                    new FixedLayer(VectorLayerStatus.NotConfigured))
+                    new FixedLayer(VectorLayerStatus.NotConfigured), new NoPictureVectors())
                 .HandleAsync(new ReindexProductsCommand(Recreate: true, Target: ReindexTargets.Vector), Ct));
+    }
+
+    // ---------- The pictures (P13-3) ----------
+
+    /// <summary>
+    /// Asked for by name, and it touches nothing else — nor does it ask the
+    /// words' layer, which may be down or never have been there.
+    /// </summary>
+    [Fact]
+    public async Task The_pictures_are_a_target_of_their_own_and_ask_nothing_of_the_words_layer()
+    {
+        var (product, draft) = (AnActiveProduct(), ADraftProduct());
+        var (lexical, vectors, pictures) = (new RecordingIndexer(), new RecordingVectors(), new RecordingPictures());
+
+        var result = await new ReindexProductsHandler(
+                new InMemoryProductReader(product, draft), lexical, vectors, new FixedLayer(VectorLayerStatus.NotConfigured), pictures)
+            .HandleAsync(new ReindexProductsCommand(Target: ReindexTargets.Pictures), Ct);
+
+        Assert.Equal((1, 1), (result.Indexed, result.Removed));
+        Assert.Equal([product.Id], pictures.Indexed);
+        Assert.Equal([draft.Id], pictures.Removed);
+        Assert.Empty(lexical.Indexed);
+        Assert.Empty(vectors.Indexed);
+    }
+
+    /// <summary>"All" is the two projections of the words: a shop without visual search can still rebuild everything it has.</summary>
+    [Fact]
+    public async Task Rebuilding_all_leaves_the_pictures_alone()
+    {
+        var product = AnActiveProduct();
+        var pictures = new RecordingPictures();
+
+        await new ReindexProductsHandler(
+                new InMemoryProductReader(product), new RecordingIndexer(), new RecordingVectors(), Layer(available: true), pictures)
+            .HandleAsync(new ReindexProductsCommand(Target: ReindexTargets.All), Ct);
+
+        Assert.Empty(pictures.Indexed);
+    }
+
+    /// <summary>The stand-in writes nothing, and a walk that wrote nothing must not answer with a count.</summary>
+    [Fact]
+    public async Task A_process_without_picture_vectors_refuses_to_rebuild_them_and_says_why()
+    {
+        var refusal = await Assert.ThrowsAsync<SearchUnavailableException>(() =>
+            new ReindexProductsHandler(
+                    new InMemoryProductReader(AnActiveProduct()), new RecordingIndexer(), new RecordingVectors(), Layer(available: true), new NoPictureVectors())
+                .HandleAsync(new ReindexProductsCommand(Target: ReindexTargets.Pictures), Ct));
+
+        Assert.Contains(NoPictureVectors.Reason, refusal.Message, StringComparison.Ordinal);
     }
 
     [Theory]
     [InlineData("lexical", true)]
     [InlineData("vector", true)]
+    [InlineData("pictures", true)]
     [InlineData("all", true)]
     [InlineData("Vector", false)]
     [InlineData("qdrant", false)]
     [InlineData("", false)]
-    public void Only_the_three_targets_pass_the_door(string target, bool valid)
+    public void Only_the_four_targets_pass_the_door(string target, bool valid)
     {
         var result = new ReindexProductsValidator().Validate(new ReindexProductsCommand(Target: target));
 
@@ -180,7 +231,7 @@ public sealed class ReindexProductsTests
     }
 
     private static ReindexProductsHandler HandlerOver(IProductIndexer indexer, params Product[] products) =>
-        new(new InMemoryProductReader(products), indexer, new RecordingVectors(), new FixedLayer(VectorLayerStatus.NotConfigured));
+        new(new InMemoryProductReader(products), indexer, new RecordingVectors(), new FixedLayer(VectorLayerStatus.NotConfigured), new NoPictureVectors());
 
     private static FixedLayer Layer(bool available) =>
         new(available
@@ -224,6 +275,8 @@ public sealed class ReindexProductsTests
     }
 
     private sealed class RecordingVectors : RecordingIndexer, IProductVectorIndexer;
+
+    private sealed class RecordingPictures : RecordingIndexer, IPictureVectorIndexer;
 
     private class RecordingIndexer : IProductIndexer
     {

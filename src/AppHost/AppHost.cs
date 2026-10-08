@@ -683,6 +683,21 @@ var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
 if (vectors)
     api.WithReference(qdrant).WithReference(embeddingsEndpoint);
 
+// THE PICTURES' VECTORS (phase 13a, P13-3). The model is not a container: SigLIP 2
+// runs inside the API and the worker, from the folder our own export leaves
+// outside git (`src/AppHost/scripts/prepare-siglip.py`, 1.5 GB). So there is no
+// switch of its own and nothing to start — **the folder is the opt-in**: where
+// the vector store runs and the export is whole, both processes are told where it
+// is; where either is missing they are told nothing, get the named stand-in, and
+// the shop has no visual search and says so. A folder half written is "missing":
+// handing it over would be a model that fails on its first picture.
+var pictureModels = Path.Combine(repositoryRoot, "models", "siglip2");
+var pictures = vectors && new[] { "vision.onnx", "text.onnx", "tokenizer.model" }
+    .All(file => File.Exists(Path.Combine(pictureModels, file)));
+
+if (pictures)
+    api.WithEnvironment("Search__Images__Models", pictureModels);
+
 // The reranker by the same rule, one step narrower: `rerank` is `vectors` on a
 // GPU. It has no equivalent of the vector layer's read-time check before its
 // first call, which is one more reason never to hand over an address nothing
@@ -814,6 +829,11 @@ var workers = builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
 // — hostage.
 if (vectors)
     workers.WithReference(qdrant).WithReference(embeddingsEndpoint);
+
+// And the pictures' (P13-3): the worker is the one that embeds the catalogue's,
+// on the CPU and in the background.
+if (pictures)
+    workers.WithEnvironment("Search__Images__Models", pictureModels);
 
 // The worker proposes claims (P10-4) and is handed the models only when the
 // switch started them — the same rule: an address nothing answers would fail
