@@ -32,6 +32,7 @@ internal static class StronglyTypedIds
         conventions.Properties<ImageId>().HaveConversion<ImageIdConverter>();
         conventions.Properties<AgentId>().HaveConversion<AgentIdConverter>();
         conventions.Properties<ClaimId>().HaveConversion<ClaimIdConverter>();
+        conventions.Properties<PictureDoubtId>().HaveConversion<PictureDoubtIdConverter>();
         conventions.Properties<SourceDocumentId>().HaveConversion<SourceDocumentIdConverter>();
         conventions.Properties<CampaignCode>().HaveConversion<CampaignCodeConverter>();
         conventions.Properties<ProposalId>().HaveConversion<ProposalIdConverter>();
@@ -47,6 +48,7 @@ internal static class StronglyTypedIds
     private sealed class ImageIdConverter() : ValueConverter<ImageId, string>(id => id.Value, value => new ImageId(value));
     private sealed class AgentIdConverter() : ValueConverter<AgentId, string>(id => id.Value, value => new AgentId(value));
     private sealed class ClaimIdConverter() : ValueConverter<ClaimId, Guid>(id => id.Value, value => new ClaimId(value));
+    private sealed class PictureDoubtIdConverter() : ValueConverter<PictureDoubtId, Guid>(id => id.Value, value => new PictureDoubtId(value));
     private sealed class SourceDocumentIdConverter() : ValueConverter<SourceDocumentId, string>(id => id.Value, value => new SourceDocumentId(value));
     private sealed class CampaignCodeConverter() : ValueConverter<CampaignCode, string>(code => code.Value, value => new CampaignCode(value));
     private sealed class ProposalIdConverter() : ValueConverter<ProposalId, Guid>(id => id.Value, value => new ProposalId(value));

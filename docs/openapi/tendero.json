@@ -1562,6 +1562,105 @@
         }
       }
     },
+    "/api/knowledge/picture-doubts": {
+      "get": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "ListPictureDoubts",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PictureDoubtsPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/knowledge/picture-doubts/{id}/decide": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "DecidePictureDoubt",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecidePictureDoubtRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecidePictureDoubtResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PictureDoubtConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orders/{orderId}/returns": {
       "post": {
         "tags": [
@@ -5690,6 +5789,32 @@
           "Month"
         ]
       },
+      "DecidePictureDoubtRequest": {
+        "required": [
+          "decision"
+        ],
+        "type": "object",
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/PictureDoubtDecision"
+          }
+        }
+      },
+      "DecidePictureDoubtResponse": {
+        "required": [
+          "doubtId",
+          "decision"
+        ],
+        "type": "object",
+        "properties": {
+          "doubtId": {
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/PictureDoubtDecision"
+          }
+        }
+      },
       "DecideReturnRequest": {
         "required": [
           "decision",
@@ -6999,6 +7124,110 @@
           "Best",
           "Worst"
         ]
+      },
+      "PictureDoubtConflict": {
+        "required": [
+          "title",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "PictureDoubtDecision": {
+        "enum": [
+          "PictureIsFine",
+          "ReplaceThePicture",
+          "BelongsToAnotherVariant"
+        ]
+      },
+      "PictureDoubtView": {
+        "required": [
+          "doubtId",
+          "productId",
+          "imageId",
+          "attributeCode",
+          "seen",
+          "seenLabel",
+          "held",
+          "heldLabel",
+          "confidence",
+          "readBy",
+          "raisedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "doubtId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "imageId": {
+            "type": "string"
+          },
+          "attributeCode": {
+            "type": "string"
+          },
+          "seen": {
+            "type": "string"
+          },
+          "seenLabel": {
+            "type": "string"
+          },
+          "held": {
+            "type": "string"
+          },
+          "heldLabel": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "format": "double"
+          },
+          "readBy": {
+            "type": "string"
+          },
+          "raisedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PictureDoubtsPage": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PictureDoubtView"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "PictureForReview": {
         "required": [

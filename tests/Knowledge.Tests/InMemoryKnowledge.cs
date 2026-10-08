@@ -5,10 +5,25 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Knowledge.Tests;
 
 /// <summary>The repository and the unit of work in memory, with the ordering rules the EF adapter keeps.</summary>
-public sealed class InMemoryKnowledge : IKnowledgeRepository, IUnitOfWork
+public sealed class InMemoryKnowledge : IKnowledgeRepository, IPictureDoubtRepository, IUnitOfWork
 {
     public List<SourceDocument> Documents { get; } = [];
     public List<ProductClaim> Claims { get; } = [];
+    public List<PictureDoubt> Doubts { get; } = [];
+
+    public Task<PictureDoubt?> FindDoubtAsync(PictureDoubtId id, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Doubts.FirstOrDefault(doubt => doubt.Id == id));
+
+    public Task<IReadOnlyList<PictureDoubt>> DoubtsAboutAsync(ProductId productId, ImageId picture, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<PictureDoubt>>([.. Doubts.Where(doubt => doubt.ProductId == productId && doubt.PictureId == picture.Value)]);
+
+    public Task<PictureDoubtPage> OpenDoubtsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var open = Doubts.Where(doubt => doubt.Status == PictureDoubtStatus.Open).OrderBy(doubt => doubt.RaisedAt).ThenBy(doubt => doubt.Id.Value).ToList();
+        return Task.FromResult(new PictureDoubtPage([.. open.Skip(Paging.Offset(page, pageSize)).Take(pageSize)], open.Count));
+    }
+
+    public void Add(PictureDoubt doubt) => Doubts.Add(doubt);
 
     public Task<SourceDocument?> FindDocumentAsync(SourceDocumentId id, CancellationToken cancellationToken = default) =>
         Task.FromResult(Documents.FirstOrDefault(document => document.Id == id));

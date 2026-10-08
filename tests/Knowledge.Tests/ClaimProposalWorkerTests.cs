@@ -59,6 +59,7 @@ public sealed class ClaimProposalWorkerTests
         services.AddSingleton<TimeProvider>(clock);
         services.AddSingleton<IPrincipalAccessor>(new Nobody());
         services.AddSingleton<IKnowledgeRepository>(knowledge);
+        services.AddSingleton<IPictureDoubtRepository>(knowledge);
         services.AddSingleton<IUnitOfWork>(knowledge);
         services.AddSingleton<IAttributeVocabulary>(new OnlyPieces());
         services.AddSingleton<ICatalogueValues>(Held.Nothing);

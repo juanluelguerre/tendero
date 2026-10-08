@@ -32,4 +32,13 @@ internal static class PictureQuestions
         "Look at this product illustration. "
         + "count: how many separate items are drawn? Count each whole item once, wherever it is in the picture, "
         + "and count the two shoes of a pair as two. Answer with the number only.";
+
+    /// <summary>
+    /// The colour of the product, to be chosen among the options the catalogue
+    /// defines — which the closed question lists after it. Of forty seed
+    /// pictures the shop's 4B chose the colour the catalogue holds for
+    /// thirty-seven; whether the other three are wrong pictures is a person's to
+    /// say, and that is what a doubt is for.
+    /// </summary>
+    public const string Colour = "Look at this product illustration. What is the main colour of the product itself?";
 }

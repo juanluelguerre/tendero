@@ -33,7 +33,13 @@ public enum AttributeKind
 /// a colour as `#RRGGBB`. Data about the product, not a style — the storefront
 /// paints it as the option's own colour, beside its name (R-7.3). Null for an
 /// option with no colour to show.</param>
-public sealed record AttributeOption(string Code, LocalizedText Label, string? Swatch = null);
+/// <param name="MistakenFor">
+/// Other options of the same attribute this one may be taken for when it is
+/// looked at (phase 13a, I-4d): stainless steel for grey. Declared, not guessed —
+/// whether two colours are one to the shop is the shop's to say — and read in
+/// both directions.
+/// </param>
+public sealed record AttributeOption(string Code, LocalizedText Label, string? Swatch = null, IReadOnlyList<string>? MistakenFor = null);
 
 public sealed record AttributeDefinitionChanged(string Code, DateTimeOffset OccurredAt) : IDomainEvent;
 
@@ -140,7 +146,8 @@ public sealed class AttributeDefinition : AggregateRoot
     }
 
     /// <summary>Adds or replaces an option. Idempotent by code.</summary>
-    public void AddOption(TimeProvider clock, string code, LocalizedText label, string? swatch = null)
+    public void AddOption(
+        TimeProvider clock, string code, LocalizedText label, string? swatch = null, IEnumerable<string>? mistakenFor = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
 
@@ -152,7 +159,8 @@ public sealed class AttributeDefinition : AggregateRoot
 
         var normalised = Normalise(code);
         this.options.RemoveAll(option => option.Code == normalised);
-        this.options.Add(new AttributeOption(normalised, label, swatch?.ToUpperInvariant()));
+        string[] taken = [.. (mistakenFor ?? []).Select(Normalise).Where(other => other != normalised).Distinct(StringComparer.Ordinal)];
+        this.options.Add(new AttributeOption(normalised, label, swatch?.ToUpperInvariant(), taken.Length == 0 ? null : taken));
         Touch(clock);
     }
 

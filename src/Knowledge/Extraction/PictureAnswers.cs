@@ -42,10 +42,29 @@ public static class PictureAnswers
     public static string Under(string prose, string culture, int count, double? confidence = null)
     {
         ArgumentNullException.ThrowIfNull(prose);
-        var sure = confidence is { } probability
+        return $"{prose.TrimEnd()}\n{Lead(culture)}{count.ToString(CultureInfo.InvariantCulture)}{Written(culture, confidence)}.";
+    }
+
+    /// <summary>How sure, as it is written beside an answer: a whole percentage rounded down, or nothing when the server did not say.</summary>
+    private static string Written(string culture, double? confidence) =>
+        confidence is { } probability
             ? $"{Sure(culture)}{((int)Math.Floor(Math.Clamp(probability, 0, 1) * 100)).ToString(CultureInfo.InvariantCulture)}{Percent}"
             : "";
-        return $"{prose.TrimEnd()}\n{Lead(culture)}{count.ToString(CultureInfo.InvariantCulture)}{sure}.";
+
+    /// <summary>
+    /// A reading's text with the colour the picture answered written under it, in
+    /// the reading's language and with how sure the model was. For a person to
+    /// read beside the picture, and part of the document's identity: the same
+    /// words with another colour are another reading. No claim is read back from
+    /// this line — a colour that differs from the catalogue's is a doubt about
+    /// the picture (<see cref="Domain.PictureDoubt"/>), never a claim.
+    /// </summary>
+    public static string WithColour(string text, string culture, string colour, double? confidence)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentException.ThrowIfNullOrWhiteSpace(colour);
+        var lead = culture == "es" ? "Color visto en la imagen: " : "Colour seen in the picture: ";
+        return $"{text.TrimEnd()}\n{lead}{colour}{Written(culture, confidence)}.";
     }
 
     /// <summary>The count written under a reading, how sure the model was, and the line that says it — or null when there is none.</summary>
@@ -57,7 +76,9 @@ public static class PictureAnswers
         if (start < 0)
             return null;
 
-        var line = text[(start + 1)..];
+        // The count's own line: another answer may be written under it.
+        var end = text.IndexOf('\n', start + 1);
+        var line = end < 0 ? text[(start + 1)..] : text[(start + 1)..end];
         if (!line.EndsWith('.'))
             return null;
 

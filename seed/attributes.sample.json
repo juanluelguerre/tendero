@@ -51,7 +51,10 @@
           "es": "acero inoxidable",
           "en": "stainless steel"
         },
-        "swatch": "#B8BCC0"
+        "swatch": "#B8BCC0",
+        "mistakenFor": [
+          "GREY"
+        ]
       },
       {
         "code": "GREY",

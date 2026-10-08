@@ -33,7 +33,7 @@ public sealed class ClaimsFromPicturesTests
             .HandleAsync(new RecordDescriptionCommand(Pan, culture, text), TestContext.Current.CancellationToken);
 
     private Task Read(PictureReading reading, string spanish, string english, int count = 1, double? confidence = null) =>
-        new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock)
+        new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.knowledge, this.clock)
             .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english, count, confidence), TestContext.Current.CancellationToken);
 
     private Task<ProposeClaimsResult> Propose(

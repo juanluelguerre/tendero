@@ -45,7 +45,7 @@ public sealed class PictureReadingOptions
 /// </summary>
 public static class PictureReadingPrompt
 {
-    public const string Version = "picture-reading-2026-10-08";
+    public const string Version = "picture-reading-2026-10-08b";
 
     /// <summary>What the answer is held to: the description, in each language.</summary>
     public static readonly JsonElement Schema = JsonDocument.Parse("""
@@ -100,6 +100,11 @@ public static class PictureReadingPrompt
 /// number is one token instead of the twenty-five the schema's grammar padded it
 /// to, and it comes with the probability the model gave it — which the reading
 /// keeps, and which decides whether its claim may be approved with others.
+///
+/// **And its colour, when it has one to be held to** (I-4d): a picture that
+/// shows variants of one colour is asked which of the catalogue's colours it
+/// is. What it answers is kept under the reading, and a sure difference from
+/// what the catalogue holds is a doubt about the picture — never a claim.
 ///
 /// **A picture is asked what its product is offered** (ADR 0056): how many,
 /// only of a product whose category declares its pieces. A shoe's does not — a
@@ -181,6 +186,8 @@ public sealed class ReadPicturesHandler(
         if (batch.Count == 0)
             return new ReadPicturesResult(PictureReadingStatus.NothingToRead, 0, 0, 0);
 
+        var colours = await pictures.ColoursAsync(cancellationToken);
+
         var (read, skipped, failed) = (0, 0, 0);
         foreach (var picture in batch)
         {
@@ -210,6 +217,19 @@ public sealed class ReadPicturesHandler(
                 }
             }
 
+            ColourSeen? colour = null;
+            if (Held(picture, colours) is { } held)
+            {
+                var answered = await ColourAsync(model, picture, content, held, colours, cancellationToken);
+                if (answered.Failed)
+                {
+                    failed++;
+                    continue;
+                }
+
+                colour = answered.Seen;
+            }
+
             await commands.SendAsync(
                 new RecordPictureReadingCommand(
                     new ProductId(picture.ProductId),
@@ -217,7 +237,8 @@ public sealed class ReadPicturesHandler(
                     said.Es,
                     said.En,
                     counted?.Number,
-                    counted?.Confidence),
+                    counted?.Confidence,
+                    colour),
                 cancellationToken);
             read++;
         }
@@ -252,6 +273,39 @@ public sealed class ReadPicturesHandler(
         }
 
         return next;
+    }
+
+    /// <summary>The colour a picture is held to, when it has one and the catalogue still defines it.</summary>
+    private static PictureColour? Held(ProductPicture picture, IReadOnlyList<PictureColour> colours) =>
+        picture.Colour is { } code
+            ? colours.FirstOrDefault(colour => string.Equals(colour.Code, code, StringComparison.OrdinalIgnoreCase))
+            : null;
+
+    /// <summary>
+    /// The colour the model chooses for the picture among the catalogue's, beside
+    /// the one the picture is held to. An answer that is none of them is no
+    /// answer — the reading is kept without a colour; a model that did not
+    /// answer at all is a failed picture, read again.
+    /// </summary>
+    private async Task<(ColourSeen? Seen, bool Failed)> ColourAsync(
+        IChatClient model, ProductPicture picture, DataContent content, PictureColour held, IReadOnlyList<PictureColour> colours,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var choice = await ClosedQuestion.AskAsync(
+                model, [content], PictureQuestions.Colour, [.. colours.Select(colour => colour.English)],
+                ModelCall.Options(Operation, promptVersion: PictureReadingPrompt.Version, person: principal.Current.Subject),
+                cancellationToken);
+
+            return (PictureColours.Seen(choice, held, colours), false);
+        }
+        catch (Exception failure) when (failure is HttpRequestException or InvalidOperationException or TaskCanceledException
+            && !cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(failure, "The picture-reading job's model did not say the colour of a picture of {Code}.", picture.Code);
+            return (null, true);
+        }
     }
 
     /// <summary>Whether a picture of this product is asked how many: when the product is offered its pieces from a picture.</summary>
@@ -363,6 +417,35 @@ public sealed class ReadPicturesHandler(
     }
 
     private sealed record Said(string Es, string En);
+}
+
+/// <summary>What a model's choice of colour is, beside the colour the picture is held to.</summary>
+public static class PictureColours
+{
+    /// <summary>What the colour question is about, as a doubt records it.</summary>
+    public const string Attribute = "COLOR";
+
+    /// <summary>
+    /// The colour chosen as values a doubt can be raised from — or null when what
+    /// the model chose is none of the catalogue's. The two are **related** when
+    /// the catalogue says the one held may be taken for the one seen: that is
+    /// the catalogue's to say, and it is carried here, not judged.
+    /// </summary>
+    public static ColourSeen? Seen(Choice choice, PictureColour held, IReadOnlyList<PictureColour> colours)
+    {
+        ArgumentNullException.ThrowIfNull(choice);
+        ArgumentNullException.ThrowIfNull(held);
+        ArgumentNullException.ThrowIfNull(colours);
+
+        return colours.FirstOrDefault(colour => colour.English == choice.Option) is { } seen
+            ? new ColourSeen(
+                Attribute,
+                seen.Code, LocalizedText.From("es", seen.Spanish).With("en", seen.English),
+                held.Code, LocalizedText.From("es", held.Spanish).With("en", held.English),
+                choice.Confidence,
+                Related: held.MistakenFor.Contains(seen.Code, StringComparer.OrdinalIgnoreCase))
+            : null;
+    }
 }
 
 // ---------- The wire ----------

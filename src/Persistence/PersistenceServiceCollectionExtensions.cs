@@ -70,6 +70,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<ICheckoutSessionRepository, EfCheckoutSessionRepository>();
         services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();
         services.AddScoped<IKnowledgeRepository, EfKnowledgeRepository>();
+        services.AddScoped<IPictureDoubtRepository, EfPictureDoubtRepository>();
         services.AddScoped<IProposalRepository, EfProposalRepository>();
         services.AddScoped<IAttributeVocabulary, CatalogAttributeVocabulary>();
         services.AddScoped<IProductFacts, CatalogProductFacts>();

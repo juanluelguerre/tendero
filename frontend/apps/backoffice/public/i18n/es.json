@@ -53,6 +53,7 @@
       "CompleteCheckoutSessionCommand": "Completar un pago",
       "CountStockCommand": "Contar existencias",
       "CreateCampaignCommand": "Crear una campaña",
+      "DecidePictureDoubtCommand": "Decidir una duda sobre una imagen",
       "DecideReturnCommand": "Decidir una devolución",
       "DefineVariantsCommand": "Definir variantes",
       "EndCampaignCommand": "Terminar una campaña",

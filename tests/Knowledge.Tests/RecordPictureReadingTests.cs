@@ -21,7 +21,7 @@ public sealed class RecordPictureReadingTests
     private static readonly PictureReading Front = new(new ImageId("front"), "Qwen/Qwen3.5-4B", "picture-2026-10-07");
 
     private Task<RecordPictureReadingResult> Read(PictureReading reading, string spanish, string english, int? count = 1) =>
-        new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock)
+        new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.knowledge, this.clock)
             .HandleAsync(new RecordPictureReadingCommand(Pan, reading, spanish, english, count), TestContext.Current.CancellationToken);
 
     private Task<RecordDescriptionResult> Describe(string culture, string text) =>
@@ -176,10 +176,119 @@ public sealed class RecordPictureReadingTests
     [Fact]
     public async Task How_sure_the_model_was_of_its_count_is_recorded_with_it()
     {
-        await new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.clock).HandleAsync(
+        await new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.knowledge, this.clock).HandleAsync(
             new RecordPictureReadingCommand(Pan, Front, "Tres sartenes.", "Three pans.", 3, 0.981), TestContext.Current.CancellationToken);
 
         Assert.Contains(this.knowledge.Documents, document => document.Text == "Three pans.\nItems counted in the picture: 3 (confidence 98 %).");
         Assert.Contains(this.knowledge.Documents, document => document.Text == "Tres sartenes.\nElementos contados en la imagen: 3 (confianza 98 %).");
+    }
+    // ---------- a colour that differs is a doubt about the picture (I-4d) ----------
+
+    private static ColourSeen Grey(double? confidence = 0.94, string held = "BLACK", bool related = false) =>
+        new("COLOR", "GREY", LocalizedText.From("es", "gris").With("en", "grey"), held, LocalizedText.From("es", "negro").With("en", "black"), confidence, related);
+
+    private Task<RecordPictureReadingResult> ReadWithColour(string spanish, string english, ColourSeen? colour) =>
+        new RecordPictureReadingHandler(this.knowledge, this.knowledge, this.knowledge, this.clock).HandleAsync(
+            new RecordPictureReadingCommand(Pan, Front, spanish, english, null, null, colour), TestContext.Current.CancellationToken);
+
+    /// <summary>
+    /// The model is sure the picture shows grey and the catalogue holds black: a
+    /// doubt, open, about that picture — and the colour is written under the
+    /// reading in each language. No claim: nothing here would change the catalogue.
+    /// </summary>
+    [Fact]
+    public async Task A_sure_colour_that_differs_raises_a_doubt_about_the_picture_and_no_claim()
+    {
+        var result = await ReadWithColour("Una funda de fieltro.", "A felt sleeve.", Grey());
+
+        Assert.True(result.DoubtRaised);
+        var doubt = Assert.Single(this.knowledge.Doubts);
+        Assert.Equal((Pan, "front", "GREY", "BLACK", PictureDoubtStatus.Open), (doubt.ProductId, doubt.PictureId, doubt.Seen, doubt.Held, doubt.Status));
+        Assert.Contains(this.knowledge.Documents, document => document.Text == "A felt sleeve.\nColour seen in the picture: grey (confidence 94 %).");
+        Assert.Contains(this.knowledge.Documents, document => document.Text == "Una funda de fieltro.\nColor visto en la imagen: gris (confianza 94 %).");
+        Assert.Empty(this.knowledge.Claims);
+    }
+
+    /// <summary>The colour the catalogue holds, an unsure answer, or two names for one colour: the answer is kept in the reading and nothing is raised.</summary>
+    [Theory]
+    [InlineData(0.99, "GREY", false)]
+    [InlineData(0.63, "BLACK", false)]
+    [InlineData(0.99, "STAINLESS_STEEL", true)]
+    public async Task What_is_no_sure_difference_is_kept_in_the_reading_and_raises_nothing(double confidence, string held, bool related)
+    {
+        var result = await ReadWithColour("Una funda.", "A sleeve.", Grey(confidence, held, related));
+
+        Assert.False(result.DoubtRaised);
+        Assert.Empty(this.knowledge.Doubts);
+        Assert.Contains(this.knowledge.Documents, document => document.Text.Contains("Colour seen in the picture: grey", StringComparison.Ordinal));
+    }
+
+    /// <summary>Read again to the colour the catalogue holds: the doubt is what the picture said, and it no longer says it.</summary>
+    [Fact]
+    public async Task A_doubt_the_next_reading_does_not_repeat_is_withdrawn()
+    {
+        await ReadWithColour("Una funda.", "A sleeve.", Grey());
+        this.clock.Advance(TimeSpan.FromMinutes(1));
+
+        await ReadWithColour("Una funda negra.", "A black sleeve.", Grey(0.99, held: "GREY"));
+
+        Assert.Equal(PictureDoubtStatus.Withdrawn, Assert.Single(this.knowledge.Doubts).Status);
+    }
+
+    /// <summary>Read again to the same colour, in other words: the doubt that is open stays the one doubt.</summary>
+    [Fact]
+    public async Task The_same_doubt_is_not_raised_twice()
+    {
+        await ReadWithColour("Una funda.", "A sleeve.", Grey());
+        this.clock.Advance(TimeSpan.FromMinutes(1));
+
+        var again = await ReadWithColour("Una funda de fieltro.", "A felt sleeve.", Grey(0.97));
+
+        Assert.False(again.DoubtRaised);
+        Assert.Equal(PictureDoubtStatus.Open, Assert.Single(this.knowledge.Doubts).Status);
+    }
+
+    /// <summary>
+    /// A person said the picture is fine. A new prompt reads it again and sees
+    /// grey again: they are not asked a second time what they already answered.
+    /// </summary>
+    [Fact]
+    public async Task A_doubt_a_person_already_decided_is_not_put_to_them_again()
+    {
+        await ReadWithColour("Una funda.", "A sleeve.", Grey());
+        this.knowledge.Doubts.Single().Decide(PictureDoubtDecision.PictureIsFine, "Ana Tendera", this.clock);
+        this.clock.Advance(TimeSpan.FromMinutes(1));
+
+        var again = await ReadWithColour("Una funda de fieltro.", "A felt sleeve.", Grey(0.97));
+
+        Assert.False(again.DoubtRaised);
+        Assert.Equal(PictureDoubtStatus.Decided, Assert.Single(this.knowledge.Doubts).Status);
+    }
+
+    /// <summary>And when it now sees another colour again — not the one decided — that is a new doubt.</summary>
+    [Fact]
+    public async Task Another_colour_than_the_one_decided_is_a_new_doubt()
+    {
+        await ReadWithColour("Una funda.", "A sleeve.", Grey());
+        this.knowledge.Doubts.Single().Decide(PictureDoubtDecision.PictureIsFine, "Ana Tendera", this.clock);
+        this.clock.Advance(TimeSpan.FromMinutes(1));
+
+        var olive = Grey() with { Seen = "OLIVE", SeenLabel = LocalizedText.From("es", "oliva").With("en", "olive") };
+        var again = await ReadWithColour("Una funda verde.", "A green sleeve.", olive);
+
+        Assert.True(again.DoubtRaised);
+        Assert.Equal(["GREY", "OLIVE"], this.knowledge.Doubts.Select(doubt => doubt.Seen));
+    }
+
+    /// <summary>A picture read again and not asked its colour — it is no longer of one — has nothing left in doubt.</summary>
+    [Fact]
+    public async Task A_picture_no_longer_asked_its_colour_has_its_open_doubt_withdrawn()
+    {
+        await ReadWithColour("Una funda.", "A sleeve.", Grey());
+        this.clock.Advance(TimeSpan.FromMinutes(1));
+
+        await ReadWithColour("Una funda de fieltro.", "A felt sleeve.", null);
+
+        Assert.Equal(PictureDoubtStatus.Withdrawn, Assert.Single(this.knowledge.Doubts).Status);
     }
 }

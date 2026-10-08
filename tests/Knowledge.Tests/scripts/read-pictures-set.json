@@ -11,5 +11,10 @@
     "when": "how many separate items",
     "pictures": 1,
     "say": "4"
+  },
+  {
+    "when": "main colour",
+    "pictures": 1,
+    "say": "grey"
   }
 ]

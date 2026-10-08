@@ -8,8 +8,10 @@ namespace ElGuerre.Tendero.Knowledge.Features.ReadPictures;
 /// <summary>What a model wrote about one picture of a product, in both languages, and what it answered.</summary>
 /// <param name="Count">How many items it counted in the picture, or null when the picture was not asked.</param>
 /// <param name="CountConfidence">The probability the model gave that number, when its server said.</param>
+/// <param name="Colour">The colour it chose, beside the one the picture is held to — or null when the picture was not asked.</param>
 public sealed record RecordPictureReadingCommand(
-    ProductId ProductId, PictureReading Reading, string Spanish, string English, int? Count, double? CountConfidence = null)
+    ProductId ProductId, PictureReading Reading, string Spanish, string English, int? Count, double? CountConfidence = null,
+    ColourSeen? Colour = null)
     : ICommand<RecordPictureReadingResult>;
 
 public enum RecordPictureReadingOutcome
@@ -21,7 +23,8 @@ public enum RecordPictureReadingOutcome
     Unchanged,
 }
 
-public sealed record RecordPictureReadingResult(RecordPictureReadingOutcome Outcome, int Superseded) : IAuditedResult
+/// <param name="DoubtRaised">Whether the reading left a doubt about the picture for a person to look at.</param>
+public sealed record RecordPictureReadingResult(RecordPictureReadingOutcome Outcome, int Superseded, bool DoubtRaised = false) : IAuditedResult
 {
     /// <summary>Neither outcome is a refusal: the same words again are simply nothing to record.</summary>
     AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
@@ -46,8 +49,14 @@ public sealed record RecordPictureReadingResult(RecordPictureReadingOutcome Outc
 /// (<see cref="PictureAnswers"/>): the count is a line of the document, so it is
 /// in the document's identity — the same words with another count are another
 /// reading, and what rested on the old one falls.
+///
+/// **And a colour that differs is a doubt, raised here** (I-4d): when the model
+/// is sure the picture shows another colour than the variants it is of hold. A
+/// doubt the new reading no longer says is withdrawn, and one a person already
+/// decided is not put to them again.
 /// </summary>
-public sealed class RecordPictureReadingHandler(IKnowledgeRepository knowledge, IUnitOfWork unitOfWork, TimeProvider clock)
+public sealed class RecordPictureReadingHandler(
+    IKnowledgeRepository knowledge, IPictureDoubtRepository doubts, IUnitOfWork unitOfWork, TimeProvider clock)
     : ICommandHandler<RecordPictureReadingCommand, RecordPictureReadingResult>
 {
     public async Task<RecordPictureReadingResult> HandleAsync(RecordPictureReadingCommand command, CancellationToken cancellationToken)
@@ -66,6 +75,9 @@ public sealed class RecordPictureReadingHandler(IKnowledgeRepository knowledge, 
                 ("en", PictureAnswers.Under(command.English, "en", count, command.CountConfidence)),
             ]
             : [("es", command.Spanish.TrimEnd()), ("en", command.English.TrimEnd())];
+
+        if (command.Colour is { } seen)
+            words = [.. words.Select(word => (word.Culture, PictureAnswers.WithColour(word.Text, word.Culture, seen.SeenLabel.In(word.Culture), seen.Confidence)))];
 
         foreach (var (culture, text) in words)
         {
@@ -102,7 +114,35 @@ public sealed class RecordPictureReadingHandler(IKnowledgeRepository knowledge, 
             }
         }
 
+        var raised = await DoubtAsync(command, cancellationToken);
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return new RecordPictureReadingResult(RecordPictureReadingOutcome.Recorded, superseded);
+        return new RecordPictureReadingResult(RecordPictureReadingOutcome.Recorded, superseded, raised);
+    }
+
+    /// <summary>
+    /// What the new reading means for the picture's doubts: an open one it no
+    /// longer says is withdrawn, and the one it does say is raised — unless it is
+    /// already open, or a person has already answered it.
+    /// </summary>
+    private async Task<bool> DoubtAsync(RecordPictureReadingCommand command, CancellationToken cancellationToken)
+    {
+        var raised = command.Colour is null ? null : PictureDoubt.Raise(command.ProductId, command.Reading, command.Colour, clock);
+        var before = await doubts.DoubtsAboutAsync(command.ProductId, command.Reading.Picture, cancellationToken);
+
+        foreach (var open in before.Where(doubt => doubt.Status == PictureDoubtStatus.Open))
+        {
+            if (raised is null || !open.IsAbout(command.Colour!))
+                open.Withdraw(clock);
+        }
+
+        if (raised is null
+            || before.Any(doubt => doubt.Status is PictureDoubtStatus.Open or PictureDoubtStatus.Decided && doubt.IsAbout(command.Colour!)))
+        {
+            return false;
+        }
+
+        doubts.Add(raised);
+        return true;
     }
 }

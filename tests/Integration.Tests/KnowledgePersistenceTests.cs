@@ -244,4 +244,65 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
         var none = await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.All, 1, 20, ProductId.New(), ct);
         Assert.Equal((8, 0, 0), (lamps.Total, none.Total, none.CountBySupport[ClaimSupportFilter.Weak]));
     }
+    /// <summary>
+    /// A doubt about a picture, against a real Postgres (phase 13a, I-4d): its two
+    /// labels survive their jsonb columns, a decision comes back with who made
+    /// it, the queue is the open ones oldest first, and what was ever doubted of
+    /// one picture is found whatever became of it — and is nobody else's.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_picture_doubt_comes_back_and_the_queue_is_the_open_ones_oldest_first()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("knowledge_picture_doubts");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var clock = new TestClock();
+        var (sleeve, pack) = (ProductId.New(), ProductId.New());
+        PictureDoubt Doubted(ProductId product, string picture, string seen)
+        {
+            clock.Advance(TimeSpan.FromMinutes(1));
+            return PictureDoubt.Raise(
+                product,
+                new PictureReading(new ImageId(picture), "qwen3.5-4b-q8_0", "picture-reading-test"),
+                new ColourSeen("COLOR", seen, LocalizedText.From("es", "gris").With("en", "grey"), "BLACK", LocalizedText.From("es", "negro").With("en", "black"), 0.94, false),
+                clock)!;
+        }
+
+        var (first, decided, withdrawn, last) = (Doubted(sleeve, "front", "GREY"), Doubted(sleeve, "front", "OLIVE"), Doubted(pack, "front", "GREY"), Doubted(pack, "side", "GREY"));
+        decided.Decide(PictureDoubtDecision.BelongsToAnotherVariant, "Ana Tendera", clock);
+        withdrawn.Withdraw(clock);
+
+        await using (var context = factory.Create())
+        {
+            // Not in the order they were raised: the queue's order is the table's, not the insert's.
+            context.PictureDoubts.AddRange(last, withdrawn, decided, first);
+            await context.SaveChangesAsync(ct);
+        }
+
+        await using var provider = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString).BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var doubts = scope.ServiceProvider.GetRequiredService<IPictureDoubtRepository>();
+
+        var stored = await doubts.FindDoubtAsync(decided.Id, ct);
+        Assert.NotNull(stored);
+        Assert.Equal(
+            (sleeve, "front", "COLOR", "OLIVE", "BLACK", 0.94, "qwen3.5-4b-q8_0", "picture-reading-test"),
+            (stored.ProductId, stored.PictureId, stored.AttributeCode, stored.Seen, stored.Held, stored.Confidence, stored.ReadByModel, stored.ReadWithPrompt));
+        Assert.Equal(("gris", "black"), (stored.SeenLabel.In("es"), stored.HeldLabel.In("en")));
+        Assert.Equal(
+            (PictureDoubtStatus.Decided, (PictureDoubtDecision?)PictureDoubtDecision.BelongsToAnotherVariant, "Ana Tendera"),
+            (stored.Status, stored.Decision, stored.DecidedBy));
+
+        var queue = await doubts.OpenDoubtsAsync(1, 1, ct);
+        var next = await doubts.OpenDoubtsAsync(2, 1, ct);
+        Assert.Equal((2, first.Id), (queue.Total, Assert.Single(queue.Doubts).Id));
+        Assert.Equal(last.Id, Assert.Single(next.Doubts).Id);
+
+        var ofTheSleevesFront = await doubts.DoubtsAboutAsync(sleeve, new ImageId("front"), ct);
+        Assert.Equal(new[] { first.Id.Value, decided.Id.Value }.Order(), ofTheSleevesFront.Select(doubt => doubt.Id.Value).Order());
+    }
 }

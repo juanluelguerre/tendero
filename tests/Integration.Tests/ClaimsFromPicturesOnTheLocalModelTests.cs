@@ -1,6 +1,8 @@
 using System.Text.Json;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Catalog.Adapters;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Extraction;
@@ -83,7 +85,12 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
 
     private sealed class Seed(IReadOnlyList<ProductPicture> pictures) : IProductPictures
     {
+        /// <summary>The colours the seed's catalogue defines, when the test is about them.</summary>
+        public IReadOnlyList<PictureColour> Colours { get; set; } = [];
+
         public Task<IReadOnlyList<ProductPicture>> AllAsync(CancellationToken cancellationToken = default) => Task.FromResult(pictures);
+
+        public Task<IReadOnlyList<PictureColour>> ColoursAsync(CancellationToken cancellationToken = default) => Task.FromResult(Colours);
     }
 
     private sealed class FromDisk : IImageStore
@@ -111,7 +118,7 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
                     product => (IReadOnlyList<HeldValue>)[new HeldValue(PictureAnswers.Pieces, $"{pieces[product]}", $"{pieces[product]}")]));
     }
 
-    private static ServiceProvider Compose(string connectionString, IReadOnlyList<ProductPicture> pictures, ICatalogueValues catalogue)
+    private static ServiceProvider Compose(string connectionString, IProductPictures pictures, ICatalogueValues catalogue)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -132,7 +139,7 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
         services.AddKnowledge(configuration);
         services.AddModelProfiles(configuration);
         services.AddSingleton<IPrincipalAccessor>(new Asker());
-        services.AddSingleton<IProductPictures>(new Seed(pictures));
+        services.AddSingleton(pictures);
         services.AddSingleton<IImageStore>(new FromDisk());
         services.AddSingleton(catalogue);
         return services.BuildServiceProvider();
@@ -154,7 +161,7 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
             .Select(picture => (picture.ProductId, Pictures.Single(known => known.ItemId == picture.Code).Pieces))
             .Where(product => product.Pieces is not null)
             .ToDictionary(product => new ProductId(product.ProductId), product => product.Pieces!.Value);
-        await using var provider = Compose(factory.ConnectionString, pictures, new DeclaredPieces(declared));
+        await using var provider = Compose(factory.ConnectionString, new Seed(pictures), new DeclaredPieces(declared));
 
         var read = 0;
         for (var batch = 0; batch < 4; batch++)
@@ -204,5 +211,79 @@ public sealed class ClaimsFromPicturesOnTheLocalModelTests(PostgresFixture postg
 
         Assert.Equal(Pictures.Length, read);
         Assert.All(claims, claim => Assert.Equal(PictureAnswers.Pieces, claim.AttributeCode));
+    }
+
+    /// <summary>
+    /// The colour, end to end (I-4d): every seed picture whose product declares
+    /// one colour is asked which of the catalogue's colours it shows, and a sure
+    /// difference is a doubt about the picture. Structural, as above: every
+    /// picture is read and no claim is about a colour. What it writes out is each
+    /// colour seen beside the one declared, and the doubts.
+    /// </summary>
+    [Fact]
+    public async Task Seed_pictures_of_one_colour_are_asked_their_colour_and_a_sure_difference_is_a_doubt()
+    {
+        Assert.SkipUnless(ReadsPictures(), "needs the local model started with its vision projector on port 38085");
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("pictures_colours");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        // The seed as the catalogue would hold it: each product's colour is its own, and its one picture is its cover.
+        var definitions = new AttributeDefinitions(await AttributeDefinitionSeedFile.LoadAsync(
+            Path.Combine(AppContext.BaseDirectory, "TestData", "attributes.sample.json"), TimeProvider.System, ct));
+        using var products = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "TestData", "products.sample.json"), ct));
+        List<ProductPicture> pictures = [];
+        foreach (var product in products.RootElement.EnumerateArray())
+        {
+            var item = product.GetProperty("item_id").GetString()!;
+            if (product.GetProperty("attributes").TryGetProperty("color", out var colour)
+                && File.Exists(SeedPicture(item))
+                && definitions.ByCode("COLOR")!.Accept(colour.GetString()!)?.OptionCode is { } code)
+            {
+                pictures.Add(new ProductPicture(Guid.CreateVersion7(), item, item, code));
+            }
+        }
+
+        Assert.SkipUnless(pictures.Count > 0, "needs the seed's pictures");
+        var seed = new Seed(pictures);
+        await using var provider = Compose(factory.ConnectionString, seed, new DeclaredPieces(new Dictionary<ProductId, int>()));
+        await using (var scope = provider.CreateAsyncScope())
+            seed.Colours = await ActivatorUtilities.CreateInstance<ProductPicturesReader>(scope.ServiceProvider).ColoursAsync(ct);
+
+        var read = 0;
+        for (var batch = 0; read < pictures.Count && batch < pictures.Count; batch++)
+        {
+            await using var scope = provider.CreateAsyncScope();
+            var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
+                .SendAsync(new ReadPicturesCommand(PictureReadingOptions.MaxBatch), ct);
+            read += result.Read;
+            if (result.Read == 0)
+                break;
+        }
+
+        await using var reread = factory.Create();
+        var documents = await reread.SourceDocuments.Where(document => document.Culture == "en").ToListAsync(ct);
+        var doubts = await reread.PictureDoubts.ToListAsync(ct);
+
+        var same = 0;
+        foreach (var picture in pictures)
+        {
+            var reading = documents.SingleOrDefault(document => document.ProductId.Value == picture.ProductId);
+            var line = reading?.Text.Split('\n').LastOrDefault(text => text.StartsWith("Colour seen", StringComparison.Ordinal)) ?? "NOT READ";
+            var held = seed.Colours.Single(colour => colour.Code == picture.Colour).English;
+            var agrees = line.StartsWith($"Colour seen in the picture: {held}", StringComparison.Ordinal);
+            same += agrees ? 1 : 0;
+            if (!agrees)
+                output.WriteLine($"{picture.Code} · held {held} · {line}");
+        }
+
+        output.WriteLine($"=== {read} of {pictures.Count} pictures read; {same} show the colour the catalogue holds; {doubts.Count} doubt(s)");
+        foreach (var doubt in doubts)
+            output.WriteLine($"DOUBT · {pictures.Single(picture => picture.ProductId == doubt.ProductId.Value).Code} · seen {doubt.Seen} at {doubt.Confidence:F2} · held {doubt.Held} · {doubt.Status}");
+
+        Assert.Equal(pictures.Count, read);
+        Assert.DoesNotContain(await reread.Claims.ToListAsync(ct), claim => claim.AttributeCode == "COLOR");
     }
 }

@@ -53,6 +53,7 @@ classDiagram
         +string Code
         +LocalizedText Label
         +string? Swatch
+        +string[]? MistakenFor
     }
     class AttributeValue {
         <<record>>
@@ -894,11 +895,56 @@ classDiagram
         Rejected
         Superseded
     }
+    class ColourSeen {
+        <<record>>
+        +string AttributeCode
+        +string Seen
+        +LocalizedText SeenLabel
+        +string Held
+        +LocalizedText HeldLabel
+        +double? Confidence
+        +bool Related
+    }
     class Evidence {
         <<record>>
         +SourceDocumentId Document
         +Quote Quote
         +double Support
+    }
+    class PictureDoubt {
+        <<aggregate>>
+        +PictureDoubtId Id
+        +ProductId ProductId
+        +string PictureId
+        +string AttributeCode
+        +string Seen
+        +LocalizedText SeenLabel
+        +string Held
+        +LocalizedText HeldLabel
+        +double Confidence
+        +string ReadByModel
+        +string ReadWithPrompt
+        +PictureDoubtStatus Status
+        +PictureDoubtDecision? Decision
+        +string? DecidedBy
+        +DateTimeOffset? DecidedAt
+        +DateTimeOffset RaisedAt
+    }
+    class PictureDoubtDecision {
+        <<enumeration>>
+        PictureIsFine
+        ReplaceThePicture
+        BelongsToAnotherVariant
+    }
+    class PictureDoubtId {
+        <<record>>
+        +Guid Value
+    }
+    class PictureDoubtStatus {
+        <<enumeration>>
+        Open
+        Decided
+        Withdrawn
     }
     class PictureReading {
         <<record>>
@@ -966,6 +1012,7 @@ classDiagram
     }
     Evidence --> SourceDocumentId : Document
     Evidence --> Quote : Quote
+    PictureDoubt --> PictureDoubtId : Id
     ProductClaim --> ClaimId : Id
     ProductClaim --> Provenance : Provenance
     ProductClaim "1" --> "*" Evidence : Evidence
@@ -981,6 +1028,16 @@ classDiagram
 | `ClaimProposed` | `ClaimId: ClaimId`, `ProductId: ProductId` |
 | `ClaimRejected` | `ClaimId: ClaimId`, `ProductId: ProductId`, `RejectedBy: string` |
 | `ClaimSuperseded` | `ClaimId: ClaimId`, `ProductId: ProductId`, `WasApproved: bool` |
+| `PictureDoubtDecided` | `DoubtId: PictureDoubtId`, `ProductId: ProductId`, `Decision: PictureDoubtDecision`, `DecidedBy: string` |
+| `PictureDoubtRaised` | `DoubtId: PictureDoubtId`, `ProductId: ProductId` |
+
+### PictureDoubt states
+
+```mermaid
+stateDiagram-v2
+    Open --> Decided
+    Open --> Withdrawn
+```
 
 ### ProductClaim states
 

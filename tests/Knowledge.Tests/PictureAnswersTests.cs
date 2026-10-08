@@ -117,4 +117,31 @@ public sealed class PictureAnswersTests
     {
         Assert.Empty(await Read(spanish, "", Pieces));
     }
+    /// <summary>
+    /// The colour a picture answered is written under the reading too, in its
+    /// language — for a person, and for the document's identity. The count is
+    /// still read from its own line above it, and nothing is read from the
+    /// colour's: a colour is never a claim.
+    /// </summary>
+    [Fact]
+    public async Task The_colour_seen_is_a_line_under_the_count_and_the_count_is_still_read()
+    {
+        var spanish = PictureAnswers.WithColour(PictureAnswers.Under("Tres sartenes.", "es", 3, 0.97), "es", "gris", 0.949);
+        var english = PictureAnswers.WithColour(PictureAnswers.Under("Three pans.", "en", 3, 0.97), "en", "grey", 0.949);
+
+        Assert.Equal("Tres sartenes.\nElementos contados en la imagen: 3 (confianza 97 %).\nColor visto en la imagen: gris (confianza 94 %).", spanish);
+        Assert.Equal("Three pans.\nItems counted in the picture: 3 (confidence 97 %).\nColour seen in the picture: grey (confidence 94 %).", english);
+
+        var claim = Assert.Single(await Read(spanish, english, Pieces));
+        Assert.Equal(("PIECES", "3", "Items counted in the picture: 3 (confidence 97 %)."), (claim.AttributeCode, claim.Value, claim.QuoteEnglish));
+    }
+
+    [Fact]
+    public async Task A_reading_with_a_colour_and_no_count_proposes_nothing()
+    {
+        var spanish = PictureAnswers.WithColour("Una zapatilla.", "es", "gris", null);
+
+        Assert.Equal("Una zapatilla.\nColor visto en la imagen: gris.", spanish);
+        Assert.Empty(await Read(spanish, PictureAnswers.WithColour("A shoe.", "en", "grey", null), Pieces));
+    }
 }

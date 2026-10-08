@@ -206,6 +206,15 @@
       ]
     },
     {
+      "name": "Picture doubts",
+      "area": "backoffice",
+      "question": "When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?",
+      "decision": "Mostly 'the picture is fine' means the line is too low or two colours are one to the shop: raise PictureDoubt.SureDifference, or declare the two as mistaken for each other. A share of 'replace the picture' worth having is what would justify a doubt holding a picture back from being the cover.",
+      "signals": [
+        "tendero.knowledge.picture_doubts.decided"
+      ]
+    },
+    {
       "name": "Approved claims reach the catalogue",
       "area": "backoffice",
       "question": "Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through?",
@@ -1398,6 +1407,24 @@
             "false"
           ],
           "description": "Whether the claim was a picture's own answer the model was sure of (at or above ProductClaim.SureAnswer): the ones a person may approve in bulk."
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.picture_doubts.decided",
+      "instrument": "counter",
+      "unit": "{doubt}",
+      "description": "Doubts about a picture a person decided, by what they said of it.",
+      "attributes": {
+        "decision": {
+          "type": "string",
+          "values": [
+            "picture_is_fine",
+            "replace_the_picture",
+            "belongs_to_another_variant"
+          ],
+          "description": "PictureDoubtDecision, labelled by MetricLabels.",
+          "from": "PictureDoubtDecision"
         }
       }
     },

@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261007153524_SourceDocumentPictureReading";
+    public override string LastMigrationId => "20261008064820_PictureDoubts";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -641,6 +641,102 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDatabaseName("ix_stock_items_sku");
 
                 b.ToTable("stock_items", "inventory");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Knowledge.Domain.PictureDoubt", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<string>("AttributeCode")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("attribute_code");
+
+                b.Property<double>("Confidence")
+                    .HasColumnType("double precision")
+                    .HasColumnName("confidence");
+
+                b.Property<DateTimeOffset?>("DecidedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("decided_at");
+
+                b.Property<string>("DecidedBy")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("decided_by");
+
+                b.Property<string>("Decision")
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("decision");
+
+                b.Property<string>("Held")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("held");
+
+                b.Property<string>("HeldLabel")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("held_label");
+
+                b.Property<string>("PictureId")
+                    .IsRequired()
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)")
+                    .HasColumnName("picture_id");
+
+                b.Property<Guid>("ProductId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("product_id");
+
+                b.Property<DateTimeOffset>("RaisedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("raised_at");
+
+                b.Property<string>("ReadByModel")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("read_by_model");
+
+                b.Property<string>("ReadWithPrompt")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("read_with_prompt");
+
+                b.Property<string>("Seen")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("seen");
+
+                b.Property<string>("SeenLabel")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("seen_label");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.HasKey("Id")
+                    .HasName("pk_picture_doubts");
+
+                b.HasIndex("ProductId", "PictureId")
+                    .HasDatabaseName("ix_picture_doubts_product_id_picture_id");
+
+                b.HasIndex("Status", "RaisedAt")
+                    .HasDatabaseName("ix_picture_doubts_status_raised_at");
+
+                b.ToTable("picture_doubts", "knowledge");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Knowledge.Domain.ProductClaim", b =>

@@ -29,6 +29,15 @@ public sealed class ReadPicturesTests
     private sealed class Catalogue(IReadOnlyList<ProductPicture> pictures) : IProductPictures
     {
         public Task<IReadOnlyList<ProductPicture>> AllAsync(CancellationToken cancellationToken = default) => Task.FromResult(pictures);
+
+        /// <summary>Black, grey, and a stainless steel that may be taken for grey.</summary>
+        public Task<IReadOnlyList<PictureColour>> ColoursAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<PictureColour>>(
+            [
+                new("BLACK", "negro", "black", []),
+                new("GREY", "gris", "grey", ["STAINLESS_STEEL"]),
+                new("STAINLESS_STEEL", "acero inoxidable", "stainless steel", ["GREY"]),
+            ]);
     }
 
     private sealed class Store(HashSet<string> held) : IImageStore
@@ -108,6 +117,7 @@ public sealed class ReadPicturesTests
         services.AddSingleton<TimeProvider>(Clock);
         services.AddSingleton<IPrincipalAccessor>(new Asker("Lucía"));
         services.AddSingleton<IKnowledgeRepository>(knowledge);
+        services.AddSingleton<IPictureDoubtRepository>(knowledge);
         services.AddSingleton<IUnitOfWork>(knowledge);
         services.AddSingleton<IProductPictures>(new Catalogue(pictures));
         services.AddSingleton<IImageStore>(store);
@@ -252,6 +262,56 @@ public sealed class ReadPicturesTests
         Assert.Single(shop.Metered());
     }
 
+    // ---------- its colour, when it has one to be held to (I-4d) ----------
+
+    /// <summary>
+    /// A picture that shows variants of one colour is asked which of the
+    /// catalogue's colours it is — a third call — and the answer is kept under
+    /// the reading. The script says grey: for a product the catalogue holds as
+    /// black, with no probability behind it, that raises no doubt.
+    /// </summary>
+    [Fact]
+    public async Task A_picture_with_a_colour_to_be_held_to_is_asked_its_colour_and_the_answer_is_kept()
+    {
+        var sleeve = Picture("Funda", "sleeve-cover") with { Colour = "BLACK" };
+        await using var shop = Compose([sleeve]);
+
+        var result = await shop.Ask();
+
+        Assert.Equal((PictureReadingStatus.Ran, 1, 0), (result.Status, result.Read, result.Failed));
+        Assert.Equal(3, shop.Metered().Count);
+        Assert.Contains(shop.Knowledge.Documents, document => document.Text.EndsWith("\nColour seen in the picture: grey.", StringComparison.Ordinal));
+        Assert.Contains(shop.Knowledge.Documents, document => document.Text.EndsWith("\nColor visto en la imagen: gris.", StringComparison.Ordinal));
+        Assert.Empty(shop.Knowledge.Doubts);
+    }
+
+    /// <summary>A picture of no variant in particular, or of a colour the catalogue no longer defines, is not asked.</summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("MAUVE")]
+    public async Task A_picture_with_no_colour_to_be_held_to_is_not_asked_its_colour(string? colour)
+    {
+        await using var shop = Compose([Picture("Funda", "sleeve-cover") with { Colour = colour }]);
+
+        await shop.Ask();
+
+        Assert.Equal(2, shop.Metered().Count);
+        Assert.DoesNotContain(shop.Knowledge.Documents, document => document.Text.Contains("Colour seen", StringComparison.Ordinal));
+    }
+
+    /// <summary>An answer that is none of the catalogue's colours is no answer: the reading is kept, without one.</summary>
+    [Fact]
+    public async Task A_colour_that_is_none_of_the_catalogues_is_left_out_of_the_reading()
+    {
+        var sleeve = Picture("Funda", "sleeve-cover") with { Colour = "BLACK" };
+        await using var shop = Compose([sleeve], script: "read-pictures-mauve.json");
+
+        var result = await shop.Ask();
+
+        Assert.Equal((PictureReadingStatus.Ran, 1, 0), (result.Status, result.Read, result.Failed));
+        Assert.DoesNotContain(shop.Knowledge.Documents, document => document.Text.Contains("Colour seen", StringComparison.Ordinal));
+    }
+
     // ---------- every way a picture ends without a reading ----------
 
     /// <summary>
@@ -319,5 +379,31 @@ public sealed class ReadPicturesTests
         Assert.All(rows, row => Assert.Equal(
             (ReadPicturesHandler.Operation, PictureReadingPrompt.Version, "scripted", "lucía"),
             (row.Operation, row.PromptVersion, row.Profile, row.Subject)));
+    }
+    /// <summary>
+    /// What the model chose, as a doubt is raised from it: the catalogue's code
+    /// and both its names for each colour, the model's own probability — and
+    /// whether the catalogue says the two may be taken for each other, which is
+    /// what keeps grey for stainless steel from being a doubt.
+    /// </summary>
+    [Fact]
+    public void A_choice_of_colour_carries_what_the_catalogue_says_of_the_two()
+    {
+        PictureColour[] colours =
+        [
+            new("BLACK", "negro", "black", []),
+            new("GREY", "gris", "grey", ["STAINLESS_STEEL"]),
+            new("STAINLESS_STEEL", "acero inoxidable", "stainless steel", ["GREY"]),
+        ];
+        var grey = new ElGuerre.Tendero.AI.Chat.Choice("grey", 0.96, "grey");
+
+        var forSteel = PictureColours.Seen(grey, colours[2], colours)!;
+        var forBlack = PictureColours.Seen(grey, colours[0], colours)!;
+
+        Assert.Equal(
+            ("COLOR", "GREY", "gris", "STAINLESS_STEEL", "stainless steel", 0.96, true),
+            (forSteel.AttributeCode, forSteel.Seen, forSteel.SeenLabel.In("es"), forSteel.Held, forSteel.HeldLabel.In("en"), forSteel.Confidence, forSteel.Related));
+        Assert.False(forBlack.Related);
+        Assert.Null(PictureColours.Seen(new ElGuerre.Tendero.AI.Chat.Choice(null, 0.9, "mauve"), colours[0], colours));
     }
 }

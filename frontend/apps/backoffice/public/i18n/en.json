@@ -53,6 +53,7 @@
       "CompleteCheckoutSessionCommand": "Complete a checkout",
       "CountStockCommand": "Count stock",
       "CreateCampaignCommand": "Create a campaign",
+      "DecidePictureDoubtCommand": "Decide a doubt about a picture",
       "DecideReturnCommand": "Decide a return",
       "DefineVariantsCommand": "Define variants",
       "EndCampaignCommand": "End a campaign",

@@ -104,6 +104,7 @@ public sealed class ReadPicturesOnTheLocalModelTests(ITestOutputHelper output)
         services.AddSingleton<TimeProvider>(new TestClock());
         services.AddSingleton<IPrincipalAccessor>(new Asker());
         services.AddSingleton<IKnowledgeRepository>(knowledge);
+        services.AddSingleton<IPictureDoubtRepository>(knowledge);
         services.AddSingleton<IUnitOfWork>(knowledge);
         services.AddSingleton<IProductPictures>(new Seed([.. Pictures.Select(picture => new ProductPicture(Guid.CreateVersion7(), picture.ItemId, picture.ItemId))]));
         services.AddSingleton<IImageStore>(new FromDisk());

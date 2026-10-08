@@ -62,7 +62,7 @@ public static class AttributeDefinitionSeedFile
             definition.AddAlias(clock, alias);
 
         foreach (var option in entry.Options)
-            definition.AddOption(clock, option.Code, new LocalizedText(option.Label), option.Swatch);
+            definition.AddOption(clock, option.Code, new LocalizedText(option.Label), option.Swatch, option.MistakenFor);
 
         return definition;
     }
@@ -81,5 +81,8 @@ public static class AttributeDefinitionSeedFile
         public List<SeedOption> Options { get; init; } = [];
     }
 
-    private sealed record SeedOption(string Code, Dictionary<string, string> Label, string? Swatch = null);
+    private sealed record SeedOption(string Code, Dictionary<string, string> Label, string? Swatch = null)
+    {
+        public List<string> MistakenFor { get; init; } = [];
+    }
 }

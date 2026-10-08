@@ -84,3 +84,42 @@ internal sealed class ProductClaimConfiguration : IEntityTypeConfiguration<Produ
         builder.Ignore(claim => claim.DomainEvents);
     }
 }
+
+/// <summary>
+/// A doubt about a picture (phase 13a, I-4d). Columns, all of it: it is listed
+/// by status and found by its picture, and nothing in it is only ever read with
+/// something else.
+/// </summary>
+internal sealed class PictureDoubtConfiguration : IEntityTypeConfiguration<PictureDoubt>
+{
+    public void Configure(EntityTypeBuilder<PictureDoubt> builder)
+    {
+        builder.ToTable("PictureDoubts", "knowledge");
+
+        builder.HasKey(doubt => doubt.Id);
+        builder.Property(doubt => doubt.Id).ValueGeneratedNever();
+
+        builder.Property(doubt => doubt.PictureId).HasMaxLength(128);
+        builder.Property(doubt => doubt.AttributeCode).HasMaxLength(64);
+        builder.Property(doubt => doubt.Seen).HasMaxLength(64);
+        builder.Property(doubt => doubt.Held).HasMaxLength(64);
+        builder.Property(doubt => doubt.SeenLabel).HasConversion(Jsonb.LocalizedTextConverter).HasColumnType("jsonb");
+        builder.Property(doubt => doubt.HeldLabel).HasConversion(Jsonb.LocalizedTextConverter).HasColumnType("jsonb");
+        builder.Property(doubt => doubt.Confidence);
+        builder.Property(doubt => doubt.ReadByModel).HasMaxLength(200);
+        builder.Property(doubt => doubt.ReadWithPrompt).HasMaxLength(100);
+        builder.Property(doubt => doubt.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(doubt => doubt.Decision).HasConversion<string>().HasMaxLength(40);
+        builder.Property(doubt => doubt.DecidedBy).HasMaxLength(200);
+        builder.Property(doubt => doubt.DecidedAt);
+        builder.Property(doubt => doubt.RaisedAt);
+
+        // The queue: the open ones, oldest first.
+        builder.HasIndex(doubt => new { doubt.Status, doubt.RaisedAt });
+
+        // "What was ever doubted of this picture" — asked each time it is read again.
+        builder.HasIndex(doubt => new { doubt.ProductId, doubt.PictureId });
+
+        builder.Ignore(doubt => doubt.DomainEvents);
+    }
+}

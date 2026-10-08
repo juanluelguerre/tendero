@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-44 features: **39** answered by a signal emitted today,
+45 features: **40** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -48,6 +48,7 @@ everything here that is not *planned* is emitted.
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
 | Claims from descriptions | How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it? | A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it. | `tendero.knowledge.claims.proposed`, `tendero.knowledge.claims.dropped`, `tendero.knowledge.proposals.failed`, `tendero.knowledge.descriptions.failed` | emitted |
 | Claim review | Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones? | A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. And of the sure answers a picture gave (sure_answer = true), more than one in ten rejected means the line they clear is too low: raise ProductClaim.SureAnswer before anything is applied without a person. | `tendero.knowledge.claims.reviewed` | emitted |
+| Picture doubts | When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised? | Mostly 'the picture is fine' means the line is too low or two colours are one to the shop: raise PictureDoubt.SureDifference, or declare the two as mistaken for each other. A share of 'replace the picture' worth having is what would justify a doubt holding a picture back from being the cover. | `tendero.knowledge.picture_doubts.decided` | emitted |
 | Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
 | Agent registry | Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered? | A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet. | `tendero.checkout.attempts` | emitted |
 | Shopkeeper dashboard | Does the shopkeeper start the day on the dashboard, and over which period do they read it? | If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records. | — Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time. | none |
@@ -647,6 +648,18 @@ Answers:
 |---|---|---|---|
 | `decision` | string | `approve`, `reject` | ReviewDecision, labelled by MetricLabels. |
 | `sure_answer` | string | `true`, `false` | Whether the claim was a picture's own answer the model was sure of (at or above ProductClaim.SureAnswer): the ones a person may approve in bulk. |
+
+### `tendero.knowledge.picture_doubts.decided`
+
+counter, unit `{doubt}`. Doubts about a picture a person decided, by what they said of it.
+
+Answers:
+
+- **Picture doubts** — When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `decision` | string | `picture_is_fine`, `replace_the_picture`, `belongs_to_another_variant` | PictureDoubtDecision, labelled by MetricLabels. |
 
 ### `tendero.knowledge.claims.applied`
 
