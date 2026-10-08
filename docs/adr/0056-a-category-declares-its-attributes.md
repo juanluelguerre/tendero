@@ -123,4 +123,5 @@ day, on the proposed answers).
   tokens a read. The description went back to its measured words, the kind is
   named in the argument and the enum, the empty field is not written, and three
   runs gave 24, 24 and 25. Tino's suite, whose prompt did not change, did not
-  move. **Owed**: a case that asks Steward for the new kind.
+  move. Two cases now ask Steward for the new kind, and it chooses it six
+  times of six.

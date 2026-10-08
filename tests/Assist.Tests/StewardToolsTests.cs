@@ -165,6 +165,67 @@ public sealed class StewardToolsTests
         Assert.Equal(new ToolUse("look_at_shelf", 1, 4, null), Assert.Single(trace.Reads));
     }
 
+    /// <summary>
+    /// **The same read twice in a turn is answered once.** A small model may ask
+    /// again for what it was just given, and the rows would then sit in its window
+    /// twice: fifty catalogue gaps are about 4,000 tokens of 8,192, and one
+    /// measured turn that read them reached 9,577 and failed
+    /// (`docs/analysis/steward-models.md`). Whether a read was already
+    /// made is not the model's to decide — code knows — so the second answer is a
+    /// line saying where the rows are, and the panel is told of one read, not two.
+    /// The same read with other arguments is another read.
+    /// </summary>
+    [Fact]
+    public async Task The_same_read_again_in_a_turn_is_told_where_its_rows_are_and_not_given_them_twice()
+    {
+        var (tools, trace, _) = Compose();
+        var shelf = tools.Single(tool => tool.Name == "look_at_shelf");
+        var ct = TestContext.Current.CancellationToken;
+
+        var first = Assert.IsType<JsonElement>(await shelf.InvokeAsync(new AIFunctionArguments { ["shelf"] = "A", ["row"] = 2 }, ct));
+        // The same arguments, written in another order.
+        var again = Assert.IsType<JsonElement>(await shelf.InvokeAsync(new AIFunctionArguments { ["row"] = 2, ["shelf"] = "A" }, ct));
+        var another = Assert.IsType<JsonElement>(await shelf.InvokeAsync(new AIFunctionArguments { ["shelf"] = "B", ["row"] = 2 }, ct));
+
+        Assert.True(first.TryGetProperty("data", out _));
+        Assert.False(again.TryGetProperty("data", out _));
+        Assert.Contains("already", again.GetProperty("repeated").GetString(), StringComparison.Ordinal);
+        Assert.True(another.TryGetProperty("data", out _));
+        Assert.Equal(2, trace.Reads.Count);
+    }
+
+    /// <summary>A read that was refused was not made: asked again with the same arguments, it is refused again, in its own words.</summary>
+    [Fact]
+    public async Task A_read_that_failed_is_not_remembered_as_made()
+    {
+        var trace = new StewardTrace();
+        var scope = new ServiceCollection().AddTenderoCqrs(typeof(ProposeActionsCommand).Assembly).AddAssist().BuildServiceProvider().CreateScope().ServiceProvider;
+        var picky = StewardTools.For(
+            [new PickyTool()], scope.GetRequiredService<ProposableCommands>(), scope.GetRequiredService<ICommandDispatcher>(),
+            new ProposalSource("scripted", "scripted", "steward-v1", "conv-1"), trace).Single(tool => tool.Name == "picky");
+        var ct = TestContext.Current.CancellationToken;
+
+        var first = Assert.IsType<JsonElement>(await picky.InvokeAsync(new AIFunctionArguments { ["warehouse"] = "Barcelona" }, ct));
+        var again = Assert.IsType<JsonElement>(await picky.InvokeAsync(new AIFunctionArguments { ["warehouse"] = "Barcelona" }, ct));
+
+        Assert.Equal(("Use BCN.", "Use BCN."), (first.GetProperty("error").GetString(), again.GetProperty("error").GetString()));
+        Assert.Empty(trace.Reads);
+    }
+
+    private sealed class PickyTool : IReadTool
+    {
+        public ToolAudience Audience => ToolAudience.Shopkeeper;
+
+        public string Name => "picky";
+
+        public string Description => "Refuses what it is asked.";
+
+        public JsonElement ArgumentsSchema { get; } = JsonDocument.Parse("""{"type":"object","properties":{"warehouse":{"type":"string"}}}""").RootElement.Clone();
+
+        public Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default) =>
+            throw new ArgumentException("Use BCN.");
+    }
+
     [Fact]
     public async Task A_proposal_tool_stores_what_its_entry_accepts_and_says_what_it_refused()
     {

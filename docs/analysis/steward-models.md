@@ -8,7 +8,7 @@ laboratory, so the rows compare.
 
 ## How
 
-`tools/SearchEval --suite copilot` (its README): 24 cases in es and en (26 from
+`tools/SearchEval --suite copilot` (its README): 24 cases in es and en (28 from 2026-10-08; 26 from
 2026-10-05, with two on the answer's language) over the
 seed catalogue (100 products), in a disposable Postgres the suite migrates and
 seeds; each case a fresh conversation through the turn the API runs. A case
@@ -261,3 +261,35 @@ purpose, does not have.
 `gaps-drafts` at 9,577 tokens is its own finding and older than this change: a
 hundred drafts in a fresh laboratory, fifty rows of them read twice in one turn.
 It passed in nine runs of ten.
+
+### The two things that were owed (2026-10-08, later)
+
+**Two cases for the new kind** — `gaps-required-en` and `gaps-required-es`, 28
+cases now. They need no incomplete product in the laboratory, and saying they
+did was wrong: as with every gap case, what is judged is the read the model
+chose, not what the read found. Three runs, each on a new database:
+
+| Run | Passed of 28 | Right tools | The new cases | What failed |
+|---|---|---|---|---|
+| 17 | 26 | 96 % | both | `restock-barcelona`, `withdraw-padel` (proposed without reading) |
+| 18 | 26 | 100 % | both | `restock-barcelona`, `translate-beanie-spanish` |
+| 19 | 26 | 100 % | both | `restock-barcelona`, `translate-thermometer` (proposed another product) |
+
+The model asks for `MissingRequiredAttribute` from the argument's description
+and the enum alone, six times of six, in both languages. *Proposing without
+reading* came back once in three runs: it is not gone with the clause, it is
+rarer — one run of six without it, four of four with it.
+
+**The read that overflowed.** A read asked again in the same turn with the same
+arguments is now answered with a line saying where its rows are, not with the
+rows a second time (`StewardTools`, held by tests and four hand mutations).
+**What this does not establish**: that the one turn at 9,577 tokens was that.
+It is the likeliest reading — fifty rows are about 4,000 tokens and nothing
+else in that turn is that size — but the report of that run went with the
+throwaway checkout it was made in, and the overflow was one turn in some
+seventeen runs, so three clean runs since say nothing. Two different gap reads
+in one turn would overflow all the same, and the turn would end as it did:
+unavailable, said so, nothing stored.
+
+The dry run scores 27 of 28: `english-under-spanish` has no entry in the
+script and its default answer is in English. Older than today.

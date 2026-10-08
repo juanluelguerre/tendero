@@ -88,6 +88,40 @@
       "proposals": []
     },
     {
+      "id": "gaps-required-en",
+      "question": "Which products are missing an attribute their category requires?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "catalogue_gaps",
+          "arguments": {
+            "kind": "MissingRequiredAttribute"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "gaps-required-es",
+      "question": "¿Qué productos están incompletos, sin algún atributo obligatorio de su categoría?",
+      "culture": "es",
+      "screen": {
+        "page": "Products",
+        "subject": "Active",
+        "subjectProduct": null
+      },
+      "tools": [
+        {
+          "name": "catalogue_gaps",
+          "arguments": {
+            "kind": "MissingRequiredAttribute"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
       "id": "find-french-press",
       "question": "Do we sell a french press?",
       "culture": "en",

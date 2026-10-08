@@ -63,6 +63,30 @@
     ]
   },
   {
+    "when": "Which products are missing an attribute their category requires?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "catalogue_gaps",
+        "arguments": {
+          "kind": "MissingRequiredAttribute"
+        }
+      }
+    ]
+  },
+  {
+    "when": "¿Qué productos están incompletos, sin algún atributo",
+    "say": "Hecho.",
+    "calls": [
+      {
+        "tool": "catalogue_gaps",
+        "arguments": {
+          "kind": "MissingRequiredAttribute"
+        }
+      }
+    ]
+  },
+  {
     "when": "Do we sell a french press?",
     "say": "Done.",
     "calls": [
