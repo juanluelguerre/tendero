@@ -360,4 +360,40 @@ Same prompt, same reads; a laboratory built from the larger seed
   comes from the catalogue, so why twenty products would move it is not
   known; **not looked into yet**, and the first thing to look at in the next
   run.
+
+  **Looked into (2026-10-08, later): it was never new, and never the
+  catalogue.** *New* was written from two runs; the tables above already had
+  it failing two runs of three on the final prompt. Asked alone, nine times,
+  on the code as it was: **it read `my_orders` seven times of nine, and three
+  times of nine the shopper who asked whether the shop ships to Portugal was
+  shown *to ask about an order, sign in***. The other four it read the orders
+  of nobody and still said the shop has no such fact. The instructions already
+  tell it not to call `my_orders` for shipping; *envíos* is the nearest word
+  any tool has to the question, and a 4B model reaches for the nearest tool.
+
+  One sentence was added where the choice is made — the read's own
+  description: *it knows nothing about shipping in general — where the shop
+  delivers, what delivery costs, how long it takes: for those, do not call
+  it.* Asked alone eight times: read three of eight, **the wrong sentence
+  shown none of eight**. And because a clause in one tool's description has
+  moved another tool's use before (Steward's), the whole suite, three runs,
+  each on a database of its own:
+
+  | Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+  |---|---|---|---|---|---|---|
+  | 16 | 24 of 28 | 3.6 s | 10.2 s | 37 | 4 | the two language cases, `pan-induction-en` (asked back), `dishwasher-sin-dato-es` |
+  | 17 | 25 of 28 | 3.5 s | 7.0 s | 33 | 5 | the two language cases, `shipping-unknown-es` (read, then *no data*) |
+  | 18 | 23 of 28 | 3.6 s | 7.5 s | 32 | 6 | the two language cases, `shipping-unknown-es` (read, then *no data*), `pan-induction-es`, `dishwasher-sin-dato-es` |
+
+  Nothing that was passing stopped: every other failure is one the earlier
+  runs list. Over the eleven askings after the change the orders were read
+  five times and the wrong sentence shown never; over the eleven before,
+  nine and four. **The case still fails about half the time, and it is
+  kept failing**: what it asks — do not read anybody's orders for this — is
+  right, and a wasted read of nobody's orders is a smaller thing than a
+  shopper told to sign in. What would end it is not wording: the shop has no
+  read that answers a shipping question, so the model takes the nearest one.
+  A read of where the shop delivers and what it costs — Ordering already
+  knows both, at checkout — would give the question somewhere to go and turn
+  *no data* into an answer. That is a feature and the author's to decide.
 - The rest is what the earlier runs showed.
