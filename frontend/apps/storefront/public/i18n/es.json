@@ -470,5 +470,27 @@
       "action": "Pregúntaselo a Tino"
     },
     "composerLabel": "Pregunta por un producto o por un pedido tuyo"
+  },
+  "visualSearch": {
+    "door": "Buscar con una imagen",
+    "title": "Buscar con una imagen",
+    "drop": "Suelta aquí una imagen",
+    "dropIt": "Suéltala",
+    "orPaste": "o pégala",
+    "choose": "Elegir una imagen",
+    "takePhoto": "Hacer una foto",
+    "looking": "Buscando cosas parecidas…",
+    "promise": "JPEG, PNG o WebP, hasta 8 MB. Tu imagen se usa para esta búsqueda y no se guarda.",
+    "refused": "Ese archivo no es una imagen que podamos leer. Prueba con un JPEG, un PNG o un WebP de hasta 8 MB.",
+    "tooMany": "Has buscado con muchas imágenes en un minuto. Vuelve a intentarlo en un momento.",
+    "down": "La búsqueda por imagen no responde ahora mismo. La búsqueda por palabras funciona como siempre.",
+    "nearest": "Lo más parecido que tenemos",
+    "nearestLede": "Estos son los productos cuyas imágenes más se parecen a la tuya. Puede que no vendamos eso mismo.",
+    "yourPicture": "Tu imagen",
+    "another": "Probar con otra imagen",
+    "byWords": "Buscar por palabras",
+    "nothing": "Ninguna imagen de la tienda se parece a la tuya.",
+    "noPicture": "Dale a la tienda una imagen y te enseña lo más parecido que tiene.",
+    "pageTitle": "Buscar con una imagen"
   }
 }

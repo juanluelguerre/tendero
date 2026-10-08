@@ -125,8 +125,13 @@ photograph from anyone, signed in or not. **It is never kept.**
 **The model runs inside the shop's own process**, on its own CPU: the picture is
 not sent to a model server, hosted or local. Nothing about it leaves the machine.
 
-None of this depends on the caller being the storefront: the endpoint can be
-called by anything, so what it does with a picture is decided on the server.
+The storefront makes the picture small in the browser before sending it —
+longest side 1,024, redrawn as a JPEG — so what travels is a redrawn copy
+without the file's metadata, and the original never leaves the device. The
+picture shown beside the results is read from the page's own memory and is
+gone with the tab. None of the server's behaviour above depends on that: the
+endpoint can be called by anything, so what it does with a picture is decided
+on the server.
 
 What is counted is who asked how often — twelve visual searches a minute for a
 client, by the person when one is signed in and by the address when nobody is —

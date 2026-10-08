@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-45 features: **40** answered by a signal emitted today,
+46 features: **41** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -36,6 +36,7 @@ everything here that is not *planned* is emitted.
 | Browsing trail | Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it? | If many clear it, the trail is felt as surveillance; show less, or ask first. | `trail_cleared` | emitted |
 | Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
 | Tino | Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? | Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. | `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`, `tendero.tino.turns` | emitted |
+| Search with a picture | Does anyone search with a picture, and does the picture find what they wanted? | If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. | `search_by_image_submitted`, `search_by_image_result_followed` | emitted |
 
 ### Backoffice
 
@@ -418,6 +419,32 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `decision` | string | `approved`, `edited`, `rejected` | What the person did with the proposal. |
+
+### `search_by_image_submitted`
+
+browser event, behavioural. A shopper gave the shop a picture to search with (phase 13a). Only with analytics consent; never the picture, its name or anything read from it.
+
+Answers:
+
+- **Search with a picture** — Does anyone search with a picture, and does the picture find what they wanted?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `how` | string | `chosen`, `dropped`, `pasted`, `camera` | How the picture was given. |
+| `outcome` | string | `answered`, `refused`, `too_many`, `down` | What the shop did with it: an answer, a refusal of the file, the minute's limit, or not answering. |
+| `results` | number | — | How many products came back; 0 when none did or it was not answered. |
+
+### `search_by_image_result_followed`
+
+browser event, behavioural. A shopper opened a product from the answer to a picture (phase 13a). Only with analytics consent.
+
+Answers:
+
+- **Search with a picture** — Does anyone search with a picture, and does the picture find what they wanted?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `position` | number | — | Its place in the answer, from 1. |
 
 ## Metrics
 

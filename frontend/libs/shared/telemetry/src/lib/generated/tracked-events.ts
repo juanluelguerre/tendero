@@ -355,6 +355,32 @@ export interface TrackedEvents {
     /** What the person did with the proposal. */
     readonly decision: 'approved' | 'edited' | 'rejected';
   };
+
+  /**
+   * A shopper gave the shop a picture to search with (phase 13a). Only with analytics consent; never the picture, its name or anything read from it.
+   *
+   * Search with a picture: Does anyone search with a picture, and does the picture find what they wanted?
+   * Decides: If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong.
+   */
+  readonly search_by_image_submitted: {
+    /** How the picture was given. */
+    readonly how: 'chosen' | 'dropped' | 'pasted' | 'camera';
+    /** What the shop did with it: an answer, a refusal of the file, the minute's limit, or not answering. */
+    readonly outcome: 'answered' | 'refused' | 'too_many' | 'down';
+    /** How many products came back; 0 when none did or it was not answered. */
+    readonly results: number;
+  };
+
+  /**
+   * A shopper opened a product from the answer to a picture (phase 13a). Only with analytics consent.
+   *
+   * Search with a picture: Does anyone search with a picture, and does the picture find what they wanted?
+   * Decides: If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong.
+   */
+  readonly search_by_image_result_followed: {
+    /** Its place in the answer, from 1. */
+    readonly position: number;
+  };
 }
 
 /**
@@ -389,4 +415,6 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   tino_result_followed: 'behavioural',
   tino_unavailable: 'behavioural',
   image_alt_proposal_decided: 'staff',
+  search_by_image_submitted: 'behavioural',
+  search_by_image_result_followed: 'behavioural',
 };

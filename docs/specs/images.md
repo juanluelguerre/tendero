@@ -1163,6 +1163,42 @@ store, a log or a trace — a span carries its dimensions and nothing else. `doc
 - Twenty-four hand mutations. One survived and was a real gap: nothing held
   the status to *no* with the model and no store. A test does now.
 
+**The storefront's control (2026-10-09)** — the mock-up first
+(`design/unpublished/mockups/storefront-visual-search.pen`, seven screens,
+in English), and the author settled where it sits: **a camera inside the
+shop's one search box**, on every page.
+
+- **Drawn only where a picture would be answered.** The shell reads the
+  status once a visit; only a *yes* draws the camera. Not answered yet, an
+  error and a *no* all leave the box exactly as it was — the degraded path is
+  the default path, and a browser spec holds it against the stack as it
+  starts.
+- **The panel** opens under the box: drop a picture, choose one, paste one,
+  or — on a phone — take a photograph. It always says the picture is not
+  kept. What the shop does not take is said there, in the shop's two
+  languages and never the API's words: the file (400, 413), the minute's
+  limit (429), or the shop not answering (anything else), with the way to
+  try another still there. Escape and a press outside close it.
+- **The picture is made small in the browser before it travels** — longest
+  side 1,024, a JPEG — which is a faster upload and leaves the file's
+  metadata behind before it is sent at all. A browser that cannot, or a file
+  it cannot decode, sends the file as it is: what is a picture is the
+  server's to say, once.
+- **The answer is a page of its own**, `/search/picture`, titled *the
+  nearest things we have* — never *we found*: a nearest picture always
+  exists and there is no floor for it (the author's ruling). No filters, no
+  order, no count: the order is the answer. Each card is the shop's own,
+  drawn with the picture that matched rather than the product's cover.
+  The shopper's picture is shown from the page's memory; a reload has
+  neither it nor the answer, and says how to ask again.
+- **One store for the three places that share it** (`VisualSearchStore`,
+  root): the header's camera, its panel and the page of results.
+- **Its events** (ADR 0036): `search_by_image_submitted` — how the picture
+  was given, what became of it, how many came back — and
+  `search_by_image_result_followed`, by place. Never the picture.
+- **Not built, and said on the mock-up**: a card does not say *which* colour
+  its picture is — the answer carries the picture, not the variant's name.
+
 **Measured (2026-10-08)** — `docs/search-evaluation.md`, *Words against the
 pictures, alone*, has the tables; the evaluation tool grew a diagnostic for it
 (`--siglip`).

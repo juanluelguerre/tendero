@@ -38,6 +38,13 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/category/category-page').then((m) => m.CategoryPage),
   },
   {
+    // The answer to a picture (phase 13a). The picture is in the page's memory and
+    // never in the address: there is nothing here to share, and a reload asks again.
+    path: 'search/picture',
+    title: 'visualSearch.pageTitle',
+    loadComponent: () => import('./features/visual-search/visual-search-page').then((m) => m.VisualSearchPage),
+  },
+  {
     // The products are in the query, not the path: a comparison is a set, its
     // order is the shopper's, and a URL that carries it can be shared (P10-7).
     path: 'compare',

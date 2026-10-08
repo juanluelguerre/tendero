@@ -470,5 +470,27 @@
       "action": "Ask Tino this"
     },
     "composerLabel": "Ask about a product or an order of yours"
+  },
+  "visualSearch": {
+    "door": "Search with a picture",
+    "title": "Search with a picture",
+    "drop": "Drop a picture here",
+    "dropIt": "Drop it",
+    "orPaste": "or paste one",
+    "choose": "Choose a picture",
+    "takePhoto": "Take a photo",
+    "looking": "Looking for things like it…",
+    "promise": "JPEG, PNG or WebP, up to 8 MB. Your picture is used for this search and is not kept.",
+    "refused": "That file is not a picture we can read. Try a JPEG, a PNG or a WebP of up to 8 MB.",
+    "tooMany": "You have searched with many pictures in a minute. Try again shortly.",
+    "down": "Searching by picture is not answering right now. Searching by words works as always.",
+    "nearest": "The nearest things we have",
+    "nearestLede": "These are the products whose pictures look most like yours. We may not sell the thing itself.",
+    "yourPicture": "Your picture",
+    "another": "Try another picture",
+    "byWords": "Search by words instead",
+    "nothing": "No picture in the shop looks like yours.",
+    "noPicture": "Give the shop a picture and it shows you the nearest things it has.",
+    "pageTitle": "Search with a picture"
   }
 }
