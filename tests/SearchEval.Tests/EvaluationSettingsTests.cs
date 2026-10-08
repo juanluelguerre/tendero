@@ -165,8 +165,17 @@ public sealed class EvaluationSettingsTests
         // floors went up with it — 0.67 and 0.73 would now pass a real regression.
         // The 52 queries scored before give 0.685 / 0.744 over the larger
         // catalogue: still above the floors they had (docs/specs/catalogue-growth.md).
-        Assert.Equal(new CultureThresholds(0.69, 0.73), thresholds.For("lexical", "es"));
-        Assert.Equal(new CultureThresholds(0.75, 0.79), thresholds.For("lexical", "en"));
+        //
+        // And the RECALL floors moved the same day, downwards, again because the
+        // ruler changed: the products the pictures bring back were judged — 359
+        // judgments, 54 of them relevant in some degree — so there are more
+        // relevant products to find than the words' strategies were ever asked
+        // for, and the same engine finds a smaller share of them: lexical
+        // 0.733 / 0.798 where it was 0.746 / 0.806, three runs alike. NDCG@10 did
+        // not need to move (0.709 / 0.767) and did not
+        // (docs/search-evaluation.md, "The pictures' pool, judged").
+        Assert.Equal(new CultureThresholds(0.69, 0.71), thresholds.For("lexical", "es"));
+        Assert.Equal(new CultureThresholds(0.75, 0.78), thresholds.For("lexical", "en"));
     }
 
     [Fact]

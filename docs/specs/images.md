@@ -1175,6 +1175,12 @@ pictures, alone*, has the tables; the evaluation tool grew a diagnostic for it
   exact name or a compatibility they are the worst in the table.
 - **Whether it helps as a leg is still open**, and now worth asking. It needs
   the newly returned products judged first.
+  **Answered the same day**: the 360 results were judged — 306 of them only
+  look like the answer — and as a third leg at depth 10, under the reranker,
+  the pictures add 0.005 en / 0.016 es of NDCG@10 and 0.024 / 0.060 of
+  recall@50, with no kind of query worse, for 100 to 150 ms a search. Built
+  behind `Search:Hybrid:PictureDepth`, **off**; turning it on is the
+  author's (`docs/search-evaluation.md`, *The pictures' pool, judged*).
 - **No floor for a picture can be chosen from the seed**: a page of text is as
   near a catalogue picture (0.743) as the least alike pair of real products
   (0.724). The catalogue's pictures share a painter and a background, and the

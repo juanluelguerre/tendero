@@ -127,9 +127,13 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
                 ["ConnectionStrings:" + QdrantServiceCollectionExtensions.ConnectionName] =
                     $"Endpoint={options.Qdrant}" + (options.QdrantKey is { } key ? $";Key={key}" : ""),
             });
-            builder.Services.AddPictureVectors(builder.Configuration);
             builder.Services.AddKeyedScoped<ISearchStrategy, PicturesByTextStrategy>(PicturesByTextStrategy.Name);
         }
+
+        // Always, as the application does: the hybrid strategy takes the pictures'
+        // ports whether or not this run has pictures, and without --siglip they
+        // are the named stand-ins.
+        builder.Services.AddPictureVectors(builder.Configuration);
 
         using var host = builder.Build();
 

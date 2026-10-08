@@ -196,6 +196,7 @@ public sealed class ProductFacetsIntegrationTests(ElasticsearchFixture elasticse
         var lexical = Lexical();
         var vectors = new NearestFirst(ids["Olla"], ids["Cazo"], ids["Pulse"]);
         var hybrid = new HybridSearchStrategy(lexical, vectors, Cards(), new NoReranker(),
+            new ElGuerre.Tendero.Search.Images.NoImageEmbeddings(), new ElGuerre.Tendero.Search.Images.NoPictureVectors(),
             Microsoft.Extensions.Options.Options.Create(new HybridSearchOptions()), NullLogger<HybridSearchStrategy>.Instance);
 
         var filters = new SearchFilters { Brands = ["Kuisina"], Facets = ["INDUCTION:true"] };

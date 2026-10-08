@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Images;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -34,6 +35,18 @@ public sealed record HybridSearchOptions
 
     /// <summary>Reading the texts and scoring them, together. Past it, the fused order stands.</summary>
     public TimeSpan RerankBudget { get; init; } = TimeSpan.FromMilliseconds(800);
+
+    /// <summary>
+    /// How many products the PICTURES contribute: the query embedded as text by the
+    /// picture model, the nearest catalogue pictures, each product once (phase 13a).
+    /// **Zero, which is off, until it is measured to help** — the images spec keeps
+    /// text against pictures out of the search until its effect on NDCG@10 is known,
+    /// and `docs/search-evaluation.md` has what was measured.
+    /// </summary>
+    public int PictureDepth { get; init; }
+
+    /// <summary>Embedding the query for the pictures and asking for the nearest, together. Past it, the search goes on without them.</summary>
+    public TimeSpan PictureBudget { get; init; } = TimeSpan.FromMilliseconds(600);
 }
 
 /// <summary>
@@ -74,6 +87,8 @@ internal sealed class HybridSearchStrategy(
     IVectorProductSearch vectors,
     ISearchHitReader cards,
     IReranker reranker,
+    IImageEmbeddingGenerator pictureModel,
+    IPictureSearch pictures,
     IOptions<HybridSearchOptions> options,
     ILogger<HybridSearchStrategy> logger) : ISearchStrategy
 {
@@ -112,6 +127,7 @@ internal sealed class HybridSearchStrategy(
 
         var depth = Math.Max(settings.LexicalDepth, query.Page * query.PageSize);
         var found = matches.Select(match => match.ProductId).ToList();
+        var looks = await LooksAsync(query, settings, activity, ct);
 
         // **The union** (the facets spec, "The API"). A page that lists what the
         // words matched AND what meaning found has to count both, so the lexical
@@ -120,7 +136,7 @@ internal sealed class HybridSearchStrategy(
         // ids score nothing, so the words' ranking is the one it always was, and
         // the products only meaning found come after them with a score of zero.
         var candidates = await lexical.SearchAsync(
-            query with { Page = 1, PageSize = depth, AlsoMatching = found }, ct);
+            query with { Page = 1, PageSize = depth, AlsoMatching = looks.Count == 0 ? found : [.. found.Union(looks, StringComparer.Ordinal)] }, ct);
 
         // The words' own ranking is what fuses: a product in the union only
         // because meaning found it is not a lexical match, and ranking it as one
@@ -133,7 +149,7 @@ internal sealed class HybridSearchStrategy(
             byProduct.TryAdd(hit.ProductId, hit);
 
         var filters = query.Filters ?? SearchFilters.None;
-        var foundByMeaningOnly = found.Where(id => !byProduct.ContainsKey(id)).ToList();
+        var foundByMeaningOnly = found.Concat(looks).Distinct(StringComparer.Ordinal).Where(id => !byProduct.ContainsKey(id)).ToList();
         if (foundByMeaningOnly.Count > 0)
         {
             foreach (var hit in await cards.FindAsync(foundByMeaningOnly, query.Culture, query.Category, filters, ct))
@@ -147,7 +163,12 @@ internal sealed class HybridSearchStrategy(
         // as before they existed.
         var nearest = filters.IsEmpty ? found : [.. found.Where(byProduct.ContainsKey)];
 
-        var fused = ReciprocalRankFusion.Fuse([words, nearest], settings.RrfK);
+        // The pictures' list by the same rule, and only when there is one: with
+        // none, the fusion is the two lists it always was, rank for rank.
+        var seen = filters.IsEmpty ? looks : [.. looks.Where(byProduct.ContainsKey)];
+        var fused = seen.Count == 0
+            ? ReciprocalRankFusion.Fuse([words, nearest], settings.RrfK)
+            : ReciprocalRankFusion.Fuse([words, nearest, seen], settings.RrfK);
 
         // An id with no card is a vector nobody can buy — archived, out of the
         // branch, or left behind by a projection that failed — and it is dropped.
@@ -158,6 +179,7 @@ internal sealed class HybridSearchStrategy(
 
         activity?.SetTag("search.hybrid.lexical", words.Count);
         activity?.SetTag("search.hybrid.vector", nearest.Count);
+        activity?.SetTag("search.hybrid.pictures", seen.Count);
         activity?.SetTag("search.hybrid.meaning_only", ranked.Count(hit => foundByMeaningOnly.Contains(hit.ProductId)));
 
         if (reranker.IsConfigured)
@@ -177,6 +199,41 @@ internal sealed class HybridSearchStrategy(
         activity?.SetTag("search.total", total);
         return new SearchResultPage(
             page, total, query.Page, query.PageSize, stopwatch.Elapsed.TotalMilliseconds, Facets: candidates.Facets);
+    }
+
+    /// <summary>
+    /// The products whose pictures are nearest the words, nearest first — or
+    /// none. None when the leg is off (the default), when the query sits inside
+    /// a category (the picture store knows nothing of branches), when this
+    /// process has no picture model or store, and when either fails or is
+    /// slow: **the pictures can only add to a search, never cost it**. A failure
+    /// is counted as a degradation of its own stage; never having had the
+    /// stage is not.
+    /// </summary>
+    private async Task<IReadOnlyList<string>> LooksAsync(
+        ProductSearchQuery query, HybridSearchOptions settings, Activity? activity, CancellationToken ct)
+    {
+        if (settings.PictureDepth <= 0 || !string.IsNullOrEmpty(query.Category) || !pictureModel.IsConfigured)
+            return [];
+
+        try
+        {
+            using var budget = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            budget.CancelAfter(settings.PictureBudget);
+
+            var vector = await pictureModel.EmbedTextAsync(query.Text, budget.Token);
+            var near = await pictures.NearestAsync(vector, settings.PictureDepth, budget.Token);
+            return [.. near.Select(match => match.ProductId)];
+        }
+        catch (SearchStageNotConfiguredException)
+        {
+            return [];
+        }
+        catch (Exception exception) when (!ct.IsCancellationRequested)
+        {
+            SearchDegradation.Record(activity, SearchDegradation.PictureStage, exception, logger);
+            return [];
+        }
     }
 
     private async Task<List<SearchHit>> RerankAsync(
@@ -230,6 +287,7 @@ internal static class SearchDegradation
 {
     public const string VectorStage = "vector";
     public const string RerankStage = "rerank";
+    public const string PictureStage = "pictures";
     public const string Tag = "search.degraded";
     public const string CounterName = "tendero.search.degraded";
 

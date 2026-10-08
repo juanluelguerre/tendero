@@ -984,3 +984,85 @@ nearest catalogue picture:
 a text and 267 ms a picture, decoding and resizing included, the first call's
 model load amortised over 96 — after the runtime was told how many threads to
 use. Left to its default it was 334 ms and 782 ms (see the images spec, *I-6*).
+
+## The pictures' pool, judged — and the pictures as a third leg (2026-10-08)
+
+The second half of the question above. In the order it had to go: judge what
+the pictures bring back, then fuse, then compare.
+
+**Judged.** 360 results that the pictures put in a first ten and nobody had
+graded: 153 in English, 207 in Spanish (1,426 and 1,463 judgments now).
+Each took, in order, the grade its pair already had in the other language; a
+grade decided for it with a reason; for a brand query, 3 or 0 by its brand; and
+otherwise 0.
+
+| Grade | Results | What they are |
+|---|---:|---|
+| 0 | 306 | a product that only LOOKS like the answer: a round mirror for a lamp, a bamboo rack for a chair, a toaster for a coffee maker |
+| 1 | 44 | mostly gifts — a kitchen appliance for a grandmother, possible and impersonal |
+| 2 | 7 | a toaster and a blender as *a gift for the kitchen*, an olive tree for a grandmother |
+| 3 | 3 | the bike pannier for *azul marino* — navy is one of its three colours, which only its variants say — and two products of a brand asked by name |
+
+**Eighty-five in a hundred of what the pictures add at the tail is noise**, and
+that is the number to keep beside the one in the section above: the pictures
+are right about what a thing is, and their fifth to tenth results are whatever
+is the same shape.
+
+**The pictures alone, with nothing unjudged**: 0.751 en / 0.726 es (it was a
+lower bound of 0.742 / 0.713), recall@50 0.827 / 0.820.
+
+**The ruler moved, and the recall floors with it.** Fifty-four products are now
+known to be relevant that the words' strategies were never asked for, so the
+same engine finds a smaller share of what there is to find. Three runs alike:
+
+| | NDCG@10 before → now | recall@50 before → now | recall floor before → now |
+|---|---|---|---|
+| lexical es | 0.711 → 0.709 | 0.746 → 0.733 | 0.73 → **0.71** |
+| lexical en | 0.768 → 0.767 | 0.806 → 0.798 | 0.79 → **0.78** |
+| hybrid + reranker es | 0.839 → 0.836 | 0.924 → 0.905 | 0.91 → **0.89** |
+| hybrid + reranker en | 0.855 → 0.848 | 0.943 → 0.932 | 0.92 → **0.91** |
+
+The NDCG floors did not need to move and did not. `--ci` passes on the engine
+as it ships.
+
+**The third leg.** `Search:Hybrid:PictureDepth` — zero, which is off — makes
+the pictures a third list in the fusion: the query embedded as text by the
+picture model, the nearest catalogue pictures, each product once, fused by rank
+with the words and their meaning, and the head reranked as always. Hybrid with
+the reranker, three runs of each, identical to the third decimal:
+
+| | NDCG@10 en | NDCG@10 es | recall@50 en | recall@50 es | mean ms en / es |
+|---|---:|---:|---:|---:|---:|
+| two legs (as it ships) | 0.848 | 0.836 | 0.932 | 0.905 | 98 / 96 |
+| + pictures, depth 10 | **0.853** | **0.852** | **0.956** | **0.965** | 247 / 197 |
+| + pictures, depth 20 | 0.855 | 0.849 | 0.964 | 0.969 | 249 / 203 |
+
+| kind (depth 10 against two legs) | en | es |
+|---|---|---|
+| product-type | 0.865 → 0.873 | 0.895 → 0.905 |
+| use-case | 0.658 → 0.670 | 0.608 → 0.657 |
+| abbreviation | 0.985 → 0.987 | 0.933 → 0.968 |
+| feature | 0.920 → 0.920 | 0.896 → 0.900 |
+| symptom | 0.704 → 0.704 | 0.646 → 0.652 |
+| exact, compatibility | unchanged | unchanged |
+
+- **It helps, and nothing gets worse.** Half a point in English, a point and a
+  half in Spanish, and no kind of query below where it was — including the
+  exact names the pictures alone were worst at, because the reranker reads the
+  text of whatever the pictures propose and the junk does not survive it. The
+  pictures propose; the words decide.
+- **What it really buys is recall**: six points in Spanish. Products the words
+  and their meaning never fetched are in the first fifty.
+- **Spanish gains three times what English does**, as the pictures alone
+  suggested it would: a picture has no language.
+- **It costs a hundred to a hundred and fifty milliseconds a search**, the text
+  tower on the CPU — more than the rest of the search together. Ten is the
+  depth: twenty buys nothing in NDCG and starts returning unjudged products.
+- **It stays off.** Whether the search every shopper uses should run a second
+  model on every query for a point of NDCG is the author's decision, with this
+  table. Turned on, it is a setting; nothing else changes, a shop without the
+  picture model searches on two legs, and a picture leg that fails or is slow
+  costs only itself — counted as its own stage, `pictures`.
+- Eleven hand mutations of the leg, ten red. The survivor is equivalent: asking
+  a shop that has no model is answered by the stand-in saying so, which the
+  leg treats as the leg not being there.
