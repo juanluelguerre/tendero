@@ -668,9 +668,97 @@ held by a schema to the attribute's options, compared by code.
 - **So a shoe's picture is described and not counted** — a pair is not two
   pieces — and a description of cookware is no longer offered a lamp's colour
   temperature or a coffee maker's cups.
-- **Owed**: the claims suite still offers the whole vocabulary, as when its
-  floors were set; measuring it by category will move them. Facets by category,
-  and a screen to edit the declarations, are their own work.
+- **Measured on the claims suite** (`--suite claims --extractor chat
+  --vocabulary category`; twenty seed products, the 4B Q8, the same prompt):
+
+  | | Whole vocabulary | By category |
+  |---|---|---|
+  | Precision | 0.91 | **0.94** |
+  | Recall | 0.82 | **0.85** |
+  | Recall of what no attribute held | 0.78 | 0.81 |
+  | Typed right | 0.88 | **0.94** |
+  | Quoted verbatim | 0.984 | 1.000 |
+  | Spurious | 14 | 15 |
+  | Traps | 1 | 1 |
+
+  Better or level on every line but one more spurious claim; twenty products,
+  so each is one or two claims' worth. `whole` stays the default and the gate —
+  the floors in `gates.json` were set with it — and by category is measured, not
+  gated, until its own floors are written.
+- **Owed**: those floors; facets by category; a screen to edit the declarations.
+
+### I-4d · What a picture is of — a variant's colour, and a doubt that is not a claim (spec, not built; 2026-10-08)
+
+**The question.** A product's colour is its variants' (`COLOR` is an axis), and
+a picture shows one colour. So "is this picture the colour the catalogue says"
+can only be asked of a picture that is known to be *of* some variants.
+
+**What already exists.** The model is there and nothing reads it:
+`Variant.Image` is a variant's own picture, and null means *the product's*.
+So every picture already has an answer to "which variants does it show":
+
+- a picture that is some variants' `Image` shows those variants;
+- the product's cover shows every variant that has no picture of its own;
+- any other picture of the gallery shows the product and no variant in
+  particular (a detail, the back, the box).
+
+A picture **has a colour to be held to** when the variants it shows all hold
+the same `COLOR`. The seed today: 65 products declare one colour and have one
+picture, so 40 of the 53 pictures drawn so far have one. No migration and no
+new field on the picture — a reader over what the catalogue holds.
+
+**Measured before designing** (the closed question in plain text, the nine
+options the catalogue defines, 40 seed pictures, the 4B):
+
+- The picture shows the declared colour in **37 of 40** (92 %); every answer
+  was one of the options.
+- The three that differ are three different things, and that is the design:
+  - *stainless steel* declared, **grey** seen (0.96) — the same thing by two
+    names: one is what it is made of;
+  - *forest green* declared, **olive** seen (0.63) — neighbours, and the model
+    unsure;
+  - *black* declared, **grey** seen (0.94) — a laptop sleeve drawn in charcoal
+    felt. The model is right about the drawing; whether charcoal is the shop's
+    *black* is a person's call.
+- At a confidence of 0.99 and above, 21 answers and none differs; at 0.95, 26
+  and one.
+
+**Decided here.**
+
+1. **A doubt, not a claim.** A claim says something of the product and, once
+   approved, is written to it. A colour that differs says something of the
+   *picture*: it is the wrong picture, or drawn wrong, or filed under the wrong
+   variant — the catalogue's colour was chosen by a person and is not the
+   picture's to overwrite. Approving a claim *COLOR = grey* would be exactly the
+   wrong repair. So it is its own record: the picture, the question, what was
+   answered and how sure, what the catalogue holds, and what a person decided
+   (*the picture is fine* · *replace the picture* · *it belongs to another
+   variant*).
+2. **Asked with the closed question** (`ClosedQuestion`), of the options the
+   catalogue defines for `COLOR`, when the picture has a colour to be held to.
+   The reading keeps the answer under its prose as it keeps the count.
+3. **Neighbours are the catalogue's to declare, not code's to guess.** Whether
+   *grey* answers for *stainless steel* is said where colours are defined (an
+   option names the options it may be mistaken for), and a doubt between
+   declared neighbours is not raised. With none declared, the three above are
+   all raised — which is the honest default.
+4. **Only a sure difference is a doubt.** Under a line (0.90, to be set from a
+   measurement as `SureAnswer` was) the answer is kept in the reading and no
+   doubt is raised: *olive* at 0.63 is the model not knowing.
+5. **Where a person meets it**: beside the picture, in the same review that
+   already shows a picture with its alt text (I-3) — one place where a picture
+   is looked at, with everything said about it.
+
+**Open, the author's.** Whether a doubt blocks anything (publishing the
+product, using the picture as the cover) or only informs. Whether the three
+decisions above are the right ones for an uploaded picture too (I-6). And
+whether the seed should gain a product with two colours and a picture of each,
+which is what would exercise *it belongs to another variant* — three or four
+pictures to draw.
+
+**Not in scope**: merging what several pictures of one product answer (three
+pictures of the same set propose *pieces: 3* three times); it is the same
+reader and comes with it.
 
 ### I-5 · Image embeddings, behind a gate
 

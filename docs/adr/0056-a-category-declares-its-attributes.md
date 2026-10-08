@@ -72,6 +72,8 @@ one tree, and Shopify's shape is the one that fits with nothing added.
   backoffice screen that edits the declarations; a review signal for a product
   holding an attribute its category does not declare.
 - The claims suite (`--suite claims`) offers its extractor the seed's whole
-  vocabulary, as it did when its floors were set. Measuring it with each
-  product's own vocabulary is the next number to take, and it will move the
-  floors: recorded as owed, not assumed to be an improvement.
+  vocabulary, as it did when its floors were set, and that stays its gate.
+  **Measured by category the same day** (`--vocabulary category`, twenty
+  products, the 4B): precision 0.91 → 0.94, recall 0.82 → 0.85, typed right
+  0.88 → 0.94, verbatim 0.984 → 1.000, one more spurious claim. Its own floors
+  are owed before it gates.
