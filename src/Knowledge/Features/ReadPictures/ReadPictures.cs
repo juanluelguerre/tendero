@@ -298,7 +298,7 @@ public sealed class ReadPicturesHandler(
                 ModelCall.Options(Operation, promptVersion: PictureReadingPrompt.Version, person: principal.Current.Subject),
                 cancellationToken);
 
-            return (PictureColours.Seen(choice, held, colours), false);
+            return (PictureColours.Seen(choice, held, colours, picture.OtherColours ?? []), false);
         }
         catch (Exception failure) when (failure is HttpRequestException or InvalidOperationException or TaskCanceledException
             && !cancellationToken.IsCancellationRequested)
@@ -431,7 +431,8 @@ public static class PictureColours
     /// the catalogue says the one held may be taken for the one seen: that is
     /// the catalogue's to say, and it is carried here, not judged.
     /// </summary>
-    public static ColourSeen? Seen(Choice choice, PictureColour held, IReadOnlyList<PictureColour> colours)
+    /// <param name="otherVariants">The colours the product's other variants hold.</param>
+    public static ColourSeen? Seen(Choice choice, PictureColour held, IReadOnlyList<PictureColour> colours, IReadOnlyList<string>? otherVariants = null)
     {
         ArgumentNullException.ThrowIfNull(choice);
         ArgumentNullException.ThrowIfNull(held);
@@ -443,7 +444,8 @@ public static class PictureColours
                 seen.Code, LocalizedText.From("es", seen.Spanish).With("en", seen.English),
                 held.Code, LocalizedText.From("es", held.Spanish).With("en", held.English),
                 choice.Confidence,
-                Related: held.MistakenFor.Contains(seen.Code, StringComparer.OrdinalIgnoreCase))
+                Related: held.MistakenFor.Contains(seen.Code, StringComparer.OrdinalIgnoreCase),
+                OfAnotherVariant: (otherVariants ?? []).Contains(seen.Code, StringComparer.OrdinalIgnoreCase))
             : null;
     }
 }

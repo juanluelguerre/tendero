@@ -585,6 +585,7 @@
     "empty": "Ninguna imagen está en duda.",
     "pictureAlt": "Imagen en duda de {{product}}",
     "seen": "El modelo ve {{seen}}; el catálogo dice {{held}}.",
+    "anotherVariant": "El {{seen}} es el color de otra variante de este producto: puede que la imagen sea la suya.",
     "sure": "Leída por {{model}}, con una confianza del {{confidence}}.",
     "decision": {
       "PictureIsFine": "La imagen está bien",

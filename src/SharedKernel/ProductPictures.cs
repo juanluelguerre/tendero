@@ -11,7 +11,10 @@ namespace ElGuerre.Tendero.SharedKernel;
 /// <param name="Colour">The colour the picture has to be held to (phase 13a, I-4d):
 /// the code of the one colour that the variants it shows hold — or null when it
 /// shows no variant in particular, or variants of more than one colour.</param>
-public sealed record ProductPicture(Guid ProductId, string Code, string ImageId, string? Colour = null);
+/// <param name="OtherColours">The colours the product's other variants hold: a
+/// picture that shows one of these and not its own is, most likely, another
+/// variant's picture filed under this one. Empty for a product of one colour.</param>
+public sealed record ProductPicture(Guid ProductId, string Code, string ImageId, string? Colour = null, IReadOnlyList<string>? OtherColours = null);
 
 /// <summary>A colour the catalogue defines, as values: what a picture may be asked to choose among.</summary>
 /// <param name="MistakenFor">The codes of the colours the catalogue says this one may be

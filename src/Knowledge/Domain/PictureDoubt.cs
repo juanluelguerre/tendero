@@ -43,8 +43,10 @@ public enum PictureDoubtDecision
 /// <param name="Held">The option the catalogue holds.</param>
 /// <param name="Confidence">The probability the model gave its answer, when its server said.</param>
 /// <param name="Related">Whether the catalogue says the two options may be mistaken for each other — stainless steel and grey.</param>
+/// <param name="OfAnotherVariant">Whether the colour seen is one another variant of the same product holds.</param>
 public sealed record ColourSeen(
-    string AttributeCode, string Seen, LocalizedText SeenLabel, string Held, LocalizedText HeldLabel, double? Confidence, bool Related);
+    string AttributeCode, string Seen, LocalizedText SeenLabel, string Held, LocalizedText HeldLabel, double? Confidence, bool Related,
+    bool OfAnotherVariant = false);
 
 public sealed record PictureDoubtRaised(PictureDoubtId DoubtId, ProductId ProductId, DateTimeOffset OccurredAt) : IDomainEvent;
 
@@ -93,6 +95,13 @@ public sealed class PictureDoubt : AggregateRoot
     public LocalizedText HeldLabel { get; private set; } = null!;
     public double Confidence { get; private set; }
 
+    /// <summary>
+    /// The colour seen is one another variant of the same product holds: most
+    /// likely the picture is that variant's, filed under this one. What a person
+    /// is told before they decide — it decides nothing itself.
+    /// </summary>
+    public bool SeenOnAnotherVariant { get; private set; }
+
     public string ReadByModel { get; private set; } = "";
     public string ReadWithPrompt { get; private set; } = "";
 
@@ -134,6 +143,7 @@ public sealed class PictureDoubt : AggregateRoot
             Held = answer.Held,
             HeldLabel = answer.HeldLabel,
             Confidence = confidence,
+            SeenOnAnotherVariant = answer.OfAnotherVariant,
             ReadByModel = reading.Model,
             ReadWithPrompt = reading.PromptVersion,
             Status = PictureDoubtStatus.Open,

@@ -160,4 +160,32 @@ public sealed class ProductPicturesReaderTests
             colours.Select(colour => (colour.Code, colour.Spanish, colour.English)));
         Assert.Equal<IEnumerable<string>>([[], ["STAINLESS_STEEL"], ["GREY"]], colours.Select(colour => colour.MistakenFor));
     }
+    /// <summary>
+    /// A picture also says what the product's other variants hold: seeing one of
+    /// those colours in it is how a picture filed under the wrong variant is
+    /// told from a picture that is simply wrong. A product of one colour has no
+    /// others, and neither has a picture that is held to none.
+    /// </summary>
+    [Fact]
+    public async Task A_picture_says_the_colours_the_products_other_variants_hold()
+    {
+        var pack = AProduct("Mochila", null, ("black-pack", null), ("grey-pack", null), ("detail", null));
+        pack.DefineAxes(Clock, ["COLOR"]);
+        pack.AddVariant(Clock, "PACK-BLACK", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK" }, image: new ImageId("black-pack"));
+        pack.AddVariant(Clock, "PACK-GREY", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "GREY" }, image: new ImageId("grey-pack"));
+        // A colour that is no longer sold is nobody's picture to be mistaken for.
+        pack.AddVariant(Clock, "PACK-STEEL", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "STAINLESS_STEEL" });
+        pack.DiscontinueVariant(Clock, "PACK-STEEL");
+        var sleeve = AProduct("Funda", null, ("cover", null));
+        sleeve.SetAttribute(Clock, AttributeValue.Option("COLOR", "BLACK"));
+        sleeve.AddVariant(Clock, "SLEEVE-DEFAULT", new Money(10m, "EUR"));
+
+        var others = (await Reader(pack, sleeve).AllAsync(TestContext.Current.CancellationToken))
+            .ToDictionary(picture => picture.ImageId, picture => picture.OtherColours ?? []);
+
+        Assert.Equal<IEnumerable<string>>(["GREY"], others["black-pack"]);
+        Assert.Equal<IEnumerable<string>>(["BLACK"], others["grey-pack"]);
+        Assert.Empty(others["detail"]);
+        Assert.Empty(others["cover"]);
+    }
 }

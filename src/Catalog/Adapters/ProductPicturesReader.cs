@@ -33,8 +33,29 @@ public sealed class ProductPicturesReader(IProductCatalogReader products, IAttri
             .OrderBy(product => product.Code, StringComparer.Ordinal)
             .SelectMany(product => product.Images
                 .OrderBy(image => image.SortOrder)
-                .Select(image => new ProductPicture(product.Id.Value, product.Code, image.Id.Value, ColourShown(product, image)))),
+                .Select(image => Picture(product, image))),
     ];
+
+    private static ProductPicture Picture(Product product, ProductImage image)
+    {
+        var colour = ColourShown(product, image);
+
+        // What the product's variants hold besides this picture's colour: only
+        // asked of a picture that has a colour to be held to.
+        string[] others = colour is null
+            ? []
+            :
+            [
+                .. product.Variants
+                    .Where(variant => variant.Status != VariantStatus.Discontinued)
+                    .Select(variant => variant.AxisValues.GetValueOrDefault(Colour))
+                    .OfType<string>()
+                    .Where(other => !string.Equals(other, colour, StringComparison.OrdinalIgnoreCase))
+                    .Distinct(StringComparer.OrdinalIgnoreCase),
+            ];
+
+        return new ProductPicture(product.Id.Value, product.Code, image.Id.Value, colour, others);
+    }
 
     public async Task<IReadOnlyList<PictureColour>> ColoursAsync(CancellationToken cancellationToken = default)
     {

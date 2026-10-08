@@ -585,6 +585,7 @@
     "empty": "No picture is in doubt.",
     "pictureAlt": "The doubted picture of {{product}}",
     "seen": "The model sees {{seen}}; the catalogue says {{held}}.",
+    "anotherVariant": "This product has another variant in {{seen}}: the picture may be that one's.",
     "sure": "Read by {{model}}, {{confidence}} sure.",
     "decision": {
       "PictureIsFine": "The picture is fine",

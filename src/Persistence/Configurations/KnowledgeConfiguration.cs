@@ -106,6 +106,7 @@ internal sealed class PictureDoubtConfiguration : IEntityTypeConfiguration<Pictu
         builder.Property(doubt => doubt.SeenLabel).HasConversion(Jsonb.LocalizedTextConverter).HasColumnType("jsonb");
         builder.Property(doubt => doubt.HeldLabel).HasConversion(Jsonb.LocalizedTextConverter).HasColumnType("jsonb");
         builder.Property(doubt => doubt.Confidence);
+        builder.Property(doubt => doubt.SeenOnAnotherVariant);
         builder.Property(doubt => doubt.ReadByModel).HasMaxLength(200);
         builder.Property(doubt => doubt.ReadWithPrompt).HasMaxLength(100);
         builder.Property(doubt => doubt.Status).HasConversion<string>().HasMaxLength(20);

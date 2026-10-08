@@ -2265,6 +2265,7 @@ export interface components {
             readBy: string;
             /** Format: date-time */
             raisedAt: string;
+            seenOnAnotherVariant: boolean;
         };
         PictureDoubtsPage: {
             items: components["schemas"]["PictureDoubtView"][];

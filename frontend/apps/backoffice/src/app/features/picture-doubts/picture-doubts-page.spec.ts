@@ -11,7 +11,7 @@ import { PictureDoubtsPage } from './picture-doubts-page';
 const Doubts = 'http://api/api/knowledge/picture-doubts';
 const Products = 'http://api/api/catalog/products';
 
-const doubt = (doubtId: string): PictureDoubtView => ({
+const doubt = (doubtId: string, seenOnAnotherVariant = false): PictureDoubtView => ({
   doubtId,
   productId: 'p1',
   imageId: 'sleeve-front',
@@ -23,6 +23,7 @@ const doubt = (doubtId: string): PictureDoubtView => ({
   confidence: 0.94,
   readBy: 'vision-model',
   raisedAt: '2026-10-08T06:00:00Z',
+  seenOnAnotherVariant,
 });
 
 /**
@@ -89,6 +90,14 @@ describe('picture doubts', () => {
     ]);
     // One clay action per view, and here none: no decision is the one to be led to.
     expect(row.querySelectorAll('button:not(.button--quiet)').length).toBe(0);
+  });
+
+  it("says so when the colour seen is another variant's of the same product, and only then", async () => {
+    const fixture = await page([doubt('d1', true), doubt('d2')]);
+    const [another, alone] = [...(fixture.nativeElement as HTMLElement).querySelectorAll('li')];
+
+    expect(another.textContent).toContain('doubts.anotherVariant');
+    expect(alone.textContent).not.toContain('doubts.anotherVariant');
   });
 
   it('sends the decision a person made, and reads the queue again', async () => {

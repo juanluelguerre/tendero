@@ -82,6 +82,11 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             // as the same culture -> text dictionary as the rest of the catalogue.
             image.Property(i => i.Alt)
                 .HasConversion(Jsonb.NullableLocalizedTextConverter, Jsonb.NullableLocalizedTextComparer);
+
+            // What the picture shows of the product's variants, as its axis ->
+            // value pairs; null, or no key at all, for a picture that shows nothing.
+            image.Property(i => i.Shows)
+                .HasConversion(Jsonb.ShownConverter, Jsonb.ShownComparer);
             image.ToJson("images");
         });
 

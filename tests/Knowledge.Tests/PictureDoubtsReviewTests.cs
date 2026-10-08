@@ -53,6 +53,7 @@ public sealed class PictureDoubtsReviewTests
             (doubt.Id.ToString(), Sleeve.ToString(), "sleeve-front", "COLOR", "GREY", "gris", "BLACK", "negro", 0.94, "qwen3.5-4b-q8_0"),
             (spanish.DoubtId, spanish.ProductId, spanish.ImageId, spanish.AttributeCode, spanish.Seen, spanish.SeenLabel, spanish.Held, spanish.HeldLabel, spanish.Confidence, spanish.ReadBy));
         Assert.Equal(("grey", "black"), (english.SeenLabel, english.HeldLabel));
+        Assert.False(spanish.SeenOnAnotherVariant);
     }
 
     /// <summary>Only what waits, the oldest first, a page at a time — and the total is of all that wait.</summary>
@@ -73,6 +74,19 @@ public sealed class PictureDoubtsReviewTests
 
         Assert.Equal((2, first.Id.ToString()), (page.Total, Assert.Single(page.Items).DoubtId));
         Assert.Equal(last.Id.ToString(), Assert.Single(next.Items).DoubtId);
+    }
+
+    [Fact]
+    public async Task The_queue_says_when_the_colour_seen_is_another_variants()
+    {
+        var doubt = PictureDoubt.Raise(
+            Sleeve,
+            new PictureReading(new ImageId("pannier-olive"), "qwen3.5-4b-q8_0", "picture-reading-test"),
+            new ColourSeen("COLOR", "BLACK", LocalizedText.From("es", "negro").With("en", "black"), "OLIVE", LocalizedText.From("es", "oliva").With("en", "olive"), 0.97, false, OfAnotherVariant: true),
+            this.clock)!;
+        this.knowledge.Add(doubt);
+
+        Assert.True(Assert.Single((await Queue()).Items).SeenOnAnotherVariant);
     }
 
     [Fact]

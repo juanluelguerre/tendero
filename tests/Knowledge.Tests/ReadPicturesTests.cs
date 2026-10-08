@@ -405,5 +405,10 @@ public sealed class ReadPicturesTests
             (forSteel.AttributeCode, forSteel.Seen, forSteel.SeenLabel.In("es"), forSteel.Held, forSteel.HeldLabel.In("en"), forSteel.Confidence, forSteel.Related));
         Assert.False(forBlack.Related);
         Assert.Null(PictureColours.Seen(new ElGuerre.Tendero.AI.Chat.Choice(null, 0.9, "mauve"), colours[0], colours));
+
+        // And whether the colour seen is one another variant of the product holds.
+        Assert.False(forBlack.OfAnotherVariant);
+        Assert.True(PictureColours.Seen(grey, colours[0], colours, ["grey"])!.OfAnotherVariant);
+        Assert.False(PictureColours.Seen(grey, colours[0], colours, ["STAINLESS_STEEL"])!.OfAnotherVariant);
     }
 }

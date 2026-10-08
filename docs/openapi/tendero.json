@@ -7159,7 +7159,8 @@
           "heldLabel",
           "confidence",
           "readBy",
-          "raisedAt"
+          "raisedAt",
+          "seenOnAnotherVariant"
         ],
         "type": "object",
         "properties": {
@@ -7197,6 +7198,9 @@
           "raisedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "seenOnAnotherVariant": {
+            "type": "boolean"
           }
         }
       },

@@ -32,6 +32,10 @@
               <p class="m-0 text-sm">
                 {{ t('doubts.seen', { seen: doubt.seenLabel, held: doubt.heldLabel }) }}
               </p>
+              @if (doubt.seenOnAnotherVariant) {
+                <!-- The colour seen is another variant's of this product: most likely the picture is that one's. -->
+                <p class="m-0 text-sm text-accent">{{ t('doubts.anotherVariant', { seen: doubt.seenLabel }) }}</p>
+              }
               <p class="m-0 text-xs text-muted">
                 {{ t('doubts.sure', { model: doubt.readBy, confidence: doubt.confidence | percent: '1.0-0' }) }}
               </p>

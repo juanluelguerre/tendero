@@ -25,6 +25,7 @@ public sealed record ListPictureDoubtsQuery(int Page = Paging.FirstPage, int Pag
 /// </summary>
 /// <param name="Seen">The option's code, and <paramref name="SeenLabel"/> the same as a person reads it.</param>
 /// <param name="ReadBy">The model that read the picture: the doubt is its, not the shop's.</param>
+/// <param name="SeenOnAnotherVariant">The colour seen is one another variant of the same product holds: the picture may be that variant's.</param>
 public sealed record PictureDoubtView(
     string DoubtId,
     string ProductId,
@@ -36,7 +37,8 @@ public sealed record PictureDoubtView(
     string HeldLabel,
     double Confidence,
     string ReadBy,
-    DateTimeOffset RaisedAt);
+    DateTimeOffset RaisedAt,
+    bool SeenOnAnotherVariant);
 
 /// <param name="Total">How many doubts are open, not how many are on the page.</param>
 public sealed record PictureDoubtsPage(IReadOnlyList<PictureDoubtView> Items, int Total, int Page, int PageSize);
@@ -69,7 +71,8 @@ public sealed class ListPictureDoubtsHandler(IPictureDoubtRepository doubts) : I
                     doubt.HeldLabel.In(query.Culture),
                     doubt.Confidence,
                     doubt.ReadByModel,
-                    doubt.RaisedAt)),
+                    doubt.RaisedAt,
+                    doubt.SeenOnAnotherVariant)),
             ],
             page.Total, query.Page, query.PageSize);
     }

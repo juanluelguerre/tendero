@@ -268,7 +268,9 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
             return PictureDoubt.Raise(
                 product,
                 new PictureReading(new ImageId(picture), "qwen3.5-4b-q8_0", "picture-reading-test"),
-                new ColourSeen("COLOR", seen, LocalizedText.From("es", "gris").With("en", "grey"), "BLACK", LocalizedText.From("es", "negro").With("en", "black"), 0.94, false),
+                new ColourSeen(
+                    "COLOR", seen, LocalizedText.From("es", "gris").With("en", "grey"), "BLACK", LocalizedText.From("es", "negro").With("en", "black"),
+                    0.94, false, OfAnotherVariant: seen == "OLIVE"),
                 clock)!;
         }
 
@@ -293,6 +295,8 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
             (sleeve, "front", "COLOR", "OLIVE", "BLACK", 0.94, "qwen3.5-4b-q8_0", "picture-reading-test"),
             (stored.ProductId, stored.PictureId, stored.AttributeCode, stored.Seen, stored.Held, stored.Confidence, stored.ReadByModel, stored.ReadWithPrompt));
         Assert.Equal(("gris", "black"), (stored.SeenLabel.In("es"), stored.HeldLabel.In("en")));
+        Assert.True(stored.SeenOnAnotherVariant);
+        Assert.False((await doubts.FindDoubtAsync(first.Id, ct))!.SeenOnAnotherVariant);
         Assert.Equal(
             (PictureDoubtStatus.Decided, (PictureDoubtDecision?)PictureDoubtDecision.BelongsToAnotherVariant, "Ana Tendera"),
             (stored.Status, stored.Decision, stored.DecidedBy));

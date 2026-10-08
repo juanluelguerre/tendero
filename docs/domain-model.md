@@ -67,6 +67,11 @@ classDiagram
         +string Key
         +bool IsWorthIndexing
     }
+    class AxisValue {
+        <<record>>
+        +string Axis
+        +string Value
+    }
     class Category {
         <<aggregate>>
         +string Code
@@ -113,6 +118,7 @@ classDiagram
         +ImageId Id
         +LocalizedText? Alt
         +int SortOrder
+        +AxisValue[] Shows
     }
     class ProductStatus {
         <<enumeration>>
@@ -141,6 +147,7 @@ classDiagram
     Product "1" --> "*" AttributeValue : Attributes
     Product "1" --> "*" ExternalReference : ExternalReferences
     Product "1" --> "*" Variant : Variants
+    ProductImage "1" --> "*" AxisValue : Shows
 ```
 
 ### Events
@@ -904,6 +911,7 @@ classDiagram
         +LocalizedText HeldLabel
         +double? Confidence
         +bool Related
+        +bool OfAnotherVariant
     }
     class Evidence {
         <<record>>
@@ -922,6 +930,7 @@ classDiagram
         +string Held
         +LocalizedText HeldLabel
         +double Confidence
+        +bool SeenOnAnotherVariant
         +string ReadByModel
         +string ReadWithPrompt
         +PictureDoubtStatus Status

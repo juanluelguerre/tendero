@@ -71,6 +71,21 @@ public sealed class PictureDoubtTests
             (doubt.Status, doubt.Decision, doubt.DecidedBy, doubt.DecidedAt));
     }
 
+    /// <summary>
+    /// The colour seen is another variant's of the same product: the doubt says
+    /// so, for the person who decides — most likely the picture is that
+    /// variant's. It decides nothing by itself.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void A_doubt_says_whether_the_colour_seen_is_another_variants(bool ofAnotherVariant)
+    {
+        var doubt = PictureDoubt.Raise(Sleeve, Front, Seen("GREY", 0.94) with { OfAnotherVariant = ofAnotherVariant }, Clock)!;
+
+        Assert.Equal((ofAnotherVariant, PictureDoubtStatus.Open), (doubt.SeenOnAnotherVariant, doubt.Status));
+    }
+
     /// <summary>The picture was read again and no longer says it: nobody decided, the reading did.</summary>
     [Fact]
     public void A_doubt_the_next_reading_does_not_repeat_is_withdrawn()
