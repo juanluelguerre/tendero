@@ -47,7 +47,8 @@ public static class SiglipPicture
         if (codec.GetPixels(info, decoded.GetPixels()) is not (SKCodecResult.Success or SKCodecResult.IncompleteInput))
             throw new ArgumentException("The bytes are not a picture this can decode.", nameof(encoded));
 
-        var square = Vertically(Horizontally(OverWhite(decoded.GetPixelSpan(), info.Width, info.Height), info.Width, info.Height), info.Height);
+        var (pixels, width, height) = Upright(OverWhite(decoded.GetPixelSpan(), info.Width, info.Height), info.Width, info.Height, codec.EncodedOrigin);
+        var square = Vertically(Horizontally(pixels, width, height), height);
 
         var tensor = new float[Length];
         const int plane = Side * Side;
@@ -79,6 +80,49 @@ public static class SiglipPicture
         }
 
         return rgb;
+    }
+
+    /// <summary>
+    /// The picture the way up a person sees it. A phone stores a portrait as a
+    /// landscape and a note that says how to turn it; a decoder hands over what is
+    /// stored. The catalogue's pictures carry no note and pass through untouched —
+    /// this is for a shopper's photograph, which without it is the product lying
+    /// on its side.
+    ///
+    /// Each stored pixel is moved to where the note says it is seen; the four
+    /// orientations that turn the picture a quarter swap its sides.
+    /// </summary>
+    private static (byte[] Rgb, int Width, int Height) Upright(byte[] rgb, int width, int height, SKEncodedOrigin origin)
+    {
+        if (origin is SKEncodedOrigin.TopLeft)
+            return (rgb, width, height);
+
+        var turned = origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
+        var (seenWidth, seenHeight) = turned ? (height, width) : (width, height);
+        var upright = new byte[rgb.Length];
+
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var (seenX, seenY) = origin switch
+                {
+                    SKEncodedOrigin.TopRight => (width - 1 - x, y),
+                    SKEncodedOrigin.BottomRight => (width - 1 - x, height - 1 - y),
+                    SKEncodedOrigin.BottomLeft => (x, height - 1 - y),
+                    SKEncodedOrigin.LeftTop => (y, x),
+                    SKEncodedOrigin.RightTop => (height - 1 - y, x),
+                    SKEncodedOrigin.RightBottom => (height - 1 - y, width - 1 - x),
+                    SKEncodedOrigin.LeftBottom => (y, width - 1 - x),
+                    _ => (x, y),
+                };
+
+                rgb.AsSpan(((y * width) + x) * Channels, Channels)
+                    .CopyTo(upright.AsSpan(((seenY * seenWidth) + seenX) * Channels, Channels));
+            }
+        }
+
+        return (upright, seenWidth, seenHeight);
     }
 
     /// <summary>

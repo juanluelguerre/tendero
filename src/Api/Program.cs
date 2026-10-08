@@ -25,6 +25,7 @@ using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.Search.Health;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Ucp;
@@ -132,10 +133,21 @@ builder.Services.AddRateLimiter(limiter =>
     // by the person when one is signed in, and by the address they call from when
     // nobody is — the only thing an anonymous caller has that is not theirs to choose.
     limiter.AddPolicy(TinoEndpoints.TurnsPerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // And twelve visual searches a minute, by the same client (phase 13a): a
+    // picture or a text embedded by a model on this process's CPU, for anyone
+    // who asks. A budget of its own — a shopper who talked to Tino has not spent
+    // their pictures.
+    limiter.AddPolicy(VisualSearch.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    static string ClientOf(HttpContext http) =>
         http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject is { Length: > 0 } subject
             ? "person:" + subject
-            : "address:" + (http.Connection.RemoteIpAddress?.ToString() ?? "unknown"),
-        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            : "address:" + (http.Connection.RemoteIpAddress?.ToString() ?? "unknown");
 });
 
 // Steward's model profiles (ADR 0053), each on its own. The local one has no

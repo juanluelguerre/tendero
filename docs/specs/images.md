@@ -1093,6 +1093,47 @@ untouched (invariant 8).
 bounded in size and type; embedded; discarded. It is never written to the image
 store, a log or a trace — a span carries its dimensions and nothing else. `docs/privacy.md` says so.
 
+**The two endpoints (`P13-4`, 2026-10-08) — the API; the storefront's control waits for its mock-up.**
+
+- **`POST /api/search/by-image`** (multipart, one file, `picture`): the
+  products whose pictures are nearest, each once, as the shop's cards, with the
+  picture that matched and how near it was. **`GET /api/search/pictures?q=`**:
+  the same answer for words. Both `AllowAnonymous` by explicit decision, and
+  both on one budget of their own — twelve a minute for a client, the person
+  when one is signed in and the address when nobody is — because each runs a
+  model on the API's CPU for whoever asks.
+- **`GET /api/search/by-image/status`** says whether this shop can be asked:
+  configured, not probed, and true only with the model **and** the store. The
+  storefront reads it first, so its control says *not available* rather than
+  failing on the first picture.
+- **Degraded, tested.** A shop started without visual search answers both
+  questions with a 503 that names the reason — *not available here* — and a
+  store that is down with one that says *not answering right now*, neither
+  carrying the store's own words (a host and a port stay in the log). Neither
+  is a 500, and `/api/search` never passes through any of this.
+- **What is taken is decided by the bytes** (`UploadedPicture`): JPEG, PNG or
+  WebP by what the decoder says they are, at most 8 MB and 4,096 a side. A GIF
+  decodes perfectly well and is refused for what it is; an SVG is a document.
+- **One departure from the paragraph above, on purpose: the picture is not
+  re-encoded.** It is decoded once, by the model's own preprocessing, to the
+  224 by 224 pixels the model reads, and nothing else is made of it — so there
+  is no second copy whose metadata would need dropping. Re-encoding existed in
+  the plan to lose the EXIF; never writing the picture anywhere loses it more
+  thoroughly.
+- **And one thing the plan did not have: which way up.** A phone stores a
+  portrait as a landscape with a note that says how to turn it, and a decoder
+  hands over what is stored. Unturned, a photograph of a lamp is embedded as a
+  lamp lying on its side. The preprocessing now reads that one field — all
+  eight orientations, held by a test that writes the note by hand — and nothing
+  else of the metadata. The catalogue's pictures carry no note and embed as
+  they did: the model-held tests did not move.
+- **A floor for each question** (`Search:Images:MinPictureSimilarity`,
+  `MinTextSimilarity`): a nearest neighbour always exists, so without one a
+  photograph of anything finds a row of products. Unset — zero — until they are
+  chosen from a measurement.
+- Twenty-four hand mutations. One survived and was a real gap: nothing held
+  the status to *no* with the model and no store. A test does now.
+
 ### I-7 · Close
 
 The phase's ADRs, Stryker over every project it touched with its survivors

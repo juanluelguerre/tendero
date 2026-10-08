@@ -900,6 +900,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search/pictures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SearchPicturesByText"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/by-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SearchByImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/by-image/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetVisualSearchAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search/reindex": {
         parameters: {
             query?: never;
@@ -1967,6 +2015,17 @@ export interface components {
         };
         HistorySettingsRequest: {
             enabled: boolean;
+        };
+        HttpValidationProblemDetails: {
+            type?: null | string;
+            title?: null | string;
+            /** Format: int32 */
+            status?: null | number;
+            detail?: null | string;
+            instance?: null | string;
+            errors?: {
+                [key: string]: string[];
+            };
         };
         /** Format: binary */
         IFormFile: string;
@@ -3309,6 +3368,18 @@ export interface components {
             code: string;
             /** Format: date-time */
             at: string;
+        };
+        VisualMatch: {
+            product: components["schemas"]["SearchHit"];
+            picture: string;
+            /** Format: double */
+            similarity: number;
+        };
+        VisualSearchAvailability: {
+            available: boolean;
+        };
+        VisualSearchResult: {
+            items: components["schemas"]["VisualMatch"][];
         };
         WarehouseCoverage: {
             warehouseCode: string;
@@ -4943,6 +5014,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResultPage"];
+                };
+            };
+        };
+    };
+    SearchPicturesByText: {
+        parameters: {
+            query?: {
+                q?: string;
+                culture?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisualSearchResult"];
+                };
+            };
+        };
+    };
+    SearchByImage: {
+        parameters: {
+            query?: {
+                culture?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    picture: components["schemas"]["IFormFile"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisualSearchResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+        };
+    };
+    GetVisualSearchAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisualSearchAvailability"];
                 };
             };
         };

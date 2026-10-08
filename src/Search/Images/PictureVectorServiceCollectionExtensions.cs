@@ -27,6 +27,10 @@ public static class PictureVectorServiceCollectionExtensions
         services.TryAddScoped<IPictureVectorIndexer>(provider => provider.GetRequiredService<NoPictureVectors>());
         services.TryAddScoped<IPictureSearch>(provider => provider.GetRequiredService<NoPictureVectors>());
 
+        // What the two visual questions share, and the floors each answers above.
+        services.AddOptions<VisualSearchOptions>().Bind(configuration.GetSection(VisualSearchOptions.Section));
+        services.TryAddScoped<VisualSearch>();
+
         return services;
     }
 }

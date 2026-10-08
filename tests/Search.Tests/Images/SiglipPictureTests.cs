@@ -80,6 +80,84 @@ public sealed class SiglipPictureTests
         Assert.All(tensor, value => Assert.Equal(1f, value, 3));
     }
 
+    /// <summary>
+    /// A phone stores a portrait as a landscape and a note that says "turn me".
+    /// Read without the note, a shopper's photograph of a lamp is a lamp lying on
+    /// its side — and its neighbours are whatever lies on its side.
+    ///
+    /// Four quadrants — red, green, blue, white — stored once and labelled with
+    /// each of EXIF's eight orientations; what the model is given is the picture
+    /// as a person sees it. Top left, top right, bottom left, bottom right.
+    /// </summary>
+    [Theory]
+    [InlineData(1, "RGBW")] // as stored
+    [InlineData(2, "GRWB")] // mirrored left to right
+    [InlineData(3, "WBGR")] // upside down
+    [InlineData(4, "BWRG")] // mirrored top to bottom
+    [InlineData(5, "RBGW")] // transposed
+    [InlineData(6, "BRWG")] // a quarter turn clockwise: the phone held upright
+    [InlineData(7, "WGBR")] // transverse
+    [InlineData(8, "GWRB")] // a quarter turn the other way
+    public void A_photograph_is_read_the_way_up_its_orientation_says(int orientation, string seen)
+    {
+        var tensor = SiglipPicture.ToTensor(QuadrantsSaying(orientation));
+
+        char At(int row, int column)
+        {
+            var at = (row * SiglipPicture.Side) + column;
+            return (tensor[at] > 0, tensor[Plane + at] > 0, tensor[(2 * Plane) + at] > 0) switch
+            {
+                (true, false, false) => 'R',
+                (false, true, false) => 'G',
+                (false, false, true) => 'B',
+                (true, true, true) => 'W',
+                _ => '?',
+            };
+        }
+
+        Assert.Equal(seen, string.Concat(At(56, 56), At(56, 168), At(168, 56), At(168, 168)));
+    }
+
+    /// <summary>
+    /// A JPEG of four quadrants, wider than tall, with an EXIF block that says
+    /// only how it is to be turned — written by hand, because nothing here writes
+    /// EXIF and thirty-four bytes are easier to read than a dependency.
+    /// </summary>
+    private static byte[] QuadrantsSaying(int orientation)
+    {
+        using var bitmap = new SKBitmap(new SKImageInfo(200, 100, SKColorType.Rgba8888, SKAlphaType.Opaque));
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            void Quadrant(int x, int y, SKColor colour)
+            {
+                using var paint = new SKPaint { Color = colour };
+                canvas.DrawRect(x, y, 100, 50, paint);
+            }
+
+            Quadrant(0, 0, new SKColor(255, 0, 0));
+            Quadrant(100, 0, new SKColor(0, 255, 0));
+            Quadrant(0, 50, new SKColor(0, 0, 255));
+            Quadrant(100, 50, new SKColor(255, 255, 255));
+        }
+
+        using var image = SKImage.FromBitmap(bitmap);
+        using var encoded = image.Encode(SKEncodedImageFormat.Jpeg, 100);
+        var jpeg = encoded.ToArray();
+
+        byte[] exif =
+        [
+            0xFF, 0xE1, 0x00, 0x22,                         // APP1, thirty-four bytes with this length
+            (byte)'E', (byte)'x', (byte)'i', (byte)'f', 0, 0,
+            (byte)'I', (byte)'I', 0x2A, 0x00, 0x08, 0, 0, 0, // TIFF, little endian, its directory eight bytes in
+            0x01, 0x00,                                     // one entry
+            0x12, 0x01, 0x03, 0x00, 0x01, 0, 0, 0, (byte)orientation, 0, 0, 0, // Orientation, a short, one of them
+            0, 0, 0, 0,                                     // and no directory after it
+        ];
+
+        // After the two bytes that say "JPEG", before everything else.
+        return [.. jpeg[..2], .. exif, .. jpeg[2..]];
+    }
+
     [Fact]
     public void Bytes_that_are_not_a_picture_are_refused()
     {
