@@ -198,6 +198,10 @@ public sealed class ImportProductsHandler(
     /// review, 2026-09-11). Replacing happens only when EVERY image the source
     /// lists arrived; a partial read only adds, because a CDN that times out
     /// once must not strip the photos off a live product.
+    ///
+    /// **A variant's own picture is set here too** (phase 13a, I-4d), and only
+    /// when every image arrived: a variant names its picture by its place in the
+    /// source's list, and a list with one missing has no places to go by.
     /// </summary>
     private async Task IngestImagesAsync(
         Product product, ExternalProduct external, CancellationToken cancellationToken)
@@ -217,6 +221,13 @@ public sealed class ImportProductsHandler(
         if (ingested.Count == external.Images.Count)
         {
             product.ReplaceImages(clock, ingested);
+
+            foreach (var variant in external.Variants ?? [])
+            {
+                if (variant.Image is { } place && place >= 0 && place < ingested.Count)
+                    product.SetVariantImage(clock, ExternalProductMapper.SkuOf(external, variant), ingested[place].Id);
+            }
+
             return;
         }
 

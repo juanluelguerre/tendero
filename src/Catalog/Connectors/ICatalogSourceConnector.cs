@@ -48,7 +48,14 @@ public sealed record ExternalProduct(
     /// Nullable because a connector may not carry it, and a row without one is
     /// simply never new — not an import failure.
     /// </summary>
-    DateOnly? AvailableFrom = null)
+    DateOnly? AvailableFrom = null,
+
+    /// <summary>
+    /// The ways the source sells it, when it tells them apart — a colour, a
+    /// size — or null when it draws no such distinction and the product is
+    /// bought one way (ADR 0015: it then gets its default variant).
+    /// </summary>
+    IReadOnlyList<ExternalVariant>? Variants = null)
 {
     public Money Price => new(PriceAmount, PriceCurrency);
 
@@ -57,6 +64,20 @@ public sealed record ExternalProduct(
     public LocalizedText? LocalizedDescription =>
         Descriptions is { Count: > 0 } ? new LocalizedText(Descriptions) : null;
 }
+
+/// <summary>
+/// One way of buying a product, as the source tells it apart (phase 13a, I-4d).
+/// </summary>
+/// <param name="Key">What tells it apart in the source's own SKU: <c>OLIVE</c>,
+/// <c>BLACK-38</c>. Ours is the product's external id and this, so it is the same
+/// on every import.</param>
+/// <param name="Attributes">What it varies by, in the source's words — the same
+/// keys and values a product's attributes arrive in (<c>color: negro</c>), and
+/// resolved against the same definitions.</param>
+/// <param name="Image">Which of the product's <see cref="ExternalProduct.Images"/>
+/// shows this one, by its place in that list — or null when it has no picture of
+/// its own and the product's cover stands for it.</param>
+public sealed record ExternalVariant(string Key, IReadOnlyDictionary<string, string> Attributes, int? Image = null);
 
 /// <summary>
 /// An image as the source offers it. <see cref="Location"/> is a Uri on purpose:

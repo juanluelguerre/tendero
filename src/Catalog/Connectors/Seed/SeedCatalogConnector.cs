@@ -70,7 +70,8 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
         SeedPrice Price,
         IReadOnlyList<string>? Images,
         IReadOnlyDictionary<string, string>? Attributes,
-        [property: JsonPropertyName("available_from")] DateOnly? AvailableFrom)
+        [property: JsonPropertyName("available_from")] DateOnly? AvailableFrom,
+        IReadOnlyList<SeedVariantRow>? Variants = null)
     {
         public ExternalProduct ToExternalProduct(Func<string, Uri> resolveImage) => new(
             ExternalId: ItemId,
@@ -82,8 +83,18 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
             PriceCurrency: Price.Currency,
             Images: (Images ?? []).Select(resolveImage).Select(location => new ExternalImage(location)).ToList(),
             Attributes: Attributes ?? new Dictionary<string, string>(),
-            AvailableFrom: AvailableFrom);
+            AvailableFrom: AvailableFrom,
+            Variants: Variants is { Count: > 0 }
+                ? [.. Variants.Select(variant => new ExternalVariant(variant.Sku, variant.Attributes ?? new Dictionary<string, string>(), variant.Image))]
+                : null);
     }
+
+    /// <summary>
+    /// A way of buying the product: <c>sku</c> is what tells it apart, its
+    /// <c>attributes</c> are what it varies by in the file's own words, and
+    /// <c>image</c> is the place of its picture among the product's <c>images</c>.
+    /// </summary>
+    private sealed record SeedVariantRow(string Sku, IReadOnlyDictionary<string, string>? Attributes, int? Image = null);
 
     private sealed record SeedPrice(decimal Amount, string Currency);
 

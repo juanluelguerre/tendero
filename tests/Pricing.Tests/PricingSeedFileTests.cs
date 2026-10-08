@@ -24,7 +24,11 @@ public sealed class PricingSeedFileTests
     private static async Task<IReadOnlyList<Promotion>> Promotions() =>
         await PricingSeedFile.LoadPromotionsAsync(Seed("promotions.sample.json"));
 
-    /// <summary>The default variant minted at import: <c>{externalId}-DEFAULT</c>.</summary>
+    /// <summary>
+    /// What the import makes purchasable: the variants a product's source tells
+    /// apart (<c>{externalId}-{sku}</c>), or the default one it mints when the
+    /// source tells none (<c>{externalId}-DEFAULT</c>).
+    /// </summary>
     private static HashSet<string> CatalogueSkus()
     {
         using var file = File.OpenRead(Seed("products.sample.json"));
@@ -33,7 +37,10 @@ public sealed class PricingSeedFileTests
         return
         [
             .. document.RootElement.EnumerateArray()
-                .Select(product => $"{product.GetProperty("item_id").GetString()}-DEFAULT")
+                .SelectMany(product => product.TryGetProperty("variants", out var variants)
+                    ? variants.EnumerateArray().Select(variant => variant.GetProperty("sku").GetString()!)
+                    : ["DEFAULT"],
+                    (product, sku) => $"{product.GetProperty("item_id").GetString()}-{sku}")
         ];
     }
 

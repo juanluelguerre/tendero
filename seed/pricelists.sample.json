@@ -286,7 +286,11 @@
         "amount": 39.0
       },
       {
-        "sku": "B13BAG0711-DEFAULT",
+        "sku": "B13BAG0711-OLIVE",
+        "amount": 79.9
+      },
+      {
+        "sku": "B13BAG0711-BLACK",
         "amount": 79.9
       },
       {
@@ -694,7 +698,11 @@
         "amount": 35.1
       },
       {
-        "sku": "B13BAG0711-DEFAULT",
+        "sku": "B13BAG0711-OLIVE",
+        "amount": 71.9
+      },
+      {
+        "sku": "B13BAG0711-BLACK",
         "amount": 71.9
       },
       {

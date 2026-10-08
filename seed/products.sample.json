@@ -1859,14 +1859,30 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0711.webp"
+      "images/B13BAG0711.webp",
+      "images/B13BAG0711-BLACK.webp"
     ],
     "attributes": {
-      "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "20"
     },
-    "available_from": "2026-02-26"
+    "available_from": "2026-02-26",
+    "variants": [
+      {
+        "sku": "OLIVE",
+        "attributes": {
+          "color": "oliva"
+        },
+        "image": 0
+      },
+      {
+        "sku": "BLACK",
+        "attributes": {
+          "color": "negro"
+        },
+        "image": 1
+      }
+    ]
   },
   {
     "item_id": "B13BAG0712",

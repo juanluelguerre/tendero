@@ -690,14 +690,24 @@
     "onHand": 2
   },
   {
-    "sku": "B13BAG0711-DEFAULT",
+    "sku": "B13BAG0711-OLIVE",
     "warehouse": "MAD",
     "onHand": 5
   },
   {
-    "sku": "B13BAG0711-DEFAULT",
+    "sku": "B13BAG0711-OLIVE",
     "warehouse": "BCN",
     "onHand": 0
+  },
+  {
+    "sku": "B13BAG0711-BLACK",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B13BAG0711-BLACK",
+    "warehouse": "BCN",
+    "onHand": 2
   },
   {
     "sku": "B13BAG0712-DEFAULT",

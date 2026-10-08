@@ -40,7 +40,7 @@ public static class ExternalProductMapper
         product.SetAvailableFrom(clock, external.AvailableFrom);
         product.LinkExternal(clock, source, external.ExternalId);
         CopyAttributes(external, product, clock, definitions);
-        EnsureDefaultVariant(external, product, clock);
+        EnsureVariants(external, product, clock, definitions);
 
         return product;
     }
@@ -59,7 +59,52 @@ public static class ExternalProductMapper
         product.SetPrice(clock, external.Price);
         product.SetAvailableFrom(clock, external.AvailableFrom);
         CopyAttributes(external, product, clock, definitions);
-        EnsureDefaultVariant(external, product, clock);
+        EnsureVariants(external, product, clock, definitions);
+    }
+
+    /// <summary>The SKU a source's variant has here: the product's external id and what the source tells it apart by.</summary>
+    public static string SkuOf(ExternalProduct external, ExternalVariant variant) => $"{external.ExternalId}-{variant.Key}";
+
+    /// <summary>
+    /// The ways the product is bought. A source that tells none apart gets the
+    /// default variant; one that does gets each of them, placed on the axes it
+    /// varies by — the attribute codes its own words resolve to, in the order
+    /// the source first names them.
+    ///
+    /// The axes are declared before the variants, as the aggregate asks, and
+    /// declaring them retires a default variant an earlier import left: the
+    /// product stops having exactly one way of being bought the moment the
+    /// source says it has two. Re-importing adds nothing: a variant is found by
+    /// its SKU, and only its price follows the source.
+    /// </summary>
+    private static void EnsureVariants(
+        ExternalProduct external, Product product, TimeProvider clock, AttributeDefinitions? definitions)
+    {
+        if (external.Variants is not { Count: > 0 } declared)
+        {
+            EnsureDefaultVariant(external, product, clock);
+            return;
+        }
+
+        var placed = declared
+            .Select(variant => (
+                Sku: SkuOf(external, variant),
+                Coordinates: variant.Attributes
+                    .Select(attribute => Resolve(attribute.Key, attribute.Value, definitions))
+                    .ToDictionary(value => value.Code, value => value.Key, StringComparer.OrdinalIgnoreCase)))
+            .ToList();
+
+        string[] axes = [.. placed.SelectMany(variant => variant.Coordinates.Keys).Distinct(StringComparer.OrdinalIgnoreCase)];
+        if (!axes.SequenceEqual(product.VariantAxes, StringComparer.OrdinalIgnoreCase))
+            product.DefineAxes(clock, axes);
+
+        foreach (var (sku, coordinates) in placed)
+        {
+            if (product.Variants.Any(variant => string.Equals(variant.Sku, sku, StringComparison.OrdinalIgnoreCase)))
+                product.SetVariantPrice(clock, sku, external.Price);
+            else
+                product.AddVariant(clock, sku, external.Price, coordinates);
+        }
     }
 
     /// <summary>

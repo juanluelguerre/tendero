@@ -71,12 +71,61 @@ public sealed class ImportProductsTests
         Assert.Contains(shop.Product.Images, image => image.Id == Shop.IdOf(Illustration));
     }
 
+    // ---------- a variant's own picture (phase 13a, I-4d) ----------
+
+    private static readonly ExternalVariant[] TwoColours =
+    [
+        new("OLIVE", new Dictionary<string, string> { ["color"] = "oliva" }, Image: 0),
+        new("BLACK", new Dictionary<string, string> { ["color"] = "negro" }, Image: 1),
+        new("GREY", new Dictionary<string, string> { ["color"] = "gris" }),
+    ];
+
+    /// <summary>
+    /// A variant names its picture by its place in the source's list, and gets
+    /// the picture that was stored for that place. One that names none has none
+    /// of its own: the cover stands for it.
+    /// </summary>
+    [Fact]
+    public async Task A_variant_gets_the_picture_the_source_says_is_its_own()
+    {
+        var shop = new Shop { Variants = TwoColours };
+
+        await shop.ImportAsync(Placeholder, Illustration);
+
+        Assert.Equal(
+            [("B000000001-OLIVE", (ImageId?)Shop.IdOf(Placeholder)), ("B000000001-BLACK", Shop.IdOf(Illustration)), ("B000000001-GREY", null)],
+            shop.Product.Variants.Select(variant => (variant.Sku, variant.Image)));
+    }
+
+    /// <summary>
+    /// With an image missing, the list has no places to go by: no variant is
+    /// given a picture that may be another's, and the next complete import sets
+    /// them.
+    /// </summary>
+    [Fact]
+    public async Task With_an_image_missing_no_variant_is_given_a_picture_until_the_gallery_is_whole()
+    {
+        var shop = new Shop { Variants = TwoColours };
+
+        await shop.ImportAsync(Placeholder, Missing);
+        Assert.All(shop.Product.Variants, variant => Assert.Null(variant.Image));
+
+        await shop.ImportAsync(Placeholder, Illustration);
+        Assert.Equal(Shop.IdOf(Illustration), shop.Product.Variants.Single(variant => variant.Sku.EndsWith("BLACK", StringComparison.Ordinal)).Image);
+    }
+
     private sealed class Shop
     {
         private readonly InMemoryProductRepository repository = new();
         private readonly OneProductConnector connector = new();
 
         public Product Product { get; private set; } = null!;
+
+        /// <summary>The ways the source sells it, from the next import on.</summary>
+        public IReadOnlyList<ExternalVariant>? Variants
+        {
+            set => this.connector.Variants = value;
+        }
 
         /// <summary>The same product, from the same source, with this gallery.</summary>
         public async Task ImportAsync(params Uri[] images)
@@ -113,6 +162,8 @@ public sealed class ImportProductsTests
 
         public IReadOnlyList<Uri> Images { get; set; } = [];
 
+        public IReadOnlyList<ExternalVariant>? Variants { get; set; }
+
         public string Source => Key;
 
         public async IAsyncEnumerable<ExternalProduct> StreamProductsAsync(
@@ -129,7 +180,8 @@ public sealed class ImportProductsTests
                 PriceAmount: 49.90m,
                 PriceCurrency: "EUR",
                 [.. Images.Select(location => new ExternalImage(location))],
-                new Dictionary<string, string>());
+                new Dictionary<string, string>(),
+                Variants: Variants);
         }
     }
 
