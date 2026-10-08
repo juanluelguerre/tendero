@@ -29,7 +29,11 @@ not — and a tag the aggregate refuses is logged and skipped. Slice 5 is the
 product store's `gallery`: the chosen variant's `imageIds`, the product's own
 when it has none. Slice 6 is a slice of its own, `SetImageShows`, and a control
 an axis beside each picture of the product's review, offering only what a
-variant still sold holds. Slice 7 waits for its ruling.
+variant still sold holds. **Slice 7 built** on the author's ruling:
+`PictureDoubtDecided` carries the picture and the colour seen,
+`RetagPictureOnDoubtDecided` in the worker sends `SetImageShows` with
+`KeepOtherAxes`, and a refusal is counted
+(`tendero.knowledge.picture_doubts.retagged`) and logged, not retried.
 
 1. **The aggregate.** `ProductImage.Shows` — the axis values a picture shows, at
    most one an axis. `Product.Show(picture, values)` refuses an axis the product

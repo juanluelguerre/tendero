@@ -580,7 +580,7 @@
   },
   "doubts": {
     "title": "Dudas de imagen",
-    "hint": "Imágenes que el modelo está seguro de que muestran otro color que el del catálogo. Nada de lo que decidas aquí cambia el catálogo ni detiene el producto: dices qué pasa con la imagen y, si hay que cambiarla o moverla, se hace en su ficha.",
+    "hint": "Imágenes que el modelo está seguro de que muestran otro color que el del catálogo. Ninguna duda detiene el producto. Decir que la imagen está bien o que hay que sustituirla no cambia nada en el catálogo; decir que es de otra variante la pasa a esa variante, la del color que el modelo ve.",
     "loading": "Cargando las dudas…",
     "failed": "No se han podido cargar las dudas.",
     "empty": "Ninguna imagen está en duda.",

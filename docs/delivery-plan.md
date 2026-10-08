@@ -928,8 +928,10 @@ what a microphone changes about the questions people ask. `#AIEngineering #RAG #
   have** (ADR 0056, amended): required or expected, never enforced — an
   incomplete product is a catalogue gap and a note on its review. That closes
   the standing backlog's *Required attributes per category*, recorded
-  2026-10-02. Still open there: *it belongs to another variant* applied from a
-  doubt, which needs its ruling; a screen that edits the declarations.
+  2026-10-02. *It belongs to another variant* is applied from the doubt, and
+  three near-universal attributes are required too, which leaves five seed
+  products incomplete on purpose. Still open there: a screen that edits the
+  declarations.
 - **Proposed by the author on 2026-10-07, not scheduled: the catalogue grows,
   it does not change.** Looking at the pictures, the shop reads as bags and
   shoes; he asked for chairs, tables, beds, wardrobes, plants. Replacing

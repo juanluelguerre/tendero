@@ -20,7 +20,13 @@ namespace ElGuerre.Tendero.Catalog.Features.SetImageShows;
 /// taken off.
 /// </summary>
 /// <param name="Shows">Axis code to the value shown, at most one an axis; empty for a picture of no variant in particular.</param>
-public sealed record SetImageShowsCommand(ProductId ProductId, ImageId ImageId, IReadOnlyDictionary<string, string> Shows)
+/// <param name="KeepOtherAxes">
+/// Whether what the picture already shows on the axes not named stays. A
+/// shopkeeper says everything a picture shows at once, so no; whoever corrects
+/// one axis — a doubt about its colour, decided — knows only that one, so yes.
+/// </param>
+public sealed record SetImageShowsCommand(
+    ProductId ProductId, ImageId ImageId, IReadOnlyDictionary<string, string> Shows, bool KeepOtherAxes = false)
     : ICommand<SetImageShowsResult>;
 
 public enum ImageShowsOutcome
@@ -82,9 +88,16 @@ public sealed class SetImageShowsHandler(IProductRepository repository, IUnitOfW
             return Outcome(ImageShowsOutcome.NoSuchImage, product.Id, activity);
 
         var before = picture.Shows;
+        var shows = command.KeepOtherAxes
+            ? before
+                .Where(shown => !command.Shows.Keys.Contains(shown.Axis, StringComparer.OrdinalIgnoreCase))
+                .ToDictionary(shown => shown.Axis, shown => shown.Value)
+                .Concat(command.Shows)
+                .ToDictionary(pair => pair.Key, pair => pair.Value)
+            : command.Shows;
         try
         {
-            product.Show(clock, command.ImageId, command.Shows);
+            product.Show(clock, command.ImageId, shows);
         }
         catch (InvalidOperationException refused)
         {

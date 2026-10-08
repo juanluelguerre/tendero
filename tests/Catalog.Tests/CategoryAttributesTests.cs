@@ -230,13 +230,18 @@ public sealed class CategoryAttributesTests
     }
 
     /// <summary>
-    /// **The seed starts complete.** What a seed category requires is what every
-    /// seed product of it already holds — on itself or on its variants — so the
-    /// first incomplete product the shop sees is a real one, and a declaration
-    /// that no seed product could meet is caught here and not on a dashboard.
+    /// **What the seed requires, and the five products that do not have it.**
+    /// Five attributes every seed product of their category holds, and — the
+    /// author's ruling, 2026-10-08 — three that nearly all do: a bag's colour, a
+    /// lamp's power, a garment's material. Those three leave five products
+    /// incomplete, each for a reason worth seeing on a screen: the packing cubes
+    /// are three colours and so say none; a ceramic lamp says no power; and
+    /// *leather ankle boots* say their material in their name and nowhere a
+    /// machine reads it. Held as a list, so a product that becomes incomplete, or
+    /// stops being, is a change somebody made on purpose.
     /// </summary>
     [Fact]
-    public async Task No_seed_product_lacks_what_its_category_requires_and_the_seed_does_require()
+    public async Task The_seed_requires_eight_attributes_and_five_products_are_known_to_lack_one()
     {
         var (tree, definitions) = await SeedCatalogue();
         using var products = JsonDocument.Parse(await File.ReadAllTextAsync(Seed("products.sample.json"), TestContext.Current.CancellationToken));
@@ -253,10 +258,20 @@ public sealed class CategoryAttributesTests
             lacking.AddRange(tree.RequiredOf(type).Where(code => !held.Contains(code)).Select(code => $"{product.GetProperty("item_id").GetString()}: {code}"));
         }
 
-        Assert.Empty(lacking);
-        // And it is not empty by saying nothing: five attributes are required today.
         Assert.Equal(
-            ["APPAREL: COLOR", "BAGS: MATERIAL", "COFFEE_MAKER: CUPS", "DESK_LAMP: COLOUR_TEMPERATURE", "KNIVES: PIECES"],
+            [
+                "B07TUVW404: MATERIAL",   // Short-sleeve trail running tech tee
+                "B12LAM0604: POWER_W",    // Cantaro ceramic table lamp
+                "B13BAG0712: COLOR",      // Packing cubes, set of 3
+                "B15SHO1101: MATERIAL",   // Charco short wellington boots
+                "B15SHO1102: MATERIAL",   // Adoquin leather ankle boots
+            ],
+            lacking.Order(StringComparer.Ordinal));
+        Assert.Equal(
+            [
+                "APPAREL: COLOR", "APPAREL: MATERIAL", "BAGS: COLOR", "BAGS: MATERIAL", "COFFEE_MAKER: CUPS",
+                "DESK_LAMP: COLOUR_TEMPERATURE", "DESK_LAMP: POWER_W", "KNIVES: PIECES",
+            ],
             tree.All.SelectMany(category => category.Required.Select(code => $"{category.Code}: {code}")).Order(StringComparer.Ordinal));
     }
 

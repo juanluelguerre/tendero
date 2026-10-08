@@ -1037,7 +1037,7 @@ classDiagram
 | `ClaimProposed` | `ClaimId: ClaimId`, `ProductId: ProductId` |
 | `ClaimRejected` | `ClaimId: ClaimId`, `ProductId: ProductId`, `RejectedBy: string` |
 | `ClaimSuperseded` | `ClaimId: ClaimId`, `ProductId: ProductId`, `WasApproved: bool` |
-| `PictureDoubtDecided` | `DoubtId: PictureDoubtId`, `ProductId: ProductId`, `Decision: PictureDoubtDecision`, `DecidedBy: string` |
+| `PictureDoubtDecided` | `DoubtId: PictureDoubtId`, `ProductId: ProductId`, `Decision: PictureDoubtDecision`, `DecidedBy: string`, `PictureId: string?`, `AttributeCode: string?`, `Seen: string?` |
 | `PictureDoubtRaised` | `DoubtId: PictureDoubtId`, `ProductId: ProductId` |
 
 ### PictureDoubt states

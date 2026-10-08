@@ -53,6 +53,31 @@ public sealed class SetImageShowsTests
         Assert.Equal(1, unitOfWork.SaveCount);
     }
 
+    /// <summary>
+    /// Whoever corrects one axis knows only that one — a doubt about a picture's
+    /// colour, decided — and what the picture shows on the others stays. A
+    /// shopkeeper says everything at once, and what they leave out is taken off.
+    /// </summary>
+    [Fact]
+    public async Task One_axis_corrected_keeps_the_others_when_asked_to_and_replaces_them_when_not()
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", "Mochila"), new Money(49m, "EUR"));
+        product.DefineAxes(Clock, ["COLOR", "SIZE"]);
+        product.AddVariant(Clock, "PACK-BLACK-L", new Money(49m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK", ["SIZE"] = "L" });
+        product.AddVariant(Clock, "PACK-GREY-L", new Money(49m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "GREY", ["SIZE"] = "L" });
+        product.AddImage(Clock, Side);
+        product.Show(Clock, Side, new Dictionary<string, string> { ["COLOR"] = "GREY", ["SIZE"] = "L" });
+        var handler = HandlerOver(product, out _);
+        var ct = TestContext.Current.CancellationToken;
+
+        await handler.HandleAsync(new SetImageShowsCommand(product.Id, Side, new Dictionary<string, string> { ["color"] = "BLACK" }, KeepOtherAxes: true), ct);
+        var kept = product.Images.Single(image => image.Id == Side).Shows;
+        await handler.HandleAsync(new SetImageShowsCommand(product.Id, Side, Colour("GREY")), ct);
+
+        Assert.Equal([new AxisValue("COLOR", "BLACK"), new AxisValue("SIZE", "L")], kept);
+        Assert.Equal([new AxisValue("COLOR", "GREY")], product.Images.Single(image => image.Id == Side).Shows);
+    }
+
     /// <summary>What it already says is one change: no save, no event, no reindex — for a tag and for none.</summary>
     [Theory]
     [InlineData("BLACK")]

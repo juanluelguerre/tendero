@@ -107,13 +107,16 @@ day, on the proposed answers).
   arrive wrong needs to see them, not lose them.
 - **An axis counts as held while a variant still sold holds it.** A shirt in two
   colours says no colour of its own.
-- **The seed starts complete.** What a seed category requires is what every one
-  of its seed products already holds — five attributes today: a garment's
-  colour, a bag's material, a coffee maker's cups, a lamp's colour temperature,
-  a knife set's pieces — and a test holds it. The first incomplete product the
-  shop sees is then a real one. The list is the author's to prune or extend;
-  the nearly-universal ones were left *expected* on purpose (a bag's colour,
-  12 of 13: the packing cubes are three colours and say none).
+- **What the seed requires.** First, what every seed product of a category
+  already holds — a garment's colour, a bag's material, a coffee maker's cups, a
+  lamp's colour temperature, a knife set's pieces. Then, **by the author's
+  ruling the same day**, three that nearly all hold: a bag's colour (12 of 13),
+  a lamp's power (10 of 11), a garment's material (29 of 32). Eight in all, and
+  **five seed products are incomplete**, each for a reason worth seeing: the
+  packing cubes are three colours and so say none; a ceramic lamp says no power;
+  a tech tee and two pairs of boots say no material — one of them *leather
+  ankle boots*, which says it in its name and nowhere a machine reads it. A
+  test holds the eight and the five by name.
 - **Evidence of use** (ADR 0036): the gap is read through `catalogue_gaps`,
   whose calls are already counted by tool and argument; nothing new is emitted.
 - **Measured, and it found something** (`docs/analysis/steward-models.md`, the

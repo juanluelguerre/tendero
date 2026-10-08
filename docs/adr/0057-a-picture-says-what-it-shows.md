@@ -71,9 +71,12 @@ URL of its own, on the colour. **It was considered and deferred by the author on
 ## Consequences
 
 - *It belongs to another variant*, the third decision on a picture doubt, is now
-  changing one tag — which is what lets it be applied from the doubt itself
-  (not built yet; it needs its own ruling, because today a doubt changes nothing
-  but itself).
+  changing one tag — and is **applied from the doubt itself** (the author's
+  ruling, 2026-10-08). The decision leaves Knowledge through the outbox carrying
+  the picture and the colour seen; a worker turns it into Catalog's own command,
+  `SetImageShows`, keeping what the picture shows on its other axes; Catalog
+  refuses a colour no variant is sold in. Knowledge still writes nothing to a
+  product (ADR 0018), and the other two decisions still change nothing.
 - A picture is no longer held to a colour by elimination: an untagged cover of a
   product in two colours is held to none, even when one of them is all that is
   left on sale.

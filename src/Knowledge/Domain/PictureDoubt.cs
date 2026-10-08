@@ -50,8 +50,15 @@ public sealed record ColourSeen(
 
 public sealed record PictureDoubtRaised(PictureDoubtId DoubtId, ProductId ProductId, DateTimeOffset OccurredAt) : IDomainEvent;
 
+/// <summary>
+/// A person decided a doubt. It carries, as values (ADR 0014), what whoever acts
+/// on the decision needs and may not come back to Knowledge for: which picture,
+/// what was asked of it and what was seen. Optional, because a decision stored
+/// before the event carried them is still in somebody's outbox.
+/// </summary>
 public sealed record PictureDoubtDecided(
-    PictureDoubtId DoubtId, ProductId ProductId, PictureDoubtDecision Decision, string DecidedBy, DateTimeOffset OccurredAt) : IDomainEvent;
+    PictureDoubtId DoubtId, ProductId ProductId, PictureDoubtDecision Decision, string DecidedBy, DateTimeOffset OccurredAt,
+    string? PictureId = null, string? AttributeCode = null, string? Seen = null) : IDomainEvent;
 
 /// <summary>
 /// A doubt about one picture of a product (phase 13a, I-4d): the model that read
@@ -63,7 +70,9 @@ public sealed record PictureDoubtDecided(
 /// is the wrong one, or drawn wrong, or filed under the wrong variant. So it has
 /// its own record and its own decisions, and it writes nothing anywhere: it
 /// **informs**, and a product with an open doubt is published and sold as any
-/// other (the author's ruling, 2026-10-08).
+/// other (the author's ruling, 2026-10-08). One decision is acted on, outside
+/// Knowledge: *it belongs to another variant* reaches Catalog through the outbox,
+/// which files the picture under the colour seen (ADR 0057).
 /// </summary>
 public sealed class PictureDoubt : AggregateRoot
 {
@@ -172,7 +181,7 @@ public sealed class PictureDoubt : AggregateRoot
         Decision = decision;
         DecidedBy = decidedBy;
         DecidedAt = clock.GetUtcNow();
-        Raise(new PictureDoubtDecided(Id, ProductId, decision, decidedBy, DecidedAt.Value));
+        Raise(new PictureDoubtDecided(Id, ProductId, decision, decidedBy, DecidedAt.Value, PictureId, AttributeCode, Seen));
     }
 
     /// <summary>The picture was read again and the doubt is not what it says now. Not a decision: no person made it.</summary>

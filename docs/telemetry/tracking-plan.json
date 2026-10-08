@@ -212,6 +212,7 @@
       "decision": "Mostly 'the picture is fine' means the line is too low or two colours are one to the shop: raise PictureDoubt.SureDifference, or declare the two as mistaken for each other. A share of 'replace the picture' worth having is what would justify a doubt holding a picture back from being the cover.",
       "signals": [
         "tendero.knowledge.picture_doubts.decided",
+        "tendero.knowledge.picture_doubts.retagged",
         "backoffice_view_opened",
         "backoffice_action_taken"
       ]
@@ -1431,6 +1432,27 @@
           ],
           "description": "PictureDoubtDecision, labelled by MetricLabels.",
           "from": "PictureDoubtDecision"
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.picture_doubts.retagged",
+      "instrument": "counter",
+      "unit": "{picture}",
+      "description": "Pictures Catalog was asked to file under another variant after a doubt was decided, by what it answered.",
+      "attributes": {
+        "outcome": {
+          "type": "string",
+          "values": [
+            "shown",
+            "unchanged",
+            "no_such_image",
+            "not_sold",
+            "archived",
+            "not_found"
+          ],
+          "description": "ImageShowsOutcome, labelled by MetricLabels: 'not_sold' is a person saying a picture is of a colour no variant is sold in.",
+          "from": "ImageShowsOutcome"
         }
       }
     },

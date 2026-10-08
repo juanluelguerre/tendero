@@ -580,7 +580,7 @@
   },
   "doubts": {
     "title": "Picture doubts",
-    "hint": "Pictures the model is sure show another colour than the catalogue holds. Nothing you decide here changes the catalogue or holds the product back: you say what is the matter with the picture, and replacing or moving it is done on its product.",
+    "hint": "Pictures the model is sure show another colour than the catalogue holds. No doubt holds a product back. Saying the picture is fine, or that it is to be replaced, changes nothing in the catalogue; saying it belongs to another variant files it under that variant — the one of the colour the model sees.",
     "loading": "Loading the doubts…",
     "failed": "The doubts could not be loaded.",
     "empty": "No picture is in doubt.",

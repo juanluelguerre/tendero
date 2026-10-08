@@ -937,9 +937,19 @@ picture; a picture says the colour it shows, and a colour's gallery is derived
 - Twenty-one more hand mutations, all red: eleven on the slice and the review
   read, seven on the backoffice's store and three on the storefront's.
 
-**Not built yet.** Applying *it belongs to another variant* from the doubt
-itself: it is now changing one tag, and needs its own ruling first — today a
-doubt changes nothing but itself.
+- **It belongs to another variant, applied** (the author's ruling,
+  2026-10-08). Decided on a doubt, the picture is filed under the colour the
+  model saw: the decision leaves Knowledge through the outbox with the picture
+  and that colour as values, the worker sends Catalog its own command, and
+  Catalog refuses a colour no variant is sold in — counted
+  (`tendero.knowledge.picture_doubts.retagged`, by outcome), logged, not
+  retried. What the picture shows on its other axes stays. The other two
+  decisions change nothing, as before, and the screen says which is which.
+  **Not built**: telling the person, on the screen, that Catalog refused.
+- **The picture tool reads `mistakenFor`** as the shop does: a stainless steel
+  coffee maker read as grey raises nothing. The board's colour line still
+  records the two false alarms it had; it is owed a re-recording, which should
+  leave one.
 The fourth decision, for uploads (I-6). And captures of the screen, parked
 until the page has stopped moving.
 

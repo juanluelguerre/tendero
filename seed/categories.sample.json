@@ -13,7 +13,10 @@
       "SIZE",
       "SIZE_RANGE",
       "GENDER",
-      "MATERIAL"
+      {
+        "code": "MATERIAL",
+        "required": true
+      }
     ]
   },
   {
@@ -124,7 +127,10 @@
         "code": "COLOUR_TEMPERATURE",
         "required": true
       },
-      "POWER_W",
+      {
+        "code": "POWER_W",
+        "required": true
+      },
       "PIECES"
     ]
   },
@@ -135,7 +141,10 @@
       "en": "Bags and backpacks"
     },
     "attributes": [
-      "COLOR",
+      {
+        "code": "COLOR",
+        "required": true
+      },
       {
         "code": "MATERIAL",
         "required": true

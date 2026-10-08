@@ -88,7 +88,9 @@ public sealed class PictureExaminer(VisionChecks vision, ColourLexicon colours)
         if (product?.SpanishColour is { } spanish
             && colours.English(spanish) is { } declared
             && colour is not null
-            && !string.Equals(declared, colour, StringComparison.OrdinalIgnoreCase))
+            && !string.Equals(declared, colour, StringComparison.OrdinalIgnoreCase)
+            // Two names the catalogue says are one to the eye — stainless steel and grey — are not a difference.
+            && !colours.MayBeTakenFor(declared, colour))
         {
             doubts.Add(new(Question.Colour, $"catalogue says {declared}, the picture looks {colour}"));
         }

@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Accounts.Features.ManageTrail;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Catalog.Features.SetImageShows;
 using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
@@ -61,7 +62,9 @@ public static class WorkerServices
         // One slice of Catalog's write side, not the assembly: an approved claim
         // becomes an attribute through Catalog's own command (P10-6), and the rest
         // of Catalog — the import and its connectors — has no business here.
-        builder.Services.AddTenderoSlices(typeof(SetProductAttributeCommand));
+        // And a second one, for the same reason: a doubted picture a person says is
+        // another variant's is filed under it by Catalog's own command (ADR 0057).
+        builder.Services.AddTenderoSlices(typeof(SetProductAttributeCommand), typeof(SetImageShowsCommand));
 
         builder.Services.AddTenderoPersistence(
             builder.Configuration.GetRequiredConnectionString("tendero-db"));

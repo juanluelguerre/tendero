@@ -199,6 +199,22 @@ public sealed class PictureExaminerTests
         Assert.Empty(examination.Doubts);
     }
     /// <summary>
+    /// **Two names the catalogue says are one colour to the eye raise nothing**
+    /// (`mistakenFor`, in the attribute's own definition): a stainless steel
+    /// coffee maker read as grey is not a wrong picture, and neither is a grey
+    /// one read as stainless steel — declared once, true both ways. It was the
+    /// one false alarm the board's colour line still carried. Any other colour
+    /// is a doubt as before.
+    /// </summary>
+    [Fact]
+    public void A_colour_the_catalogue_says_may_be_taken_for_the_declared_one_is_no_doubt()
+    {
+        Assert.False(Examine(new Sees { Colour = "grey" }, Product(colour: "acero inoxidable")).Raises(Question.Colour));
+        Assert.False(Examine(new Sees { Colour = "stainless steel" }, Product(colour: "gris")).Raises(Question.Colour));
+        Assert.True(Examine(new Sees { Colour = "black" }, Product(colour: "acero inoxidable")).Raises(Question.Colour));
+    }
+
+    /// <summary>
     /// **The colour is its own question, in plain text** (phase 13a, I-4d): asked
     /// inside the look's schema, with two other answers, the model called a
     /// terracotta pannier black. The examiner asks it once, alone, with the

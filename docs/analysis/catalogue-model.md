@@ -198,8 +198,9 @@ variant's picture except through `Product.PictureOf` and `PicturesOf`. A
 variant in the API keeps `imageId` and gains `imageIds`. The storefront's
 gallery is the chosen colour's, and the backoffice says which colour a picture
 shows, beside the picture, on the product's review (`SetImageShows`). Still to
-build: *it belongs to another variant* applied from the doubt, which needs its
-own ruling.
+build: nothing. *It belongs to another variant* is applied from the doubt
+(ruled and built 2026-10-08): the decision travels the outbox to Catalog's own
+command, which files the picture under the colour seen.
 
 ---
 
@@ -299,10 +300,12 @@ many of that category's seed products hold it:
 | Desk lamps | colour temperature 11/11 | power 10 |
 | Knives | pieces 3/3 | — |
 
-Five required, and no seed product incomplete. The middle column is the
-author's to prune or extend: marking a bag's colour required would make the
-packing cubes — three colours, and so none — the catalogue's first incomplete
-product, which may be exactly what is wanted to see the screen work.
+Five required, and no seed product incomplete. **Then the author took three of
+the middle column** (the same day): a bag's colour, a lamp's power, a garment's
+material. Eight required, and five products incomplete — the packing cubes
+(three colours, and so none), a ceramic table lamp (no power), a tech tee and
+two pairs of boots (no material; one is *leather ankle boots*). The gap and the
+review's note now have something to show.
 
 Not built: a backoffice screen that edits the declarations; ordering the claims
 queue by what would complete a product; publishing held behind completeness —

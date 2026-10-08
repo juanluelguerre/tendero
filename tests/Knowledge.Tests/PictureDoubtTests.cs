@@ -69,6 +69,9 @@ public sealed class PictureDoubtTests
         Assert.Equal(
             (PictureDoubtStatus.Decided, (PictureDoubtDecision?)decision, "Ana Tendera", (DateTimeOffset?)Clock.GetUtcNow()),
             (doubt.Status, doubt.Decision, doubt.DecidedBy, doubt.DecidedAt));
+        // What leaves Knowledge says which picture and what was seen, as values: whoever acts on it does not come back to ask.
+        var raised = Assert.Single(doubt.DomainEvents.OfType<PictureDoubtDecided>());
+        Assert.Equal((decision, "sleeve-front", "COLOR", "GREY"), (raised.Decision, raised.PictureId, raised.AttributeCode, raised.Seen));
     }
 
     /// <summary>
