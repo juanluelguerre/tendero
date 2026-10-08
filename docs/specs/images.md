@@ -993,6 +993,46 @@ repository), committed beside the test, and never typed.
 - The open fork *SigLIP 2 in-process or sidecar* (roadmap, fork 6) had this
   test as its gate: **in process** stands.
 
+**The export and the adapter (`P13-2`, 2026-10-08).**
+
+- **Our own export** (`src/AppHost/scripts/prepare-siglip.py`, in a throwaway
+  Python container — the evaluation side): the maker's weights at revision
+  `75de2d5` (Apache-2.0), each tower to ONNX at opset 17 — `vision.onnx` 372 MB,
+  `text.onnx` 1.13 GB — and held to the original before it is kept: the same
+  pictures and texts through PyTorch and through the export agree to
+  0.99999994 in cosine, 1.2e-5 at the worst value.
+- **`SiglipOnnxEmbeddings`** (`src/Search/Images`), on ONNX Runtime 1.30.0 —
+  the version already in the graph, MIT — on the CPU, each tower loaded when it
+  is first asked for. Unit-length vectors. Registered where a folder is given
+  (`Search:Images:Models`) and a named stand-in where not.
+- **Held to the maker's own embeddings**, committed beside the test: a text
+  agrees above 0.9999; a picture **at 0.999998 at the least**.
+- **The resize is Pillow's arithmetic, written out.** Through the graphics
+  library's own *linear* a seed picture's embedding sat at 0.983 of the
+  maker's: when it shrinks a picture, Pillow widens its triangle to the ratio
+  and the library does not. Forty lines that say what Pillow does are the same
+  pixels everywhere. I had written *0.994 and above, held at 0.99* in the test
+  before measuring anything; the measurement was 0.983, and the comment went
+  with it.
+- **Lower-case, settled by measuring.** Each seed product's name as the query,
+  its own picture as the answer, among 93 seed pictures:
+
+  | Names | As written, first / in five | Lower-cased | In capitals |
+  |---|---|---|---|
+  | English | 0.849 / 1.000 | 0.849 / 0.978 | 0.011 / 0.065 |
+  | Spanish | 0.645 / 0.892 | **0.882 / 0.989** | 0.011 / 0.075 |
+
+  The adapter lower-cases before it tokenizes: a quarter more Spanish names
+  find their picture first, English loses two in a hundred at five, and a
+  shopper with the caps lock on finds something rather than nothing. The
+  tokenizer itself stays faithful to the maker's; the decision is one line in
+  the adapter, with these numbers above it.
+- Eight hand mutations, seven red. The survivor is the check that the model
+  answered 768 dimensions — a guard against another model's file in the folder,
+  which cannot be made to fail without one.
+- **CI does not run the model-held tests** (1.5 GB that are not the
+  repository's); it does run the preprocessing's, which need no model.
+
 Then `IImageEmbeddingGenerator`, a port with an in-process adapter: SigLIP 2
 (`google/siglip2-base-patch16-224`, Apache-2.0, pinned revision) on ONNX Runtime,
 **exported by us** from the maker's weights. No Python sidecar. A collection
