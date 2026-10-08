@@ -128,6 +128,22 @@ public sealed class PictureLegTests
         Assert.Equal((1d / 61) + (1d / 61), result.Hits.Single(hit => hit.ProductId == "d").Score, precision: 12);
     }
 
+    /// <summary>
+    /// Without filters the pictures' list fuses whole, as the nearest list does: a
+    /// picture of something nobody can buy keeps the rank it took, and what comes
+    /// after it is not promoted into its place.
+    /// </summary>
+    [Fact]
+    public async Task Without_filters_the_pictures_list_fuses_whole()
+    {
+        var result = await Hybrid(new Lexical("a", "b"), new Vectors(("a", 0.9)), new Cards(), options: On, pictureModel: new Words(), pictures: new Looks("x", "b"))
+            .SearchAsync(new ProductSearchQuery("lamp", "en"), Ct);
+
+        Assert.DoesNotContain("x", result.Hits.Select(hit => hit.ProductId));
+        // b is second among the words and SECOND among the pictures, behind the one with no card.
+        Assert.Equal((1d / 62) + (1d / 62), result.Hits.Single(hit => hit.ProductId == "b").Score, precision: 12);
+    }
+
     private static string Json(SearchResultPage page) => JsonSerializer.Serialize(page with { TookMs = 0 });
 
     private sealed class Words : IImageEmbeddingGenerator

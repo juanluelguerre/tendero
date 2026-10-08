@@ -151,6 +151,7 @@ public sealed class PictureProjectionTests
     /// <summary>A store with no model has nothing to fill it, and a model with no store has nowhere to write.</summary>
     [Theory]
     [InlineData("Endpoint=http://127.0.0.1:1;Key=unit-test", null)]
+    [InlineData("Endpoint=http://127.0.0.1:1;Key=unit-test", "")]
     [InlineData(null, "models/siglip2")]
     [InlineData(null, null)]
     public async Task Without_both_a_store_and_a_model_the_process_gets_the_stand_in(string? qdrant, string? models)
@@ -175,6 +176,29 @@ public sealed class PictureProjectionTests
         // The real one is registered first, so the stand-in's TryAdd never lands.
         Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IPictureVectorIndexer));
         Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IPictureSearch));
+    }
+
+    /// <summary>
+    /// And resolved, with a model and a store of pictures standing in for the
+    /// real ones: both ports are the one adapter — a registration that fell back
+    /// to the stand-in would count one descriptor too.
+    /// </summary>
+    [Fact]
+    public void With_a_store_and_a_model_both_ports_resolve_to_the_one_qdrant_adapter_without_connecting()
+    {
+        using var provider = new ServiceCollection()
+            .AddLogging()
+            .AddPictureVectors(Configuration("Endpoint=http://127.0.0.1:1;Key=unit-test", "models/siglip2"))
+            .AddSingleton<IImageEmbeddingGenerator>(new NoImageEmbeddings())
+            .AddSingleton<IImageStore>(new NoPictures())
+            .BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        using var scope = provider.CreateScope();
+
+        var indexer = scope.ServiceProvider.GetRequiredService<IPictureVectorIndexer>();
+
+        Assert.IsType<QdrantPictureVectors>(indexer);
+        Assert.Same(indexer, scope.ServiceProvider.GetRequiredService<IPictureSearch>());
+        Assert.True(indexer.IsConfigured);
     }
 
     /// <summary>The words' layer and the pictures' share one client: each registered alone, or both, there is exactly one.</summary>
@@ -212,7 +236,14 @@ public sealed class PictureProjectionTests
 
         Assert.Equal(PicturePointId.For(one), PicturePointId.For(new ImageId("sha256-aaaa")));
         Assert.NotEqual(PicturePointId.For(one), PicturePointId.For(another));
-        Assert.Equal(8, PicturePointId.For(one).Version);
+
+        // Version 8 and the RFC's variant on every id, not on one whose hash happens to allow it.
+        foreach (var picture in Enumerable.Range(0, 64).Select(number => new ImageId($"sha256-{number:x4}")))
+        {
+            var point = PicturePointId.For(picture);
+            Assert.Equal(8, point.Version);
+            Assert.InRange(point.Variant, 0x8, 0xB);
+        }
     }
 
     private static ProjectProductPicturesOnUpserted Handler(IProductReader products, IPictureVectorIndexer pictures) =>
@@ -309,6 +340,13 @@ public sealed class PictureProjectionTests
             into.Add(id);
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class NoPictures : IImageStore
+    {
+        public Task<ImageId> SaveAsync(Stream content, string contentType, CancellationToken ct = default) => throw new NotSupportedException();
+
+        public Task<StoredImage?> OpenAsync(ImageId id, CancellationToken ct = default) => Task.FromResult<StoredImage?>(null);
     }
 
     private sealed class RecordingDispatcher : ICommandDispatcher

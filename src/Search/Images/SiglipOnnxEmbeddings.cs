@@ -56,7 +56,10 @@ public sealed class SiglipOnnxEmbeddings : IImageEmbeddingGenerator, IDisposable
     /// eight** (2026-10-08, ten runs each after a warm-up). A server that takes
     /// every core for one picture also takes them from every other request.
     /// </summary>
-    internal static int Threads => Math.Clamp(Environment.ProcessorCount / 2, 1, 8);
+    internal static int Threads => ThreadsFor(Environment.ProcessorCount);
+
+    /// <summary>The rule on its own, so it can be held on a machine of any size.</summary>
+    internal static int ThreadsFor(int logicalProcessors) => Math.Clamp(logicalProcessors / 2, 1, 8);
 
     private static InferenceSession Tower(string path)
     {

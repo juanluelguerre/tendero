@@ -72,6 +72,19 @@ public sealed class VisualSearchTests
 
         Assert.Null(picture);
         Assert.Contains("at most 8 MB", refusal, StringComparison.Ordinal);
+
+        // Exactly the bound is not too heavy: these bytes are refused for what they are.
+        Assert.DoesNotContain("at most", UploadedPicture.Read(new byte[UploadedPicture.MaxBytes]).Refusal, StringComparison.Ordinal);
+    }
+
+    /// <summary>Tall is bounded as wide is, and the bound itself is taken.</summary>
+    [Fact]
+    public void A_picture_taller_than_a_side_allows_is_refused_and_one_at_the_bound_is_not()
+    {
+        var (_, refusal) = UploadedPicture.Read(APicture(2, UploadedPicture.MaxSide + 1, SKEncodedImageFormat.Png));
+
+        Assert.Contains($"2 by {UploadedPicture.MaxSide + 1}", refusal, StringComparison.Ordinal);
+        Assert.NotNull(UploadedPicture.Read(APicture(2, UploadedPicture.MaxSide, SKEncodedImageFormat.Png)).Picture);
     }
 
     [Fact]
@@ -221,11 +234,17 @@ public sealed class VisualSearchTests
     /// picture against 121 ms with eight threads). The rule is held here; that a
     /// session is given it is not something a test without the model can see.
     /// </summary>
-    [Fact]
-    public void One_inference_takes_half_the_processors_and_never_more_than_eight()
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(2, 1)]
+    [InlineData(4, 2)]
+    [InlineData(12, 6)]
+    [InlineData(16, 8)]
+    [InlineData(64, 8)]
+    public void One_inference_takes_half_the_processors_and_never_more_than_eight(int processors, int threads)
     {
-        Assert.Equal(Math.Clamp(Environment.ProcessorCount / 2, 1, 8), SiglipOnnxEmbeddings.Threads);
-        Assert.InRange(SiglipOnnxEmbeddings.Threads, 1, 8);
+        Assert.Equal(threads, SiglipOnnxEmbeddings.ThreadsFor(processors));
+        Assert.Equal(SiglipOnnxEmbeddings.ThreadsFor(Environment.ProcessorCount), SiglipOnnxEmbeddings.Threads);
     }
 
     private static VisualSearch Search(params PictureMatch[] near) =>

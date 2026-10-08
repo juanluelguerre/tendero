@@ -158,6 +158,32 @@ public sealed class SiglipPictureTests
         return [.. jpeg[..2], .. exif, .. jpeg[2..]];
     }
 
+    /// <summary>
+    /// A dark grey a quarter opaque, over white, is a light grey — not the dark
+    /// grey ignoring the alpha gives, and not the white dropping the pixel gives.
+    ///
+    /// Not black at half: that was the first version of this test, and it could
+    /// not tell the blend from the blend with its sign wrong — 255 × (255 + 128)
+    /// overflows a byte back to the very 127 the right arithmetic gives.
+    /// </summary>
+    [Fact]
+    public void A_see_through_picture_is_blended_with_the_white_under_it()
+    {
+        var tensor = SiglipPicture.ToTensor(Png(30, 30, canvas => canvas.Clear(new SKColor(100, 100, 100, 64)), SKAlphaType.Unpremul));
+
+        // (100 × 64 + 255 × 191) / 255 = 216, give or take what the encoder rounds.
+        var expected = ((216 / 255f) - 0.5f) / 0.5f;
+        Assert.All(tensor, value => Assert.InRange(value, expected - 0.03f, expected + 0.03f));
+    }
+
+    /// <summary>Tall is refused as wide is, and the limit itself is taken.</summary>
+    [Fact]
+    public void A_picture_taller_than_the_limit_is_refused_and_one_at_the_limit_is_not()
+    {
+        Assert.Throws<ArgumentException>(() => SiglipPicture.ToTensor(Png(1, SiglipPicture.MaxSide + 1, canvas => canvas.Clear(SKColors.White))));
+        Assert.Equal(SiglipPicture.Length, SiglipPicture.ToTensor(Png(1, SiglipPicture.MaxSide, canvas => canvas.Clear(SKColors.White))).Length);
+    }
+
     [Fact]
     public void Bytes_that_are_not_a_picture_are_refused()
     {
