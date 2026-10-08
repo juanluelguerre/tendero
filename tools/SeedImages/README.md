@@ -36,6 +36,28 @@ generation (the quota panels read `0/0`, which looks exactly like a quota you
 have exhausted), so `gemini` needs prepaid credit on the project the key belongs
 to.
 
+## Another colour of the same product
+
+A product sold in two colours is one object photographed twice. Two drawings
+from the same description are two different objects — the first black pannier
+was another bag than the olive one, and before that a flat silhouette. So a
+second colour is not drawn: **it is made from the first picture.** The hosted
+model is an editing model; it is shown the picture that exists and told to give
+it back with one change (`PromptTemplate.Recolour`, which names everything that
+must stay, because what is not named gets redrawn).
+
+It keeps the object and not what is around it: the black pannier came back
+twice with a grey haze above it, in the same place. Since the original says
+where the background is, `ReferenceBackground` restores it — wherever the
+original has nothing drawn, the result gets background, and in a margin around
+the object only what is clearly drawn stays. What the model was free to change
+is the object alone.
+
+Two ways in: `recolour --only <id> --colour <colour>` for any picture, and
+`generate`, which makes a variant's picture this way whenever the seed names one
+(`variants`, with its `image`) and the cover exists. Only the hosted generator
+can; the local one draws from noise and falls back to drawing.
+
 ## State
 
 Working. Both generators draw, and the vision pass reviews:
@@ -47,6 +69,10 @@ dotnet run --project tools/SeedImages -- generate --only B073WXYZ01 --force
 
 # The same, locally. About 76 seconds each on an RTX 5070 Laptop.
 dotnet run --project tools/SeedImages -- generate --provider sdxl --models <dir> --take 5
+
+# The same picture in another colour: the model is shown the one that exists and
+# changes only the colour; the background is restored from the original.
+dotnet run --project tools/SeedImages -- recolour --only B13BAG0711 --colour negro
 
 # Ask a local vision model what it sees in the finished files.
 dotnet run --project tools/SeedImages -- verify

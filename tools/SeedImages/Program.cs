@@ -47,6 +47,9 @@ switch (command)
             Value("--model"),
             Value("--hint"));
 
+    case "recolour":
+        return Recolour(Value("--only"), Value("--colour"), Value("--as"), Value("--out"), Value("--model"), Value("--hint"));
+
     case "verify":
         return Verify(
             Value("--in"),
@@ -99,6 +102,15 @@ switch (command)
                                                       draw the missing illustrations.
                                                       gemini by default and needs
                                                       GEMINI_API_KEY; sdxl needs --models
+              recolour --only <id> --colour <a colour of the catalogue> [--as <file id>] [--hint "<what to mind>"]
+                       [--out <dir>] [--model <hosted id>]
+                                                      the same picture in another colour: the model is
+                                                      shown the one that exists and changes only the
+                                                      colour, and the background is restored from the
+                                                      original. Writes <id>-<COLOUR>.webp unless --as
+                                                      names it. Needs GEMINI_API_KEY. A variant's
+                                                      picture named in the seed is made this way by
+                                                      generate, with no need to ask
               verify [--in <dir>] [--only <id,id>] [--provider ollama|llama] [--url <url>]
                      [--model <name>] [--reference <id>] [--ci]
                                                       ask a vision model what it sees: text, a mark
@@ -342,7 +354,16 @@ static int Generate(
         return 0;
     }
 
+    // A variant's picture is its product's cover in another colour, when the
+    // cover is there and the generator can do that: the same object, not a
+    // second drawing from the same words.
+    byte[]? CoverOf(SeedProduct product) =>
+        product.VariantOf is { } cover && File.Exists(Path.Combine(destination, $"{cover}.webp"))
+            ? VisionChecks.AsPng(File.ReadAllBytes(Path.Combine(destination, $"{cover}.webp")))
+            : null;
+
     var jobs = wanted
+        .Where(product => illustrator != "gemini" || CoverOf(product) is null)
         .Select(product => (product.ItemId, Prompt: PromptTemplate.Positive(product, colours, hint)))
         .ToArray();
 
@@ -360,7 +381,25 @@ static int Generate(
 
     try
     {
-        images = generator.Draw(jobs, PromptTemplate.Negative, Console.WriteLine);
+        List<GeneratedImage> made = [.. jobs.Length == 0 ? [] : generator.Draw(jobs, PromptTemplate.Negative, Console.WriteLine)];
+
+        if (generator is IRecolourer recolourer)
+        {
+            foreach (var variant in wanted.Where(product => CoverOf(product) is not null))
+            {
+                var cover = products.First(product => product.ItemId == variant.VariantOf);
+                made.Add(recolourer.Recolour(
+                    variant.ItemId,
+                    CoverOf(variant)!,
+                    PromptTemplate.Recolour(
+                        cover.SpanishColour is { } was ? colours.English(was) : null,
+                        variant.SpanishColour is { } becomes ? colours.English(becomes) ?? becomes : "another colour",
+                        hint),
+                    Console.WriteLine));
+            }
+        }
+
+        images = made;
     }
     catch (InvalidOperationException refusal)
     {
@@ -389,6 +428,71 @@ static int Generate(
     }
 
     return failures == 0 ? 0 : 1;
+}
+
+// The same picture in another colour (phase 13a, I-4d). A product sold in two
+// colours is one object photographed twice, and two drawings from the same
+// words are two different objects -- so the second colour is made from the
+// first picture, by a model that is shown it and told to change only that.
+static int Recolour(string? only, string? colour, string? asId, string? outDirectory, string? hostedModel, string? hint)
+{
+    if (only is null || colour is null)
+    {
+        Console.Error.WriteLine("recolour needs --only <id> (the picture to start from) and --colour <a colour of the catalogue>.");
+        return 2;
+    }
+
+    var root = RepositoryRoot.Find();
+    var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
+    // Read from the catalogue's pictures; written there too unless --out says elsewhere.
+    var destination = outDirectory ?? Path.Combine(root, "seed", "images");
+    var source = Path.Combine(root, "seed", "images", $"{only}.webp");
+    Directory.CreateDirectory(destination);
+
+    // The colour as the catalogue says it, in either of its languages.
+    var to = colours.English(colour)
+        ?? colours.EnglishLabels.FirstOrDefault(label => String.Equals(label, colour, StringComparison.OrdinalIgnoreCase));
+
+    if (to is null)
+    {
+        Console.Error.WriteLine($"'{colour}' is not a colour of the catalogue. It has: {String.Join(", ", colours.EnglishLabels)}.");
+        return 2;
+    }
+
+    if (!File.Exists(source))
+    {
+        Console.Error.WriteLine($"No picture at {source}: there is nothing to recolour.");
+        return 2;
+    }
+
+    var product = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"))
+        .FirstOrDefault(known => String.Equals(known.ItemId, only, StringComparison.OrdinalIgnoreCase));
+    var from = product?.SpanishColour is { } was ? colours.English(was) : null;
+    var id = asId ?? $"{only}-{to.ToUpperInvariant().Replace(' ', '_')}";
+
+    using var generator = new GeminiIllustrator(hostedModel ?? "gemini-2.5-flash-image", 1024);
+    Console.WriteLine($"recolouring with {generator.Name} · {from ?? "its colour"} -> {to}");
+
+    GeneratedImage image;
+    try
+    {
+        image = generator.Recolour(id, VisionChecks.AsPng(File.ReadAllBytes(source)), PromptTemplate.Recolour(from, to, hint), Console.WriteLine);
+    }
+    catch (InvalidOperationException refusal)
+    {
+        Console.Error.WriteLine();
+        Console.Error.WriteLine(refusal.Message);
+        return 2;
+    }
+
+    var path = Path.Combine(destination, $"{image.ItemId}.webp");
+    File.WriteAllBytes(path, image.Webp);
+
+    Console.WriteLine();
+    Console.WriteLine($"{image.ItemId}  {image.Webp.Length / 1024} KB  {image.Took.TotalSeconds:F1}s  bg {image.Background}  -> {path}");
+    Console.WriteLine($"    {image.SafeArea.Detail}{(image.SafeArea.Passed ? "" : "  OUTSIDE THE SAFE AREA")}");
+
+    return image.SafeArea.Passed ? 0 : 1;
 }
 
 // Where the object sits in images that already exist. It decodes rather than

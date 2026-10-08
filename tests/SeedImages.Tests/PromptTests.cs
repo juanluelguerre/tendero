@@ -271,4 +271,32 @@ public sealed class PromptTests
             "An abrasion-resistant upper.",
             PromptTemplate.WithoutMeasurements("An abrasion-resistant upper. 8 mm drop."));
     }
+    /// <summary>
+    /// **A variant's picture is its product's cover in another colour** (phase
+    /// 13a, I-4d): the instruction names the two colours, names everything that
+    /// must stay — or it gets redrawn — and says the one thing a dark colour
+    /// needs said, because the first black pannier came back as a silhouette.
+    /// </summary>
+    [Fact]
+    public void A_recolour_names_the_two_colours_and_everything_that_must_stay()
+    {
+        var instruction = PromptTemplate.Recolour("olive", "black");
+
+        Assert.Contains("which is olive, becomes black", instruction, StringComparison.Ordinal);
+        Assert.Contains("Only the surfaces that are olive change", instruction, StringComparison.Ordinal);
+        foreach (var kept in new[] { "the same object", "the same shape", "the same viewing angle", "the same size and", "the same plain background" })
+            Assert.Contains(kept, instruction, StringComparison.Ordinal);
+        Assert.Contains("never as a flat silhouette", instruction, StringComparison.Ordinal);
+        Assert.Contains("do not add", instruction, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_recolour_of_a_picture_whose_colour_nobody_declared_still_says_what_it_becomes()
+    {
+        var instruction = PromptTemplate.Recolour(null, "black", "The handle stays black.");
+
+        Assert.Contains("the product's main colour becomes black", instruction, StringComparison.Ordinal);
+        Assert.Contains("Only the surfaces that are the main colour change", instruction, StringComparison.Ordinal);
+        Assert.EndsWith("The handle stays black.", instruction.TrimEnd(), StringComparison.Ordinal);
+    }
 }

@@ -38,6 +38,22 @@ public interface IIllustrationGenerator : IDisposable
 }
 
 /// <summary>
+/// A generator that can take a picture and give it back in another colour
+/// (phase 13a, I-4d). **Its own interface, because one adapter has it and the
+/// other does not**: the hosted model edits an image it is shown; the local
+/// pipeline only draws from noise. A product sold in two colours is one object
+/// photographed twice, and two drawings from the same words are two different
+/// objects — so a variant's picture is made from its product's cover, not from
+/// the description again.
+/// </summary>
+public interface IRecolourer
+{
+    /// <param name="reference">The picture to start from, as PNG.</param>
+    /// <param name="instruction">What to change, and that nothing else is to change.</param>
+    GeneratedImage Recolour(string itemId, byte[] reference, string instruction, Action<string> say);
+}
+
+/// <summary>
 /// The tail every adapter shares: measure, inset, repaint, encode.
 ///
 /// It lives outside both of them on purpose. The guarantees this tool actually

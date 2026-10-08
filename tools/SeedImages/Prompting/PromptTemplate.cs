@@ -84,6 +84,36 @@ public static class PromptTemplate
     /// names the object without the invented brand — a generator has never heard
     /// of a "Pulse Runner" and reads "cushioned running shoes" perfectly well.
     /// </summary>
+    /// <summary>
+    /// What a picture is told to become when it is another colour of the same
+    /// product (phase 13a, I-4d). **Everything it must keep is named, because
+    /// what is not named gets redrawn**: the object, its lines, its place and
+    /// size in the frame, the background. And the one thing a dark colour needs
+    /// said — the first black pannier came back as a flat silhouette — is that
+    /// its seams and parts stay drawn, in a lighter line.
+    /// </summary>
+    /// <param name="from">The colour the reference is, in English, or null when the catalogue does not say.</param>
+    /// <param name="to">The colour it is to be, in English.</param>
+    public static string Recolour(string? from, string to, string? hint = null) =>
+        $"""
+         This is a product illustration from a shop's catalogue. Give back the same
+         illustration with one change: the product's main colour{(from is null ? string.Empty : $", which is {from},")} becomes {to}.
+
+         Keep everything else exactly as it is: the same object, the same shape and
+         proportions, the same outlines, seams, pockets, straps, buckles, handles
+         and hooks in the same places, the same viewing angle, the same size and
+         position in the frame, the same plain background and the same soft shadow.
+         Do not redraw the object, do not add or remove any part, and do not add
+         any text, logo, label or second object.
+
+         Only the surfaces that are {from ?? "the main colour"} change. Parts that are another
+         colour — dark straps, buckles, hooks, zips — keep their own colour, unless
+         they would no longer be told apart from the new colour: then make them a
+         mid grey. Keep every outline and seam visible: on a dark object draw them
+         in a lighter grey, so that it still reads as a detailed illustration and
+         never as a flat silhouette.{(string.IsNullOrWhiteSpace(hint) ? string.Empty : " " + hint.Trim())}
+         """;
+
     /// <param name="hint">For a redraw: what was wrong with the last drawing, said as what the object is. It follows the description.</param>
     public static string Positive(SeedProduct product, ColourLexicon colours, string? hint = null)
     {
