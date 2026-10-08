@@ -825,7 +825,53 @@ with two colours and a picture of each.
     the same pannier in navy blue.
   - Not for the whole catalogue: for the products that test variants. Seven
     images in all, about twenty cents; some $1.50 of the three euros spent.
-  - **It waits for the author to accept it**, as every picture does.
+  - **Accepted by the author.**
+- **Four things for variants, in the picture tool** (the author's ask, the same
+  day; `tools/SeedImages/README.md`, *Another colour of the same product*):
+  - **Still the same drawing?** `SameShape`: how much of the original's shape
+    a recolour kept — where something is drawn, never what colour. On the
+    finished files the black and the navy pannier share 94.0 % with the olive;
+    the view from behind 86.7 %; two different bags 63.2 % and 42.4 %. The line
+    is 90 %, set from those five numbers and no more. `same` asks it of any two
+    files, and a recolour that falls under it fails.
+  - **The colour that was asked for?** `recolour --check` asks a vision model
+    in plain text. **And found the tool's own colour question wrong**: `Look`
+    asks the colour inside a schema with two other answers, and called the
+    terracotta pannier *black*; asked alone and in plain text the same model
+    says terracotta. The grammar again (I-4b), in the place where it was first
+    measured — the board's colour line, 9 of 11, was taken with it.
+  - **The board, with the colour asked alone and in plain text** (the examiner
+    now asks it so; the same twenty-eight pictures, re-recorded):
+
+    | Colour | In the look's schema | Alone, in plain text |
+    |---|---|---|
+    | A recoloured picture caught | 9 of 11 | 8 of 11 |
+    | A right picture doubted | 4 of 28 | **2 of 28** |
+    | Doubts that were right | 9 of 13 | 8 of 10 |
+
+    One catch fewer and half the false alarms. The two right pictures still
+    doubted are the stainless steel coffee maker seen as grey — which the
+    catalogue now says is the same thing, and the tool's examiner does not read
+    yet — and the black felt sleeve seen as grey, which is the shop's one real
+    doubt. Every other line of the board is as it was. `Look` still carries a
+    colour in its schema and nothing reads it: the other two answers it gives
+    were measured with it there.
+  - **Every variant at once.** `generate --variants-of <id>`. The pannier
+    gained a third colour for it: navy blue, with its SKU, stock and tariffs.
+  - **Another view.** `view --only <id> --view back|side`. A redraw, not an
+    edit that moves nothing: the pannier's back came back first with a
+    backpack's shoulder straps, and with what it is said in a hint, with a
+    rail and its hooks. The seed lists it as the pannier's fourth picture — one
+    that is no variant's, so it is held to no colour, which the real import now
+    proves. Every edit comes back with a pale smear above the object;
+    `FloatingHaze` clears it for a view, which has no original to be held to.
+  - The vision pass on the four: black and navy read as their colours; the
+    cover and the back are flagged by the scene question, which lists a bag's
+    own handle and buckle as other things — the false alarm it already had for
+    bags (5 of 28).
+  - Eleven images in all for the pannier, about thirty-three cents; some
+    $1.65 of the three euros spent. **The navy and the back were accepted by
+    the author.**
 - **Imported for real** (`VariantPicturesFromTheSeedTests`: the committed seed,
   its pictures stored, Postgres, twice): two variants on the colour axis, each
   with its own picture, and the reader holds the cover to olive and the other
@@ -833,11 +879,17 @@ with two colours and a picture of each.
   at 0.977 — so the two pictures as filed raise nothing, and either of them
   filed under the other variant would raise a doubt.
 
-**Not built yet.** A doubt that says *which* other variant the picture looks
-like — it is one comparison away, since the colours of the product's other
-variants are known — and applying *it belongs to another variant* from the
-doubt itself (today the person moves the picture in the catalogue). The fourth
-decision, for uploads (I-6). And captures of the screen.
+**A doubt says when the colour seen is another variant's.** The reader gives
+each picture the colours the product's other variants hold; a doubt whose colour
+seen is one of them says so (`SeenOnAnotherVariant`), and the screen tells the
+person the picture may be that variant's. It informs the third decision and
+makes none.
+
+**Not built yet.** Applying *it belongs to another variant* from the doubt
+itself — it waits for the model to change: `docs/analysis/catalogue-model.md`
+proposes that a picture say what it shows, and then that decision is one tag.
+The fourth decision, for uploads (I-6). And captures of the screen, parked
+until the page has stopped moving.
 
 **Not in scope**: merging what several pictures of one product answer (three
 pictures of the same set propose *pieces: 3* three times); it is the same
