@@ -81,7 +81,8 @@ switch (command)
             Value("--dump"),
             args.Contains("--draw-only"),
             args.Contains("--record"),
-            args.Contains("--ci"));
+            args.Contains("--ci"),
+            args.Contains("--fresh"));
 
     case "reject":
         return Reject(Value("--in"), Value("--only"), Value("--defect"), Value("--note"));
@@ -140,12 +141,14 @@ switch (command)
               pairs [--in <dir>] [--offset <n>] [--provider ollama|llama] [--url <url>] [--model <name>]
                                                       measure the description check: every picture
                                                       against its own product and against another's
-              defects [--in <dir>] [--only <id,id>] [--take <n>] [--dump <dir> [--draw-only]] [--record] [--ci]
+              defects [--in <dir>] [--only <id,id>] [--take <n>] [--dump <dir> [--draw-only]] [--record] [--ci] [--fresh]
                       [--provider ollama|llama] [--url <url>] [--model <name>] [--reference <id>]
                                                       measure every question: each picture as it is,
                                                       and with one defect of each kind drawn into it,
                                                       beside the pictures a person rejected. --record
-                                                      writes the board; --ci fails below the recorded one
+                                                      writes the board; --ci fails below the recorded one.
+                                                      A question already answered about an unchanged
+                                                      picture is not asked again; --fresh asks them all
               reject --only <id> --defect <kind> --note "<what is wrong>" [--in <dir>]
                                                       keep a picture a person rejected, with its defect,
                                                       before it is drawn over
@@ -845,7 +848,8 @@ static int Pairs(string? input, IVisionModel model, int offset)
 //
 // The board it prints is recorded with --record and held with --ci: a question
 // that catches less than it did is a change to explain.
-static int Defects(string? input, IVisionModel model, string? only, int take, string? reference, string? dump, bool drawOnly, bool record, bool ci)
+static int Defects(
+    string? input, IVisionModel asked, string? only, int take, string? reference, string? dump, bool drawOnly, bool record, bool ci, bool fresh)
 {
     var root = RepositoryRoot.Find();
     input ??= Path.Combine(root, "seed", "images");
@@ -895,15 +899,12 @@ static int Defects(string? input, IVisionModel model, string? only, int take, st
         return 0;
     }
 
-    try
-    {
-        model.EnsureReachable();
-    }
-    catch (InvalidOperationException failure)
-    {
-        Console.Error.WriteLine(failure.Message);
-        return 2;
-    }
+    // What the model answered when the board was last recorded. A question it
+    // was asked then, about a picture that has not changed, is not asked again
+    // (RememberedVision): a run pays for the pictures that are new. --fresh asks
+    // everything, which is what a change of weights under the same name needs.
+    var memory = Path.Combine(root, "tools", "SeedImages", "known-bad", "answers.jsonl");
+    var model = new RememberedVision(asked, fresh ? new Dictionary<string, string>() : AnswerMemory.Read(memory));
 
     var examiner = new PictureExaminer(
         new VisionChecks(model),
@@ -924,57 +925,66 @@ static int Defects(string? input, IVisionModel model, string? only, int take, st
     ];
 
     List<Trial> trials = [];
+    var kept = new KnownBad(Path.Combine(root, "tools", "SeedImages", "known-bad"));
     Dictionary<string, HashSet<Question>> asIs = new(StringComparer.OrdinalIgnoreCase);
 
     Console.WriteLine($"asking {model.Name} about {files.Length} picture(s), as they are and with each defect drawn in...");
     Console.WriteLine();
 
-    foreach (var file in files)
+    // The model is reached for when the first question nothing remembers comes,
+    // which may be never: with nobody answering then, this is where it is said.
+    try
     {
-        var product = products[Path.GetFileNameWithoutExtension(file)];
-        var good = File.ReadAllBytes(file);
-        var before = asIs[product.ItemId] = Asked(good, product);
-
-        trials.Add(new Trial(product.ItemId, null, before));
-        Console.WriteLine($"{product.ItemId,-12} as it is     {Named(before)}");
-
-        foreach (var defect in Enum.GetValues<Defect>())
+        foreach (var file in files)
         {
-            // A count is held to the pieces a product declares, and a colour to the
-            // one it declares: with nothing declared there is nothing the defect
-            // could be caught against, and the miss would be the set's.
-            if ((defect == Defect.Count && product.Pieces is null) || (defect == Defect.Colour && product.SpanishColour is null))
+            var product = products[Path.GetFileNameWithoutExtension(file)];
+            var good = File.ReadAllBytes(file);
+            var before = asIs[product.ItemId] = Asked(good, product);
+
+            trials.Add(new Trial(product.ItemId, null, before));
+            Console.WriteLine($"{product.ItemId,-12} as it is     {Named(before)}");
+
+            foreach (var defect in Enum.GetValues<Defect>())
+            {
+                // A count is held to the pieces a product declares, and a colour to the
+                // one it declares: with nothing declared there is nothing the defect
+                // could be caught against, and the miss would be the set's.
+                if ((defect == Defect.Count && product.Pieces is null) || (defect == Defect.Colour && product.SpanishColour is null))
+                    continue;
+
+                if (DefectForge.Draw(defect, good) is not { } bad)
+                    continue;
+
+                if (dump is not null)
+                    File.WriteAllBytes(Path.Combine(dump, $"{product.ItemId}-{defect.ToString().ToLowerInvariant()}.png"), bad);
+
+                var raised = Asked(bad, product);
+                raised.ExceptWith(before);
+                trials.Add(new Trial($"{product.ItemId}-{defect}", defect, raised));
+                Console.WriteLine($"{product.ItemId,-12} {defect,-12}  {(raised.Count == 0 ? "MISSED" : Named(raised))}");
+            }
+        }
+
+            foreach (var rejected in kept.Read())
+        {
+            if (!products.TryGetValue(rejected.ItemId, out var product)
+                || (wanted is not null && !wanted.Contains(rejected.ItemId, StringComparer.OrdinalIgnoreCase)))
+            {
                 continue;
+            }
 
-            if (DefectForge.Draw(defect, good) is not { } bad)
-                continue;
-
-            if (dump is not null)
-                File.WriteAllBytes(Path.Combine(dump, $"{product.ItemId}-{defect.ToString().ToLowerInvariant()}.png"), bad);
-
-            var raised = Asked(bad, product);
-            raised.ExceptWith(before);
-            trials.Add(new Trial($"{product.ItemId}-{defect}", defect, raised));
-            Console.WriteLine($"{product.ItemId,-12} {defect,-12}  {(raised.Count == 0 ? "MISSED" : Named(raised))}");
+            // Held against the picture that was accepted for the same product, when
+            // this run looked at it: what that one raises too is not this defect.
+            var raised = Asked(File.ReadAllBytes(Path.Combine(kept.Folder, rejected.File)), product);
+            raised.ExceptWith(asIs.GetValueOrDefault(rejected.ItemId) ?? []);
+            trials.Add(new Trial(rejected.File, rejected.Defect, raised));
+            Console.WriteLine($"{rejected.File,-28} rejected: {rejected.Defect,-10}  {(raised.Count == 0 ? "MISSED" : Named(raised))}");
         }
     }
-
-    var kept = new KnownBad(Path.Combine(root, "tools", "SeedImages", "known-bad"));
-
-    foreach (var rejected in kept.Read())
+    catch (InvalidOperationException failure)
     {
-        if (!products.TryGetValue(rejected.ItemId, out var product)
-            || (wanted is not null && !wanted.Contains(rejected.ItemId, StringComparer.OrdinalIgnoreCase)))
-        {
-            continue;
-        }
-
-        // Held against the picture that was accepted for the same product, when
-        // this run looked at it: what that one raises too is not this defect.
-        var raised = Asked(File.ReadAllBytes(Path.Combine(kept.Folder, rejected.File)), product);
-        raised.ExceptWith(asIs.GetValueOrDefault(rejected.ItemId) ?? []);
-        trials.Add(new Trial(rejected.File, rejected.Defect, raised));
-        Console.WriteLine($"{rejected.File,-28} rejected: {rejected.Defect,-10}  {(raised.Count == 0 ? "MISSED" : Named(raised))}");
+        Console.Error.WriteLine(failure.Message);
+        return 2;
     }
 
     var board = Scoreboard.Of(trials);
@@ -1014,12 +1024,17 @@ static int Defects(string? input, IVisionModel model, string? only, int take, st
             Console.WriteLine($"  {fall}");
     }
 
+    Console.WriteLine();
+    Console.WriteLine($"{model.Asked} question(s) asked of the model, {model.Remembered} answered from what it had answered before.");
+
     if (record)
     {
         Directory.CreateDirectory(kept.Folder);
         File.WriteAllText(recordedFile, board.Write() + "\n");
+        // With the board, the answers it was made from: only the ones this run used.
+        AnswerMemory.Write(memory, model.Used);
         Console.WriteLine();
-        Console.WriteLine($"Recorded in {Path.GetRelativePath(root, recordedFile)}.");
+        Console.WriteLine($"Recorded in {Path.GetRelativePath(root, recordedFile)}, with {model.Used.Count} answers in {Path.GetRelativePath(root, memory)}.");
     }
 
     return falls.Count == 0 || !ci ? 0 : 1;

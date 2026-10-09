@@ -303,7 +303,28 @@ dotnet run --project tools/SeedImages -- defects --provider llama            # t
 dotnet run --project tools/SeedImages -- defects --provider llama --record   # after a change that is meant
 dotnet run --project tools/SeedImages -- defects --draw-only --dump <dir>    # the drawn defects, for a person to look at; no model
 dotnet run --project tools/SeedImages -- reject --only B10SHO0106 --defect emblem --note "a hand-wash symbol on its side"
+dotnet run --project tools/SeedImages -- defects --provider llama --record --fresh   # ask everything again: after a change of weights
 ```
+
+**The model is not asked twice.** The board asks some forty questions of every
+picture, and over the whole catalogue that is an hour and a half of a GPU —
+nearly all of it asking again what was asked the last time. `--record` keeps,
+beside the board, every answer it was made from
+(`known-bad/answers.jsonl`, one a line), and a run asks the model only what is
+not there (`RememberedVision`). The model answers at temperature zero with a
+fixed seed, so the same question about the same picture is the same answer.
+
+- **An answer is kept by everything that was sent to get it** — the model's
+  name, the question's words, its schema, the bytes of each picture in order —
+  so nothing has to be told that something changed: a new picture, a redrawn
+  one, a reworded question or a defect drawn differently are other questions,
+  and those are the ones asked.
+- **What it cannot see is the weights changing under the same name**: another
+  quantisation, another projector. That is `--fresh`, which asks everything.
+- **A run with everything remembered needs no model**: none is reached for
+  until a question nothing remembers comes.
+- Only `--record`, over the whole set, writes the answers — and only the ones
+  that run used, so an answer about a picture that is gone is not kept for ever.
 
 Measured on 2026-10-07, the shop's model, 28 pictures, about 20 minutes:
 

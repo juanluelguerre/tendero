@@ -53,6 +53,28 @@ public sealed class VisionChecksTests
     }
 
     /// <summary>
+    /// A picture is asked seven questions, and each sends it as a PNG: it is
+    /// turned into one once. Over the whole board that was most of what a run
+    /// with every answer remembered still cost — eleven minutes of encoding.
+    /// The same picture is the same array; another array is another picture,
+    /// even when its bytes are equal, and is converted for itself.
+    /// </summary>
+    [Fact]
+    public void A_picture_is_turned_into_a_png_once_however_many_times_it_is_sent()
+    {
+        var picture = WebP();
+
+        var first = VisionChecks.AsPng(picture);
+
+        Assert.Same(first, VisionChecks.AsPng(picture));
+        Assert.Equal(PngSignature, first[..4]);
+
+        var twin = VisionChecks.AsPng([.. picture]);
+        Assert.NotSame(first, twin);
+        Assert.Equal(first, twin);
+    }
+
+    /// <summary>
     /// The schema's names are snake_case, and a parser that does not reach them
     /// does not fail: it binds nothing and turns a right answer into "no text, no
     /// scene". The first version of this tool did exactly that.

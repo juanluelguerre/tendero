@@ -1177,10 +1177,36 @@ table.
 
 **It takes this long because it asks everything of everything**: each
 picture as it is, then spoilt in each of five to seven ways, every version
-asked every question — some forty calls a picture. Three ways to shorten it
-were set out for the author and none taken yet: keep the result a picture so
-that only new pictures are asked (the board is sums); more than one slot on
-the model, if the card has room; or a fixed sample.
+asked every question — some forty calls a picture, 4,161 over the catalogue.
+Three ways to shorten it were set out for the author: keep what was answered
+so that only new pictures are asked; more than one slot on the model, if the
+card has room; or a fixed sample.
+
+**The first was taken the same day, a step finer than asked: the model is not
+asked twice.** Not a result a picture but every answer, kept by everything
+that was sent to get it — the model's name, the question's words, its schema,
+each picture's bytes in order (`RememberedVision`,
+`known-bad/answers.jsonl`). So nothing has to be told that something changed:
+a new picture, a redrawn one, a reworded question, a defect drawn differently
+are other questions, and those are what a run asks. It holds because the
+model answers at temperature zero with a fixed seed and the defects are
+drawn to the same bytes every time — both checked: the board recorded twice
+came out the same file.
+
+| The whole board, 123 pictures | Questions asked | Time |
+|---|---:|---|
+| as it was | 4,161 | 85 min of GPU |
+| with every answer remembered, the model stopped | 0 | 11 min |
+| and each picture turned into a PNG once, not once a question | 0 | 5 min 22 s |
+
+With nothing to ask, what was left was encoding: a picture is sent as a PNG
+with each of seven questions and was converted seven times. Adding pictures
+now costs those five minutes and about forty seconds of the model for each
+new one. **A run with everything remembered needs no model at all**, which
+is what would let CI hold the board one day — not done: it would need the
+defects drawn to the same bytes on the runner as here, and that is not
+measured. **What the memory cannot see** is the weights changing under the
+same name; `--fresh` asks everything again.
 
 **Every product has a picture (2026-10-09).** The last twenty-seven were drawn
 — about $0.96 with three redraws, under the ceiling the author set for the

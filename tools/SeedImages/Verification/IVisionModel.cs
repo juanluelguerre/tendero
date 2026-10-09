@@ -312,7 +312,17 @@ public sealed class VisionChecks(IVisionModel model)
     /// that reads PNG, JPEG and a few others and does not read WebP — so the file
     /// this tool writes is exactly the one it cannot send.
     /// </summary>
-    public static byte[] AsPng(byte[] imageBytes)
+    /// <remarks>
+    /// **Once a picture.** A picture is asked seven questions and each sends it,
+    /// so the conversion is kept for as long as the picture's own array is: by
+    /// the array and not by its bytes, which costs nothing to look up and cannot
+    /// confuse two pictures. Nothing here writes into a picture it was handed.
+    /// </remarks>
+    public static byte[] AsPng(byte[] imageBytes) => Converted.GetValue(imageBytes, Convert);
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<byte[], byte[]> Converted = [];
+
+    private static byte[] Convert(byte[] imageBytes)
     {
         // Asked of the codec, not of SKBitmap.Decode: handed bytes that are no
         // image, that one throws an ArgumentNullException about a parameter of its
