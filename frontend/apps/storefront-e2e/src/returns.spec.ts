@@ -37,6 +37,12 @@ async function move(page: Page, orderId: string, label: RegExp): Promise<void> {
 
 test.describe('a return', () => {
   test('is opened from the order page once the shopkeeper has delivered it', async ({ page, context }) => {
+    // A checkout, a sign-in and two moves that each wait for the outbox, up to
+    // thirty seconds apiece: under the default thirty for the whole test, the
+    // first wait that took its time ended the test with it — in a whole run,
+    // after the rest of the suite, and never alone.
+    test.setTimeout(120_000);
+
     await aProductInTheCart(page);
     await checkoutWithAnAddress(page);
     await payWith(page, 'card-ok');

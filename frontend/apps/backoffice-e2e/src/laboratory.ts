@@ -44,6 +44,13 @@ export const Needs = {
   orders: 21,
   /** j and k need somewhere to go from the first claim. */
   claims: 2,
+  /**
+   * The shop's window, for the storefront's specs: they search for shoes, a
+   * backpack and a pan, narrow by a facet and walk the taxonomy, and were
+   * written with the whole catalogue on sale. A hundred of its hundred and
+   * twenty is that shop; three is not.
+   */
+  shopWindow: 100,
 } as const;
 
 /**
@@ -266,6 +273,40 @@ async function claims(api: ShopkeeperApi): Promise<void> {
       timeout: 90_000,
     })
     .toBeGreaterThanOrEqual(Needs.claims);
+}
+
+/**
+ * The whole catalogue on sale and found by the shop's search — what the
+ * storefront's specs act on (`shop-window.setup.ts`).
+ *
+ * The first time those specs ran on a stack brought up from nothing, twenty-five
+ * of forty-seven failed: the laboratory above had put three products on sale,
+ * which is all the backoffice's specs need, and *zapatillas* found nothing.
+ * Every draft is published here — one the shop refuses is the shop's answer —
+ * and then the search is waited for, because publishing is a domain event and
+ * the index hears of it from the outbox. A shop that already has its window is
+ * left as it is.
+ */
+export async function prepareShopWindow(page: Page): Promise<void> {
+  const api = await shopkeeperApi(page);
+  const products = await catalogue(api);
+  let selling = products.filter((product) => is(product.status, 'active')).length;
+  if (selling >= Needs.shopWindow) return;
+
+  for (const draft of products.filter((product) => is(product.status, 'draft'))) {
+    const response = await api
+      .post<{ status: string }>(`/api/catalog/products/${draft.productId}/publish`)
+      .catch(() => null);
+    if (response && is(response.status, 'active')) selling++;
+  }
+  expect(selling, 'products on sale').toBeGreaterThanOrEqual(Needs.shopWindow);
+
+  await expect
+    .poll(async () => (await api.get<{ total: number }>('/api/search?pageSize=1')).total, {
+      message: 'the search never showed what was published: is the outbox worker projecting to the index?',
+      timeout: 180_000,
+    })
+    .toBeGreaterThanOrEqual(Needs.shopWindow);
 }
 
 /** The smallest shop in which every spec has something to act on, made only where it is missing. */
