@@ -1,0 +1,32 @@
+[
+  {
+    "code": "KITCHEN_STARTER",
+    "name": { "es": "Kit de cocina", "en": "Kitchen starter kit" },
+    "slots": [
+      { "code": "pan", "name": { "es": "Sartén", "en": "Frying pan" }, "category": "COOKWARE", "query": { "es": "sartén", "en": "frying pan" }, "required": true },
+      { "code": "pot", "name": { "es": "Cacerola", "en": "Casserole" }, "category": "COOKWARE", "query": { "es": "cacerola", "en": "casserole" }, "required": true },
+      { "code": "knife", "name": { "es": "Cuchillo", "en": "Knife" }, "category": "KNIVES", "query": { "es": "cuchillo", "en": "knife" }, "required": true },
+      { "code": "board", "name": { "es": "Tabla de cortar", "en": "Chopping board" }, "category": "COOKWARE", "query": { "es": "tabla de cortar", "en": "chopping board" }, "required": false },
+      { "code": "utensils", "name": { "es": "Utensilios", "en": "Utensils" }, "category": "COOKWARE", "query": { "es": "utensilios", "en": "utensils" }, "required": false }
+    ]
+  },
+  {
+    "code": "COFFEE_CORNER",
+    "name": { "es": "Rincón del café", "en": "Coffee corner" },
+    "slots": [
+      { "code": "maker", "name": { "es": "Cafetera", "en": "Coffee maker" }, "category": "COFFEE_MAKER", "query": { "es": "cafetera", "en": "coffee maker" }, "required": true },
+      { "code": "grinder", "name": { "es": "Molinillo", "en": "Grinder" }, "category": "SMALL_APPLIANCE", "query": { "es": "molinillo de café", "en": "coffee grinder" }, "required": false },
+      { "code": "kettle", "name": { "es": "Hervidor", "en": "Kettle" }, "category": "SMALL_APPLIANCE", "query": { "es": "hervidor", "en": "kettle" }, "required": false },
+      { "code": "scale", "name": { "es": "Báscula", "en": "Scale" }, "category": "SMALL_APPLIANCE", "query": { "es": "báscula", "en": "kitchen scale" }, "required": false }
+    ]
+  },
+  {
+    "code": "DESK",
+    "name": { "es": "Puesto de trabajo", "en": "Desk setup" },
+    "slots": [
+      { "code": "table", "name": { "es": "Mesa", "en": "Desk" }, "category": "TABLES", "query": { "es": "escritorio", "en": "desk" }, "required": true },
+      { "code": "chair", "name": { "es": "Silla", "en": "Chair" }, "category": "SEATING", "query": { "es": "silla de oficina", "en": "office chair" }, "required": true },
+      { "code": "lamp", "name": { "es": "Lámpara de escritorio", "en": "Desk lamp" }, "category": "DESK_LAMP", "query": { "es": "lámpara de escritorio", "en": "desk lamp" }, "required": false }
+    ]
+  }
+]

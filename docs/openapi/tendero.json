@@ -2678,6 +2678,88 @@
         }
       }
     },
+    "/api/kits": {
+      "get": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "ListKits",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KitTemplateView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kits/{template}/build": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "BuildKit",
+        "parameters": [
+          {
+            "name": "template",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildKitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KitView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/accounts/me/history": {
       "get": {
         "tags": [
@@ -5073,6 +5155,27 @@
           }
         }
       },
+      "BuildKitRequest": {
+        "required": [
+          "budget"
+        ],
+        "type": "object",
+        "properties": {
+          "budget": {
+            "type": "number",
+            "format": "double"
+          },
+          "requirements": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "BulkApprovalOutcome": {
         "enum": [
           "Approved",
@@ -6322,6 +6425,247 @@
         }
       },
       "JsonElement": {},
+      "KitBinding": {
+        "enum": [
+          "None",
+          "Budget",
+          "Candidates"
+        ]
+      },
+      "KitGapReason": {
+        "enum": [
+          "NoCandidate",
+          "OverBudget"
+        ]
+      },
+      "KitGapView": {
+        "required": [
+          "reason",
+          "cheapest",
+          "short"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/KitGapReason"
+          },
+          "cheapest": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SearchHit"
+              }
+            ]
+          },
+          "short": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "KitRequirementOption": {
+        "required": [
+          "facet",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "facet": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "KitSlotView": {
+        "required": [
+          "code",
+          "name",
+          "required",
+          "requirements",
+          "product",
+          "gap",
+          "better"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "product": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SearchHit"
+              }
+            ]
+          },
+          "gap": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/KitGapView"
+              }
+            ]
+          },
+          "better": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/KitUpgradeView"
+              }
+            ]
+          }
+        }
+      },
+      "KitTemplateSlotView": {
+        "required": [
+          "code",
+          "name",
+          "required"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      },
+      "KitTemplateView": {
+        "required": [
+          "code",
+          "name",
+          "slots",
+          "requirements"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KitTemplateSlotView"
+            }
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KitRequirementOption"
+            }
+          }
+        }
+      },
+      "KitUpgradeView": {
+        "required": [
+          "product",
+          "short"
+        ],
+        "type": "object",
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/SearchHit"
+          },
+          "short": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "KitView": {
+        "required": [
+          "template",
+          "name",
+          "budget",
+          "total",
+          "left",
+          "currency",
+          "binding",
+          "complete",
+          "exact",
+          "slots",
+          "unusedRequirements"
+        ],
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "budget": {
+            "type": "number",
+            "format": "double"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "left": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/KitBinding"
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "exact": {
+            "type": "boolean"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KitSlotView"
+            }
+          },
+          "unusedRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "LinkIdentityRequest": {
         "required": [
           "displayName",
@@ -11600,6 +11944,9 @@
     },
     {
       "name": "Inventory"
+    },
+    {
+      "name": "Kits"
     },
     {
       "name": "Knowledge"

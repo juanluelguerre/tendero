@@ -996,6 +996,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/kits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListKits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kits/{template}/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["BuildKit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/me/history": {
         parameters: {
             query?: never;
@@ -1728,6 +1760,11 @@ export interface components {
             views: components["schemas"]["ViewedProduct"][];
             searches: components["schemas"]["PastSearch"][];
         };
+        BuildKitRequest: {
+            /** Format: double */
+            budget: number;
+            requirements?: null | string[];
+        };
         /** @enum {unknown} */
         BulkApprovalOutcome: "Approved" | "WeakSupport" | "ReadFromAPicture" | "ContradictsTheCatalogue" | "NotWaiting" | "NotFound";
         /** @enum {unknown} */
@@ -2047,6 +2084,61 @@ export interface components {
             elapsedSeconds: number;
         };
         JsonElement: unknown;
+        /** @enum {unknown} */
+        KitBinding: "None" | "Budget" | "Candidates";
+        /** @enum {unknown} */
+        KitGapReason: "NoCandidate" | "OverBudget";
+        KitGapView: {
+            reason: components["schemas"]["KitGapReason"];
+            cheapest: null | components["schemas"]["SearchHit"];
+            /** Format: double */
+            short: null | number;
+        };
+        KitRequirementOption: {
+            facet: string;
+            label: string;
+        };
+        KitSlotView: {
+            code: string;
+            name: string;
+            required: boolean;
+            requirements: string[];
+            product: null | components["schemas"]["SearchHit"];
+            gap: null | components["schemas"]["KitGapView"];
+            better: null | components["schemas"]["KitUpgradeView"];
+        };
+        KitTemplateSlotView: {
+            code: string;
+            name: string;
+            required: boolean;
+        };
+        KitTemplateView: {
+            code: string;
+            name: string;
+            slots: components["schemas"]["KitTemplateSlotView"][];
+            requirements: components["schemas"]["KitRequirementOption"][];
+        };
+        KitUpgradeView: {
+            product: components["schemas"]["SearchHit"];
+            /** Format: double */
+            short: number;
+        };
+        KitView: {
+            template: string;
+            name: string;
+            /** Format: double */
+            budget: number;
+            /** Format: double */
+            total: number;
+            /** Format: double */
+            left: number;
+            currency: string;
+            binding: components["schemas"]["KitBinding"];
+            complete: boolean;
+            exact: boolean;
+            slots: components["schemas"]["KitSlotView"][];
+            unusedRequirements: string[];
+        };
         LinkIdentityRequest: {
             displayName: null | string;
             culture: null | string;
@@ -5164,6 +5256,63 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SearchEvaluation"];
                 };
+            };
+        };
+    };
+    ListKits: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KitTemplateView"][];
+                };
+            };
+        };
+    };
+    BuildKit: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                template: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildKitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KitView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

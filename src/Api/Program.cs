@@ -23,6 +23,7 @@ using ElGuerre.Tendero.Pricing;
 using ElGuerre.Tendero.Pricing.Features.QuoteCart;
 using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Elasticsearch;
+using ElGuerre.Tendero.Search.Features.BuildKit;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.Search.Health;
 using ElGuerre.Tendero.Search.Images;
@@ -149,6 +150,13 @@ builder.Services.AddRateLimiter(limiter =>
     limiter.AddPolicy(VisualSearch.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
         ClientOf(http),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // And thirty kits a minute (phase 13c): each is up to five searches and a
+    // solver's run, for anyone who asks. More than a person at a form needs,
+    // and a bound on what a loop can ask of the search.
+    limiter.AddPolicy(KitsEndpoint.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 
     static string ClientOf(HttpContext http) =>
         http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject is { Length: > 0 } subject

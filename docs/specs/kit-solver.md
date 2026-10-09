@@ -189,8 +189,23 @@ solver depend on Pricing and end the properties.
    reader a budget constraint was made for, and it gets the arithmetic rather
    than a paragraph.
 
-`GET /api/kits` (the templates) and `POST /api/kits/build`, public and
-rate-limited; the OpenAPI document and the frontend's types regenerated.
+`GET /api/kits` (the templates, each with what can be required of it) and
+`POST /api/kits/{template}/build` — the kit is in the address, the budget
+and the requirements in the body — public, the second rate-limited at thirty
+a minute a client; the OpenAPI document and the frontend's types
+regenerated.
+
+*As built (K-2, 2026-10-09)*: three templates in `seed/kits.sample.json` —
+the kitchen starter, a coffee corner and a desk of three slots, not four:
+the catalogue's storage is the kitchen's, and a slot that finds a spice rack
+for a desk is worse than no slot. A file written wrong is refused whole and
+by name. **The slice does not call Pricing**: Search sees Pricing through one
+adapter and a rule holds that, so the kit comes back with each product's SKU
+and whoever shows it asks for the quote — the page through the endpoint the
+cart already uses, `build_kit` in the MCP project, which may dispatch both.
+A requirement no slot of the kit can be held to comes back as unused rather
+than being dropped in silence, and a category that declares nothing is not
+held to any.
 
 ## Non-goals
 
