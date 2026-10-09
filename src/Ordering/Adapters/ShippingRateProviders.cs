@@ -37,7 +37,33 @@ public sealed class FlatRateShipping(IOptions<FlatRateShippingOptions> options) 
 {
     public const string Key = "flat-rate";
 
+    private const string StandardCode = "standard";
+
+    private const string ExpressCode = "express";
+
+    private static readonly LocalizedText Standard = Label("Envío estándar", "Standard delivery");
+
+    private static readonly LocalizedText StandardFree = Label("Envío estándar gratis", "Free standard delivery");
+
+    private static readonly LocalizedText Express = Label("Envío exprés", "Express delivery");
+
     string IShippingRateProvider.Key => Key;
+
+    /// <summary>The two ways it sends, for everywhere: the threshold is the standard one's, said as an amount and not as a label.</summary>
+    public IReadOnlyList<ShippingTerm> Terms
+    {
+        get
+        {
+            var settings = options.Value;
+            Money? freeFrom = settings.FreeAbove > 0m ? new Money(settings.FreeAbove, settings.Currency) : null;
+
+            return
+            [
+                new(StandardCode, Standard, new Money(settings.Standard, settings.Currency), StandardDays, freeFrom),
+                new(ExpressCode, Express, new Money(settings.Express, settings.Currency), ExpressDays),
+            ];
+        }
+    }
 
     public Task<IReadOnlyList<ShippingOption>> QuoteAsync(
         ShippingQuoteRequest request, CancellationToken cancellationToken = default)
@@ -49,29 +75,19 @@ public sealed class FlatRateShipping(IOptions<FlatRateShippingOptions> options) 
 
         IReadOnlyList<ShippingOption> rates =
         [
-            new(
-                "standard",
-                new LocalizedText(new Dictionary<string, string>
-                {
-                    ["es"] = free ? "Envío estándar gratis" : "Envío estándar",
-                    ["en"] = free ? "Free standard delivery" : "Standard delivery"
-                }),
-                new Money(free ? 0m : settings.Standard, currency),
-                EstimatedDays: 3),
-
-            new(
-                "express",
-                new LocalizedText(new Dictionary<string, string>
-                {
-                    ["es"] = "Envío exprés",
-                    ["en"] = "Express delivery"
-                }),
-                new Money(settings.Express, currency),
-                EstimatedDays: 1)
+            new(StandardCode, free ? StandardFree : Standard, new Money(free ? 0m : settings.Standard, currency), StandardDays),
+            new(ExpressCode, Express, new Money(settings.Express, currency), ExpressDays)
         ];
 
         return Task.FromResult(rates);
     }
+
+    private const int StandardDays = 3;
+
+    private const int ExpressDays = 1;
+
+    private static LocalizedText Label(string spanish, string english) =>
+        new(new Dictionary<string, string> { ["es"] = spanish, ["en"] = english });
 }
 
 /// <summary>A band of countries and what it costs to reach them.</summary>
@@ -119,6 +135,22 @@ public sealed class ZoneRateShipping(IOptions<ZoneRateShippingOptions> options) 
 
     string IShippingRateProvider.Key => Key;
 
+    /// <summary>A term a zone, cheapest first, each with the countries it reaches as the table reads them.</summary>
+    public IReadOnlyList<ShippingTerm> Terms =>
+    [
+        .. options.Value.Zones
+            .Where(zone => zone.Value.Countries.Count > 0)
+            .Select(zone =>
+            {
+                var option = Option(zone.Key, zone.Value);
+                return new ShippingTerm(
+                    option.Code, option.Label, option.Amount, option.EstimatedDays,
+                    Countries: [.. zone.Value.Countries.Select(Address.NormaliseCountry).Distinct().Order(StringComparer.Ordinal)]);
+            })
+            .OrderBy(term => term.Amount.Amount)
+            .ThenBy(term => term.Code, StringComparer.Ordinal),
+    ];
+
     public Task<IReadOnlyList<ShippingOption>> QuoteAsync(
         ShippingQuoteRequest request, CancellationToken cancellationToken = default)
     {
@@ -128,23 +160,22 @@ public sealed class ZoneRateShipping(IOptions<ZoneRateShippingOptions> options) 
         var zone = settings.Zones.FirstOrDefault(entry => entry.Value.Countries
             .Any(candidate => string.Equals(candidate.Trim(), country, StringComparison.OrdinalIgnoreCase)));
 
-        IReadOnlyList<ShippingOption> rates = zone.Value is null
-            ? []
-            :
-            [
-                new(
-                    $"zone-{zone.Key.ToLowerInvariant()}",
-                    new LocalizedText(new Dictionary<string, string>
-                    {
-                        ["es"] = $"Envío a {ZoneName(zone.Key, "es")}",
-                        ["en"] = $"Delivery to {ZoneName(zone.Key, "en")}"
-                    }),
-                    new Money(zone.Value.Standard, settings.Currency),
-                    zone.Value.EstimatedDays)
-            ];
+        IReadOnlyList<ShippingOption> rates = zone.Value is null ? [] : [Option(zone.Key, zone.Value)];
 
         return Task.FromResult(rates);
     }
+
+    /// <summary>What reaching a zone is, for a quote and for the terms alike: one place says its code, its name and its price.</summary>
+    private ShippingOption Option(string name, ShippingZone zone) =>
+        new(
+            $"zone-{name.ToLowerInvariant()}",
+            new LocalizedText(new Dictionary<string, string>
+            {
+                ["es"] = $"Envío a {ZoneName(name, "es")}",
+                ["en"] = $"Delivery to {ZoneName(name, "en")}"
+            }),
+            new Money(zone.Standard, options.Value.Currency),
+            zone.EstimatedDays);
 
     /// <summary>
     /// Zone names are configuration keys, and configuration keys are not

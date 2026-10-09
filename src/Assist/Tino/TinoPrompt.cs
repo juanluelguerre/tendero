@@ -47,6 +47,9 @@ public static class TinoPrompt
           name: call get_product_specs and get_product for THAT product only. Do not
           search for other products: the shopper asked about this one.
         - A question about returns: call get_return_policy.
+        - A question about shipping in general — whether the shop delivers to a country,
+          what delivery costs, how long it takes: call get_shipping_terms, with the
+          country's two-letter code when the shopper names one (Portugal is PT).
         - A question about the shopper's OWN order — where it is, what is in it, whether it
           can be returned: call my_orders. It takes no order number: never ask the shopper
           for one, and ignore any number they write. Do NOT call my_orders for a general
@@ -72,7 +75,7 @@ public static class TinoPrompt
           one short sentence and cites the id of the one fact it rests on. A reason cites a fact of ITS OWN product. Never compare with another product
           inside a reason. Do not state a price or whether it is in stock: the shopper sees
           both on the product's card.
-        - kind "shop": the question is about the shop itself (returns), not a product. 1 or 2
+        - kind "shop": the question is about the shop itself (returns, shipping), not a product. 1 or 2
           sentences, each citing a fact whose "about" is SHOP.
         - kind "order": the question is about one of THE SHOPPER'S ORDERS. "order" is its
           reference; "my last order" is the one whose facts say it is the most recent. 1 or 2
@@ -85,8 +88,8 @@ public static class TinoPrompt
           the statement no fact makes, as a sentence: "It can go in the oven." "nearest"
           holds up to 2 facts of that product that are close to what was asked, each as a
           reason; it may be empty.
-        - kind "unknown": the question is clear and no fact answers it — shipping, opening
-          hours, anything that is not in the sheet. Do not ask back: say it is not known.
+        - kind "unknown": the question is clear and no fact answers it — opening hours, a
+          phone number, anything that is not in the sheet. Do not ask back: say it is not known.
         - kind "ask": ONLY when the shopper has not said what they are looking for. Ask ONE
           short question back.
         - Write every "says", "ask" and "about" in {{PageLanguage.Name(culture)}}, the language of the shop's

@@ -133,6 +133,84 @@ public abstract class ShippingRateProviderContractTests
 
         Assert.NotNull(options);
     }
+
+    // ---------- the terms: what it charges, said before there is a cart ----------
+
+    /// <summary>A country a term names, or one this provider serves when the term is for everywhere.</summary>
+    private string CountryOf(ShippingTerm term) => term.Countries?[0] ?? ServedCountry;
+
+    [Fact]
+    public void It_has_terms_a_shopper_can_read_in_either_language()
+    {
+        Assert.NotEmpty(Provider.Terms);
+        Assert.All(Provider.Terms, term =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(term.Label.In("es")));
+            Assert.False(string.IsNullOrWhiteSpace(term.Label.In("en")));
+            Assert.False(term.Amount.IsNegative);
+            Assert.True(term.EstimatedDays is null or > 0);
+            Assert.True(term.Countries is null or { Count: > 0 });
+        });
+    }
+
+    /// <summary>
+    /// **The terms promise what a quote charges, and nothing else.** They are
+    /// what the shop tells somebody who has not reached checkout yet, and a
+    /// term that says 4.95 over a quote that charges 5.95 is the shop quoting
+    /// one price and charging another, a page earlier.
+    /// </summary>
+    [Fact]
+    public async Task Every_term_is_what_a_quote_charges_where_it_applies()
+    {
+        foreach (var term in Provider.Terms)
+        {
+            var quoted = (await Provider.QuoteAsync(Request(country: CountryOf(term), subtotal: 0.01m), Ct))
+                .Single(option => option.Code == term.Code);
+
+            Assert.Equal((term.Amount, term.EstimatedDays), (quoted.Amount, quoted.EstimatedDays));
+        }
+    }
+
+    /// <summary>"Free from 50" in the terms is free at 50 in the quote, and not a cent before.</summary>
+    [Fact]
+    public async Task A_term_free_from_an_amount_is_quoted_free_from_exactly_that_amount()
+    {
+        foreach (var term in Provider.Terms.Where(term => term.FreeFrom is not null))
+        {
+            var from = term.FreeFrom!.Value.Amount;
+            async Task<decimal> Charged(decimal subtotal) =>
+                (await Provider.QuoteAsync(Request(country: CountryOf(term), subtotal: subtotal), Ct))
+                .Single(option => option.Code == term.Code).Amount.Amount;
+
+            Assert.Equal(0m, await Charged(from));
+            Assert.Equal(term.Amount.Amount, await Charged(from - 0.01m));
+        }
+    }
+
+    /// <summary>Nothing is quoted that the terms did not say: an option a shopper meets at checkout for the first time.</summary>
+    [Fact]
+    public async Task Every_option_quoted_is_one_of_the_terms()
+    {
+        var said = Provider.Terms.Select(term => term.Code).ToHashSet(StringComparer.Ordinal);
+
+        Assert.All(await Provider.QuoteAsync(Request(), Ct), option => Assert.Contains(option.Code, said));
+    }
+
+    /// <summary>
+    /// Where the terms say the shop delivers is where a quote has an option:
+    /// a country no term names gets none, unless a term is for everywhere.
+    /// </summary>
+    [Fact]
+    public async Task A_country_no_term_reaches_is_quoted_nothing()
+    {
+        var everywhere = Provider.Terms.Any(term => term.Countries is null);
+        var named = Provider.Terms.SelectMany(term => term.Countries ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("AU", named);
+
+        var quoted = await Provider.QuoteAsync(Request(country: "AU"), Ct);
+
+        Assert.Equal(everywhere, quoted.Count > 0);
+    }
 }
 
 public sealed class FlatRateShippingContractTests : ShippingRateProviderContractTests
@@ -159,6 +237,25 @@ public sealed class FlatRateShippingContractTests : ShippingRateProviderContract
         Assert.Equal(0m, free.Amount.Amount);
         Assert.Contains("gratis", free.Label.In("es"), StringComparison.OrdinalIgnoreCase);
         Assert.Contains("free", free.Label.In("en"), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Its terms are for everywhere, and the threshold is the standard one's alone.</summary>
+    [Fact]
+    public void Its_terms_name_no_country_and_only_standard_delivery_is_ever_free()
+    {
+        Assert.All(Provider.Terms, term => Assert.Null(term.Countries));
+        Assert.Equal(
+            [("standard", (Money?)new Money(50m, "EUR")), ("express", null)],
+            Provider.Terms.Select(term => (term.Code, term.FreeFrom)));
+    }
+
+    /// <summary>A threshold of zero is no threshold: the terms promise nothing free, as the quote gives nothing free.</summary>
+    [Fact]
+    public void With_the_threshold_disabled_the_terms_promise_nothing_free()
+    {
+        var provider = new FlatRateShipping(Options.Create(new FlatRateShippingOptions { FreeAbove = 0m }));
+
+        Assert.All(provider.Terms, term => Assert.Null(term.FreeFrom));
     }
 
     [Fact]
@@ -213,5 +310,27 @@ public sealed class ZoneRateShippingContractTests : ShippingRateProviderContract
         var options = await provider.QuoteAsync(Request(country: "ES"), TestContext.Current.CancellationToken);
 
         Assert.Equal(3.95m, Assert.Single(options).Amount.Amount);
+
+        // And the terms say it as a shopper is told it: the code, not what somebody typed.
+        Assert.Equal(["ES"], Assert.Single(provider.Terms).Countries);
+    }
+
+    /// <summary>A term a zone, cheapest first, with its countries in order; a zone that reaches nowhere is not a way of sending.</summary>
+    [Fact]
+    public void Its_terms_are_its_zones_cheapest_first_with_the_countries_each_reaches()
+    {
+        var provider = new ZoneRateShipping(Options.Create(new ZoneRateShippingOptions
+        {
+            Zones = new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["europe"] = new() { Countries = ["FR", "DE", "FR"], Standard = 8.95m, EstimatedDays = 5 },
+                ["nowhere"] = new() { Countries = [], Standard = 1m },
+                ["peninsula"] = new() { Countries = ["PT", "ES"], Standard = 3.95m, EstimatedDays = 2 },
+            }
+        }));
+
+        Assert.Equal(
+            [("zone-peninsula", 3.95m, "ES,PT"), ("zone-europe", 8.95m, "DE,FR")],
+            provider.Terms.Select(term => (term.Code, term.Amount.Amount, string.Join(',', term.Countries!))));
     }
 }

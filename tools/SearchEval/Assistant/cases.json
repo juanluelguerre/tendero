@@ -128,9 +128,33 @@
       }
     },
     {
-      "id": "shipping-unknown-es",
+      "id": "shipping-country-es",
       "culture": "es",
       "question": "¿hacéis envíos a Portugal?",
+      "expect": {
+        "kinds": ["Shop"],
+        "tools": ["get_shipping_terms"],
+        "noTools": ["my_orders"],
+        "cites": [{ "contains": "hace envíos" }],
+        "language": "es"
+      }
+    },
+    {
+      "id": "shipping-cost-en",
+      "culture": "en",
+      "question": "how much is delivery?",
+      "expect": {
+        "kinds": ["Shop"],
+        "tools": ["get_shipping_terms"],
+        "noTools": ["my_orders"],
+        "cites": [{ "contains": "4.95" }],
+        "language": "en"
+      }
+    },
+    {
+      "id": "opening-hours-unknown-es",
+      "culture": "es",
+      "question": "¿qué horario tenéis?",
       "expect": {
         "kinds": ["NoData"],
         "noTools": ["my_orders"]

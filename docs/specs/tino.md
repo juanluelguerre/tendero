@@ -205,11 +205,55 @@ MCP server already dispatches — no logic in `Assist`, no second store of text:
 | `get_product(code)` | Catalog | the product's detail: attributes, variants, description |
 | `get_product_specs(codes)` | Knowledge | `GetProductSpecs`: rows with their source, **approved** statements with evidence |
 | `get_return_policy()` | Ordering | `ReturnPolicyQuery` |
+| `get_shipping_terms(country?)` | Ordering | `ShippingTermsQuery` — added 2026-10-09, below |
 | `my_orders()` · `my_order(order)` | Ordering | **new** queries, scoped to the principal |
 
 `compare_products`, `list_offers` and `list_campaigns` exist over MCP and are
 left out of v1: each tool is 200–300 tokens of every call, and the suite will say
 whether a question needs them.
+
+**The suite said shipping needed one (2026-10-09).** *¿Hacéis envíos a
+Portugal?* was answered *no tenemos ese dato* — after reading the shopper's
+orders, the nearest read there was, about half the time, whatever the prompt
+and the tool's description said. The shop knew the answer the whole time:
+checkout quotes it. What it could not do was say it without a cart and an
+address.
+
+- **The port says its terms.** `IShippingRateProvider` gains `Terms`: each way
+  of sending with its price, its days, the order from which it is free and the
+  countries it reaches — none named when it is the same everywhere. The
+  contract suite holds them to the quote, both ways: a term is what a quote
+  charges where it applies, free from exactly the amount it says, and nothing
+  is quoted that no term said. A term that promised 4.95 over a quote that
+  charged 5.95 would be the shop quoting one price and charging another, a
+  page earlier.
+- **`ShippingTermsQuery(country?)`** reads the terms of the provider checkout
+  is configured with (`Checkout:ShippingProvider`), so what is said is what
+  will be charged. **Whether the shop delivers to a country is decided there
+  and not read off a list by a model**: the model's part is turning *Portugal*
+  into `PT`, and a country that is not a code is an error it can read.
+- **`get_shipping_terms`** words the result, es and en, as facts about the
+  shop (`FactSource.Policy`): where it delivers first, then each way's price
+  and days, then the threshold. A country is written as its code — the host
+  runs with invariant globalization, and a table of country names here would
+  be a second list of where the shop delivers.
+- **What it says today**, with the default `flat-rate`: *La tienda hace envíos
+  a cualquier país, al mismo precio. Envío estándar cuesta 4.95 EUR y tarda
+  unos 3 días. Envío estándar es gratis en pedidos desde 50.00 EUR. Envío
+  exprés cuesta 9.95 EUR y tarda 1 día.* That first sentence is exactly what
+  checkout does — `flat-rate` reads no destination — and it is now something
+  the shop **says**. A shop that should not say it sets `zone-rate`, whose
+  terms name their countries.
+- **Not over MCP, and no endpoint**: nobody asked for either, and an agent
+  that reaches checkout is quoted there. Both are a registration away.
+- **Evidence of use**: no event of its own, and that is said rather than
+  shipped silent (ADR 0036). A turn that used it is a `tino_answered` of kind
+  `shop`, which does not tell it from a return-policy answer; what does is
+  the read's span, `ordering.shipping_terms`, tagged with the provider, the
+  country asked and whether the shop delivers there. The question it would
+  answer — which countries are asked about that the shop does not reach — is
+  the one that would move a zone into the table; when Tino's reads get a
+  counter by tool, this is its first use.
 
 Three things the existing port did not have. **The first two and the support
 port's move were built on 2026-10-05, at the author's request, ahead of the rest**

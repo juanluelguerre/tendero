@@ -396,4 +396,35 @@ Same prompt, same reads; a laboratory built from the larger seed
   A read of where the shop delivers and what it costs — Ordering already
   knows both, at checkout — would give the question somewhere to go and turn
   *no data* into an answer. That is a feature and the author's to decide.
+- **Decided and built the next day (2026-10-09): `get_shipping_terms`.** The
+  Tino spec, *The tools*, says what it is. The case became two that expect
+  an answer — `shipping-country-es` (*¿hacéis envíos a Portugal?*) and
+  `shipping-cost-en` (*how much is delivery?*) — and what *unknown* is for
+  moved to a question the shop really cannot answer,
+  `opening-hours-unknown-es` (*¿qué horario tenéis?*). Thirty cases now, so
+  the totals below are not the ones above. Three runs, each on a database of
+  its own:
+
+  | Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+  |---|---|---|---|---|---|---|
+  | 19 | 28 of 30 | 3.2 s | 8.7 s | 44 | 3 | the two language cases |
+  | 20 | 27 of 30 | 3.5 s | 8.4 s | 39 | 5 | the two language cases, `opening-hours-unknown-es` (read `my_orders`, then *no data*) |
+  | 21 | 27 of 30 | 3.3 s | 6.4 s | 31 | 5 | the two language cases, `shipping-country-es` (answered rightly, and read `my_orders` too) |
+
+  **Both shipping questions were answered six times of six**, with the same
+  sentences each time: *Sí, la tienda hace envíos a cualquier país, al mismo
+  precio*, and *Standard delivery costs 4.95 EUR and takes about 3 days.
+  Express delivery costs 9.95 EUR and takes 1 day*. Over the runs before it
+  the first was never answered — there was nothing to answer it with.
+  Nothing that was passing stopped; `pan-induction` and
+  `dishwasher-sin-dato-es`, which come and go, passed all three.
+
+  **What is left is the same habit with a smaller cost.** Once in three the
+  shipping question still read `my_orders` beside the right read, and once
+  in three the opening-hours question did — the nearest read for a question
+  that has none. In neither was anything from it shown. It confirms the
+  reading above from the other side: the question with somewhere to go goes
+  there, and the one without takes the nearest. One more tool is one more
+  description in every read call; it does not show above the variation —
+  the largest call was 3,195, 3,208 and 2,897 tokens, and 3,029 in run 15.
 - The rest is what the earlier runs showed.

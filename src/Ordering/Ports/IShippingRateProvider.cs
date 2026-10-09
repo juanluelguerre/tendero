@@ -39,6 +39,28 @@ public sealed record ShippingOption(
     int? EstimatedDays);
 
 /// <summary>
+/// What a provider charges, said before there is a cart or an address: one way
+/// of sending, where it reaches, what it costs and from what order it is free.
+///
+/// A quote answers *this cart, to this address*; a shopper who asks "do you
+/// deliver to Portugal?" has neither yet, and the shop knew the answer all
+/// along. The terms are that answer, and the contract suite holds them to the
+/// quote: a term says what a quote charges, and nothing is quoted that no term
+/// said.
+/// </summary>
+/// <param name="Code">The code of the option a quote gives for it.</param>
+/// <param name="Amount">What it costs below <paramref name="FreeFrom"/>.</param>
+/// <param name="FreeFrom">The order's subtotal from which it costs nothing; null when it always costs.</param>
+/// <param name="Countries">Where it reaches, ISO 3166-1 alpha-2 and in order; null when it is the same wherever the parcel goes.</param>
+public sealed record ShippingTerm(
+    string Code,
+    LocalizedText Label,
+    Money Amount,
+    int? EstimatedDays,
+    Money? FreeFrom = null,
+    IReadOnlyList<string>? Countries = null);
+
+/// <summary>
 /// How much it costs to send this there.
 ///
 /// Keyed adapters, one contract suite, and a new carrier is a new class plus a
@@ -69,6 +91,13 @@ public interface IShippingRateProvider
     /// </summary>
     Task<IReadOnlyList<ShippingOption>> QuoteAsync(
         ShippingQuoteRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// What it charges, without a cart or an address: every option a quote can
+    /// give, cheapest first. What the shop says to somebody who asks before
+    /// checkout.
+    /// </summary>
+    IReadOnlyList<ShippingTerm> Terms { get; }
 }
 
 /// <summary>
