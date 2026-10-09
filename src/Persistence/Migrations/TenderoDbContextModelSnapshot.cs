@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261008092743_VariantImageBecomesWhatAPictureShows";
+    public override string LastMigrationId => "20261009122512_AccentsFoldedInTheListsOfWork";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -26,6 +26,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
             .HasAnnotation("ProductVersion", "11.0.0-preview.6.26359.118")
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+        NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "unaccent");
         NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
         modelBuilder.Entity("ElGuerre.Tendero.AI.AIInvocation", b =>

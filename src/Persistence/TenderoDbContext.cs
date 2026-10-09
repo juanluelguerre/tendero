@@ -54,6 +54,11 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // What the backoffice's lists match a typed text with: "portatil" finds
+        // "portátil". ILIKE folds case and not accents, and nobody types an accent
+        // to search. Postgres ships it; the migration creates it.
+        modelBuilder.HasPostgresExtension("unaccent");
+
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
         modelBuilder.ApplyConfiguration(new AgentConfiguration());
         modelBuilder.ApplyConfiguration(new BrowsingHistoryConfiguration());

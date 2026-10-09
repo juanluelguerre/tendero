@@ -67,6 +67,12 @@ public sealed class OrderListFilterTests(PostgresFixture postgres)
         var madridToShip = await reader.ListAsync(new OrderListQuery(OrderStatus.Confirmed, "MADRID"), ct);
         Assert.Equal(2, madridToShip.Orders.Count);
 
+        // A name or a city is found with or without its accent, typed either way:
+        // "gomez" is how Gómez is searched for, and "Sevílla" is a slip.
+        Assert.Equal(luisConfirmed.Id, Assert.Single((await reader.ListAsync(new OrderListQuery(null, "gomez"), ct)).Orders).Id);
+        Assert.Equal(luisConfirmed.Id, Assert.Single((await reader.ListAsync(new OrderListQuery(null, "LUIS GÓMEZ"), ct)).Orders).Id);
+        Assert.Equal(martaPending.Id, Assert.Single((await reader.ListAsync(new OrderListQuery(null, "sevílla"), ct)).Orders).Id);
+
         // The whole id, typed in capitals. Not its first eight characters: an id
         // is a version-7 Guid, whose start is a timestamp, and the four orders
         // here were placed in the same instant, so they share it.
