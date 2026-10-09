@@ -14,9 +14,10 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** **phase 12, Steward, closed on 2026-10-05** on `feature/phase-12-steward` (not merged: the branch waits for the author) — S-1 to S-6 and S-8 done, `P12-9` and `P12-10` with them; ADR 0019 written last; Stryker over the seven projects it touched, `Assist` at 84.76 % and `AI` at 72.02 % of covered as first baselines (`docs/testing.md`); the after captures in `docs/blog/reports/2026-10-05-phase-12-steward/`. **Left open on purpose by the author**: S-7's hosted profiles (Steward runs on the local Qwen3.5-4B on the GPU, about two seconds a turn) and everything about pictures, which waits for phase 13 (`docs/analysis/image-models.md`). Before it: the redesign (R-0 to R-9) and the frontend against its own guides, merged into `develop`.
-- **Next task:** **phase 12b, Tino, is closed (2026-10-06)** on `feature/phase-12b-tino`, stacked on phase 12's branch; both wait for the author to merge them. Done at the close: ADR 0055 (*an answer is a list of cited facts*); Stryker — `Assist` 84.69 → **86.26 %** of covered, six projects scoped, survivors classified in `docs/testing.md`; the `assistant` suite again, **26 and 26 of 28**, after it caught a wording of the instructions that broke an order case; the captures, the not-available state among them; the book's map. **The author walked Tino in a browser** on the real model, and from it: the docked page scrolls under the header at the panel's left, the search sits beside Tino's door, sending is an arrow and stopping a square in both panels, *this product's details do not say* is only about the product on the screen, and what Steward's and Tino's panels shared is one library (`conversation/` in shared-ui, `withConversation` in shared-util). **Next: phase 13** (images, and the voice postponed with them) — its spec first. Still open, the author's to say: three products and two reasons instead of the spec's four and three; a card shown with nothing said; an answer in the language of the last message (*hi* got English in a Spanish shop); Steward's S-7.
-- **Next publication:** article **01 · Design before code** on **2026-09-29** — the design system, one deliberately ugly sketch per app of screens already in the tag of 00, the running screen as the prototype, and its own tag cut from `develop`. Then **02 · One port, N catalogs** on 2026-10-13, reviewed and re-checked against `blog/02-one-port-n-catalogs` on 2026-09-21. The articles were renumbered that day to their publication order, which follows the book (`blog/index.md`, *Why this order*). Article 00's published post still names the old next article and needs a one-line edit in WordPress.
+- **Current phase:** **phase 12, Steward, closed on 2026-10-05** on `feature/phase-12-steward` (merged into `develop` on 2026-10-06 with phase 12b's pull request, tag `phase/phase-12-steward`) — S-1 to S-6 and S-8 done, `P12-9` and `P12-10` with them; ADR 0019 written last; Stryker over the seven projects it touched, `Assist` at 84.76 % and `AI` at 72.02 % of covered as first baselines (`docs/testing.md`); the after captures in `docs/blog/reports/2026-10-05-phase-12-steward/`. **Left open on purpose by the author**: S-7's hosted profiles (Steward runs on the local Qwen3.5-4B on the GPU, about two seconds a turn) and everything about pictures, which waits for phase 13 (`docs/analysis/image-models.md`). Before it: the redesign (R-0 to R-9) and the frontend against its own guides, merged into `develop`.
+- **Phase 13a, images, is closed (2026-10-09)** on `feature/phase-13a-images`, **not merged and not pushed past its second day** — the pull request into `develop` is the author's to ask for. In it: the model that reads a picture and the board that holds its questions (I-1 to I-4), a category that declares its attributes and a picture that says what it shows (ADR 0056, 0057), the catalogue at 120 products with every one of them drawn, SigLIP 2 exported by us and run in process, the pictures as a vector space of their own (ADR 0058), the shop searched with a picture from a camera in the search box, and the pictures as a third leg of the search where they are. Done at the close: Stryker — `Search` 83.38 %, `Knowledge` 77.34 %, `AI` 75.00 % and `Assist` back over its baseline on its third run, three projects scoped, survivors classified in `docs/testing.md`; the gate with `--ci`; the storefront's browser suite, now in CI; captures 22 to 28; the book's map. The author accepted the last 27 pictures on 2026-10-09 and the defects board was re-recorded over all 123; the branch is pushed. **Waiting for the author**: whether the pull request goes now. The board's colour question had seemed to catch less on the new pictures; it was the forge drawing a defect that was not there, and with the product drawn in another of the catalogue's colours it is 24 of 24 (the images spec). **Noted for later**: the count question misses four sets of like pieces of 23, and nothing doubts a colour outside the catalogue's list. **Tino answers shipping questions** (2026-10-09, the Tino spec, *The tools*): a shipping provider says its terms without a cart, the contract suite holds them to the quote, and `get_shipping_terms` is the read the question had nowhere to go without. The board no longer asks the model what it already answered (the images spec): the whole of it replays in five minutes without a GPU, and a new picture costs about forty seconds. **Next: phase 13c, the kit solver.**
+- **Before it:** **phase 12b, Tino, is closed (2026-10-06)** on `feature/phase-12b-tino`, stacked on phase 12's branch; **both merged into `develop` on 2026-10-06** in one pull request (#22), tagged `phase/phase-12-steward` and `phase/phase-12b-tino`, their branches deleted. Done at the close: ADR 0055 (*an answer is a list of cited facts*); Stryker — `Assist` 84.69 → **86.26 %** of covered, six projects scoped, survivors classified in `docs/testing.md`; the `assistant` suite again, **26 and 26 of 28**, after it caught a wording of the instructions that broke an order case; the captures, the not-available state among them; the book's map. **The author walked Tino in a browser** on the real model, and from it: the docked page scrolls under the header at the panel's left, the search sits beside Tino's door, sending is an arrow and stopping a square in both panels, *this product's details do not say* is only about the product on the screen, and what Steward's and Tino's panels shared is one library (`conversation/` in shared-ui, `withConversation` in shared-util). **In progress: phase 13a, images** on `feature/phase-13a-images` (pushed, stacked on the branch of pull request #23, which is still open), spec `docs/specs/images.md` accepted. **Done by 2026-10-07**: ten of the 82 pictures in two batches of five (about $0.39 of the 2 € ceiling); I-2, the local model reads pictures on weights converted by us (`Tendero__Vision=true`); I-3, alt text — a batch of five proposed from the Proposals list, reviewed with its picture, corrected in place as a third decision, and typed with no model on the product's own screen. **Next, in this order**: another batch of five pictures through the automatic checks; I-4, claims read from a picture and the picture held against the catalogue's data; I-5 and I-6, SigLIP 2 and search by picture; the close. 13c, the kit solver, follows; voice is a phase 14 and the shopper's account a phase 15. **Left in the development database by the session's captures**: about ten alt-text proposals waiting for review, the model's own words. **The four points left open were decided by the author on 2026-10-06** (on `feature/agents-language-and-silent-cards`, not merged): an answer **stays at three products and two reasons**; **a card with nothing said is never shown** — the product is left out, and with none left code says the product's *sin dato* on its page and the search answers anywhere else; **both agents answer in the page's language**, not the last message's, set by code on Tino's reads and named in both prompts (`tino-2026-10-06`, `steward-2026-10-06`); **S-7 stays postponed**, with no date. With them, Steward's docked panel stands the window's whole height beside the header, as Tino's. **Measured the same day** on the local 4B: Tino 24 and 24 of 28 — no answer in the wrong language, and **the two crossing cases fail because the page's search finds nothing for the other language's words**, so Tino asks back (`docs/analysis/tino-models.md`); Steward 24 of 26, and a Spanish question on the English screen was still answered in Spanish, four runs of four, a second line in the prompt changing nothing. **Ruled by the author: both agents answer in the language chosen in the menu** — so Steward's answer in another language is now said again by the same profile and shown only with the same figures (three runs of three in English, `docs/analysis/steward-models.md`), and Tino's crossing cases stay as measured: the page's language is the rule, and a search in it for the other language's words finds what it finds.
+- **Next publication:** article **02 · One port, N catalogs** on **2026-10-13**, reviewed and re-checked against `blog/02-one-port-n-catalogs` on 2026-09-21; its tag sits on the commit of 00, so publishing it moves only the tag. **Article 01 · Design before code was published on 2026-10-08** (`blog/01-design-before-code`, public; `blog/index.md` has the post). The articles were renumbered that day to their publication order, which follows the book (`blog/index.md`, *Why this order*). Article 00's published post still names the old next article and needs a one-line edit in WordPress.
 
 **Decisions taken 2026-09-18** — 1 · **the project gains an optional second
 product: a self-published technical book**, in `docs/book/`, whose spine is the
@@ -862,7 +863,7 @@ answer ends in a button. `#AIEngineering #agents #dotnet #ecommerce`
 
 ## Phase 12b · Tino, the shopping assistant, with a voice
 
-`en curso` (T-2 a T-6 hechos 2026-10-05; falta el cierre; voz aplazada a la fase 13) · priority **medium** · size **L** — added 2026-09-26 at the author's
+`cerrada 2026-10-06` (voz aplazada a la fase 13) · priority **medium** · size **L** — added 2026-09-26 at the author's
 request, with speech recognition inside it rather than in phase 13. The vision
 lists *a conversational assistant* among the standard 2026 capabilities and no
 phase had it; the gap analysis marked it missing. It comes **after phase 10**
@@ -875,7 +876,7 @@ call are built there.
 - [x] `P12b-2b` **After-sale tools**, at the author's request (2026-09-26): *where is my order?* and *can I return it?*, answered from **that customer's** orders, returns and the return policy — the place the big shops get the most value from retrieval (Klarna reported its assistant handling two thirds of its service chats in 2024). Read-only and scoped to the signed-in principal: an order is found through `IPrincipalAccessor`, never by a number typed into the chat; opening a return stays the storefront's own form, which the answer links to — the assistant explains, the customer acts — **M** · **done 2026-10-05** (T-4): one read, `my_orders`, that takes no order number; the order on the screen reaches it beside the model; a guest is answered about that order alone
 - [x] `P12b-3` Grounding before sending: every factual sentence is held to the claim or product field it cites through the support port of `P10-0`; a sentence nothing supports is dropped, and counted — **M** · **done 2026-10-05** (T-3): the premise is the product's name and the fact (17 good reasons of 18 kept, against 11 with the fact alone), 0.5 to stand; nine of nine real questions answered, 33 reasons shown and 4 dropped
 - [x] `P12b-4` The storefront conversation: es and en, one clay action, agent-driven actions in clay; **degrades to the search results** when no model answers (invariant 8), and the test proves it — **M** · **done 2026-10-05** (T-6): the door where Steward's is, the panel beside the page and a sheet on a phone, the shop's card and a chip per sentence, the search's results whenever Tino does not answer; four browser tests over a scripted Tino
-- [ ] `P12b-5` *(postponed 2026-10-05 by the author to phase 13 and after, with the image work — not part of 12b's close)* `ISpeechToText` with two adapters compared under one protocol: the browser's Web Speech API (no server, but Chrome sends the audio to Google) and **whisper.cpp** in a container, weights pinned by revision (ADR 0031), limits sized from a measurement; the text box is the non-AI path — **M**
+- [ ] `P12b-5` *(postponed 2026-10-05 by the author with the image work, and on 2026-10-06 to a phase of its own, 14, after the images — not part of 12b's close)* `ISpeechToText` with two adapters compared under one protocol: the browser's Web Speech API (no server, but Chrome sends the audio to Google) and **whisper.cpp** in a container, weights pinned by revision (ADR 0031), limits sized from a measurement; the text box is the non-AI path — **M**
 - [ ] `P12b-6` *(postponed with `P12b-5`)* Voice in the assistant and in the search box on mobile; accessibility checked with the tokens and the keyboard, not assumed — **M**
 - [x] `P12b-7` `assistant` eval suite in `SearchEval`: questions with the claims each answer must cite; a fact with no citation fails, no judge — **M** · **done 2026-10-05** (T-5): 28 cases, 25 to 26 passed on the final prompt over three runs, every case answered, the isolation cases in every run; it cut an answer to three products and two reasons
 - [x] `P12b-8` ADR — **S** · **done 2026-10-06**: ADR 0055, with the phase's close (Stryker, the suite, the captures, the book's map)
@@ -901,16 +902,65 @@ what a microphone changes about the questions people ask. `#AIEngineering #RAG #
 
 ## Phase 13 · Multimodal and the kit solver
 
-`no empezada` · priority **medium** · size **L**
+`13a closed 2026-10-09, on its branch — 13c next` · priority **medium** · size **L**
 
-**Carried here on 2026-10-05, by the author**: voice (`P12b-5`, `P12b-6` — the
-tasks stay written in phase 12b and are done here or after), beside the image
-work already waiting (`docs/analysis/image-models.md`).
+**Split in two by the author on 2026-10-06, each on its own stacked branch:**
 
-- [ ] `P13-1` Tokenizer-fidelity fixture test **before** committing to in-process ONNX — **S**
-- [ ] `P13-2` SigLIP 2 via ONNX Runtime; `IImageEmbeddingGenerator` — **L**
-- [ ] `P13-3` Image collection keyed on `ImageId`; dedup for free — **M**
-- [ ] `P13-4` `POST /api/search/by-image`; then text→image — **M**
+- **13a · Images** — `feature/phase-13a-images`, spec
+  [`docs/specs/images.md`](specs/images.md), a draft that waits for the author:
+  the 82 missing seed pictures first, then a model that reads a picture (alt
+  text and picture-against-data, as proposals), claims read from a picture, and
+  visual search with SigLIP 2 (`P13-1` to `P13-4`). Rulings taken with it: both
+  kinds of image work; weights converted by us, never a third party's copy
+  (ADR 0031); a picture's claim rests on the model's description of it and is
+  marked as such; a shopper's uploaded picture is not kept and loses its metadata.
+  Added and built 2026-10-07: **I-2b**, the picture checks held to what goes
+  wrong — a set of known-bad pictures by kind of defect (drawn by code, and the
+  ones a person rejects from now on), questions whose answers code compares with
+  the product's attributes, and a recorded board per question that may not fall
+  (`defects --ci`). It found the scene question blind, 0 of 28, and repaired it.
+  Added and built 2026-10-08, from the author's question about the model
+  itself ([`docs/analysis/catalogue-model.md`](analysis/catalogue-model.md)):
+  **a category declares its attributes** (ADR 0056) and **a picture says what
+  it shows** (ADR 0057) — a variant has no picture of its own, a colour's
+  gallery is derived, and the seed, the import, the API and a migration all
+  moved with it; the storefront shows a colour's gallery and the backoffice
+  says which colour a picture shows. **And a category says what a product must
+  have** (ADR 0056, amended): required or expected, never enforced — an
+  incomplete product is a catalogue gap and a note on its review. That closes
+  the standing backlog's *Required attributes per category*, recorded
+  2026-10-02. *It belongs to another variant* is applied from the doubt, and
+  three near-universal attributes are required too, which leaves five seed
+  products incomplete on purpose. Still open there: a screen that edits the
+  declarations.
+- **Built 2026-10-08, on the author's go-ahead: the catalogue is 120 products**
+  ([`docs/specs/catalogue-growth.md`](specs/catalogue-growth.md)) — the
+  proposal just below, as it was written the day before.
+- **Proposed by the author on 2026-10-07, not scheduled: the catalogue grows,
+  it does not change.** Looking at the pictures, the shop reads as bags and
+  shoes; he asked for chairs, tables, beds, wardrobes, plants. Replacing
+  products would move the golden set's judgments and every number an article
+  quotes, so the ruling is to **add about twenty products in families the shop
+  does not have** — seating and tables, the bedroom and large storage, plants and
+  the garden, decoration, and the bathroom, which he added — with their
+  categories in es and en,
+  prices, stock and pictures, and the golden set extended rather than rejudged.
+  It needs a spec of its own, and it changes `CLAUDE.md`'s *The catalogue is 100
+  products*. Worth having for the picture checks too: a bed or a plant is hard
+  to draw without a scene. **When: after I-4 and the 47 pictures still to draw**,
+  as a phase of its own (the author, the same day).
+- **13c · The kit solver** — `P13-5` to `P13-8`, after 13a. It needs nothing of
+  the image work.
+
+**Voice is not in this phase** (the author, the same day): `P12b-5` and `P12b-6`
+wait for a phase of their own, 14, after the images.
+
+- [x] `P13-1` Tokenizer-fidelity fixture test **before** committing to in-process ONNX — **S** · **done 2026-10-08**: `SiglipTextTokenizer` reproduces the maker's ids for twenty-three texts, id for id, at revision `75de2d5`; the reference is written by the maker's tokenizer and committed. Found on the way: the configuration says to lower-case and the maker's tokenizer does not — to be measured in `P13-2`. In process stands
+- [x] `P13-2` SigLIP 2 via ONNX Runtime; `IImageEmbeddingGenerator` — **L** · **done 2026-10-08**: our own export of both towers (0.99999994 against PyTorch), the adapter in process on the CPU, held to the maker's embeddings — a picture at 0.999998 once the resize was Pillow's arithmetic and not a library's (0.983). Lower-casing measured and applied: Spanish names find their picture first 88 % of the time against 65 %
+- [x] `P13-3` Image collection keyed on `ImageId`; dedup for free — **M** · **done 2026-10-08**: one point a picture in a collection named for the picture model, naming every product that shows it; fed by the outbox without ever failing a message, rebuilt when empty, `reindex?target=pictures`; the folder of our export is the opt-in. Sixteen hand mutations red, ten of them against a real Qdrant (the images spec, *I-5*).
+- [x] `P13-4c` **The pictures as a third leg of the search: measured, built, and on where the pictures are (the author, 2026-10-09 — zero in the code, ten from the AppHost beside visual search).** +0.005 en / +0.016 es NDCG@10 and +0.024 / +0.060 recall@50 at depth 10 with the reranker, no kind of query worse, 100–150 ms a search. `Search:Hybrid:PictureDepth` is zero. **The author's**: whether it goes on by default, and where — it needs the picture model in the API, so only where visual search already runs.
+- [ ] `P13-4b` **The words' floor, parked by the author (2026-10-08).** `Search:Images:MinTextSimilarity` stays unset until the golden set holds more queries for things the shop does not sell: seven a culture gave a direction (nothing above 0.092, nine right answers in ten above 0.093, so about 0.08) and not a number. Take it up when words against the pictures have a consumer — the storefront, or a leg of the search — and those queries exist. **The picture's floor is settled: none** — the storefront says *the nearest things we have*, never *we found these* (`docs/search-evaluation.md`, *What a floor would separate*).
+- [x] `P13-4` `POST /api/search/by-image`; then text→image — **M** · **the API done 2026-10-08**: both endpoints, public and rate-limited, the status, the degraded path tested, the picture never kept; words against the pictures alone measured at 0.742 en / 0.713 es, better than the fused search for a kind of product. **The storefront's control done 2026-10-09**: the author took the mock-up with the camera in the search box; the panel, the page of the nearest things, the degraded path held by a browser spec (the images spec, *I-6*)
 - [ ] `P13-5` `IKitSolver`, pure: branch-and-bound with a solver trace — **M**
 - [ ] `P13-6` CsCheck properties: budget never exceeded, order-stable, monotone in candidates — **M**
 - [ ] `P13-7` Explanation generated from the trace; a model may phrase, never add facts — **M**
@@ -934,6 +984,51 @@ phrases, the solver decides. `#AIEngineering #ecommerce #dotnet`
 
 ---
 
+## Phase 15 · The shopper's account: profile, addresses, payment methods, preferences
+
+`no empezada — para más adelante` · priority **medium** · size **L** — added
+2026-10-06 at the author's request, after the images (13a), the kit solver (13c)
+and voice (14). It schedules what the backlog had recorded unscheduled since
+2026-09-04 (*A real account, and the menu it earns*, below): today the account
+page is one screen — who you are, sign out, your orders — and a shop people come
+back to remembers more about them than that.
+
+What the author asked for: **the shopper's settings, profile and parameters** — a
+favourite or default way to pay, a default address knowing there can be several,
+payments, and the rest of what a returning customer expects not to type twice.
+
+- [ ] `P15-1` Spec and mock-ups (in English), before anything is built: the sections, what each holds, what checkout reads from them, and **which facts are the identity provider's and which are the shop's** — a name and an email come in the token and are not ours to edit (invariant 10); an address book and a preference are — **S**
+- [ ] `P15-2` **Address book** in `Accounts`: several addresses per customer, each named by the shopper, **one default for delivery and one for billing**; add, edit, remove, choose the default. `Address` already exists in the SharedKernel and is frozen onto orders, so an edit never changes an order placed — **M**
+- [ ] `P15-3` **Checkout reads the account**: the default address preselected and another one a choice, never a form to retype; a new address typed at checkout can be kept. A guest's checkout is unchanged — **M**
+- [ ] `P15-4` **Saved payment methods — never card data.** A provider-side token and a masked label (*Visa ending 4242, expires 08/28*), a default among them, removal. It is a change to `IPaymentProvider` (tokenise, charge a token, forget a token) and to `FakePaymentProvider` and the contract suite **before it is a screen** — **L**
+- [ ] `P15-5` **Preferred way to pay**: the default method preselected at checkout, another one a choice; a method that has expired or was declined is said so and is not silently skipped — **M**
+- [ ] `P15-6` **Profile and preferences**: language and currency (`Customer` already carries both), and what the shop may send — order emails always, marketing only by consent, recorded with its date as the analytics consent is — **S/M**
+- [ ] `P15-7` **The account's menu**, last: it was declined on 2026-09-04 because a menu with one item is chrome pretending to be structure. Three real sections is when it earns its place, so it is built after them, not before — **S**
+- [ ] `P15-8` **What an agent may use of it.** A default address and a saved method are exactly what a delegated checkout wants to reuse; whether a mandate (phase 11, AP2) may name them, and how the shopper sees and withdraws that, is decided in the spec and not discovered in the code — **M**
+- [ ] `P15-9` **The shopper's own data**: see what the shop holds, and remove the account — what is erased, and what an order keeps because the law makes the shop keep it. `docs/privacy.md` says both — **M**
+- [ ] `P15-10` The tracking plan's events with the question each answers (ADR 0036), an ADR for the payment token, and the close — **S**
+
+**Risks.** Payment data: a PAN stored anywhere is out of the question, and a token
+that outlives the customer's wish to keep it is the same mistake made later. A
+default address applied without being shown is an order sent to the wrong house.
+And the identity provider owns part of the profile: a screen that lets a shopper
+edit what the issuer will overwrite at the next sign-in is a bug by design.
+
+**Demo.** A returning shopper checks out in two clicks: *deliver to* **Home** ·
+*pay with* **Visa ending 4242** — both chosen beforehand, both changeable there.
+Then the account: a second address added and made the default, the card removed,
+and the next checkout asking for a way to pay instead of assuming one.
+
+**Evidences.** A tokenised payment port with a contract suite; an aggregate of
+the customer's own (`Accounts`) that an order snapshots and never references
+(invariant 1); consent and erasure as domain operations with an audit row.
+
+**Article.** *"The shop remembered my address, and nothing it should not"* — what
+a customer's account may hold, what it must not, and where the line runs through
+the payment port. `#ecommerce #dotnet #payments #privacy #DDD`
+
+---
+
 ## Standing backlog — deferred, with the number
 
 Not scheduled. Each is recorded so the deferral is a decision rather than an
@@ -941,6 +1036,7 @@ oversight, and each is a paragraph in some future article.
 
 | Item | Measured today | Enters when |
 |---|---|---|
+| **A level between product and variant** — the colour as a row of its own (`Product → Colour → Size`), as Zalando and Akeneo have | deferred by the author on 2026-10-08 (ADR 0057): the pictures of a colour are what that level was wanted for, and a tag on the picture gives them; one seed product in three colours, no colour with a price, a URL or a description of its own | A colour needs something of its own that is not a picture — its own page and SEO, price or promotion, description, or to be what a search result shows. The tags are the data it would be built from |
 | Outbox coalescing | 47 rows for 6 products (~8 events each); ~1.2M for the full 147k ABO set | A real import, or the outbox lag metric turns bad |
 | Bulk indexing | one HTTP call per product per culture | Same |
 | Reindex as a background job | fine for 6 products; the wrong shape for 147k | Same |
@@ -993,7 +1089,6 @@ oversight, and each is a paragraph in some future article.
 | **The backoffice dashboard, configurable** — v2 and v3 of `P11-7`, **a suite product per organisation** (the author, 2026-09-27: *"for now, a dashboard with orders, returns and the rest; the configurable one would be a product of the suite, per organisation or customer — which makes me think of multi-tenancy"*) | recorded 2026-09-27 at the author's question (*configurable with widgets, to build different dashboards dynamically — or start with something basic?*). v1 is built from widgets in a fixed layout, so this path costs little later. **v2**: each user and role shows, hides and reorders widgets from a closed catalogue, the layout persisted per user — Seller Central's model. **v3**: a builder for new dashboards from arbitrary queries — which is rebuilding Grafana, and the developer already has Grafana. Configurability costs layouts, per-widget permissions, empty states and combinations to test; the dashboard's own tracking plan (widgets viewed, widgets hidden) is the evidence that decides | **Last in the queue** (the author, 2026-09-29: the features already planned come first). v2: more than one role uses the dashboard, and its events show different needs. v3: a need Grafana cannot meet |
 | **Steward for the operator (feature B)** — the system's questions: the audit, the outbox's health, search quality, the AI's own cost and latency, and the backoffice AI panel (`P12-7`) | set aside by the author on 2026-10-01 when Steward's v1 was scoped to the shopkeeper's questions about the shop (`docs/specs/steward.md`, decision 2); Grafana's `ai-usage.json` covers the cost and latency meanwhile | Steward's v1 measured (S-7) and its proposals worth reviewing by `proposals_reviewed` |
 | **Suppliers and purchase orders (`Purchasing`)** — suppliers with lead time and minimum order, purchase orders (draft → sent → partly received → received → closed), receiving goods into Inventory by an event, restock suggestions from the coverage R-9 computes; Steward could then propose purchase orders | recorded 2026-10-01 at the author's request: Inventory has no "order from the supplier" (`CountStock` is a count), so Steward's `stock_to_restock` can say what is short but propose nothing. Amazon (Vendor Central's purchase orders, Seller Central's *Restock Inventory*), Shopify's purchase orders and every ERP treat it as a module of its own | The author's say on its place in the plan; analysed then |
-| **Required attributes per category** — which attributes a product of a category must have (a flag per category, or per attribute definition), held where publishing and the review read it; Steward's `catalogue_gaps` would then report "missing a required attribute", which the spec lists and v1 leaves out | recorded 2026-10-02 at the author's request, while planning S-3a: the concept does not exist in the domain — no `AttributeDefinition` or `Category` says which attributes are required, and `Product.Publish` checks nothing but Archived | A domain decision in Catalog with its own design (where the rule lives, whether it blocks publishing, how the backoffice edits it); then `catalogue_gaps` gains the kind |
 | **Notifications** — telling the shopkeeper (and later the customer) what needs attention without being asked | recorded 2026-10-01 at the author's request, to be analysed when its time comes; Steward's alerts without being asked (with R-10) would ride on it | The author's say |
 | **A product of its own: dashboards built by asking** — an idea, not a phase | recorded 2026-09-27 at the author's suggestion (*"it would be great if Steward could even create them, as you ask for them"* — and then *"wait, that would be a different product; note it"*). *"Show me how clothing returns are doing this month"* → a proposed dashboard of widgets from `P11-7`'s catalogue, with their filters and order → **Approve** → saved. The rule that makes it safe is the project's own: the model **composes widgets from a closed catalogue, each with its tested, typed query**, and never writes a query of its own — it cannot draw a figure that does not exist; a person approves the composition (invariant 12, and the shape of ADR 0019's commands). It turns v3 of the dashboard from a manual builder into a conversation. **Kept apart from Steward and from the phases**: a different product, with its own audience | The dashboard's v1 widgets exist (`P11-7`) and Steward's command pattern is proven (phase 12); then a decision on whether it is a product |
 | **Multi-tenancy** — an architectural decision the suite would force | recorded 2026-09-27, when the configurable dashboard became *a suite product per organisation*. Today there is one shop, by the scale rule, and nothing carries a tenant. A suite — Knowledge for Shopify at Level 2 (`analysis/tendero-suite-shopify.md`), dashboards per organisation — needs every row, index, queue, cache, model budget and audit entry scoped by tenant. The choices to weigh then: **database per tenant**, **schema per tenant**, or **one database with a tenant column and Postgres row-level security**; Elasticsearch an index per tenant or a filter; the identity provider's organisations (Keycloak has them) as the tenant's source; the outbox and the claims queue fair across tenants; the tracking plan's metrics labelled by tenant without a series per customer. Retrofitting it touches every context, which is why it is written down now and decided before the first suite product, not after | The first suite product is decided — the suite analysis's Level 2, or a second organisation to serve |
@@ -1005,6 +1100,9 @@ oversight, and each is a paragraph in some future article.
 | **A storefront that looks like a shop** | the home page and the taxonomy landed 2026-09-04 and the returns promise 2026-09-07; what is left is the editorial imagery, and a delivery promise the code cannot make yet — a rate needs an address | Deliberately after the floor. See below — it is the largest single item here and the only one that is not deferred for scale |
 
 ### A real account, and the menu it earns
+
+**Scheduled on 2026-10-06 as phase 15** (above), by the author; gift vouchers
+stay here, unscheduled.
 
 Recorded 2026-09-04, unscheduled. Today the account page is one screen: who you
 are, sign out, and your orders. A shop people come back to has more, and the

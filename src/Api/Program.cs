@@ -25,6 +25,7 @@ using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.Search.Health;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Ucp;
@@ -68,6 +69,12 @@ builder.Services.AddLexicalSearch(
 // answers every search, and degrades to lexical by itself when a stage is missing
 // or failing. Lexical search above is required; none of this is.
 builder.Services.AddHybridSearch(builder.Configuration);
+
+// The picture model loaded in the background as the API starts, so the first
+// shopper to search with a picture does not wait for it (18.7 s, measured). The
+// API alone: the worker never reads a text and would hold that tower for nothing.
+// Without the model it does nothing.
+builder.Services.AddHostedService<WarmVisualSearchAtStartupWorker>();
 
 // Each stage's health through its own port, and the memory of when it last
 // changed, for the dashboard's search status (R-9, D-7). Private checks: the
@@ -132,10 +139,21 @@ builder.Services.AddRateLimiter(limiter =>
     // by the person when one is signed in, and by the address they call from when
     // nobody is — the only thing an anonymous caller has that is not theirs to choose.
     limiter.AddPolicy(TinoEndpoints.TurnsPerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // And twelve visual searches a minute, by the same client (phase 13a): a
+    // picture or a text embedded by a model on this process's CPU, for anyone
+    // who asks. A budget of its own — a shopper who talked to Tino has not spent
+    // their pictures.
+    limiter.AddPolicy(VisualSearch.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    static string ClientOf(HttpContext http) =>
         http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject is { Length: > 0 } subject
             ? "person:" + subject
-            : "address:" + (http.Connection.RemoteIpAddress?.ToString() ?? "unknown"),
-        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            : "address:" + (http.Connection.RemoteIpAddress?.ToString() ?? "unknown");
 });
 
 // Steward's model profiles (ADR 0053), each on its own. The local one has no

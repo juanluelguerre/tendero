@@ -179,6 +179,37 @@ public sealed class ProposalDisplayTests
         Assert.Equal("Mug", read.Changes[0].Proposed?.In("es"));
     }
 
+    /// <summary>
+    /// A proposal about a picture carries which one (phase 13a), so whoever reviews
+    /// it sees the picture beside the words. One stored before pictures has none.
+    /// </summary>
+    [Fact]
+    public void A_display_may_carry_the_picture_it_is_about_and_an_older_one_reads_with_none()
+    {
+        var display = new ProposalDisplay(
+            LocalizedText.From("en", "Mug"), LocalizedText.From("en", "Alt text"),
+            [new ProposalChange(LocalizedText.From("en", "Alt text · EN"), null, LocalizedText.From("en", "A white mug."))],
+            Image: "9f2c");
+
+        Assert.Equal("9f2c", ProposalDisplay.FromJson(display.ToJson())!.Image);
+        Assert.Null(ProposalDisplay.FromJson("""{"title":{"en":"Mug"},"kind":{"en":"English name"},"changes":[]}""")!.Image);
+        // A blank one is no picture: nothing would be fetched for it.
+        Assert.Null(ProposalDisplay.FromJson("""{"title":{"en":"Mug"},"kind":{"en":"Alt text"},"changes":[],"image":" "}""")!.Image);
+    }
+
+    /// <summary>A change may name the payload's field it is the words of, which is what lets a person correct them; one that names none is read, not rewritten.</summary>
+    [Fact]
+    public void A_change_may_name_the_words_a_person_can_correct()
+    {
+        var display = new ProposalDisplay(LocalizedText.From("en", "Mug"), LocalizedText.From("en", "Alt text"),
+        [
+            new ProposalChange(LocalizedText.From("en", "Alt text · EN"), null, LocalizedText.From("en", "A white mug."), "english"),
+            new ProposalChange(LocalizedText.From("en", "Status"), LocalizedText.From("en", "On sale"), LocalizedText.From("en", "Draft")),
+        ]);
+
+        Assert.Equal(["english", null], ProposalDisplay.FromJson(display.ToJson())!.Changes.Select(change => change.Key));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

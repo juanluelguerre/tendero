@@ -4,7 +4,20 @@
     "name": {
       "es": "Ropa",
       "en": "Clothing"
-    }
+    },
+    "attributes": [
+      {
+        "code": "COLOR",
+        "required": true
+      },
+      "SIZE",
+      "SIZE_RANGE",
+      "GENDER",
+      {
+        "code": "MATERIAL",
+        "required": true
+      }
+    ]
   },
   {
     "code": "FOOTWEAR",
@@ -20,7 +33,10 @@
     "name": {
       "es": "Zapatillas deportivas",
       "en": "Sports shoes"
-    }
+    },
+    "attributes": [
+      "DROP_MM"
+    ]
   },
   {
     "code": "SPORTSWEAR",
@@ -36,14 +52,21 @@
     "name": {
       "es": "Camisetas",
       "en": "Shirts"
-    }
+    },
+    "attributes": [
+      "UV_PROTECTION"
+    ]
   },
   {
     "code": "HOME",
     "name": {
       "es": "Hogar",
       "en": "Home"
-    }
+    },
+    "attributes": [
+      "MATERIAL",
+      "COLOR"
+    ]
   },
   {
     "code": "KITCHEN",
@@ -59,7 +82,13 @@
     "name": {
       "es": "Menaje de cocina",
       "en": "Cookware"
-    }
+    },
+    "attributes": [
+      "PIECES",
+      "DIAMETERS_CM",
+      "INDUCTION",
+      "CAPACITY_L"
+    ]
   },
   {
     "code": "COFFEE_MAKER",
@@ -67,7 +96,16 @@
     "name": {
       "es": "Cafeteras",
       "en": "Coffee makers"
-    }
+    },
+    "attributes": [
+      {
+        "code": "CUPS",
+        "required": true
+      },
+      "POWER_W",
+      "INDUCTION",
+      "CAPACITY_L"
+    ]
   },
   {
     "code": "LIGHTING",
@@ -83,14 +121,37 @@
     "name": {
       "es": "Flexos y lámparas de escritorio",
       "en": "Desk and reading lamps"
-    }
+    },
+    "attributes": [
+      {
+        "code": "COLOUR_TEMPERATURE",
+        "required": true
+      },
+      {
+        "code": "POWER_W",
+        "required": true
+      },
+      "PIECES"
+    ]
   },
   {
     "code": "BAGS",
     "name": {
       "es": "Bolsas y mochilas",
       "en": "Bags and backpacks"
-    }
+    },
+    "attributes": [
+      {
+        "code": "COLOR",
+        "required": true
+      },
+      {
+        "code": "MATERIAL",
+        "required": true
+      },
+      "CAPACITY_L",
+      "LAPTOP_MAX_IN"
+    ]
   },
   {
     "code": "BACKPACK",
@@ -122,7 +183,10 @@
     "name": {
       "es": "Complementos",
       "en": "Accessories"
-    }
+    },
+    "attributes": [
+      "PIECES"
+    ]
   },
   {
     "code": "TABLEWARE",
@@ -130,7 +194,12 @@
     "name": {
       "es": "Mesa y mantel",
       "en": "Tableware and linen"
-    }
+    },
+    "attributes": [
+      "PIECES",
+      "DIAMETERS_CM",
+      "CAPACITY_L"
+    ]
   },
   {
     "code": "KNIVES",
@@ -138,7 +207,13 @@
     "name": {
       "es": "Cuchillos",
       "en": "Knives"
-    }
+    },
+    "attributes": [
+      {
+        "code": "PIECES",
+        "required": true
+      }
+    ]
   },
   {
     "code": "SMALL_APPLIANCE",
@@ -146,7 +221,11 @@
     "name": {
       "es": "Pequeño electrodoméstico",
       "en": "Small appliances"
-    }
+    },
+    "attributes": [
+      "POWER_W",
+      "CAPACITY_L"
+    ]
   },
   {
     "code": "TEXTILES",
@@ -154,7 +233,10 @@
     "name": {
       "es": "Textil de hogar",
       "en": "Home textiles"
-    }
+    },
+    "attributes": [
+      "PIECES"
+    ]
   },
   {
     "code": "STORAGE",
@@ -162,7 +244,12 @@
     "name": {
       "es": "Almacenaje y orden",
       "en": "Storage and tidying"
-    }
+    },
+    "attributes": [
+      "PIECES",
+      "DIAMETERS_CM",
+      "CAPACITY_L"
+    ]
   },
   {
     "code": "BAGS_TOTE",
@@ -178,6 +265,110 @@
     "name": {
       "es": "Equipaje y viaje",
       "en": "Luggage and travel"
-    }
+    },
+    "attributes": [
+      "PIECES"
+    ]
+  },
+  {
+    "code": "FURNITURE",
+    "parent": "HOME",
+    "name": {
+      "es": "Muebles",
+      "en": "Furniture"
+    },
+    "attributes": [
+      {
+        "code": "WIDTH_CM",
+        "required": true
+      },
+      {
+        "code": "DEPTH_CM",
+        "required": true
+      },
+      {
+        "code": "HEIGHT_CM",
+        "required": true
+      }
+    ]
+  },
+  {
+    "code": "SEATING",
+    "parent": "FURNITURE",
+    "name": {
+      "es": "Sillas y sofás",
+      "en": "Chairs and sofas"
+    },
+    "attributes": [
+      {
+        "code": "SEATS",
+        "required": true
+      }
+    ]
+  },
+  {
+    "code": "TABLES",
+    "parent": "FURNITURE",
+    "name": {
+      "es": "Mesas y escritorios",
+      "en": "Tables and desks"
+    },
+    "attributes": [
+      "POWER_W"
+    ]
+  },
+  {
+    "code": "BEDROOM",
+    "parent": "FURNITURE",
+    "name": {
+      "es": "Dormitorio y armarios",
+      "en": "Bedroom and wardrobes"
+    },
+    "attributes": [
+      "PIECES"
+    ]
+  },
+  {
+    "code": "PLANTS",
+    "parent": "HOME",
+    "name": {
+      "es": "Plantas y jardín",
+      "en": "Plants and garden"
+    },
+    "attributes": [
+      "LIGHT_NEEDS",
+      "PET_SAFE",
+      "HEIGHT_CM",
+      "CAPACITY_L",
+      "PIECES",
+      "DIAMETERS_CM"
+    ]
+  },
+  {
+    "code": "DECOR",
+    "parent": "HOME",
+    "name": {
+      "es": "Decoración",
+      "en": "Decoration"
+    },
+    "attributes": [
+      "WIDTH_CM",
+      "HEIGHT_CM",
+      "DIAMETERS_CM"
+    ]
+  },
+  {
+    "code": "BATHROOM",
+    "parent": "HOME",
+    "name": {
+      "es": "Baño",
+      "en": "Bathroom"
+    },
+    "attributes": [
+      "PIECES",
+      "WIDTH_CM",
+      "HEIGHT_CM",
+      "CAPACITY_L"
+    ]
   }
 ]

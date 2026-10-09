@@ -74,7 +74,7 @@ internal sealed class EfPurchasableReader(
                 // language does not leave it in the one it was filled in.
                 product.Name,
                 Label(variant, attributes),
-                (variant.Image ?? product.PrimaryImage?.Id)?.ToString(),
+                product.PictureOf(variant)?.Id.ToString(),
                 variant.Price.Currency,
                 // The order line snapshots it, as it does the name (R-9, D-7), and
                 // its path, so a department's figure reaches everything under it.

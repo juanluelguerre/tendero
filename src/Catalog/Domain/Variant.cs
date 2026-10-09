@@ -43,17 +43,13 @@ public sealed class Variant
 
     public string? TaxClass { get; private set; }
 
-    /// <summary>Its own photo when the variant looks different — colour needs
-    /// one, size does not. Null means "use the product's".</summary>
-    public ImageId? Image { get; private set; }
-
     public VariantStatus Status { get; private set; }
 
     private Variant() { } // EF Core
 
     internal static Variant Create(
         string sku, Money price, IReadOnlyDictionary<string, string> axisValues,
-        string? taxClass = null, ImageId? image = null)
+        string? taxClass = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sku);
         if (price.Amount < 0)
@@ -65,7 +61,6 @@ public sealed class Variant
             Sku = sku.Trim(),
             Price = price,
             TaxClass = taxClass,
-            Image = image,
             Status = VariantStatus.Available
         };
 
@@ -83,8 +78,6 @@ public sealed class Variant
     }
 
     internal void Discontinue() => Status = VariantStatus.Discontinued;
-
-    internal void SetImage(ImageId? image) => Image = image;
 
     /// <summary>
     /// How it is named on an order line: "NAVY_BLUE · 38". It is frozen onto the

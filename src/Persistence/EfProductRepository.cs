@@ -85,15 +85,20 @@ internal sealed class EfProductRepository(TenderoDbContext context)
         // entity is what EF 11's preview cannot compose with its JSON
         // columns. The interpolated values are parameters, not text.
         //
+        // **Accents are folded on both sides** (`unaccent`), as case is: the
+        // author typed "portatil" and the products named "portátil" were not
+        // there. The shop's own search folds them in its analyzer; this list
+        // never passes through it.
+        //
         // A sequential scan, and fine for a laboratory's hundred products;
         // the full catalogue wants a trigram index (the standing backlog).
         var pattern = $"%{Escaped(typed)}%";
         return context.Database.SqlQuery<Guid>(
             $"""
             SELECT p.id AS "Value" FROM catalog.products AS p
-            WHERE p.code ILIKE {pattern} ESCAPE '\'
+            WHERE unaccent(p.code) ILIKE unaccent({pattern}) ESCAPE '\'
                OR p.id::text = {typed.ToLowerInvariant()}
-               OR EXISTS (SELECT 1 FROM jsonb_each_text(p.name) AS n WHERE n.value ILIKE {pattern} ESCAPE '\')
+               OR EXISTS (SELECT 1 FROM jsonb_each_text(p.name) AS n WHERE unaccent(n.value) ILIKE unaccent({pattern}) ESCAPE '\')
             """);
     }
 

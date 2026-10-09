@@ -57,4 +57,11 @@ public static class ClaimExtractors
 
     /// <summary>A generative model behind an OpenAI-compatible endpoint, its answer held to a JSON Schema.</summary>
     public const string Chat = "chat";
+
+    /// <summary>
+    /// The answers written under a picture's reading (phase 13a, I-4): no model
+    /// and no prose — a picture answered a closed question, and code reads the
+    /// answer back.
+    /// </summary>
+    public const string Picture = "picture";
 }

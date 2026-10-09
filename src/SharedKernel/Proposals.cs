@@ -66,6 +66,14 @@ public interface IProposableCommand
     Task<string?> NowAsync(JsonElement payload, CancellationToken cancellationToken = default);
 
     Task<ProposalApplication> ApplyAsync(JsonElement payload, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Whether only a job may propose it, and no conversation: true for a command
+    /// whose subject must be seen to be proposed about — a picture's alt text —
+    /// while the chat that would propose it sees none (phase 13a). Such an entry
+    /// is registered and approved like any other; it is only never a chat's tool.
+    /// </summary>
+    bool OnlyFromAJob => false;
 }
 
 /// <param name="Subject">What the proposal is about, as a value (a product's code).</param>
@@ -99,7 +107,10 @@ public sealed record ProposalSubject(string Subject, object Now, ProposalDisplay
 /// the language they were written in, and a status is words in each language the
 /// shop speaks — never an enum's name (the review of S-4).
 /// </summary>
-public sealed record ProposalChange(LocalizedText Field, LocalizedText? Now, LocalizedText? Proposed)
+/// <param name="Key">The payload's field these words are, when a person may correct
+/// them before approving (phase 13a): "english", "name". A change with no key is
+/// read and not rewritten — a status, a withdrawal. Only a field that is text.</param>
+public sealed record ProposalChange(LocalizedText Field, LocalizedText? Now, LocalizedText? Proposed, string? Key = null)
 {
     /// <summary>Text as written, in the language it was written in; null stays null.</summary>
     public static LocalizedText? Written(string culture, string? text) => text is null ? null : LocalizedText.From(culture, text);
@@ -112,13 +123,18 @@ public sealed record ProposalChange(LocalizedText Field, LocalizedText? Now, Loc
 /// card, the review and the list show a product's name without Assist reading
 /// Catalog (invariant 1) — and show what was proposed, as it was proposed.
 /// </summary>
-public sealed record ProposalDisplay(LocalizedText Title, LocalizedText Kind, IReadOnlyList<ProposalChange> Changes)
+/// <param name="Image">The picture the proposal is about, by the id the shop serves
+/// it under, when it is about one (phase 13a): whoever approves a description has
+/// to see what is described. Assist stores it and never opens it.</param>
+public sealed record ProposalDisplay(
+    LocalizedText Title, LocalizedText Kind, IReadOnlyList<ProposalChange> Changes, string? Image = null)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public string ToJson() => JsonSerializer.Serialize(
         new Stored(Title.Values, Kind.Values,
-            [.. Changes.Select(change => new StoredChange(change.Field.Values, Words(change.Now), Words(change.Proposed)))]),
+            [.. Changes.Select(change => new StoredChange(change.Field.Values, Words(change.Now), Words(change.Proposed), change.Key))],
+            Image),
         Json);
 
     /// <summary>The display a proposal stored, or null when it has none or it
@@ -134,8 +150,11 @@ public sealed record ProposalDisplay(LocalizedText Title, LocalizedText Kind, IR
                 ? new ProposalDisplay(new LocalizedText(stored.Title), new LocalizedText(stored.Kind),
                 [
                     .. (stored.Changes ?? []).Where(change => change.Field is { Count: > 0 })
-                        .Select(change => new ProposalChange(new LocalizedText(change.Field), Read(change.Now), Read(change.Proposed))),
-                ])
+                        .Select(change => new ProposalChange(
+                            new LocalizedText(change.Field), Read(change.Now), Read(change.Proposed),
+                            string.IsNullOrWhiteSpace(change.Key) ? null : change.Key)),
+                ],
+                string.IsNullOrWhiteSpace(stored.Image) ? null : stored.Image)
                 : null;
         }
         catch (JsonException)
@@ -145,10 +164,11 @@ public sealed record ProposalDisplay(LocalizedText Title, LocalizedText Kind, IR
     }
 
     private sealed record Stored(
-        IReadOnlyDictionary<string, string> Title, IReadOnlyDictionary<string, string> Kind, IReadOnlyList<StoredChange>? Changes);
+        IReadOnlyDictionary<string, string> Title, IReadOnlyDictionary<string, string> Kind, IReadOnlyList<StoredChange>? Changes,
+        string? Image = null);
 
     /// <param name="Now">Words per language — or, in the first displays, plain text.</param>
-    private sealed record StoredChange(IReadOnlyDictionary<string, string> Field, JsonElement? Now, JsonElement? Proposed);
+    private sealed record StoredChange(IReadOnlyDictionary<string, string> Field, JsonElement? Now, JsonElement? Proposed, string? Key = null);
 
     private static JsonElement? Words(LocalizedText? text) =>
         text is null ? null : JsonSerializer.SerializeToElement(text.Values, Json);
@@ -185,6 +205,9 @@ public abstract class ProposableCommand<TPayload, TCommand, TResult>(IServicePro
     public abstract LocalizedText Label { get; }
 
     public JsonElement PayloadSchema { get; } = ArgumentSchemas.Of(typeof(TPayload));
+
+    /// <summary>Anybody's to propose unless the entry says its subject must be seen (<see cref="IProposableCommand.OnlyFromAJob"/>).</summary>
+    public virtual bool OnlyFromAJob => false;
 
     protected abstract TCommand ToCommand(TPayload payload);
 

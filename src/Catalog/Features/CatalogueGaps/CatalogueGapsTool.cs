@@ -1,17 +1,26 @@
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Catalog.Features.CatalogueGaps;
 
 public sealed record CatalogueGapsArguments(
-    [property: Description("MissingName, MissingImage, MissingImageAlt or DraftWaiting.")] CatalogueGap Kind,
+    [property: Description("MissingName, MissingImage, MissingImageAlt, DraftWaiting or MissingRequiredAttribute.")] CatalogueGap Kind,
     [property: Description("For MissingName and MissingImageAlt: the language that is missing, es or en.")] string? Culture = null,
     [property: Description("The language to name the products in: es or en.")] string? NamesIn = null);
 
 public sealed record Gaps(string Kind, string? Culture, int Total, IReadOnlyList<GapItem> Items);
 
 /// <param name="ProductId">What a translation proposal needs.</param>
-public sealed record GapItem(string ProductId, string Code, string Name);
+/// <param name="Lacks">
+/// For MissingRequiredAttribute: the attributes it lacks, by their labels. Null
+/// for the other kinds, and then **not written at all**: a model reads every
+/// field of every row, and fifty rows of <c>"lacks":null</c> were 350 tokens of
+/// an 8,192 window — measured, on a read that had already overflowed it once.
+/// </param>
+public sealed record GapItem(
+    string ProductId, string Code, string Name,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<string>? Lacks = null);
 
 /// <summary><c>catalogue_gaps</c> (phase 12, S-3b): what the catalogue lacks, fifty at most with the total.</summary>
 public sealed class CatalogueGapsTool(IQueryDispatcher queries) : ReadTool<CatalogueGapsArguments, Gaps>(queries)
@@ -30,14 +39,24 @@ public sealed class CatalogueGapsTool(IQueryDispatcher queries) : ReadTool<Catal
             arguments.Kind, arguments.Culture, ReadLimits.MaxRows, arguments.NamesIn ?? CultureNegotiation.Default), cancellationToken);
 
         var data = new Gaps(gaps.Kind.ToString(), gaps.Culture, gaps.Total,
-            [.. gaps.Rows.Select(row => new GapItem(row.ProductId, row.Code, row.Name))]);
+            [.. gaps.Rows.Select(row => new GapItem(
+                row.ProductId, row.Code, row.Name, gaps.Kind == CatalogueGap.MissingRequiredAttribute ? row.Lacks : null))]);
         return (data, data.Items.Count, gaps.Total);
     }
 
+    /// <summary>The same table for every kind; the one kind that is about several things at once says which, in a third column.</summary>
     protected override IReadOnlyList<ResultTable> Tables(Gaps data) =>
-    [
-        ResultTable.Of("catalogueGaps",
-            [new("code", CellKind.Text), new("name", CellKind.Text)],
-            data.Items.Select(row => (IReadOnlyList<object?>)[row.Code, row.Name])),
-    ];
+        data.Kind == nameof(CatalogueGap.MissingRequiredAttribute)
+            ?
+            [
+                ResultTable.Of("catalogueGaps",
+                    [new("code", CellKind.Text), new("name", CellKind.Text), new("lacks", CellKind.Text)],
+                    data.Items.Select(row => (IReadOnlyList<object?>)[row.Code, row.Name, string.Join(", ", row.Lacks ?? [])])),
+            ]
+            :
+            [
+                ResultTable.Of("catalogueGaps",
+                    [new("code", CellKind.Text), new("name", CellKind.Text)],
+                    data.Items.Select(row => (IReadOnlyList<object?>)[row.Code, row.Name])),
+            ];
 }

@@ -16,7 +16,7 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AgentTools } from '@tendero/shared-agent';
 import { CultureStore } from '@tendero/shared-i18n';
-import { Icon, ThemeStore } from '@tendero/shared-ui';
+import { followsMedia, Icon, ThemeStore } from '@tendero/shared-ui';
 import { filter, map } from 'rxjs';
 import { StorefrontTools } from '../agent/storefront-tools';
 import { CartStore } from '../cart/cart.store';
@@ -26,6 +26,8 @@ import { ListingParam } from '../listing/listing-filters';
 import { ShopLinks } from '../shop-links';
 import { TinoDock } from '../tino/tino-dock/tino-dock';
 import { TinoDoorStore } from '../tino/tino-door.store';
+import { VisualSearchPanel } from '../visual-search/visual-search-panel/visual-search-panel';
+import { VisualSearchStore } from '../visual-search/visual-search.store';
 import { CompareTray } from '../compare/compare-tray/compare-tray';
 import { ConsentBanner } from './consent-banner/consent-banner';
 import { ShopMenu } from './shop-menu/shop-menu';
@@ -55,6 +57,7 @@ import { AccountMenu } from './account-menu/account-menu';
     ShopMenu,
     AccountMenu,
     TinoDock,
+    VisualSearchPanel,
     Icon,
     NgOptimizedImage,
   ],
@@ -90,6 +93,9 @@ export class Shell {
 
   /** Tino's door: whether its panel is open, and whether Tino can be asked at all. */
   protected readonly tino = inject(TinoDoorStore);
+  protected readonly visual = inject(VisualSearchStore);
+  /** From the tablet turn the search box is the header row's; below it, the phone's own row. Which of the two is showing. */
+  protected readonly wideEnoughForTheRow = followsMedia('(min-width: 48rem)');
 
   private readonly agent = inject(AgentTools);
   private readonly tools = inject(StorefrontTools);

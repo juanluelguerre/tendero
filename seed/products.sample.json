@@ -1135,8 +1135,7 @@
     ],
     "attributes": {
       "material": "acero inoxidable",
-      "potencia_w": "900",
-      "piezas": "2"
+      "potencia_w": "900"
     },
     "available_from": "2026-05-06"
   },
@@ -1860,14 +1859,51 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0711.webp"
+      {
+        "file": "images/B13BAG0711.webp",
+        "shows": {
+          "color": "oliva"
+        }
+      },
+      {
+        "file": "images/B13BAG0711-BLACK.webp",
+        "shows": {
+          "color": "negro"
+        }
+      },
+      {
+        "file": "images/B13BAG0711-NAVY_BLUE.webp",
+        "shows": {
+          "color": "azul marino"
+        }
+      },
+      "images/B13BAG0711-BACK.webp"
     ],
     "attributes": {
-      "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "20"
     },
-    "available_from": "2026-02-26"
+    "available_from": "2026-02-26",
+    "variants": [
+      {
+        "sku": "OLIVE",
+        "attributes": {
+          "color": "oliva"
+        }
+      },
+      {
+        "sku": "BLACK",
+        "attributes": {
+          "color": "negro"
+        }
+      },
+      {
+        "sku": "NAVY",
+        "attributes": {
+          "color": "azul marino"
+        }
+      }
+    ]
   },
   {
     "item_id": "B13BAG0712",
@@ -2610,5 +2646,546 @@
       "piezas": "3"
     },
     "available_from": "2025-11-13"
+  },
+  {
+    "item_id": "B16FUR1301",
+    "name": {
+      "es": "Silla de comedor de roble Sobremesa",
+      "en": "Sobremesa oak dining chair"
+    },
+    "description": {
+      "es": "Silla de comedor de roble macizo con asiento curvado y respaldo de lamas. Soporta hasta 120 kg y llega montada.",
+      "en": "Solid oak dining chair with a curved seat and a slatted back. It holds up to 120 kg and arrives assembled."
+    },
+    "brand": "Arbor",
+    "product_type": "SEATING",
+    "price": {
+      "amount": 129.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1301.webp"
+    ],
+    "attributes": {
+      "material": "roble",
+      "ancho_cm": "46",
+      "fondo_cm": "52",
+      "alto_cm": "82",
+      "plazas": "1"
+    },
+    "available_from": "2026-08-24"
+  },
+  {
+    "item_id": "B16FUR1302",
+    "name": {
+      "es": "Silla de oficina ergonómica Postura",
+      "en": "Postura ergonomic office chair"
+    },
+    "description": {
+      "es": "Silla de oficina con respaldo de malla, apoyo lumbar regulable y reposabrazos ajustables en altura. Base de aluminio con cinco ruedas.",
+      "en": "Office chair with a mesh back, adjustable lumbar support and height-adjustable armrests. Aluminium base on five castors."
+    },
+    "brand": "Arbor",
+    "product_type": "SEATING",
+    "price": {
+      "amount": 289.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1302.webp"
+    ],
+    "attributes": {
+      "material": "malla sintética",
+      "color": "negro",
+      "ancho_cm": "66",
+      "fondo_cm": "64",
+      "alto_cm": "118",
+      "plazas": "1"
+    },
+    "available_from": "2026-08-24"
+  },
+  {
+    "item_id": "B16FUR1303",
+    "name": {
+      "es": "Sofá de dos plazas Tertulia",
+      "en": "Tertulia two-seater sofa"
+    },
+    "description": {
+      "es": "Sofá de dos plazas tapizado en tela desenfundable y lavable a 30 grados, con patas de roble. Pasa por una puerta de 70 cm.",
+      "en": "Two-seater sofa upholstered in a removable cover that washes at 30 degrees, on oak legs. It fits through a 70 cm door."
+    },
+    "brand": "Arbor",
+    "product_type": "SEATING",
+    "price": {
+      "amount": 749.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1303.webp"
+    ],
+    "attributes": {
+      "material": "tela de tapicería",
+      "color": "gris",
+      "ancho_cm": "168",
+      "fondo_cm": "88",
+      "alto_cm": "80",
+      "plazas": "2"
+    },
+    "available_from": "2026-08-26"
+  },
+  {
+    "item_id": "B16FUR1304",
+    "name": {
+      "es": "Taburete alto de pino",
+      "en": "Tall pine bar stool"
+    },
+    "description": {
+      "es": "Taburete de 65 cm de altura de asiento en pino macizo sin tratar, con reposapiés. Para una barra o una isla de cocina de 90 cm.",
+      "en": "A stool with a 65 cm seat height in untreated solid pine, with a footrest. For a bar or a 90 cm kitchen island."
+    },
+    "brand": "Arbor",
+    "product_type": "SEATING",
+    "price": {
+      "amount": 59.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1304.webp"
+    ],
+    "attributes": {
+      "material": "pino",
+      "ancho_cm": "36",
+      "fondo_cm": "36",
+      "alto_cm": "65",
+      "plazas": "1"
+    },
+    "available_from": "2026-08-26"
+  },
+  {
+    "item_id": "B16FUR1305",
+    "name": {
+      "es": "Mesa de comedor extensible de roble",
+      "en": "Extendable oak dining table"
+    },
+    "description": {
+      "es": "Mesa de comedor de roble que pasa de 140 a 200 cm con un tablero central guardado dentro. Sienta de seis a ocho personas.",
+      "en": "Oak dining table that goes from 140 to 200 cm with a centre leaf stored inside. It seats six to eight."
+    },
+    "brand": "Arbor",
+    "product_type": "TABLES",
+    "price": {
+      "amount": 549.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1305.webp"
+    ],
+    "attributes": {
+      "material": "roble",
+      "ancho_cm": "140",
+      "fondo_cm": "90",
+      "alto_cm": "75"
+    },
+    "available_from": "2026-08-28"
+  },
+  {
+    "item_id": "B16FUR1306",
+    "name": {
+      "es": "Escritorio elevable eléctrico Vertical",
+      "en": "Vertical electric standing desk"
+    },
+    "description": {
+      "es": "Escritorio regulable en altura de 72 a 120 cm con motor eléctrico y cuatro posiciones memorizadas. Tablero de bambú de 140 por 70 cm.",
+      "en": "Height-adjustable desk from 72 to 120 cm with an electric motor and four memory positions. A 140 by 70 cm bamboo top."
+    },
+    "brand": "Arbor",
+    "product_type": "TABLES",
+    "price": {
+      "amount": 399.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1306.webp"
+    ],
+    "attributes": {
+      "material": "bambú",
+      "ancho_cm": "140",
+      "fondo_cm": "70",
+      "alto_cm": "120",
+      "potencia_w": "180"
+    },
+    "available_from": "2026-08-28"
+  },
+  {
+    "item_id": "B16FUR1307",
+    "name": {
+      "es": "Mesa auxiliar redonda de acero",
+      "en": "Round steel side table"
+    },
+    "description": {
+      "es": "Mesa auxiliar redonda de 45 cm de diámetro en acero al carbono lacado, con bandeja desmontable para servir.",
+      "en": "A round 45 cm side table in lacquered carbon steel, with a tray top that lifts off to serve."
+    },
+    "brand": "Arbor",
+    "product_type": "TABLES",
+    "price": {
+      "amount": 89.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1307.webp"
+    ],
+    "attributes": {
+      "material": "acero al carbono",
+      "color": "negro",
+      "ancho_cm": "45",
+      "fondo_cm": "45",
+      "alto_cm": "50"
+    },
+    "available_from": "2026-09-01"
+  },
+  {
+    "item_id": "B16FUR1308",
+    "name": {
+      "es": "Mesa de centro de roble con balda",
+      "en": "Oak coffee table with shelf"
+    },
+    "description": {
+      "es": "Mesa de centro de roble de 110 por 60 cm con una balda inferior para revistas y mandos.",
+      "en": "A 110 by 60 cm oak coffee table with a lower shelf for magazines and remotes."
+    },
+    "brand": "Arbor",
+    "product_type": "TABLES",
+    "price": {
+      "amount": 199.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1308.webp"
+    ],
+    "attributes": {
+      "material": "roble",
+      "ancho_cm": "110",
+      "fondo_cm": "60",
+      "alto_cm": "42"
+    },
+    "available_from": "2026-09-01"
+  },
+  {
+    "item_id": "B16FUR1309",
+    "name": {
+      "es": "Cama de matrimonio de roble 150 x 190",
+      "en": "Oak double bed frame, 150 by 190"
+    },
+    "description": {
+      "es": "Estructura de cama de roble para colchón de 150 por 190 cm, con somier de láminas incluido y cabecero liso. El colchón no va incluido.",
+      "en": "Oak bed frame for a 150 by 190 cm mattress, with a slatted base included and a plain headboard. The mattress is not included."
+    },
+    "brand": "Arbor",
+    "product_type": "BEDROOM",
+    "price": {
+      "amount": 459.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1309.webp"
+    ],
+    "attributes": {
+      "material": "roble",
+      "ancho_cm": "160",
+      "fondo_cm": "200",
+      "alto_cm": "95"
+    },
+    "available_from": "2026-09-03"
+  },
+  {
+    "item_id": "B16FUR1310",
+    "name": {
+      "es": "Armario de dos puertas de pino",
+      "en": "Two-door pine wardrobe"
+    },
+    "description": {
+      "es": "Armario de pino de 100 cm de ancho con dos puertas batientes, barra para colgar y una balda superior.",
+      "en": "A 100 cm wide pine wardrobe with two hinged doors, a hanging rail and a top shelf."
+    },
+    "brand": "Arbor",
+    "product_type": "BEDROOM",
+    "price": {
+      "amount": 379.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1310.webp"
+    ],
+    "attributes": {
+      "material": "pino",
+      "ancho_cm": "100",
+      "fondo_cm": "58",
+      "alto_cm": "190"
+    },
+    "available_from": "2026-09-03"
+  },
+  {
+    "item_id": "B16FUR1311",
+    "name": {
+      "es": "Mesilla de noche de roble con cajón",
+      "en": "Oak bedside table with drawer"
+    },
+    "description": {
+      "es": "Mesilla de noche de roble con un cajón de cierre suave y un hueco abierto debajo.",
+      "en": "Oak bedside table with one soft-close drawer and an open shelf underneath."
+    },
+    "brand": "Arbor",
+    "product_type": "BEDROOM",
+    "price": {
+      "amount": 119.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1311.webp"
+    ],
+    "attributes": {
+      "material": "roble",
+      "ancho_cm": "45",
+      "fondo_cm": "38",
+      "alto_cm": "50"
+    },
+    "available_from": "2026-09-05"
+  },
+  {
+    "item_id": "B16FUR1312",
+    "name": {
+      "es": "Cómoda de cuatro cajones de pino",
+      "en": "Four-drawer pine chest"
+    },
+    "description": {
+      "es": "Cómoda de pino con cuatro cajones de guías metálicas y anclaje a la pared incluido.",
+      "en": "Pine chest with four drawers on metal runners, and a wall anchor included."
+    },
+    "brand": "Arbor",
+    "product_type": "BEDROOM",
+    "price": {
+      "amount": 289.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16FUR1312.webp"
+    ],
+    "attributes": {
+      "material": "pino",
+      "ancho_cm": "80",
+      "fondo_cm": "45",
+      "alto_cm": "98"
+    },
+    "available_from": "2026-09-05"
+  },
+  {
+    "item_id": "B16PLA1401",
+    "name": {
+      "es": "Monstera deliciosa en maceta de 17 cm",
+      "en": "Monstera deliciosa in a 17 cm pot"
+    },
+    "description": {
+      "es": "Monstera deliciosa de unos 60 cm de altura en maceta de 17 cm. Quiere luz indirecta y un riego a la semana. Es tóxica para perros y gatos.",
+      "en": "A monstera deliciosa about 60 cm tall in a 17 cm pot. It wants indirect light and one watering a week. It is toxic to dogs and cats."
+    },
+    "brand": "Verdor",
+    "product_type": "PLANTS",
+    "price": {
+      "amount": 29.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16PLA1401.webp"
+    ],
+    "attributes": {
+      "luz": "luz indirecta",
+      "apta_mascotas": "false",
+      "alto_cm": "60"
+    },
+    "available_from": "2026-09-08"
+  },
+  {
+    "item_id": "B16PLA1402",
+    "name": {
+      "es": "Olivo en maceta de terraza",
+      "en": "Potted patio olive tree"
+    },
+    "description": {
+      "es": "Olivo de unos 120 cm de altura para terraza o balcón. Necesita sol directo, aguanta la sequía y no es tóxico para mascotas.",
+      "en": "An olive tree about 120 cm tall for a terrace or a balcony. It needs full sun, stands drought and is not toxic to pets."
+    },
+    "brand": "Verdor",
+    "product_type": "PLANTS",
+    "price": {
+      "amount": 69.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16PLA1402.webp"
+    ],
+    "attributes": {
+      "luz": "sol directo",
+      "apta_mascotas": "true",
+      "alto_cm": "120"
+    },
+    "available_from": "2026-09-08"
+  },
+  {
+    "item_id": "B16PLA1403",
+    "name": {
+      "es": "Juego de 3 macetas de barro cocido",
+      "en": "Set of 3 terracotta pots"
+    },
+    "description": {
+      "es": "Tres macetas de barro cocido de 14, 18 y 22 cm de diámetro, con agujero de drenaje y plato.",
+      "en": "Three terracotta pots of 14, 18 and 22 cm in diameter, each with a drainage hole and a saucer."
+    },
+    "brand": "Verdor",
+    "product_type": "PLANTS",
+    "price": {
+      "amount": 34.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16PLA1403.webp"
+    ],
+    "attributes": {
+      "material": "barro cocido",
+      "color": "terracota",
+      "piezas": "3",
+      "diametros_cm": "14, 18, 22"
+    },
+    "available_from": "2026-09-10"
+  },
+  {
+    "item_id": "B16PLA1404",
+    "name": {
+      "es": "Regadera de acero de 5 litros",
+      "en": "5 litre steel watering can"
+    },
+    "description": {
+      "es": "Regadera de 5 litros de acero inoxidable con alcachofa desmontable y pico largo para macetas colgantes.",
+      "en": "A 5 litre stainless steel watering can with a removable rose and a long spout for hanging pots."
+    },
+    "brand": "Verdor",
+    "product_type": "PLANTS",
+    "price": {
+      "amount": 24.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16PLA1404.webp"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "capacidad_l": "5"
+    },
+    "available_from": "2026-09-10"
+  },
+  {
+    "item_id": "B16DEC1501",
+    "name": {
+      "es": "Espejo de pared redondo de 60 cm",
+      "en": "Round wall mirror, 60 cm"
+    },
+    "description": {
+      "es": "Espejo redondo de 60 cm de diámetro con marco fino de aluminio negro y colgador oculto.",
+      "en": "A round 60 cm mirror with a thin black aluminium frame and a hidden hanger."
+    },
+    "brand": "Barro",
+    "product_type": "DECOR",
+    "price": {
+      "amount": 79.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16DEC1501.webp"
+    ],
+    "attributes": {
+      "material": "aluminio",
+      "color": "negro",
+      "diametros_cm": "60"
+    },
+    "available_from": "2026-09-12"
+  },
+  {
+    "item_id": "B16DEC1502",
+    "name": {
+      "es": "Alfombra de lana tejida a mano 160 x 230",
+      "en": "Hand-woven wool rug, 160 by 230"
+    },
+    "description": {
+      "es": "Alfombra de lana tejida a mano de 160 por 230 cm, de pelo corto, para salón o dormitorio. Se limpia con aspirador.",
+      "en": "A hand-woven wool rug, 160 by 230 cm, short pile, for a living room or a bedroom. It cleans with a vacuum."
+    },
+    "brand": "Lanar",
+    "product_type": "DECOR",
+    "price": {
+      "amount": 249.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16DEC1502.webp"
+    ],
+    "attributes": {
+      "material": "lana",
+      "color": "crema",
+      "ancho_cm": "160",
+      "alto_cm": "230"
+    },
+    "available_from": "2026-09-12"
+  },
+  {
+    "item_id": "B16BAT1601",
+    "name": {
+      "es": "Juego de 4 toallas de algodón",
+      "en": "Set of 4 cotton towels"
+    },
+    "description": {
+      "es": "Dos toallas de baño de 70 por 140 cm y dos de lavabo de 50 por 100 cm, de algodón de 500 gramos.",
+      "en": "Two 70 by 140 cm bath towels and two 50 by 100 cm hand towels, in 500 gram cotton."
+    },
+    "brand": "Lanar",
+    "product_type": "BATHROOM",
+    "price": {
+      "amount": 49.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16BAT1601.webp"
+    ],
+    "attributes": {
+      "material": "algodón",
+      "color": "blanco",
+      "piezas": "4"
+    },
+    "available_from": "2026-09-15"
+  },
+  {
+    "item_id": "B16BAT1602",
+    "name": {
+      "es": "Estantería de baño de bambú de 3 baldas",
+      "en": "Three-shelf bamboo bathroom rack"
+    },
+    "description": {
+      "es": "Estantería de bambú de tres baldas para el baño, de 36 cm de ancho y 80 de alto, tratada contra la humedad.",
+      "en": "A three-shelf bamboo rack for the bathroom, 36 cm wide and 80 tall, treated against damp."
+    },
+    "brand": "Barro",
+    "product_type": "BATHROOM",
+    "price": {
+      "amount": 44.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B16BAT1602.webp"
+    ],
+    "attributes": {
+      "material": "bambú",
+      "ancho_cm": "36",
+      "alto_cm": "80"
+    },
+    "available_from": "2026-09-15"
   }
 ]

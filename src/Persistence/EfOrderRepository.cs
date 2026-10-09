@@ -52,14 +52,15 @@ internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
             // every order placed within a minute or so; its end is random, and
             // tells them apart. The cast reaches the Guid under OrderId and becomes
             // `id::text LIKE '01a0e%'`. Name and city are read out of the address's
-            // JSON and matched anywhere, ignoring case.
+            // JSON and matched anywhere, ignoring case and accents: "gomez" is
+            // how Gómez is searched for.
             var id = text.ToLowerInvariant();
             var anywhere = $"%{Escaped(text)}%";
             matching = matching.Where(order =>
                 ((Guid)(object)order.Id).ToString().StartsWith(id)
                 || ((Guid)(object)order.Id).ToString().EndsWith(id)
-                || EF.Functions.ILike(order.ShippingAddress.RecipientName, anywhere, LikeEscape)
-                || EF.Functions.ILike(order.ShippingAddress.City, anywhere, LikeEscape));
+                || EF.Functions.ILike(EF.Functions.Unaccent(order.ShippingAddress.RecipientName), EF.Functions.Unaccent(anywhere), LikeEscape)
+                || EF.Functions.ILike(EF.Functions.Unaccent(order.ShippingAddress.City), EF.Functions.Unaccent(anywhere), LikeEscape));
         }
 
         var counts = await matching

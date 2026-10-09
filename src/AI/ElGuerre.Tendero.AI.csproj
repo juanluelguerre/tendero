@@ -17,6 +17,12 @@
     <PackageReference Include="Microsoft.Extensions.AI" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
     <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" />
+    <!-- A picture is decoded and written again as PNG before a model is sent it
+         (Chat/Pictures.cs, phase 13a): the store keeps WebP and the model server
+         does not decode it. The Linux assets are named for the reason
+         Directory.Packages.props gives: without them CI throws on the first call. -->
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
   </ItemGroup>
 
   <ItemGroup>

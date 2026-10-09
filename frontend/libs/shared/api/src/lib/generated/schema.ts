@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/steward/proposals/{id}/approve-edited": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ApproveEditedProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/steward/proposals/reject": {
         parameters: {
             query?: never;
@@ -174,6 +190,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["RejectProposals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/steward/alt-text/propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProposeAltText"];
         delete?: never;
         options?: never;
         head?: never;
@@ -205,6 +237,38 @@ export interface paths {
         };
         get?: never;
         put: operations["SetProductTranslation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/products/{id}/images/{imageId}/shows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetImageShows"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/products/{id}/images/{imageId}/alt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetImageAltText"];
         post?: never;
         delete?: never;
         options?: never;
@@ -516,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/knowledge/pictures/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReadPictures"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/knowledge/specs": {
         parameters: {
             query?: never;
@@ -526,6 +606,38 @@ export interface paths {
         get: operations["GetProductSpecs"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/knowledge/picture-doubts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListPictureDoubts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/knowledge/picture-doubts/{id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DecidePictureDoubt"];
         delete?: never;
         options?: never;
         head?: never;
@@ -780,6 +892,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["SearchProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/pictures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SearchPicturesByText"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/by-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SearchByImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/by-image/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetVisualSearchAvailability"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1463,6 +1623,10 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /** @enum {unknown} */
+        AloneReason: "WeakSupport" | "ContradictsTheCatalogue" | "ReadFromAPicture" | null;
+        /** @enum {unknown} */
+        AltTextStatus: "Ran" | "NothingToDescribe" | "NoModel";
         AlternateSlug: {
             culture: string;
             slug: string;
@@ -1489,6 +1653,11 @@ export interface components {
         };
         ApproveClaimsRequest: {
             ids: null | string[];
+        };
+        ApproveEditedProposalRequest: {
+            edits: {
+                [key: string]: string;
+            };
         };
         ApproveProposalsRequest: {
             ids: string[];
@@ -1560,7 +1729,7 @@ export interface components {
             searches: components["schemas"]["PastSearch"][];
         };
         /** @enum {unknown} */
-        BulkApprovalOutcome: "Approved" | "WeakSupport" | "NotWaiting" | "NotFound";
+        BulkApprovalOutcome: "Approved" | "WeakSupport" | "ReadFromAPicture" | "ContradictsTheCatalogue" | "NotWaiting" | "NotFound";
         /** @enum {unknown} */
         CampaignChange: "Created" | "Updated" | "Scheduled" | "Unscheduled" | "Ended" | "Unchanged" | "NotFound" | "AlreadyExists" | "UnknownPromotion" | "UnknownImage" | "WindowClosed" | "NotEditable" | "NotAllowed";
         CampaignChangeResponse: {
@@ -1655,8 +1824,13 @@ export interface components {
             expiresAt: string;
             lines: components["schemas"]["CartLineView"][];
         };
+        CatalogueContradiction: {
+            attributeCode: string;
+            claimed: string;
+            held: string;
+        };
         /** @enum {unknown} */
-        CatalogueGap: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting";
+        CatalogueGap: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting" | "MissingRequiredAttribute";
         CatalogueGaps: {
             kind: components["schemas"]["CatalogueGap"];
             culture: null | string;
@@ -1738,6 +1912,9 @@ export interface components {
             /** Format: date-time */
             proposedAt: string;
             isWeak: boolean;
+            picture: null | components["schemas"]["PictureForReview"];
+            decidedAlone: null | components["schemas"]["AloneReason"];
+            contradicts: null | components["schemas"]["CatalogueContradiction"];
         };
         ClaimSupportCount: {
             support: components["schemas"]["ClaimSupportFilter"];
@@ -1782,12 +1959,19 @@ export interface components {
         };
         /** @enum {unknown} */
         DashboardPeriod: "Day" | "Week" | "Month";
+        DecidePictureDoubtRequest: {
+            decision: components["schemas"]["PictureDoubtDecision"];
+        };
+        DecidePictureDoubtResponse: {
+            doubtId: string;
+            decision: components["schemas"]["PictureDoubtDecision"];
+        };
         DecideReturnRequest: {
             decision: components["schemas"]["ReturnDecision"];
             reason: null | string;
         };
         /** @enum {unknown} */
-        DecisionOutcome: "Applied" | "Failed" | "Stale" | "Rejected" | "NotFound" | "NotWaiting";
+        DecisionOutcome: "Applied" | "Failed" | "Stale" | "Rejected" | "NotFound" | "NotWaiting" | "Invalid";
         DefineVariantsRequest: {
             axes: components["schemas"]["VariantAxisRequest"][];
             skuPrefix: null | string;
@@ -1827,12 +2011,28 @@ export interface components {
             code: string;
             name: string;
             status: components["schemas"]["ProductStatus"];
+            lacks: string[];
         };
         HistorySettingsRequest: {
             enabled: boolean;
         };
+        HttpValidationProblemDetails: {
+            type?: null | string;
+            title?: null | string;
+            /** Format: int32 */
+            status?: null | number;
+            detail?: null | string;
+            instance?: null | string;
+            errors?: {
+                [key: string]: string[];
+            };
+        };
         /** Format: binary */
         IFormFile: string;
+        /** @enum {unknown} */
+        ImageAltOutcome: "Described" | "Unchanged" | "NoSuchImage" | "Archived" | "NotFound";
+        /** @enum {unknown} */
+        ImageShowsOutcome: "Shown" | "Unchanged" | "NoSuchImage" | "NotSold" | "Archived" | "NotFound";
         ImportProductsCommand: {
             source: string;
         };
@@ -1947,6 +2147,10 @@ export interface components {
         MergeHistoryRequest: {
             views: null | components["schemas"]["ViewedProduct"][];
             searches: null | components["schemas"]["PastSearch"][];
+        };
+        MissingAttributeView: {
+            code: string;
+            label: string;
         };
         MoveOrderRequest: {
             move: components["schemas"]["OrderMove"];
@@ -2123,6 +2327,44 @@ export interface components {
         };
         /** @enum {unknown} */
         PerformanceRanking: "Best" | "Worst";
+        PictureDoubtConflict: {
+            title: string;
+            detail: string;
+        };
+        /** @enum {unknown} */
+        PictureDoubtDecision: "PictureIsFine" | "ReplaceThePicture" | "BelongsToAnotherVariant";
+        PictureDoubtView: {
+            doubtId: string;
+            productId: string;
+            imageId: string;
+            attributeCode: string;
+            seen: string;
+            seenLabel: string;
+            held: string;
+            heldLabel: string;
+            /** Format: double */
+            confidence: number;
+            readBy: string;
+            /** Format: date-time */
+            raisedAt: string;
+            seenOnAnotherVariant: boolean;
+        };
+        PictureDoubtsPage: {
+            items: components["schemas"]["PictureDoubtView"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+        };
+        PictureForReview: {
+            imageId: string;
+            readBy: string;
+            promptVersion: string;
+        };
+        /** @enum {unknown} */
+        PictureReadingStatus: "Ran" | "NothingToRead" | "NoModel";
         PlaceOrderRequest: {
             shippingAddress: components["schemas"]["AddressRequest"];
             shippingOptionCode: string;
@@ -2219,6 +2461,9 @@ export interface components {
             missingCultures: string[];
             /** Format: date-time */
             updatedAt: string;
+            images: components["schemas"]["ReviewedImage"][];
+            axes: components["schemas"]["ReviewedAxis"][];
+            missingRequired: components["schemas"]["MissingAttributeView"][];
         };
         ProductImageView: {
             imageId: string;
@@ -2290,6 +2535,7 @@ export interface components {
             field: string;
             now: null | string;
             proposed: null | string;
+            key?: null | string;
         };
         ProposalDecisionView: {
             id: string;
@@ -2313,6 +2559,8 @@ export interface components {
             conversationId: null | string;
             traceId: null | string;
             askedBy: string;
+            /** @default Steward */
+            proposer: string;
         };
         /** @enum {unknown} */
         ProposalStatus: "Proposed" | "Approved" | "Applied" | "Failed" | "Rejected" | "Stale";
@@ -2333,6 +2581,9 @@ export interface components {
             decidedAt: null | string;
             result: null | string;
             provenance: components["schemas"]["ProposalProvenanceView"];
+            image?: null | string;
+            /** @default false */
+            edited: boolean;
         };
         ProposalsPage: {
             items: components["schemas"]["ProposalView"][];
@@ -2343,6 +2594,18 @@ export interface components {
             /** Format: int32 */
             pageSize: number;
             counts: components["schemas"]["ProposalFilterCount"][];
+        };
+        ProposeAltTextRequest: {
+            /** Format: int32 */
+            count: null | number;
+        };
+        ProposeAltTextResult: {
+            status: components["schemas"]["AltTextStatus"];
+            proposals: string[];
+            /** Format: int32 */
+            skipped: number;
+            /** Format: int32 */
+            failed: number;
         };
         /** @enum {unknown} */
         PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
@@ -2432,6 +2695,19 @@ export interface components {
             /** Format: int32 */
             days: number;
             items: components["schemas"]["RankedProduct"][];
+        };
+        ReadPicturesRequest: {
+            /** Format: int32 */
+            count: null | number;
+        };
+        ReadPicturesResult: {
+            status: components["schemas"]["PictureReadingStatus"];
+            /** Format: int32 */
+            read: number;
+            /** Format: int32 */
+            skipped: number;
+            /** Format: int32 */
+            failed: number;
         };
         Reason: {
             text: string;
@@ -2607,7 +2883,25 @@ export interface components {
             outcome: components["schemas"]["ReviewOutcome"];
         };
         /** @enum {unknown} */
-        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "NotFound";
+        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "ReadFromAPicture" | "ContradictsTheCatalogue" | "NotFound";
+        ReviewedAxis: {
+            code: string;
+            label: string;
+            options: components["schemas"]["ReviewedOption"][];
+        };
+        ReviewedImage: {
+            id: string;
+            alt: {
+                [key: string]: string;
+            };
+            shows: {
+                [key: string]: string;
+            };
+        };
+        ReviewedOption: {
+            code: string;
+            label: string;
+        };
         SalesFigures: {
             /** Format: double */
             revenue: number;
@@ -2729,6 +3023,33 @@ export interface components {
         SetCartLineRequest: {
             /** Format: int32 */
             quantity: number;
+        };
+        SetImageAltTextConflict: {
+            title: string;
+            detail: string;
+        };
+        SetImageAltTextRequest: {
+            es: string;
+            en: string;
+        };
+        SetImageAltTextResponse: {
+            productId: string;
+            imageId: string;
+            outcome: components["schemas"]["ImageAltOutcome"];
+        };
+        SetImageShowsConflict: {
+            title: string;
+            detail: string;
+        };
+        SetImageShowsRequest: {
+            shows: {
+                [key: string]: string;
+            };
+        };
+        SetImageShowsResponse: {
+            productId: string;
+            imageId: string;
+            outcome: components["schemas"]["ImageShowsOutcome"];
         };
         SetProductTranslationConflict: {
             title: string;
@@ -3036,6 +3357,7 @@ export interface components {
             inStock: boolean;
             /** Format: int32 */
             remaining: null | number;
+            imageIds: string[];
         };
         VectorLayerReport: {
             isConfigured: boolean;
@@ -3046,6 +3368,18 @@ export interface components {
             code: string;
             /** Format: date-time */
             at: string;
+        };
+        VisualMatch: {
+            product: components["schemas"]["SearchHit"];
+            picture: string;
+            /** Format: double */
+            similarity: number;
+        };
+        VisualSearchAvailability: {
+            available: boolean;
+        };
+        VisualSearchResult: {
+            items: components["schemas"]["VisualMatch"][];
         };
         WarehouseCoverage: {
             warehouseCode: string;
@@ -3304,6 +3638,32 @@ export interface operations {
             };
         };
     };
+    ApproveEditedProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveEditedProposalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalDecisionView"];
+                };
+            };
+        };
+    };
     RejectProposals: {
         parameters: {
             query?: never;
@@ -3324,6 +3684,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProposalDecisionsResponse"];
+                };
+            };
+        };
+    };
+    ProposeAltText: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["ProposeAltTextRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposeAltTextResult"];
                 };
             };
         };
@@ -3405,6 +3791,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetProductTranslationConflict"];
+                };
+            };
+        };
+    };
+    SetImageShows: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                imageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetImageShowsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImageShowsResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImageShowsConflict"];
+                };
+            };
+        };
+    };
+    SetImageAltText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                imageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetImageAltTextRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImageAltTextResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImageAltTextConflict"];
                 };
             };
         };
@@ -3691,7 +4163,7 @@ export interface operations {
     ListCatalogueGaps: {
         parameters: {
             query: {
-                kind: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting";
+                kind: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting" | "MissingRequiredAttribute";
                 culture?: string;
                 limit?: number;
             };
@@ -3860,6 +4332,7 @@ export interface operations {
                 page?: number;
                 pageSize?: number;
                 product?: string;
+                culture?: string;
             };
             header?: never;
             path?: never;
@@ -3954,6 +4427,30 @@ export interface operations {
             };
         };
     };
+    ReadPictures: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["ReadPicturesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadPicturesResult"];
+                };
+            };
+        };
+    };
     GetProductSpecs: {
         parameters: {
             query: {
@@ -3981,6 +4478,72 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ListPictureDoubts: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PictureDoubtsPage"];
+                };
+            };
+        };
+    };
+    DecidePictureDoubt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecidePictureDoubtRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecidePictureDoubtResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PictureDoubtConflict"];
+                };
             };
         };
     };
@@ -4451,6 +5014,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResultPage"];
+                };
+            };
+        };
+    };
+    SearchPicturesByText: {
+        parameters: {
+            query?: {
+                q?: string;
+                culture?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisualSearchResult"];
+                };
+            };
+        };
+    };
+    SearchByImage: {
+        parameters: {
+            query?: {
+                culture?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    picture: components["schemas"]["IFormFile"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisualSearchResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+        };
+    };
+    GetVisualSearchAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisualSearchAvailability"];
                 };
             };
         };

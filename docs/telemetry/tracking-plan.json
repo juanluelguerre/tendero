@@ -172,7 +172,8 @@
       "decision": "Whether the AI stages can be on by default, which service to fix first, and when a reindex is due.",
       "signals": [
         "tendero.search.degraded",
-        "tendero.search.vector_projection.failed"
+        "tendero.search.vector_projection.failed",
+        "tendero.search.picture_projection.failed"
       ]
     },
     {
@@ -200,9 +201,21 @@
       "name": "Claim review",
       "area": "backoffice",
       "question": "Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones?",
-      "decision": "A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read.",
+      "decision": "A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. And of the sure answers a picture gave (sure_answer = true), more than one in ten rejected means the line they clear is too low: raise ProductClaim.SureAnswer before anything is applied without a person.",
       "signals": [
         "tendero.knowledge.claims.reviewed"
+      ]
+    },
+    {
+      "name": "Picture doubts",
+      "area": "backoffice",
+      "question": "When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?",
+      "decision": "Mostly 'the picture is fine' means the line is too low or two colours are one to the shop: raise PictureDoubt.SureDifference, or declare the two as mistaken for each other. A share of 'replace the picture' worth having is what would justify a doubt holding a picture back from being the cover.",
+      "signals": [
+        "tendero.knowledge.picture_doubts.decided",
+        "tendero.knowledge.picture_doubts.retagged",
+        "backoffice_view_opened",
+        "backoffice_action_taken"
       ]
     },
     {
@@ -386,6 +399,25 @@
       ]
     },
     {
+      "name": "Alt text for pictures",
+      "area": "backoffice",
+      "question": "Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read?",
+      "decision": "Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes.",
+      "signals": [
+        "tendero.alt_text.pictures",
+        "image_alt_proposal_decided"
+      ]
+    },
+    {
+      "name": "Pictures read for claims",
+      "area": "backoffice",
+      "question": "Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for?",
+      "decision": "Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events.",
+      "signals": [
+        "tendero.picture_reading.pictures"
+      ]
+    },
+    {
       "name": "Tino",
       "area": "storefront",
       "question": "Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?",
@@ -396,6 +428,16 @@
         "tino_result_followed",
         "tino_unavailable",
         "tendero.tino.turns"
+      ]
+    },
+    {
+      "name": "Search with a picture",
+      "area": "storefront",
+      "question": "Does anyone search with a picture, and does the picture find what they wanted?",
+      "decision": "If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong.",
+      "signals": [
+        "search_by_image_submitted",
+        "search_by_image_result_followed"
       ]
     }
   ],
@@ -552,6 +594,7 @@
             "review",
             "catalogue",
             "claims",
+            "doubts",
             "attributes",
             "search",
             "promotions",
@@ -580,6 +623,7 @@
             "review",
             "catalogue",
             "claims",
+            "doubts",
             "attributes",
             "search",
             "promotions",
@@ -602,6 +646,7 @@
             "import",
             "claim_approve",
             "claim_reject",
+            "doubt_decide",
             "order_ship",
             "order_deliver",
             "order_cancel",
@@ -787,6 +832,7 @@
             "review",
             "catalogue",
             "claims",
+            "doubts",
             "attributes",
             "search",
             "promotions",
@@ -991,6 +1037,64 @@
           "description": "The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off."
         }
       }
+    },
+    {
+      "name": "image_alt_proposal_decided",
+      "description": "A proposed alt text for a product picture was decided by a person: approved as the model wrote it, approved after the person corrected it, or rejected. The decision and the language of the screen, never the words.",
+      "consent": "staff",
+      "attributes": {
+        "decision": {
+          "type": "string",
+          "values": [
+            "approved",
+            "edited",
+            "rejected"
+          ],
+          "description": "What the person did with the proposal."
+        }
+      }
+    },
+    {
+      "name": "search_by_image_submitted",
+      "description": "A shopper gave the shop a picture to search with (phase 13a). Only with analytics consent; never the picture, its name or anything read from it.",
+      "consent": "behavioural",
+      "attributes": {
+        "how": {
+          "type": "string",
+          "values": [
+            "chosen",
+            "dropped",
+            "pasted",
+            "camera"
+          ],
+          "description": "How the picture was given."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "answered",
+            "refused",
+            "too_many",
+            "down"
+          ],
+          "description": "What the shop did with it: an answer, a refusal of the file, the minute's limit, or not answering."
+        },
+        "results": {
+          "type": "number",
+          "description": "How many products came back; 0 when none did or it was not answered."
+        }
+      }
+    },
+    {
+      "name": "search_by_image_result_followed",
+      "description": "A shopper opened a product from the answer to a picture (phase 13a). Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "position": {
+          "type": "number",
+          "description": "Its place in the answer, from 1."
+        }
+      }
     }
   ],
   "metrics": [
@@ -1015,6 +1119,13 @@
       "instrument": "counter",
       "unit": "{change}",
       "description": "Product changes the vector layer could not take; the lexical index took them.",
+      "attributes": {}
+    },
+    {
+      "name": "tendero.search.picture_projection.failed",
+      "instrument": "counter",
+      "unit": "{change}",
+      "description": "Product changes the picture vectors could not take; the lexical index took them.",
       "attributes": {}
     },
     {
@@ -1302,9 +1413,10 @@
           "type": "string",
           "values": [
             "rules",
-            "chat"
+            "chat",
+            "picture"
           ],
-          "description": "Which extractor read the description: the rules, or the model."
+          "description": "Which extractor read the source: the rules or the model for a description, and for a picture's reading the code that reads back what the picture answered."
         }
       }
     },
@@ -1354,6 +1466,53 @@
           ],
           "description": "ReviewDecision, labelled by MetricLabels.",
           "from": "ReviewDecision"
+        },
+        "sure_answer": {
+          "type": "string",
+          "values": [
+            "true",
+            "false"
+          ],
+          "description": "Whether the claim was a picture's own answer the model was sure of (at or above ProductClaim.SureAnswer): the ones a person may approve in bulk."
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.picture_doubts.decided",
+      "instrument": "counter",
+      "unit": "{doubt}",
+      "description": "Doubts about a picture a person decided, by what they said of it.",
+      "attributes": {
+        "decision": {
+          "type": "string",
+          "values": [
+            "picture_is_fine",
+            "replace_the_picture",
+            "belongs_to_another_variant"
+          ],
+          "description": "PictureDoubtDecision, labelled by MetricLabels.",
+          "from": "PictureDoubtDecision"
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.picture_doubts.retagged",
+      "instrument": "counter",
+      "unit": "{picture}",
+      "description": "Pictures Catalog was asked to file under another variant after a doubt was decided, by what it answered.",
+      "attributes": {
+        "outcome": {
+          "type": "string",
+          "values": [
+            "shown",
+            "unchanged",
+            "no_such_image",
+            "not_sold",
+            "archived",
+            "not_found"
+          ],
+          "description": "ImageShowsOutcome, labelled by MetricLabels: 'not_sold' is a person saying a picture is of a colour no variant is sold in.",
+          "from": "ImageShowsOutcome"
         }
       }
     },
@@ -1510,6 +1669,40 @@
             "order"
           ],
           "description": "TinoKind, labelled by MetricLabels; none when Tino did not answer."
+        }
+      }
+    },
+    {
+      "name": "tendero.alt_text.pictures",
+      "instrument": "counter",
+      "unit": "{picture}",
+      "description": "Pictures the alt-text job took, by what became of each.",
+      "attributes": {
+        "outcome": {
+          "type": "string",
+          "values": [
+            "proposed",
+            "skipped",
+            "failed"
+          ],
+          "description": "proposed: a description was stored for a person to review. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be proposed."
+        }
+      }
+    },
+    {
+      "name": "tendero.picture_reading.pictures",
+      "instrument": "counter",
+      "unit": "{picture}",
+      "description": "Pictures the reading job took, by what became of each.",
+      "attributes": {
+        "outcome": {
+          "type": "string",
+          "values": [
+            "read",
+            "skipped",
+            "failed"
+          ],
+          "description": "read: the model's description was kept as a document, in both languages. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be kept."
         }
       }
     }

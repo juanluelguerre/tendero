@@ -78,6 +78,26 @@
 - Multilingual embeddings (`bge-m3`, served by Text Embeddings Inference at a
   pinned revision — ADR 0031) → one vector space serves both cultures.
 - Quality is tested: golden set per culture, NDCG@10 + recall@50 in CI.
+- **Pictures are a second vector space, beside and never inside the first**
+  (phase 13a): SigLIP 2, exported by us and run in process on the CPU, embeds a
+  picture and a text into the same space. The catalogue's pictures are a
+  collection of their own — one point a picture, keyed on the hash of its
+  bytes, naming every product that shows it — fed by the same outbox events.
+  Two questions are asked of it, each at an endpoint of its own: a picture
+  (`POST /api/search/by-image`) and words (`GET /api/search/pictures`).
+  Neither is a leg of `/api/search`, whose ranking is the one the gate
+  measures; a shop without the model's folder has neither, says so, and its
+  search is byte for byte what it was.
+
+```mermaid
+flowchart LR
+    U[A shopper's picture<br/>never kept] --> M[SigLIP 2 · in process]
+    W[Words] --> M
+    M --> C[(Qdrant · pictures<br/>one point a picture)]
+    O[Outbox · ProductUpserted] --> E[Worker embeds<br/>the gallery's new pictures] --> C
+    C --> N[Nearest products,<br/>each once]
+    N --> K[Cards · the lexical index]
+```
 
 ```mermaid
 flowchart LR
@@ -110,6 +130,7 @@ Everything the API exposes today. Each is one vertical slice.
 | `GET /api/catalog/categories` | `Catalog/Features/ListCategories` |
 | `GET /api/catalog/skus` | `Catalog/Features/DescribeSkus` — names for the stock grid, across the Inventory boundary |
 | `POST /api/catalog/products/{id}/variants` | `Catalog/Features/DefineVariants` |
+| `PUT /api/catalog/products/{id}/images/{imageId}/shows` | `Catalog/Features/SetImageShows` — which of the product's variants a picture shows (ADR 0057) |
 | `POST /api/pricing/quote` | `Pricing/Features/QuoteCart` |
 | `GET /api/pricing/promotions` | `Pricing/Features/ListPromotions` |
 | `GET /api/pricing/offers` | `Pricing/Features/ListOffers` — what the home page shows |
@@ -131,7 +152,9 @@ Everything the API exposes today. Each is one vertical slice.
 | `POST /api/returns/{id}/decide` | `Ordering/Features/Returns` (DecideReturn) |
 | `POST /api/payments/{provider}/webhook` | `Ordering/Features/PaymentWebhook` |
 | `GET /api/search` | `Search/Features/SearchProducts` — also browses: `?category=` and `?sort=newest` with no `q` |
-| `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
+| `POST /api/search/reindex` | `Search/Features/ReindexProducts` — `?target=lexical`, `vector`, `pictures` or `all` (the words' two) |
+| `POST /api/search/by-image` | `Search/Features/SearchByImage` — a picture in, the products whose pictures are nearest out; the picture is never kept (`docs/privacy.md`). `GET …/status` says whether this shop can be asked |
+| `GET /api/search/pictures` | `Search/Features/SearchPicturesByText` — words against the catalogue's pictures; an endpoint of its own, not a leg of `/api/search` |
 | `POST /api/accounts/me` | `Accounts/Features/LinkIdentity` — the subject comes from the token, never from the body |
 | `GET /api/audit` | `Accounts/Features/ListAuditEntries` — opens on the refusals |
 | `GET /.well-known/ucp` | `Ucp/UcpProfileEndpoint` — the UCP business profile, composed from the capability registry on every request. Anonymous because the specification requires it, and out of the OpenAPI document (ADR 0030) |

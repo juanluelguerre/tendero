@@ -28,6 +28,14 @@ public enum BulkApprovalOutcome
     /// whatever the screen sent — it is opened and decided on its own.</summary>
     WeakSupport,
 
+    /// <summary>Read from a picture: never approved in bulk, whatever the screen
+    /// sent — the person who approves it has it open, with the picture (phase 13a, I-4).</summary>
+    ReadFromAPicture,
+
+    /// <summary>It says another value than the catalogue holds: never approved in
+    /// bulk — which of the two is wrong is decided with both in front (phase 13a, I-4).</summary>
+    ContradictsTheCatalogue,
+
     /// <summary>Already decided, or replaced by a newer text.</summary>
     NotWaiting,
 
@@ -89,6 +97,8 @@ public sealed class ApproveClaimsHandler(IServiceScopeFactory scopes) : ICommand
         {
             ReviewOutcome.Approved => BulkApprovalOutcome.Approved,
             ReviewOutcome.WeakSupport => BulkApprovalOutcome.WeakSupport,
+            ReviewOutcome.ReadFromAPicture => BulkApprovalOutcome.ReadFromAPicture,
+            ReviewOutcome.ContradictsTheCatalogue => BulkApprovalOutcome.ContradictsTheCatalogue,
             ReviewOutcome.NotFound => BulkApprovalOutcome.NotFound,
             _ => BulkApprovalOutcome.NotWaiting,
         };

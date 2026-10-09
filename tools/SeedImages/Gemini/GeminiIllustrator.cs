@@ -30,7 +30,7 @@ namespace ElGuerre.Tendero.SeedImages;
 /// 3. **A key and a network.** Both are read from the environment and neither is
 ///    ever written anywhere: `GEMINI_API_KEY`, and nothing else.
 /// </summary>
-public sealed class GeminiIllustrator(string model, int size, string? apiKey = null) : IIllustrationGenerator
+public sealed class GeminiIllustrator(string model, int size, string? apiKey = null) : IIllustrationGenerator, IPictureEditor
 {
     private const string Host = "https://generativelanguage.googleapis.com/v1beta/models/";
 
@@ -47,17 +47,7 @@ public sealed class GeminiIllustrator(string model, int size, string? apiKey = n
     public IReadOnlyList<GeneratedImage> Draw(
         IReadOnlyList<(string ItemId, string Prompt)> jobs, string negative, Action<string> say)
     {
-        var key = apiKey ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY")
-            ?? throw new InvalidOperationException(
-                """
-                No GEMINI_API_KEY in the environment. Set one:
-
-                  PowerShell:  $env:GEMINI_API_KEY = "..."
-                  bash:        export GEMINI_API_KEY=...
-
-                It is read from there and never written to a file, so it does not
-                end up in the repository by accident.
-                """);
+        var key = Key();
 
         List<GeneratedImage> images = [];
 
@@ -87,6 +77,52 @@ public sealed class GeminiIllustrator(string model, int size, string? apiKey = n
 
         return images;
     }
+
+    /// <summary>
+    /// The picture given back changed: the model is shown the reference and told
+    /// what to change. One call and no retry — what comes back is held to the
+    /// same arithmetic as a drawing, and a person accepts it or not.
+    /// </summary>
+    public GeneratedImage Edit(string itemId, byte[] reference, string instruction, bool sameFrame, Action<string> say)
+    {
+        var clock = Stopwatch.StartNew();
+        say($"  {itemId}  (from its product's cover)");
+
+        var (rgb, drawn) = Ask(Key(), instruction, reference);
+        double? same = null;
+
+        if (sameFrame)
+        {
+            // What the reference has as background, the result has as background:
+            // the model keeps the object and not what is around it. And then how
+            // much of the reference's shape is still there.
+            var original = Pixels.SquareOf(reference, drawn);
+            rgb = ReferenceBackground.Restore(original, rgb, drawn);
+            same = SameShape.Overlap(original, rgb, drawn);
+        }
+        else
+        {
+            // Another view has no original to be cleaned against: what is pale
+            // and floats above the object is not the picture's.
+            rgb = FloatingHaze.Clear(rgb, drawn);
+        }
+
+        clock.Stop();
+        return Finished.From(itemId, rgb, drawn, clock.Elapsed) with { SameAsReference = same };
+    }
+
+    private string Key() =>
+        apiKey ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY")
+        ?? throw new InvalidOperationException(
+            """
+            No GEMINI_API_KEY in the environment. Set one:
+
+              PowerShell:  $env:GEMINI_API_KEY = "..."
+              bash:        export GEMINI_API_KEY=...
+
+            It is read from there and never written to a file, so it does not
+            end up in the repository by accident.
+            """);
 
     /// <summary>
     /// The prompt as an instruction rather than as two bags of words. What SDXL
@@ -122,11 +158,16 @@ public sealed class GeminiIllustrator(string model, int size, string? apiKey = n
          Avoid: {negative}
          """;
 
-    private (byte[] Rgb, int Size) Ask(string key, string instruction)
+    /// <param name="reference">A picture the instruction is about, as PNG: sent before the words, as the thing they refer to.</param>
+    private (byte[] Rgb, int Size) Ask(string key, string instruction, byte[]? reference = null)
     {
+        var shown = reference is null
+            ? string.Empty
+            : $$"""{ "inlineData": { "mimeType": "image/png", "data": "{{Convert.ToBase64String(reference)}}" } }, """;
+
         var request = $$"""
             {
-              "contents": [{ "parts": [{ "text": {{JsonSerializer.Serialize(instruction)}} }] }],
+              "contents": [{ "parts": [{{shown}}{ "text": {{JsonSerializer.Serialize(instruction)}} }] }],
               "generationConfig": { "responseModalities": ["TEXT", "IMAGE"] }
             }
             """;
@@ -182,38 +223,7 @@ public sealed class GeminiIllustrator(string model, int size, string? apiKey = n
 
         var encoded = inline.GetProperty("inlineData").GetProperty("data").GetString() ?? string.Empty;
 
-        return ToSquareRgb(Convert.FromBase64String(encoded));
-    }
-
-    /// <summary>
-    /// Whatever came back, as the square of interleaved bytes the rest of the
-    /// pipeline works in. A hosted model returns the size it feels like, so the
-    /// shorter side wins and the picture is centre-cropped — the object is
-    /// centred by instruction, so a crop takes background.
-    /// </summary>
-    private static (byte[] Rgb, int Size) ToSquareRgb(byte[] encoded)
-    {
-        using var bitmap = SKBitmap.Decode(encoded)
-            ?? throw new InvalidDataException("The answer carried something that is not an image.");
-
-        var side = Math.Min(bitmap.Width, bitmap.Height);
-        var left = (bitmap.Width - side) / 2;
-        var top = (bitmap.Height - side) / 2;
-
-        var rgb = new byte[side * side * 3];
-
-        for (var row = 0; row < side; row++)
-            for (var column = 0; column < side; column++)
-            {
-                var pixel = bitmap.GetPixel(left + column, top + row);
-                var at = ((row * side) + column) * 3;
-
-                rgb[at] = pixel.Red;
-                rgb[at + 1] = pixel.Green;
-                rgb[at + 2] = pixel.Blue;
-            }
-
-        return (rgb, side);
+        return Pixels.Square(Convert.FromBase64String(encoded));
     }
 
     public void Dispose() => _client.Dispose();

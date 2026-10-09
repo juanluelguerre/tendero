@@ -56,6 +56,97 @@ public sealed class ReviewProductTests
         Assert.Equal(22m, litres.Number);
     }
 
+    /// <summary>
+    /// What each picture says, per language and as stored (phase 13a): a language a
+    /// picture is not described in is absent, never filled from the other — the
+    /// screen where a shopkeeper types alt text shows exactly what is missing.
+    /// </summary>
+    [Fact]
+    public async Task Shows_what_each_picture_says_in_each_language_as_stored()
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", "Taza"), new Money(9m, "EUR"));
+        product.AddImage(Clock, new ImageId("cover"), LocalizedText.Both("A white mug.", "Una taza blanca."));
+        product.AddImage(Clock, new ImageId("side"), LocalizedText.From("es", "La taza de lado."));
+        product.AddImage(Clock, new ImageId("top"));
+
+        var review = (await Handler(product).HandleAsync(new ReviewProductQuery(product.Code, "en"), TestContext.Current.CancellationToken))!;
+
+        Assert.Equal(["cover", "side", "top"], review.Images.Select(image => image.Id));
+        Assert.Equal(("Una taza blanca.", "A white mug."), (review.Images[0].Alt["es"], review.Images[0].Alt["en"]));
+        Assert.Equal(["es"], review.Images[1].Alt.Keys);
+        Assert.Empty(review.Images[2].Alt);
+        // The ids alone are still there, in the same order, for whoever only draws them.
+        Assert.Equal(review.Images.Select(image => image.Id), review.ImageIds);
+    }
+
+    /// <summary>
+    /// What each picture says it shows, and what it may be said to show (ADR
+    /// 0057): the product's axes, each with the values a variant still sold
+    /// holds, named in the culture asked for — the colour by its option's label,
+    /// a size with no definition by its code. A discontinued colour is not on
+    /// offer: the aggregate would refuse it.
+    /// </summary>
+    [Fact]
+    public async Task Shows_what_each_picture_shows_and_what_a_picture_may_be_said_to_show()
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", "Mochila"), new Money(49m, "EUR"));
+        product.DefineAxes(Clock, ["COLOR", "SIZE"]);
+        foreach (var (shade, size) in new[] { ("GREY", "L"), ("BLACK", "L"), ("BLACK", "S"), ("OLIVE", "S") })
+            product.AddVariant(Clock, $"PACK-{shade}-{size}", new Money(49m, "EUR"), new Dictionary<string, string> { ["COLOR"] = shade, ["SIZE"] = size });
+        product.DiscontinueVariant(Clock, "PACK-OLIVE-S");
+        product.AddImage(Clock, new ImageId("black"));
+        product.AddImage(Clock, new ImageId("back"));
+        product.Show(Clock, new ImageId("black"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+        var colour = AttributeDefinition.Define(Clock, "COLOR", LocalizedText.Both("colour", "color"), AttributeKind.Option, isVariantAxis: true);
+        colour.AddOption(Clock, "BLACK", LocalizedText.Both("black", "negro"));
+        colour.AddOption(Clock, "GREY", LocalizedText.Both("grey", "gris"));
+        colour.AddOption(Clock, "OLIVE", LocalizedText.Both("olive", "oliva"));
+        var handler = new ReviewProductHandler(new InMemoryProductCatalogReader(product), new DefinitionsOf(colour), new Categories());
+
+        var review = (await handler.HandleAsync(new ReviewProductQuery(product.Code, "es"), TestContext.Current.CancellationToken))!;
+
+        Assert.Equal(new Dictionary<string, string> { ["COLOR"] = "BLACK" }, review.Images[0].Shows);
+        Assert.Empty(review.Images[1].Shows);
+        Assert.Equal([("COLOR", "color"), ("SIZE", "SIZE")], review.Axes.Select(axis => (axis.Code, axis.Label)));
+        Assert.Equal([("GREY", "gris"), ("BLACK", "negro")], review.Axes[0].Options.Select(option => (option.Code, option.Label)));
+        Assert.Equal([("L", "L"), ("S", "S")], review.Axes[1].Options.Select(option => (option.Code, option.Label)));
+    }
+
+    /// <summary>
+    /// What a draft lacks of what its category requires (ADR 0056, amended), by
+    /// its label in the culture asked for: what a person sees before publishing
+    /// an incomplete product. A product that has it all lacks nothing.
+    /// </summary>
+    [Fact]
+    public async Task Says_what_the_product_lacks_of_what_its_category_requires()
+    {
+        var shirt = Product.Create(Clock, LocalizedText.From("es", "Camiseta"), new Money(24m, "EUR"), category: "CLOTHING");
+        var whole = Product.Create(Clock, LocalizedText.From("es", "Sudadera"), new Money(40m, "EUR"), category: "CLOTHING");
+        whole.SetAttribute(Clock, AttributeValue.Plain("MATERIAL", "algodón"));
+        var material = AttributeDefinition.Define(Clock, "MATERIAL", LocalizedText.Both("material", "tejido"), AttributeKind.Text);
+        var handler = new ReviewProductHandler(
+            new InMemoryProductCatalogReader(shirt, whole), new DefinitionsOf(material), new Categories(required: ["MATERIAL"]));
+
+        var lacking = (await handler.HandleAsync(new ReviewProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken))!;
+        var complete = (await handler.HandleAsync(new ReviewProductQuery(whole.Code, "es"), TestContext.Current.CancellationToken))!;
+
+        Assert.Equal([("MATERIAL", "tejido")], lacking.MissingRequired.Select(missing => (missing.Code, missing.Label)));
+        Assert.Empty(complete.MissingRequired);
+    }
+
+    [Fact]
+    public async Task A_product_bought_one_way_has_no_axes_for_a_picture_to_show()
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", "Taza"), new Money(9m, "EUR"));
+        product.AddVariant(Clock, "MUG-DEFAULT", new Money(9m, "EUR"));
+        product.AddImage(Clock, new ImageId("cover"));
+
+        var review = (await Handler(product).HandleAsync(new ReviewProductQuery(product.Code, "es"), TestContext.Current.CancellationToken))!;
+
+        Assert.Empty(review.Axes);
+        Assert.Empty(Assert.Single(review.Images).Shows);
+    }
+
     [Fact]
     public async Task Names_a_defined_attribute_by_its_label_in_the_culture_asked_for()
     {
@@ -95,13 +186,13 @@ public sealed class ReviewProductTests
             Task.FromResult(new AttributeDefinitions(definitions));
     }
 
-    private sealed class Categories : ICategoryReader
+    private sealed class Categories(string[]? required = null) : ICategoryReader
     {
         public Task<CategoryTree> AllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(new CategoryTree(
             [
                 Category.Define(Clock, "CLOTHING",
-                    new LocalizedText(new Dictionary<string, string> { ["es"] = "Ropa", ["en"] = "Clothing" })),
+                    new LocalizedText(new Dictionary<string, string> { ["es"] = "Ropa", ["en"] = "Clothing" }), required: required),
             ]));
     }
 }

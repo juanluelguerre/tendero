@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.CatalogueGaps;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
@@ -74,7 +75,7 @@ public sealed class CatalogueGapsTests
     {
         var products = Enumerable.Range(0, 60).Select(index => Spanish($"Producto {index}")).ToArray();
 
-        var gaps = await new CatalogueGapsHandler(new InMemoryProductCatalogReader(products))
+        var gaps = await Handler(products)
             .HandleAsync(new CatalogueGapsQuery(CatalogueGap.MissingName, "en"), TestContext.Current.CancellationToken);
 
         Assert.Equal((60, ReadLimits.MaxRows), (gaps.Total, gaps.Rows.Count));
@@ -89,7 +90,7 @@ public sealed class CatalogueGapsTests
     {
         var bilingual = Product.Create(Clock,
             new LocalizedText(new Dictionary<string, string> { ["es"] = "Mochila", ["en"] = "Backpack" }), new Money(10m, "EUR"));
-        var handler = new CatalogueGapsHandler(new InMemoryProductCatalogReader(bilingual, Spanish("Flexo")));
+        var handler = Handler(bilingual, Spanish("Flexo"));
 
         var pictures = await handler.HandleAsync(
             new CatalogueGapsQuery(CatalogueGap.MissingImage, null, DisplayCulture: "en"), TestContext.Current.CancellationToken);
@@ -106,7 +107,7 @@ public sealed class CatalogueGapsTests
         var archived = Spanish("Flexo");
         archived.Archive(Clock);
 
-        var gaps = await new CatalogueGapsHandler(new InMemoryProductCatalogReader(archived))
+        var gaps = await Handler(archived)
             .HandleAsync(new CatalogueGapsQuery(CatalogueGap.MissingName, "en"), TestContext.Current.CancellationToken);
 
         Assert.Equal(0, gaps.Total);
@@ -122,9 +123,88 @@ public sealed class CatalogueGapsTests
     [InlineData(CatalogueGap.DraftWaiting, "en", 50, false)]
     [InlineData(CatalogueGap.DraftWaiting, null, 51, false)]
     [InlineData(CatalogueGap.DraftWaiting, null, 0, false)]
+    [InlineData(CatalogueGap.MissingRequiredAttribute, null, 50, true)]
+    [InlineData(CatalogueGap.MissingRequiredAttribute, "en", 50, false)]
     public void A_gap_by_culture_needs_one_the_shop_speaks_and_the_others_take_none(
         CatalogueGap kind, string? culture, int limit, bool valid) =>
         Assert.Equal(valid, new CatalogueGapsValidator().Validate(new CatalogueGapsQuery(kind, culture, limit)).IsValid);
+
+    // ---------- missing a required attribute (ADR 0056, amended) ----------
+
+    /// <summary>Cookware must say its material; bags must say nothing.</summary>
+    private static CategoryTree Requiring()
+    {
+        var home = Category.Define(Clock, "HOME", LocalizedText.Both("Home", "Hogar"), attributes: ["COLOR"], required: ["MATERIAL"]);
+        var cookware = Category.Define(Clock, "COOKWARE", LocalizedText.Both("Cookware", "Menaje"), home, required: ["PIECES"]);
+        var bags = Category.Define(Clock, "BAGS", LocalizedText.Both("Bags", "Bolsas"), attributes: ["MATERIAL"]);
+        return new CategoryTree([home, cookware, bags]);
+    }
+
+    private static Product In(string category, string name, params string[] holds)
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", name), new Money(10m, "EUR"), category: category);
+        foreach (var code in holds)
+            product.SetAttribute(Clock, AttributeValue.Plain(code, "x"));
+        return product;
+    }
+
+    [Fact]
+    public void A_product_without_what_its_category_requires_is_incomplete_and_one_with_it_is_not()
+    {
+        var tree = Requiring();
+
+        Assert.True(CatalogueGapRules.Has(In("COOKWARE", "Sartén", "MATERIAL"), CatalogueGap.MissingRequiredAttribute, null, tree));
+        Assert.False(CatalogueGapRules.Has(In("COOKWARE", "Sartén", "MATERIAL", "PIECES"), CatalogueGap.MissingRequiredAttribute, null, tree));
+        // Expected is not required: a bag with no material is not incomplete.
+        Assert.False(CatalogueGapRules.Has(In("BAGS", "Mochila"), CatalogueGap.MissingRequiredAttribute, null, tree));
+        // With nobody saying what is required, nothing is.
+        Assert.False(CatalogueGapRules.Has(In("COOKWARE", "Sartén"), CatalogueGap.MissingRequiredAttribute, null));
+    }
+
+    /// <summary>
+    /// The row says what it lacks, by the attribute's label in the reader's
+    /// language — and by its code when the catalogue never defined it: a gap is
+    /// not hidden behind another. The other kinds say nothing there; the kind is
+    /// what is missing.
+    /// </summary>
+    [Fact]
+    public async Task An_incomplete_product_says_what_it_lacks_in_the_readers_language()
+    {
+        var pan = In("COOKWARE", "Sartén");
+        var complete = In("COOKWARE", "Olla", "MATERIAL", "PIECES");
+        var material = AttributeDefinition.Define(Clock, "MATERIAL", LocalizedText.Both("material", "material"), AttributeKind.Text);
+        var pieces = AttributeDefinition.Define(Clock, "PIECES", LocalizedText.Both("pieces", "piezas"), AttributeKind.Number);
+        var handler = new CatalogueGapsHandler(
+            new InMemoryProductCatalogReader(pan, complete), new Categories(Requiring()), new Definitions(material, pieces));
+
+        var spanish = await handler.HandleAsync(new CatalogueGapsQuery(CatalogueGap.MissingRequiredAttribute, null), TestContext.Current.CancellationToken);
+        var english = await handler.HandleAsync(
+            new CatalogueGapsQuery(CatalogueGap.MissingRequiredAttribute, null, DisplayCulture: "en"), TestContext.Current.CancellationToken);
+        var undefined = await new CatalogueGapsHandler(new InMemoryProductCatalogReader(pan), new Categories(Requiring()), new Definitions())
+            .HandleAsync(new CatalogueGapsQuery(CatalogueGap.MissingRequiredAttribute, null), TestContext.Current.CancellationToken);
+        var drafts = await handler.HandleAsync(new CatalogueGapsQuery(CatalogueGap.DraftWaiting, null), TestContext.Current.CancellationToken);
+
+        Assert.Equal((1, pan.Code), (spanish.Total, Assert.Single(spanish.Rows).Code));
+        // The root's first, then the leaf's.
+        Assert.Equal(["material", "piezas"], spanish.Rows[0].Lacks);
+        Assert.Equal(["material", "pieces"], english.Rows[0].Lacks);
+        Assert.Equal(["MATERIAL", "PIECES"], undefined.Rows[0].Lacks);
+        Assert.All(drafts.Rows, row => Assert.Empty(row.Lacks));
+    }
+
+    private static CatalogueGapsHandler Handler(params Product[] products) =>
+        new(new InMemoryProductCatalogReader(products), new Categories(CategoryTree.Empty), new Definitions());
+
+    private sealed class Categories(CategoryTree tree) : ICategoryReader
+    {
+        public Task<CategoryTree> AllAsync(CancellationToken cancellationToken = default) => Task.FromResult(tree);
+    }
+
+    private sealed class Definitions(params AttributeDefinition[] definitions) : IAttributeDefinitionReader
+    {
+        public Task<AttributeDefinitions> AllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AttributeDefinitions(definitions));
+    }
 
     private static Product Spanish(string name) =>
         Product.Create(Clock, LocalizedText.From("es", name), new Money(10m, "EUR"));

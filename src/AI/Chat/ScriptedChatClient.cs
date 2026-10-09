@@ -25,10 +25,13 @@ namespace ElGuerre.Tendero.AI.Chat;
 /// <c>{asked:pattern}</c> takes the first group the pattern captures in what was
 /// asked — a product's code is minted at import, so a script finds it by the name
 /// beside it: <c>{asked:(\S+) = Sartén}</c>.</param>
+/// <param name="Pictures">When set, the step answers only a message that carries
+/// that many pictures (phase 13a): a pipeline that forgot to send one gets another
+/// step's answer, not the right one by luck.</param>
 public sealed record ScriptedTurn(
     string When, IReadOnlyList<ScriptedCall>? Calls = null, string? Say = null,
     int InputTokens = 100, int OutputTokens = 20, int DelayMs = 0, bool Always = false, bool ThenFail = false,
-    IReadOnlyList<ScriptedCall>? Then = null, JsonElement? Reply = null);
+    IReadOnlyList<ScriptedCall>? Then = null, JsonElement? Reply = null, int? Pictures = null);
 
 public sealed record ScriptedCall(string Tool, JsonElement Arguments);
 
@@ -53,8 +56,11 @@ public sealed class ScriptedChatClient(IReadOnlyList<ScriptedTurn> script, TimeS
         IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
         var conversation = messages.ToList();
-        var asked = conversation.LastOrDefault(message => message.Role == ChatRole.User)?.Text ?? "";
-        var step = script.FirstOrDefault(turn => asked.Contains(turn.When, StringComparison.OrdinalIgnoreCase));
+        var last = conversation.LastOrDefault(message => message.Role == ChatRole.User);
+        var asked = last?.Text ?? "";
+        var pictures = last is null ? 0 : Pictures.In(last);
+        var step = script.FirstOrDefault(turn =>
+            asked.Contains(turn.When, StringComparison.OrdinalIgnoreCase) && (turn.Pictures is null || turn.Pictures == pictures));
 
         if (step is null)
             return Answer(new ChatMessage(ChatRole.Assistant, NotScripted), 10, 6);

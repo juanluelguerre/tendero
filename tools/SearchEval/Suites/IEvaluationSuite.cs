@@ -30,6 +30,13 @@ public interface IEvaluationSuite
     TimeSpan Budget => TimeSpan.FromMinutes(5);
 
     /// <summary>
+    /// The budget for this run, when what was asked for changes what it costs:
+    /// the search gate takes seconds, and the same gate with the catalogue's
+    /// pictures embedded on a CPU takes minutes.
+    /// </summary>
+    TimeSpan BudgetFor(EvaluationOptions options) => Budget;
+
+    /// <summary>
     /// 0 when it passes, 1 when it falls below the thresholds and <c>--ci</c> was
     /// asked for, 2 when it could not even run (a dependency is not answering).
     /// </summary>

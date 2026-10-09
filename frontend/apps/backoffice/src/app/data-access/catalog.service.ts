@@ -9,6 +9,9 @@ import type {
   DefineVariantsResponse,
   ImportResult,
   ProductForReview,
+  SetImageAltTextRequest,
+  SetImageAltTextResponse,
+  SetImageShowsResponse,
   ProductListPage,
   ProductStatus,
   PublishProductResponse,
@@ -107,6 +110,28 @@ export class CatalogService {
     return this.http.get<ProductForReview>(`${this.baseUrl}/api/catalog/products/${encodeURIComponent(code)}/review`, {
       params: new HttpParams().set('culture', culture),
     });
+  }
+
+  /**
+   * Says what one of a product's pictures shows, in both languages (phase 13a):
+   * the path with no model, and the same command an approved proposal runs.
+   */
+  describeImage(productId: string, imageId: string, alt: SetImageAltTextRequest): Observable<SetImageAltTextResponse> {
+    return this.http.put<SetImageAltTextResponse>(
+      `${this.baseUrl}/api/catalog/products/${productId}/images/${encodeURIComponent(imageId)}/alt`,
+      alt,
+    );
+  }
+
+  /**
+   * Says which of a product's variants one of its pictures shows (ADR 0057):
+   * axis code to value, and nothing at all for a picture that is every variant's.
+   */
+  showInImage(productId: string, imageId: string, shows: Record<string, string>): Observable<SetImageShowsResponse> {
+    return this.http.put<SetImageShowsResponse>(
+      `${this.baseUrl}/api/catalog/products/${productId}/images/${encodeURIComponent(imageId)}/shows`,
+      { shows },
+    );
   }
 
   import(source = 'seed'): Observable<ImportResult> {

@@ -191,7 +191,7 @@ public sealed class ClaimFlowTests
         }
 
         using var provider = services.BuildServiceProvider();
-        return new ProposeClaimsHandler(this.knowledge, new Vocabulary(), provider, KnowledgeServiceCollectionExtensions.Extractor, this.knowledge, this.clock)
+        return new ProposeClaimsHandler(this.knowledge, new Vocabulary(), Held.Nothing, provider, KnowledgeServiceCollectionExtensions.Extractor, this.knowledge, this.clock)
             .HandleAsync(new ProposeClaimsCommand(Pan), TestContext.Current.CancellationToken);
     }
 
@@ -220,7 +220,7 @@ public sealed class ClaimFlowTests
 
     private sealed class Vocabulary : IAttributeVocabulary
     {
-        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(CancellationToken cancellationToken = default) =>
+        public Task<IReadOnlyList<AttributeSpec>> CurrentAsync(ProductId product, SourceKind readFrom, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<AttributeSpec>>(
             [
                 new("INDUCTION", "Boolean", null, "induction", [], "inducción"),

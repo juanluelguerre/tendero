@@ -39,7 +39,13 @@ public sealed record EvaluationOptions(
     int ContextTokens = 8192,
     string? CopilotDirectory = null,
     string? AssistantDirectory = null,
-    string? Only = null)
+    string? Only = null,
+    string? Dataset = null,
+    string? Modality = null,
+    int? Take = null,
+    string? Format = null,
+    string? Vocabulary = null,
+    string? Siglip = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -56,6 +62,8 @@ public sealed record EvaluationOptions(
           --embeddings <url>      Text Embeddings Inference serving bge-m3, for hybrid (default http://localhost:8080)
           --reranker <url>        Text Embeddings Inference serving bge-reranker-v2-m3; reranks hybrid when given
           --reranker-model <m@sha> A candidate reranker the --reranker endpoint serves instead, pinned by full commit SHA
+          --siglip <dir>          With hybrid: our SigLIP 2 export (models/siglip2). Also scores words against the
+                                  catalogue's pictures, ungated, and prints what a similarity floor would separate
           --golden <dir>          Golden set directory  (default tools/SearchEval/golden)
           --thresholds <file>     Committed thresholds  (default tools/SearchEval/eval.thresholds.json)
           --seed <file>           Seed catalogue        (default seed/products.sample.json)
@@ -83,8 +91,18 @@ public sealed record EvaluationOptions(
           --onnx <dir>            Or a maker's ONNX model folder, run in process by ONNX Runtime GenAI
           --model <label>         What it serves, as it will appear in the report (e.g. qwen3.5-4b-q8)
           --attributes <file>     Attribute seed        (default seed/attributes.sample.json)
+          --vocabulary <name>     whole (default: every attribute, as the floors were set) or category:
+                                  what each product's category declares (ADR 0056), read from --categories
           --report <file>         Every prediction and its verdict, as JSON
           --ci                    With claims or support: exit 1 under the floors in knowledge/gates.json
+
+        The ImplicitAVE suite (--suite implicit-ave) asks a model read attributes off product photographs:
+          --dataset <dir>         ImplicitAVE's data/evaluation_data folder, downloaded outside this repository
+          --chat <url> --model <id>  The OpenAI-compatible endpoint, and what it serves
+          --modality <name>       both (default: picture and title), image, or text
+          --format <name>         plain (default: the option as text, with its probability) or json (held by a schema)
+          --take <n>              Only n examples, spread over the whole set
+          --report <file>         Every answer beside its annotation, as JSON
 
         The support suite (--suite support) scores a scorer against knowledge/support.json:
           --scorer <name>         nli, reranker (both through TEI at --tei) or yesno (through --chat)
@@ -142,6 +160,11 @@ public sealed record EvaluationOptions(
         if (rerankerModel is not null && rerankerModel.Split('@') is not [{ Length: > 0 }, { Length: > 0 }])
             throw new ArgumentException($"--reranker-model is <model id>@<full commit SHA>, and '{rerankerModel}' is not.");
 
+        // The pictures share the words' vector store, so they are measured where it is.
+        var siglip = values.GetValueOrDefault("siglip");
+        if (siglip is not null && strategy is not SearchStrategies.Hybrid)
+            throw new ArgumentException("--siglip measures the pictures in the vector store, and needs --strategy hybrid.");
+
         return new EvaluationOptions(
             values.GetValueOrDefault("suite", "search"),
             values.GetValueOrDefault("elasticsearch", "http://localhost:9200"),
@@ -175,6 +198,12 @@ public sealed record EvaluationOptions(
             int.TryParse(values.GetValueOrDefault("context"), out var context) ? context : 8192,
             values.GetValueOrDefault("copilot", Path.Combine("tools", "SearchEval", "Copilot")),
             values.GetValueOrDefault("assistant", Path.Combine("tools", "SearchEval", "Assistant")),
-            values.GetValueOrDefault("only"));
+            values.GetValueOrDefault("only"),
+            values.GetValueOrDefault("dataset"),
+            values.GetValueOrDefault("modality"),
+            int.TryParse(values.GetValueOrDefault("take"), out var take) ? take : null,
+            values.GetValueOrDefault("format"),
+            values.GetValueOrDefault("vocabulary"),
+            siglip);
     }
 }

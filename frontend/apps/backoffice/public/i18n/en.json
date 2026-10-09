@@ -45,6 +45,7 @@
     "commands": {
       "AddToCartCommand": "Add to cart",
       "ApproveProposalsCommand": "Approve proposals",
+      "ApproveEditedProposalCommand": "Approve a proposal with corrections",
       "CancelCheckoutSessionCommand": "Cancel a checkout",
       "ChangeAgentTrustCommand": "Change an agent's trust",
       "ClaimCartCommand": "Keep a guest's cart on signing in",
@@ -52,6 +53,7 @@
       "CompleteCheckoutSessionCommand": "Complete a checkout",
       "CountStockCommand": "Count stock",
       "CreateCampaignCommand": "Create a campaign",
+      "DecidePictureDoubtCommand": "Decide a doubt about a picture",
       "DecideReturnCommand": "Decide a return",
       "DefineVariantsCommand": "Define variants",
       "EndCampaignCommand": "End a campaign",
@@ -64,11 +66,14 @@
       "PaymentWebhookCommand": "Payment provider's notice",
       "PlaceOrderCommand": "Place an order",
       "ProposeActionsCommand": "Propose changes",
-      "ProposeClaimsCommand": "Propose claims from a description",
+      "ProposeAltTextCommand": "Propose alt text for pictures",
+      "ProposeClaimsCommand": "Propose claims from a description or from a picture's reading",
       "PublishProductCommand": "Publish a product",
+      "ReadPicturesCommand": "Read product pictures",
       "RecordBrowsingCommand": "Record a product viewed or a search",
       "RecordClaimApplicationCommand": "Apply an approved claim",
       "RecordDescriptionCommand": "Record a description",
+      "RecordPictureReadingCommand": "Record a picture's reading",
       "RegisterAgentCommand": "Register an agent",
       "ReindexProductsCommand": "Rebuild the search index",
       "ReinstateAgentCommand": "Reinstate an agent",
@@ -78,6 +83,8 @@
       "ScheduleCampaignCommand": "Schedule a campaign",
       "SetBrowsingCommand": "Switch a browsing history on or off",
       "SetCartLineCommand": "Change a cart line",
+      "SetImageAltTextCommand": "Describe a product picture",
+      "SetImageShowsCommand": "Say what a product picture shows",
       "SetProductAttributeCommand": "Set a product attribute",
       "SetProductTranslationCommand": "Translate a product",
       "StewardTurnCommand": "Ask Steward",
@@ -153,6 +160,7 @@
     "search": "Search quality",
     "stock": "Stock",
     "claims": "Claims",
+    "doubts": "Picture doubts",
     "dashboard": "Dashboard",
     "groups": {
       "home": "Home",
@@ -570,12 +578,28 @@
     "created": "{{count}} variants created",
     "back": "Back to the queue"
   },
+  "doubts": {
+    "title": "Picture doubts",
+    "hint": "Pictures the model is sure show another colour than the catalogue holds. No doubt holds a product back. Saying the picture is fine, or that it is to be replaced, changes nothing in the catalogue; saying it belongs to another variant files it under that variant — the one of the colour the model sees.",
+    "loading": "Loading the doubts…",
+    "failed": "The doubts could not be loaded.",
+    "empty": "No picture is in doubt.",
+    "pictureAlt": "The doubted picture of {{product}}",
+    "seen": "The model sees {{seen}}; the catalogue says {{held}}.",
+    "anotherVariant": "This product has another variant in {{seen}}: the picture may be that one's.",
+    "sure": "Read by {{model}}, {{confidence}} sure.",
+    "decision": {
+      "PictureIsFine": "The picture is fine",
+      "ReplaceThePicture": "Replace the picture",
+      "BelongsToAnotherVariant": "It is of another variant"
+    }
+  },
   "claims": {
     "title": "Claims to review",
     "loading": "Loading the claims…",
     "failed": "The claims could not be loaded. Try again.",
     "empty": "No claims are waiting for review.",
-    "hint": "What a model read in each product's description. Nothing changes in the catalogue until you approve it. The weakly supported first: their quote may not say what the claim does.",
+    "hint": "What a model read in each product's description, and in its pictures. Nothing changes in the catalogue until you approve it. The weakly supported first: their quote may not say what the claim does.",
     "column": {
       "product": "Product",
       "claim": "Claim",
@@ -584,6 +608,15 @@
       "action": "Decision"
     },
     "proposedBy": "Proposed by {{extractor}}",
+    "fromPicture": "Read from a picture",
+    "sureAnswer": "The model's sure answer",
+    "pictureNotice": "A model described this picture, and the claim was taken from its description. The quotes below are the model's words, not the shop's text. Check the claim against the picture before you approve it.",
+    "pictureAlt": "The picture of {{product}} this claim was read from",
+    "readBy": "picture read by {{model}}",
+    "contradicts": "The catalogue says otherwise",
+    "catalogueSays": "The catalogue holds, for {{attribute}}",
+    "claimSays": "This claim says",
+    "contradictsNotice": "One of the two is wrong, and nothing here says which. Approving this claim replaces what the catalogue holds; rejecting it leaves the catalogue as it is.",
     "supportExplained": "How well the quote supports the claim, measured by a textual-inference model — not what the extractor says about itself.",
     "approve": "Approve",
     "reject": "Reject",
@@ -963,7 +996,23 @@
     "yes": "Yes",
     "no": "No",
     "loading": "Loading the product…",
-    "failed": "Could not load this product."
+    "failed": "Could not load this product.",
+    "altText": {
+      "title": "What each picture says",
+      "hint": "Alt text: what someone who cannot see the picture is told. Both languages, a sentence each.",
+      "save": "Save",
+      "saving": "Saving…",
+      "notSaved": "Not saved: both languages need a sentence, 300 characters at most."
+    },
+    "shows": {
+      "label": "Which {{axis}} it shows",
+      "none": "None in particular: it is every variant's",
+      "notShown": "Not saved: no variant on sale has that value."
+    },
+    "missingRequired": {
+      "title": "Missing what its category requires",
+      "hint": "It can still be published: it stays as incomplete in the catalogue's gaps."
+    }
   },
   "palette": {
     "title": "Go to, or find",
@@ -997,7 +1046,7 @@
   },
   "proposals": {
     "title": "Proposals",
-    "hint": "What Steward proposed. Nothing here has changed the shop until someone approves it.",
+    "hint": "What Steward and the alt-text job proposed. Nothing here has changed the shop until someone approves it.",
     "filterLabel": "Show proposals",
     "filter": {
       "ToReview": "To review",
@@ -1055,6 +1104,26 @@
       "confirm": "Reject",
       "keep": "Keep it",
       "reason": "Why not? It is what the next prompt is judged against."
+    },
+    "picture": "The picture of {{title}} this proposal is about",
+    "proposedWords": "Proposed — correct it if it is not right",
+    "correctHint": "Approving sends your words. What the model wrote is kept beside them.",
+    "refused": "These words were not taken:",
+    "approveCorrected": "Approve with corrections",
+    "edited": "A person corrected its words first.",
+    "proposer": {
+      "Steward": "Steward",
+      "AltTextJob": "Alt-text job"
+    },
+    "altText": {
+      "describe": "Describe {{count}} pictures",
+      "describing": "Reading the pictures…",
+      "notDescribed": "{{count}} could not be described.",
+      "result": {
+        "Ran": "{{proposed}} descriptions are waiting below for your review.",
+        "NothingToDescribe": "Every picture is described or has a proposal waiting.",
+        "NoModel": "No model that reads pictures is running. Type the alt text on the product instead."
+      }
     }
   },
   "proposalReview": {
@@ -1121,6 +1190,7 @@
       "status": "Status",
       "price": "Price",
       "missingCultures": "No name in",
+      "lacks": "Lacks",
       "period": "Period",
       "revenue": "Revenue",
       "orders": "Orders",
@@ -1202,7 +1272,7 @@
   "claimsBulk": {
     "door": "Review this product's claims together",
     "heading": "Review {{count}} claims · {{product}}",
-    "lede": "The same review as Steward's proposals: what changes, and the evidence for it. Weakly supported claims cannot be approved together — open them one by one.",
+    "lede": "The same review as Steward's proposals: what changes, and the evidence for it. Claims with weak support, claims the catalogue contradicts and claims read from a picture cannot be approved together — open them one by one.",
     "failed": "The claims could not be loaded. Try again.",
     "column": {
       "pick": "Approve",
@@ -1211,25 +1281,35 @@
       "evidence": "Evidence",
       "result": "Result"
     },
-    "weak": "Weak support — open it to decide",
-    "tally": "{{together}} of {{count}} can go together · {{weak}} weak",
+    "openAlone": "Open the one left out",
+    "openFirstAlone": "Open the first one left out",
+    "alone": {
+      "WeakSupport": "Weak support — open it to decide",
+      "ContradictsTheCatalogue": "The catalogue says otherwise — open it to decide",
+      "ReadFromAPicture": "Read from a picture — open it to decide"
+    },
+    "aloneFor": {
+      "WeakSupport": "{{attribute}}: weak support — open it to decide",
+      "ContradictsTheCatalogue": "{{attribute}}: the catalogue says otherwise — open it to decide",
+      "ReadFromAPicture": "{{attribute}}: read from a picture — open it to decide"
+    },
+    "tally": "{{together}} of {{count}} can go together · {{alone}} to open one by one",
     "selected": "{{selected}} of {{count}} selected",
     "cancel": "Cancel",
     "close": "Close",
-    "openWeak": "Open the weak one",
-    "openFirstWeak": "Open the first weak one",
     "approve": "Approve {{count}}",
     "outcome": {
       "Approved": "Approved",
       "WeakSupport": "Weak support — not approved",
+      "ReadFromAPicture": "Read from a picture — not approved",
+      "ContradictsTheCatalogue": "The catalogue says otherwise — not approved",
       "NotWaiting": "Already decided",
       "NotFound": "Not found"
     },
     "headingOne": "Review 1 claim · {{product}}",
     "loading": "Loading the claims of {{product}}…",
     "capped": "Showing the first {{shown}} of {{total}}; the rest wait in the queue.",
-    "tallyOne": "{{together}} of {{count}} can go together · 1 weak",
-    "weakFor": "{{attribute}}: weak support — open it to decide",
+    "tallyOne": "{{together}} of {{count}} can go together · 1 to open on its own",
     "approveFailed": "The approval did not go through. What was decided shows on its row; try the rest again.",
     "done": "{{approved}} approved."
   }

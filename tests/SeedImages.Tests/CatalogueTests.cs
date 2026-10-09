@@ -17,11 +17,12 @@ public sealed class CatalogueTests
     private static string Attributes => Path.Combine(RepositoryRoot.Find(), "seed", "attributes.sample.json");
 
     [Fact]
-    public void The_catalogue_is_a_hundred_products_and_every_one_can_be_drawn()
+    public void The_catalogue_is_a_hundred_and_twenty_products_and_every_one_can_be_drawn()
     {
         var products = ProductCatalogue.Read(Seed);
 
-        Assert.Equal(100, products.Count);
+        // A hundred until 2026-10-08, when twenty were added in families the shop did not have.
+        Assert.Equal(120, products.Count(product => product.VariantOf is null));
 
         // The English description is what the prompt is built from: it names the
         // object without the invented brand, which is what a generator reads best.
@@ -33,7 +34,8 @@ public sealed class CatalogueTests
     }
 
     /// <summary>
-    /// **Thirty-five products declare no colour at all**, and they are the case a
+    /// **Forty-eight products declare no colour at all** (thirty-five of the first
+    /// hundred, thirteen of the twenty added: an oak table is oak), and they are the case a
     /// naive prompt builder gets wrong — it writes "The object is : a bamboo
     /// spice rack" and the model reads a colon as punctuation about nothing.
     ///
@@ -41,12 +43,35 @@ public sealed class CatalogueTests
     /// moves it is a seed edit that silently changes ninety-two prompts.
     /// </summary>
     [Fact]
-    public void Sixty_five_products_declare_a_colour_and_thirty_five_do_not()
+    public void Seventy_two_products_declare_a_colour_and_forty_eight_do_not()
+    {
+        var products = ProductCatalogue.Read(Seed).Where(product => product.VariantOf is null).ToList();
+
+        Assert.Equal(72, products.Count(product => product.SpanishColour is not null));
+        Assert.Equal(48, products.Count(product => product.SpanishColour is null));
+    }
+
+    /// <summary>
+    /// A product sold in several colours has a picture of each (phase 13a,
+    /// I-4d): its cover, drawn in the colour of the variant that shows it, and
+    /// one more to make for each of the others — named for its file, in that
+    /// variant's colour. A picture of its gallery that is no variant's — the
+    /// back — is not a colour to make: it is another view.
+    /// </summary>
+    [Fact]
+    public void A_product_in_three_colours_is_its_cover_and_one_more_picture_for_each_other_colour()
     {
         var products = ProductCatalogue.Read(Seed);
 
-        Assert.Equal(65, products.Count(product => product.SpanishColour is not null));
-        Assert.Equal(35, products.Count(product => product.SpanishColour is null));
+        var cover = products.Single(product => product.ItemId == "B13BAG0711");
+        var others = products.Where(product => product.VariantOf is not null).ToList();
+
+        Assert.Equal(("oliva", (string?)null), (cover.SpanishColour, cover.VariantOf));
+        Assert.Equal(
+            [("B13BAG0711-BLACK", "negro", "B13BAG0711"), ("B13BAG0711-NAVY_BLUE", "azul marino", "B13BAG0711")],
+            others.Select(other => (other.ItemId, other.SpanishColour, other.VariantOf)));
+        Assert.All(others, other => Assert.Equal((cover.EnglishName, cover.EnglishDescription), (other.EnglishName, other.EnglishDescription)));
+        Assert.DoesNotContain(products, product => product.ItemId == "B13BAG0711-BACK");
     }
 
     [Fact]

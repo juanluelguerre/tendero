@@ -31,6 +31,7 @@ export const Navigation: readonly NavGroup[] = [
       { route: '/review', label: 'reviewQueue', icon: 'review', waiting: 'drafts' },
       { route: '/catalogue', label: 'catalogue', icon: 'products' },
       { route: '/claims', label: 'claims', icon: 'claims', waiting: 'claims' },
+      { route: '/doubts', label: 'doubts', icon: 'review' },
       { route: '/attributes', label: 'attributes', icon: 'attributes' },
     ],
   },

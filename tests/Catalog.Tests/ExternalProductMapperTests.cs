@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Tests;
 using Xunit;
 
@@ -111,5 +112,93 @@ public sealed class ExternalProductMapperTests
         product.LinkExternal(Clock, "seed", external.ExternalId);
 
         Assert.Single(product.ExternalReferences);
+    }
+    // ---------- a source that tells its variants apart (phase 13a, I-4d) ----------
+
+    private sealed class Colours
+    {
+        public static AttributeDefinitions Defined()
+        {
+            var colour = AttributeDefinition.Define(Clock, "COLOR", ElGuerre.Tendero.SharedKernel.LocalizedText.From("es", "color").With("en", "colour"), AttributeKind.Option, isVariantAxis: true);
+            colour.AddAlias(Clock, "color");
+            colour.AddOption(Clock, "OLIVE", ElGuerre.Tendero.SharedKernel.LocalizedText.From("es", "oliva").With("en", "olive"));
+            colour.AddOption(Clock, "BLACK", ElGuerre.Tendero.SharedKernel.LocalizedText.From("es", "negro").With("en", "black"));
+            return new AttributeDefinitions([colour]);
+        }
+    }
+
+    private static ExternalProduct InTwoColours() => AnExternalProduct() with
+    {
+        Attributes = new Dictionary<string, string>(),
+        Variants =
+        [
+            new ExternalVariant("OLIVE", new Dictionary<string, string> { ["color"] = "oliva" }),
+            new ExternalVariant("BLACK", new Dictionary<string, string> { ["color"] = "negro" }),
+        ],
+    };
+
+    /// <summary>
+    /// Each way the source sells it is a variant, placed on the axis its own
+    /// word resolves to — the attribute's code and the option's — with a SKU
+    /// that is the same on every import. And no default one: the product is not
+    /// bought one way.
+    /// </summary>
+    [Fact]
+    public void A_source_that_tells_two_colours_apart_gets_a_variant_of_each_and_no_default()
+    {
+        var external = InTwoColours();
+
+        var product = external.ToNewProduct("seed", Clock, Colours.Defined());
+
+        Assert.Equal(["COLOR"], product.VariantAxes);
+        Assert.Equal(
+            [("B073WXYZ01-OLIVE", "OLIVE"), ("B073WXYZ01-BLACK", "BLACK")],
+            product.Variants.Select(variant => (variant.Sku, variant.AxisValues["COLOR"])));
+        Assert.All(product.Variants, variant => Assert.Equal((external.Price, VariantStatus.Available), (variant.Price, variant.Status)));
+    }
+
+    /// <summary>
+    /// What a picture shows arrives in the same words a variant's colour does,
+    /// and lands on the same value: the attribute's code and the option's. A word
+    /// the catalogue has no option for stays as the source wrote it — which no
+    /// variant holds, and the aggregate then refuses.
+    /// </summary>
+    [Fact]
+    public void The_sources_words_for_what_a_picture_shows_resolve_as_a_variants_do()
+    {
+        var black = InTwoColours().ToNewProduct("seed", Clock, Colours.Defined()).Variants.Single(variant => variant.Sku.EndsWith("BLACK", StringComparison.Ordinal));
+
+        var shown = ExternalProductMapper.Coordinates(new Dictionary<string, string> { ["color"] = "negro" }, Colours.Defined());
+
+        Assert.Equal(black.AxisValues, shown);
+        Assert.Equal("BLACK", shown["color"]);
+    }
+
+    [Fact]
+    public void Reimporting_adds_no_variant_and_the_price_follows_the_source()
+    {
+        var product = InTwoColours().ToNewProduct("seed", Clock, Colours.Defined());
+
+        (InTwoColours() with { PriceAmount = 35m }).ApplyTo(product, Clock, Colours.Defined());
+
+        Assert.Equal(2, product.Variants.Count);
+        Assert.All(product.Variants, variant => Assert.Equal(35m, variant.Price.Amount));
+    }
+
+    /// <summary>
+    /// A product imported before the source told its colours apart has a
+    /// default variant. The day the source does, that one is retired — an order
+    /// placed against it still names its SKU — and the two take its place.
+    /// </summary>
+    [Fact]
+    public void A_source_that_starts_telling_variants_apart_retires_the_default_one()
+    {
+        var product = AnExternalProduct().ToNewProduct("seed", Clock, Colours.Defined());
+
+        InTwoColours().ApplyTo(product, Clock, Colours.Defined());
+
+        Assert.Equal(
+            [("B073WXYZ01-DEFAULT", VariantStatus.Discontinued), ("B073WXYZ01-OLIVE", VariantStatus.Available), ("B073WXYZ01-BLACK", VariantStatus.Available)],
+            product.Variants.Select(variant => (variant.Sku, variant.Status)));
     }
 }

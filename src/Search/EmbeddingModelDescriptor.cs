@@ -39,6 +39,15 @@ public sealed record EmbeddingModelDescriptor
     public static EmbeddingModelDescriptor BgeM3 { get; } =
         new("BAAI/bge-m3", "5617a9f61b028005a4858fdac845db406aefb181", 1024);
 
+    /// <summary>
+    /// <c>google/siglip2-base-patch16-224</c>: Apache-2.0 at this revision, 768
+    /// dimensions, and one space for a picture and for the words that describe
+    /// it — what visual search stands on (phase 13a). Its towers are our own
+    /// ONNX export of this revision (ADR 0031).
+    /// </summary>
+    public static EmbeddingModelDescriptor Siglip2Base { get; } =
+        new("google/siglip2-base-patch16-224", "75de2d55ec2d0b4efc50b3e9ad70dba96a7b2fa2", 768);
+
     /// <summary>The repository id on Hugging Face, <c>organisation/name</c>.</summary>
     public string ModelId { get; }
 

@@ -134,6 +134,43 @@ public sealed class ProposalApprovalTests(PostgresFixture postgres)
         return (provider, factory);
     }
 
+    /// <summary>
+    /// Approved with the person's corrections (phase 13a), on Postgres: the corrected
+    /// name is what Catalog wrote, the model's own is kept on the proposal's row
+    /// beside it, the proposal says it was Steward's, and the correction is audited
+    /// as the person's decision.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_translation_approved_with_corrections_writes_the_persons_words_and_keeps_the_models()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var (provider, factory) = await ShopAsync("proposal_edited", ct);
+        await using var _ = provider;
+        var product = await FirstProductAsync(factory, ct);
+        var proposal = await ProposeAsync(provider, product, "A name the model nearly got right", ct);
+
+        var decision = await SendAsync(provider, new ApproveEditedProposalCommand(
+            proposal, new Dictionary<string, string> { ["name"] = "The name a person corrected" }), ct);
+
+        Assert.Equal(DecisionOutcome.Applied, decision.Outcome);
+        await using var reread = factory.Create();
+        Assert.Equal("The name a person corrected", (await reread.Products.SingleAsync(p => p.Id == product, ct)).Name.Values["en"]);
+        var stored = await reread.Proposals.SingleAsync(p => p.Id == proposal, ct);
+        Assert.Equal((ProposalStatus.Applied, true, Proposers.Steward), (stored.Status, stored.Edited, stored.Provenance.Proposer));
+        using var kept = JsonDocument.Parse(stored.ProposedPayload!);
+        using var applied = JsonDocument.Parse(stored.Payload);
+        Assert.Equal(("A name the model nearly got right", "The name a person corrected"),
+            (kept.RootElement.GetProperty("name").GetString(), applied.RootElement.GetProperty("name").GetString()));
+        var audited = await reread.AuditEntries.SingleAsync(entry => entry.CommandType == nameof(ApproveEditedProposalCommand), ct);
+        Assert.Equal(("Lucía", AuditOutcome.Allowed), (audited.ActorName, audited.Outcome));
+
+        // And the list says both: that a person edited it, and whose it was.
+        var listed = Assert.Single((await AskAsync(provider, new ListProposalsQuery(ProposalFilter.All, [proposal], 1, 20, "en"), ct)).Items);
+        Assert.Equal((true, "Steward", "name"), (listed.Edited, listed.Provenance.Proposer, listed.Changes[0].Key));
+    }
+
     private static async Task<ProductId> FirstProductAsync(TenderoDbContextFactory factory, CancellationToken ct)
     {
         await using var context = factory.Create();
@@ -145,7 +182,7 @@ public sealed class ProposalApprovalTests(PostgresFixture postgres)
         var payload = JsonSerializer.SerializeToElement(new { productId = product.Value, culture = "en", name });
         var result = await SendAsync(provider, new ProposeActionsCommand(
             [new ProposedAction(SetProductTranslationProposal.CommandName, payload, "It has no English name.")],
-            new ProposalSource("scripted", null, "steward-v1", "conv-1")), ct);
+            new ProposalSource("scripted", null, "steward-v1", "conv-1", Proposers.Steward)), ct);
         return Assert.Single(result.Rows).Id!.Value;
     }
 

@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.Search.Reranking;
 using ElGuerre.Tendero.Search.Strategies;
 using Microsoft.Extensions.Configuration;
@@ -27,6 +28,30 @@ public sealed class HybridSearchCompositionTests
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(ISearchAnswerer) && descriptor.ImplementationType == typeof(SearchAnswerer));
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IReranker) && descriptor.ImplementationType == typeof(NoReranker));
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IVectorLayer));
+        // And no visual search: the port is there, and says it was started without its model.
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IImageEmbeddingGenerator) && descriptor.ImplementationType == typeof(NoImageEmbeddings));
+    }
+
+    /// <summary>
+    /// A folder given is SigLIP 2 in process, once for the whole process — and not
+    /// opened to register it: a folder that is wrong says so when a picture is
+    /// first embedded, with what to run, not while the host is being built.
+    /// </summary>
+    [Fact]
+    public void A_folder_for_the_picture_model_registers_it_once_and_opens_nothing()
+    {
+        var services = new ServiceCollection().AddHybridSearch(Configuration(new()
+        {
+            [ImageEmbeddingServiceCollectionExtensions.FolderKey] = Path.Combine(Path.GetTempPath(), "no-such-siglip-folder")
+        }));
+
+        var pictures = Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IImageEmbeddingGenerator));
+        Assert.Equal(ServiceLifetime.Singleton, pictures.Lifetime);
+        Assert.NotEqual(typeof(NoImageEmbeddings), pictures.ImplementationType);
+
+        using var provider = services.BuildServiceProvider();
+        var refusal = Assert.Throws<FileNotFoundException>(() => provider.GetRequiredService<IImageEmbeddingGenerator>());
+        Assert.Contains("prepare-siglip.py", refusal.Message, StringComparison.Ordinal);
     }
 
     [Fact]

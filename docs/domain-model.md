@@ -33,6 +33,7 @@ classDiagram
         +bool IsVariantAxis
         +bool IsFacet
         +bool IsSearchable
+        +bool IsShownInPictures
         +bool IsDraft
         +AttributeOption[] Options
         +string[] Aliases
@@ -52,6 +53,7 @@ classDiagram
         +string Code
         +LocalizedText Label
         +string? Swatch
+        +string[]? MistakenFor
     }
     class AttributeValue {
         <<record>>
@@ -65,6 +67,11 @@ classDiagram
         +string Key
         +bool IsWorthIndexing
     }
+    class AxisValue {
+        <<record>>
+        +string Axis
+        +string Value
+    }
     class Category {
         <<aggregate>>
         +string Code
@@ -73,6 +80,8 @@ classDiagram
         +string Path
         +int SortOrder
         +DateTimeOffset UpdatedAt
+        +string[] Attributes
+        +string[] Required
         +string[] Ancestry
     }
     class CategoryTree {
@@ -110,6 +119,7 @@ classDiagram
         +ImageId Id
         +LocalizedText? Alt
         +int SortOrder
+        +AxisValue[] Shows
     }
     class ProductStatus {
         <<enumeration>>
@@ -123,7 +133,6 @@ classDiagram
         +Money Price
         +Map~string, string~ AxisValues
         +string? TaxClass
-        +ImageId? Image
         +VariantStatus Status
     }
     class VariantStatus {
@@ -138,6 +147,7 @@ classDiagram
     Product "1" --> "*" AttributeValue : Attributes
     Product "1" --> "*" ExternalReference : ExternalReferences
     Product "1" --> "*" Variant : Variants
+    ProductImage "1" --> "*" AxisValue : Shows
 ```
 
 ### Events
@@ -892,11 +902,64 @@ classDiagram
         Rejected
         Superseded
     }
+    class ColourSeen {
+        <<record>>
+        +string AttributeCode
+        +string Seen
+        +LocalizedText SeenLabel
+        +string Held
+        +LocalizedText HeldLabel
+        +double? Confidence
+        +bool Related
+        +bool OfAnotherVariant
+    }
     class Evidence {
         <<record>>
         +SourceDocumentId Document
         +Quote Quote
         +double Support
+    }
+    class PictureDoubt {
+        <<aggregate>>
+        +PictureDoubtId Id
+        +ProductId ProductId
+        +string PictureId
+        +string AttributeCode
+        +string Seen
+        +LocalizedText SeenLabel
+        +string Held
+        +LocalizedText HeldLabel
+        +double Confidence
+        +bool SeenOnAnotherVariant
+        +string ReadByModel
+        +string ReadWithPrompt
+        +PictureDoubtStatus Status
+        +PictureDoubtDecision? Decision
+        +string? DecidedBy
+        +DateTimeOffset? DecidedAt
+        +DateTimeOffset RaisedAt
+    }
+    class PictureDoubtDecision {
+        <<enumeration>>
+        PictureIsFine
+        ReplaceThePicture
+        BelongsToAnotherVariant
+    }
+    class PictureDoubtId {
+        <<record>>
+        +Guid Value
+    }
+    class PictureDoubtStatus {
+        <<enumeration>>
+        Open
+        Decided
+        Withdrawn
+    }
+    class PictureReading {
+        <<record>>
+        +ImageId Picture
+        +string Model
+        +string PromptVersion
     }
     class ProductClaim {
         <<aggregate>>
@@ -938,6 +1001,10 @@ classDiagram
         +string Culture
         +string Text
         +DateTimeOffset RetrievedAt
+        +PictureReading? Reading
+        +string? PictureId
+        +string? ReadByModel
+        +string? ReadWithPrompt
         +DateTimeOffset? ProposedAt
         +int FailedAttempts
         +bool IsWaiting
@@ -950,13 +1017,16 @@ classDiagram
     class SourceKind {
         <<enumeration>>
         ProductDescription
+        ProductImage
     }
     Evidence --> SourceDocumentId : Document
     Evidence --> Quote : Quote
+    PictureDoubt --> PictureDoubtId : Id
     ProductClaim --> ClaimId : Id
     ProductClaim --> Provenance : Provenance
     ProductClaim "1" --> "*" Evidence : Evidence
     SourceDocument --> SourceDocumentId : Id
+    SourceDocument --> PictureReading : Reading
 ```
 
 ### Events
@@ -967,6 +1037,16 @@ classDiagram
 | `ClaimProposed` | `ClaimId: ClaimId`, `ProductId: ProductId` |
 | `ClaimRejected` | `ClaimId: ClaimId`, `ProductId: ProductId`, `RejectedBy: string` |
 | `ClaimSuperseded` | `ClaimId: ClaimId`, `ProductId: ProductId`, `WasApproved: bool` |
+| `PictureDoubtDecided` | `DoubtId: PictureDoubtId`, `ProductId: ProductId`, `Decision: PictureDoubtDecision`, `DecidedBy: string`, `PictureId: string?`, `AttributeCode: string?`, `Seen: string?` |
+| `PictureDoubtRaised` | `DoubtId: PictureDoubtId`, `ProductId: ProductId` |
+
+### PictureDoubt states
+
+```mermaid
+stateDiagram-v2
+    Open --> Decided
+    Open --> Withdrawn
+```
 
 ### ProductClaim states
 
@@ -987,6 +1067,8 @@ classDiagram
         +ProposalId Id
         +string Command
         +string Payload
+        +string? ProposedPayload
+        +bool Edited
         +string Subject
         +string? Before
         +string? Display
@@ -1007,6 +1089,7 @@ classDiagram
         +string? ConversationId
         +string? TraceId
         +string AskedBy
+        +string? Proposer
     }
     class ProposalStatus {
         <<enumeration>>

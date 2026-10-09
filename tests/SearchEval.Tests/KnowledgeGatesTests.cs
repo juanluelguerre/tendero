@@ -27,6 +27,27 @@ public sealed class KnowledgeGatesTests
         Assert.Empty(gates.Support["nli"].Failures(new SupportScore(1.00, 1.00, 1.00, 1.00, 0.03, 0.95, 0.1, 0.1, 0.07)));
     }
 
+    /// <summary>
+    /// **Offered by category, held to its own floor** (ADR 0056; measured
+    /// 2026-10-08). What the 4B gave offered each product's own attributes
+    /// passes it; what it gives offered the whole vocabulary — 0.92, 0.80, typed
+    /// 0.88 — does not: the floor is higher because the measurement was, and a
+    /// run that slid back to the old numbers is a regression.
+    /// </summary>
+    [Fact]
+    public async Task By_category_has_its_own_floors_and_the_whole_vocabularys_numbers_do_not_pass_them()
+    {
+        var gates = await KnowledgeGates.LoadAsync(KnowledgeDirectory(), Ct);
+        var (rules, chat) = (gates.Claims[ClaimsSuite.GateKey("rules", byCategory: true)], gates.Claims[ClaimsSuite.GateKey("chat", byCategory: true)]);
+
+        Assert.Empty(rules.Failures(Score(1.00, 0.30)));
+        Assert.Empty(chat.Failures(Score(0.938, 0.845, typed: 0.941, verbatim: 1.000, language: 1.00, traps: 1)));
+        Assert.Equal(
+            ["typed accuracy 0.880 < 0.890"],
+            chat.Failures(Score(0.92, 0.80, typed: 0.88, verbatim: 0.984, language: 1.00, traps: 1)));
+        Assert.Equal(("chat", "chat/category"), (ClaimsSuite.GateKey("chat", byCategory: false), ClaimsSuite.GateKey("chat", byCategory: true)));
+    }
+
     [Fact]
     public async Task A_regression_fails_and_names_every_floor_it_missed()
     {

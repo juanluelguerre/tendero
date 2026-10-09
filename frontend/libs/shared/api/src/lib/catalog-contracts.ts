@@ -25,6 +25,11 @@ export type WithdrawProductResponse = Schemas['WithdrawProductResponse'];
 
 /** A product as the shopkeeper reviews it: every culture as stored, whatever its status (R-4.3). */
 export type ProductForReview = Schemas['ProductForReview'];
+
+/** A picture's alt text as a person types it, and what writing it came to. */
+export type SetImageAltTextRequest = Schemas['SetImageAltTextRequest'];
+export type SetImageAltTextResponse = Schemas['SetImageAltTextResponse'];
+export type SetImageShowsResponse = Schemas['SetImageShowsResponse'];
 export type ImportResult = Schemas['ImportProductsResult'];
 export type DefineVariantsResponse = Schemas['DefineVariantsResponse'];
 

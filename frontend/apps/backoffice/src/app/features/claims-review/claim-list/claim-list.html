@@ -63,19 +63,44 @@
                     >{{ claim.attributeCode }} = {{ claim.value }}</span
                   >
                 }
+                @if (claim.picture) {
+                  <span
+                    class="ms-1 mt-1 inline-block rounded-sm border border-accent px-2 py-px text-3xs text-accent"
+                    >{{ t('claims.fromPicture') }}</span
+                  >
+                  @if (!claim.decidedAlone) {
+                    <span
+                      class="ms-1 mt-1 inline-block rounded-sm border border-hairline-strong px-2 py-px text-3xs text-muted"
+                      >{{ t('claims.sureAnswer') }}</span
+                    >
+                  }
+                }
+                @if (claim.contradicts) {
+                  <span
+                    class="ms-1 mt-1 inline-block rounded-sm border border-hairline-strong px-2 py-px text-3xs text-warning"
+                    >{{ t('claims.contradicts') }}</span
+                  >
+                }
               </td>
               <td class="font-medium whitespace-nowrap">{{ store.productName(claim) }}</td>
               <td class="numeric"><backoffice-claim-support [claim]="claim" /></td>
               <td class="text-end whitespace-nowrap">
                 <!-- Quiet, both: one clay action per view, and a queue of rows has many. -->
-                <button
-                  type="button"
-                  class="button button--small button--quiet"
-                  [disabled]="store.busy() === claim.claimId"
-                  (click)="$event.stopPropagation(); store.decide(claim, 'approve', 'row')"
-                >
-                  {{ t('claims.approve') }}
-                </button>
+                <!-- Read from a picture, or saying another value than the catalogue
+                     holds: approved with both in front, so from the pane and never
+                     from the row. Unless it is the picture's own answer and the
+                     model was sure of it: the server then gives no reason to
+                     decide it alone, and it is approved from here like any other. -->
+                @if (!(claim.picture && claim.decidedAlone) && !claim.contradicts) {
+                  <button
+                    type="button"
+                    class="button button--small button--quiet"
+                    [disabled]="store.busy() === claim.claimId"
+                    (click)="$event.stopPropagation(); store.decide(claim, 'approve', 'row')"
+                  >
+                    {{ t('claims.approve') }}
+                  </button>
+                }
                 <button
                   type="button"
                   class="button button--small button--quiet ms-2"
@@ -96,6 +121,15 @@
         <li class="worklist-card" [class.worklist-card--selected]="claim.claimId === store.selectedId()">
           <button type="button" class="worklist-card__open" (click)="store.open(claim)">
             <span class="m-0 font-medium">{{ statement(claim) }}</span>
+            @if (claim.picture) {
+              <span class="text-3xs text-accent">{{ t('claims.fromPicture') }}</span>
+              @if (!claim.decidedAlone) {
+                <span class="text-3xs text-muted">{{ t('claims.sureAnswer') }}</span>
+              }
+            }
+            @if (claim.contradicts) {
+              <span class="text-3xs text-warning">{{ t('claims.contradicts') }}</span>
+            }
             <span class="worklist-card__line">
               <span class="muted font-medium whitespace-nowrap">{{ store.productName(claim) }}</span>
               <span class="worklist-card__end"><backoffice-claim-support [claim]="claim" /></span>

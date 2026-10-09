@@ -45,7 +45,10 @@
           height="40"
         />
         <span class="flex flex-col leading-tight">
-          <span class="brand__wordmark">{{ t('brand.name') }}</span>
+          <!-- On the narrowest phones the mark stands for the name (read out all the
+               same): with Tino's door in the row, the name pushed the basket off a
+               360 px screen. -->
+          <span class="brand__wordmark max-3xs:sr-only">{{ t('brand.name') }}</span>
           <span class="text-2xs text-muted max-md:hidden">{{ t('brand.tagline') }}</span>
         </span>
       </a>
@@ -268,7 +271,9 @@
            it answered and the words can be refined where they were typed. -->
       <input
         #box
-        class="min-h-tap w-full rounded-md border border-hairline-strong bg-surface ps-3 pe-tap text-body"
+        class="min-h-tap w-full rounded-md border border-hairline-strong bg-surface ps-3 text-body"
+        [class.pe-tap]="!visual.available()"
+        [class.pe-tap-2]="visual.available()"
         type="search"
         [id]="'find-' + variant"
         [placeholder]="t('nav.search')"
@@ -278,6 +283,21 @@
            draw it: Enter is not the only way, and on a phone there may be no
            Enter key in sight. Quiet, not clay: the page's one accent action is
            the page's. -->
+      <!-- A picture instead of words (phase 13a): a quiet camera beside the magnifier,
+           drawn only where the shop can be searched with one. Where it cannot, this
+           box is exactly the one it always was (invariant 8). Never clay. -->
+      @if (visual.available()) {
+        <button
+          type="button"
+          class="absolute inset-y-0 end-tap grid w-tap place-items-center bg-transparent text-muted hover:text-body aria-expanded:text-body"
+          data-visual-search-door
+          [attr.aria-label]="t('visualSearch.door')"
+          [attr.aria-expanded]="visual.isOpen()"
+          (click)="visual.toggle()"
+        >
+          <lib-icon class="size-icon" name="camera" />
+        </button>
+      }
       <button
         type="submit"
         class="absolute inset-y-0 end-0 grid w-tap place-items-center rounded-r-md bg-transparent text-muted hover:text-body"
@@ -288,6 +308,15 @@
           <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
       </button>
+      <!-- Under the box it belongs to, over the page; loaded when it is first opened.
+           The box is drawn twice — the header's row, and the phone's own — and the
+           panel exists under the one that is showing, never under both: it listens
+           to the whole page for a paste and for a press outside it. -->
+      @if (visual.isOpen() && (variant === 'row') === wideEnoughForTheRow()) {
+        @defer (on immediate) {
+          <storefront-visual-search-panel class="absolute inset-x-0 top-full z-20 mt-2" />
+        }
+      }
     </form>
   </ng-template>
 

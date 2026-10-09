@@ -1,0 +1,20 @@
+[
+  {
+    "when": "Describe the picture",
+    "pictures": 1,
+    "reply": {
+      "es": "Una taza blanca con asa.",
+      "en": "A white mug with a handle."
+    }
+  },
+  {
+    "when": "how many separate items",
+    "pictures": 1,
+    "say": "There are several of them."
+  },
+  {
+    "when": "main colour",
+    "pictures": 1,
+    "say": "grey"
+  }
+]

@@ -86,12 +86,12 @@ public sealed class OrderingReadToolsTests
     }
 
     [Fact]
-    public void Ordering_registers_its_three_tools_for_the_shopkeeper_and_two_for_the_shopper()
+    public void Ordering_registers_its_three_tools_for_the_shopkeeper_and_three_for_the_shopper()
     {
         var byAudience = Compose().Tools.ToLookup(tool => tool.Audience, tool => tool.Name);
 
         Assert.Equal(["product_performance", "returns_summary", "sales_summary"], byAudience[ToolAudience.Shopkeeper].Order());
-        Assert.Equal(["get_return_policy", "my_orders"], byAudience[ToolAudience.Shopper].Order());
+        Assert.Equal(["get_return_policy", "get_shipping_terms", "my_orders"], byAudience[ToolAudience.Shopper].Order());
     }
 
     [Fact]

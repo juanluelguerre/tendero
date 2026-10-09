@@ -53,7 +53,7 @@ public sealed class UcpCatalogConformanceTests
             new VariantView(
                 "0199a1f0-0000-7000-8000-000000000002", $"{code}-BLACK", 39.00m, "EUR",
                 new Dictionary<string, string> { ["COLOR"] = "BLACK" },
-                "negro", "abc123", false, true, 4)
+                "negro", "abc123", false, true, 4, ["abc123"])
         ],
         PriceFrom: 39.00m,
         PriceTo: 39.00m,

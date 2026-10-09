@@ -42,6 +42,28 @@ internal static class Jsonb
         text => text == null ? 0 : JsonSerializer.Serialize(text.Values, Options).GetHashCode(StringComparison.Ordinal),
         text => text == null ? null : new LocalizedText(text.Values));
 
+    /// <summary>
+    /// What a picture shows of its product's variants (`ProductImage.Shows`), as
+    /// its axis -> value pairs: {"COLOR":"NAVY_BLUE"}, written as text inside the
+    /// gallery's JSON, the way a picture's alt text is. A picture that shows
+    /// nothing writes null; one stored before pictures said anything has no such
+    /// key at all, and both read as *shows nothing*.
+    /// </summary>
+    public static readonly ValueConverter<IReadOnlyList<AxisValue>, string?> ShownConverter = new(
+        shown => shown == null || shown.Count == 0 ? null : WriteShown(shown),
+        json => json == null ? Array.Empty<AxisValue>() : ReadShown(json));
+
+    public static readonly ValueComparer<IReadOnlyList<AxisValue>> ShownComparer = new(
+        (left, right) => (left ?? Array.Empty<AxisValue>()).SequenceEqual(right ?? Array.Empty<AxisValue>()),
+        shown => shown == null ? 0 : shown.Aggregate(0, (hash, value) => HashCode.Combine(hash, value)),
+        shown => shown == null ? Array.Empty<AxisValue>() : shown.ToArray());
+
+    private static string WriteShown(IReadOnlyList<AxisValue> shown) =>
+        JsonSerializer.Serialize(shown.ToDictionary(value => value.Axis, value => value.Value), Options);
+
+    private static IReadOnlyList<AxisValue> ReadShown(string json) =>
+        [.. JsonSerializer.Deserialize<Dictionary<string, string>>(json, Options)!.Select(pair => new AxisValue(pair.Key, pair.Value))];
+
     private static LocalizedText ReadLocalizedText(string json) =>
         new(JsonSerializer.Deserialize<Dictionary<string, string>>(json, Options)!);
 

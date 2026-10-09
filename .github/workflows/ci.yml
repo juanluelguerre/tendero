@@ -154,6 +154,11 @@ jobs:
       - name: Run the claims gate (rules)
         run: dotnet run --project tools/SearchEval -- --suite claims --extractor rules --ci
 
+      # And once more as the shop offers it since phase 13a: each product only
+      # what its category's branch declares (ADR 0056), held to its own floor.
+      - name: Run the claims gate (rules, by category)
+        run: dotnet run --project tools/SearchEval -- --suite claims --extractor rules --vocabulary category --ci
+
       # Everything below runs even when the gate fails, because a failed gate is
       # precisely when you want to read the per-query table.
       - name: Add the report to the job summary
@@ -268,7 +273,8 @@ jobs:
     # About five and a half minutes when it passed. On 2026-09-29 it sat in
     # "Bring up the stack" for over a quarter of an hour, and was cancelled by
     # hand: the gate's curl had no time limit, and neither had the job.
-    timeout-minutes: 25
+    # Thirty since the storefront's specs run here too (2026-10-08).
+    timeout-minutes: 30
     # The thinnest layer of the pyramid, and the only one that needs the whole
     # stack. It is a separate job so the fast checks stay fast: the backend and
     # frontend jobs answer in a couple of minutes and this one has to bring up
@@ -386,6 +392,34 @@ jobs:
         run: npx nx e2e backoffice-e2e
         working-directory: frontend
 
+      # **The shopper's half, which nothing ran** (added 2026-10-08). The
+      # backoffice's specs were in CI from the start and the storefront's were
+      # run by hand, which is to say not run: three of them were red for weeks,
+      # one for a real defect — a listing narrowed by a filter kept its old
+      # counts, because an exception in one corner of the page cut the rest of
+      # its rendering short — and nobody saw it until they were run for another
+      # reason. Same stack, already up: Tino answers from the script exported
+      # above, and its spec runs wherever CI is set.
+      #
+      # After the backoffice's, and not beside them: both move real stock in
+      # the one database, and each suite runs with one worker for that reason.
+      - name: Wait for the storefront
+        run: |
+          for _ in $(seq 1 30); do
+            if curl -sf -o /dev/null --max-time 10 http://localhost:4200; then
+              echo "the storefront serves"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "the storefront never came up"
+          tail -100 "$RUNNER_TEMP/aspire.log"
+          exit 1
+
+      - name: Run the storefront's specs
+        run: npx nx e2e storefront-e2e
+        working-directory: frontend
+
       # The trace of a failing attempt is what makes a failure diagnosable
       # afterwards — including by an agent, which can read it instead of
       # guessing from a stack.
@@ -396,6 +430,15 @@ jobs:
           name: playwright-report
           path: frontend/apps/backoffice-e2e/playwright-report/
           retention-days: 7
+
+      - name: Keep the storefront's report
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-storefront
+          path: frontend/apps/storefront-e2e/playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
 
       # On a timeout too: a job cancelled by its limit is the one whose log is
       # most needed, and `failure()` alone does not run for it.

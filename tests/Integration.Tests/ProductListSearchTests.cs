@@ -31,7 +31,7 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
             await context.Database.MigrateAsync(ct);
 
         var backpack = Product.Create(Clock,
-            new LocalizedText(new Dictionary<string, string> { ["es"] = "Mochila urbana", ["en"] = "Urban backpack" }),
+            new LocalizedText(new Dictionary<string, string> { ["es"] = "Mochila para portátil", ["en"] = "Urban backpack" }),
             new Money(49m, "EUR"));
         var kettle = Product.Create(Clock,
             new LocalizedText(new Dictionary<string, string> { ["es"] = "Hervidor 100% acero", ["en"] = "All-steel kettle" }),
@@ -57,6 +57,14 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
 
         Assert.Equal([backpack.Code], await Found("BACKPACK"));
         Assert.Equal([backpack.Code], await Found("mochila"));
+
+        // An accent is not something a shopkeeper types to find a product: the
+        // author searched "portatil" and the list of products with "portátil"
+        // in their name came back empty. Neither way round, and in any case.
+        Assert.Equal([backpack.Code], await Found("portatil"));
+        Assert.Equal([backpack.Code], await Found("PORTÁTIL"));
+        Assert.Equal([backpack.Code], await Found("móchila"));
+        Assert.Equal([kettle.Code], await Found("100% acéro"));
         Assert.Equal([lamp.Code], await Found(lamp.Code[..5].ToLowerInvariant()));
 
         // A % typed is a character: as a wildcard, "0%a" would also find "100% acero"'s neighbours.

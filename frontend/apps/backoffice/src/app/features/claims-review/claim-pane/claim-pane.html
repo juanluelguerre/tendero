@@ -12,6 +12,44 @@
         }
       </section>
 
+      @if (claim.contradicts; as contradiction) {
+        <!-- The catalogue holds another value for this attribute: both are named and
+             neither is corrected. Approving replaces what the catalogue holds. -->
+        <section class="pane-section">
+          <h3 class="eyebrow text-warning">{{ t('claims.contradicts') }}</h3>
+          <dl class="m-0 grid gap-2 rounded-lg border border-hairline bg-raised p-4 text-xs">
+            <div class="grid gap-hair">
+              <dt class="text-muted">{{ t('claims.catalogueSays', { attribute: contradiction.attributeCode }) }}</dt>
+              <dd class="m-0 font-medium">{{ contradiction.held }}</dd>
+            </div>
+            <div class="grid gap-hair">
+              <dt class="text-muted">{{ t('claims.claimSays') }}</dt>
+              <dd class="m-0 font-medium">{{ contradiction.claimed }}</dd>
+            </div>
+          </dl>
+          <p class="m-0 text-xs text-muted">{{ t('claims.contradictsNotice') }}</p>
+        </section>
+      }
+
+      @if (claim.picture; as picture) {
+        <!-- Read from a picture: the quotes below are a model's words about it, so
+             the picture is what the claim is checked against. -->
+        <section class="pane-section">
+          <h3 class="eyebrow text-accent">{{ t('claims.fromPicture') }}</h3>
+          <figure
+            class="relative m-0 aspect-square w-full flex-none overflow-hidden rounded-lg border border-hairline bg-raised"
+          >
+            <img
+              class="object-contain"
+              [ngSrc]="images.of(picture.imageId)"
+              fill
+              [alt]="t('claims.pictureAlt', { product: store.productName(claim) })"
+            />
+          </figure>
+          <p class="m-0 text-xs text-muted">{{ t('claims.pictureNotice') }}</p>
+        </section>
+      }
+
       <section class="pane-section">
         <h3 class="eyebrow">{{ t('claims.column.evidence') }}</h3>
         <ul class="grid gap-hair text-xs" role="list">
@@ -31,6 +69,9 @@
       </p>
       <p class="mt-1 text-3xs text-muted">
         {{ t('claims.proposedBy', { extractor: claim.model ?? claim.extractor }) }}
+        @if (claim.picture; as picture) {
+          · {{ t('claims.readBy', { model: picture.readBy }) }}
+        }
       </p>
 
       <div class="flex flex-wrap gap-2">

@@ -5,11 +5,12 @@ import { DateTimePipe } from '@tendero/shared-ui';
 import { FilterChips } from '../../../../worklist/filter-chips/filter-chips';
 import { ListState } from '../../../../worklist/list-state/list-state';
 import { Pager } from '../../../../worklist/pager/pager';
-import { ProposalsStore } from '../proposals.store';
+import { AltTextBatch, ProposalsStore } from '../proposals.store';
 
 /**
- * Steward's proposals, the newest first: the product, the action in words, what
- * it proposes and when. Decisions are taken in the pane, where the change, the
+ * The proposals, Steward's and the alt-text job's, the newest first: the product,
+ * the action in words, what it proposes and when. A batch of alt texts is asked
+ * for from here. Decisions are taken in the pane, where the change, the
  * reason and the provenance are in view — one clay action per view.
  */
 @Component({
@@ -21,4 +22,5 @@ export class ProposalList {
   protected readonly store = inject(ProposalsStore);
   protected readonly culture = inject(CultureStore);
   protected readonly pageSize = this.store.pageSize;
+  protected readonly batch = AltTextBatch;
 }

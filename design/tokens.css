@@ -182,6 +182,7 @@
      same number for different reasons, and one may change without the other. */
   --spacing-target: 1.5rem;      /* 24px — the smallest a target may be (WCAG 2.5.8) */
   --spacing-tap:    2.75rem;     /* 44px — where a finger aims: `pointer-coarse:` */
+  --spacing-tap-2:  5.5rem;      /* 88px — two of them side by side: the search box's camera and its magnifier */
 
   --spacing-control-xs: 1.75rem; /* 28px — a round icon button on a card or a row */
   --spacing-control-sm: 2rem;    /* 32px — a compact row, the header's buttons */

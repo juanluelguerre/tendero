@@ -663,9 +663,9 @@ public sealed record ProductSearchDocument
             // The cover is the lowest SortOrder, and that rule lives in the
             // aggregate. Here it used to take the first of the list while the
             // backoffice listing sorted: the same product could show two different
-            // photos. The variant's own photo when it has one — colour needs one,
-            // size does not — and the product's cover otherwise.
-            ImageId = variant.Image?.Value ?? product.PrimaryImage?.Id.Value,
+            // photos. The variant's own picture — the first that says it shows its
+            // colour — and otherwise the first that is every variant's.
+            ImageId = product.PictureOf(variant)?.Id.Value,
             Status = product.Status.ToString().ToLowerInvariant()
         };
 }

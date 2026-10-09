@@ -860,3 +860,211 @@ synonym gap lexical search could not solve. It scores 1.000, and always did —
 the Spanish description literally begins "Flexo LED". The annotation was written
 from assumption instead of from the catalogue. That is precisely what the `why`
 field exists to make visible in review.
+
+## The catalogue grew to 120 products, and the set with it (2026-10-08)
+
+Twenty products were added in families the shop did not have — furniture,
+plants, decoration, the bathroom (`docs/specs/catalogue-growth.md`). **Nothing
+was replaced and nothing judged before was judged again**, which is what lets
+the numbers before and after sit in one table:
+
+| NDCG@10 | 100 products, 52 scored queries | The same 52, 120 products | 63 scored queries, 120 products | Floor now |
+|---|---:|---:|---:|---:|
+| lexical es | 0.692 | 0.685 | 0.714 | 0.69 |
+| lexical en | 0.748 | 0.744 | 0.773 | 0.75 |
+| hybrid + reranker es | 0.831 | 0.822 | 0.839 | 0.82 |
+| hybrid + reranker en | 0.843 | 0.834 | 0.855 | 0.83 |
+
+recall@50 over the 63: lexical 0.746 es / 0.806 en (floors 0.73 / 0.79), hybrid
+0.924 / 0.943 (floors 0.91 / 0.92, unmoved). Throwaway engines, the versions of
+the first measurement; 1256 (es) and 1273 (en) judgments, every strategy's first
+ten judged.
+
+- **The second column is what twenty more products cost** the queries that
+  were already there: four to nine thousandths. A coffee table for *coffee
+  maker*, a standing desk for *electric kettle*, a bed and two plants that want
+  light for *luz para leer en la cama*.
+- **The third is not search getting better.** Eleven queries joined — ten new
+  pairs and *house plant*, which had nothing to find until the shop sold a
+  monstera — and they are easy: one obvious product each. The floors were
+  re-derived from the whole set because the old ones, under a mean lifted by
+  easy queries, would pass a real regression. The test that says the lexical
+  bar does not move was changed on purpose, and says why.
+- **Seen once and not explained**: one gate run of six gave lexical es 0.706
+  with two results unjudged, while another program was starting a dozen
+  containers on the same machine. Five runs agree to the third decimal. If it
+  is the gate searching before its index has refreshed, a loaded CI runner
+  will find it again; recorded so that it is recognised.
+
+## Words against the pictures, alone (2026-10-08)
+
+The images spec keeps text against pictures out of `/api/search` *until its
+effect on NDCG@10 is known*. This is the first half of that: what the pictures
+rank **on their own**, over the same golden set, as a diagnostic strategy of
+the tool (`--strategy hybrid --siglip models/siglip2`) that gates nothing.
+SigLIP 2 at revision `75de2d5`, our export, in process on the CPU; a throwaway
+Qdrant v1.18.0; the query embedded as text, the nearest catalogue pictures,
+each product once.
+
+| NDCG@10, 63 scored queries | lexical | hybrid, fused only | words' vectors alone | **pictures alone** |
+|---|---:|---:|---:|---:|
+| en | 0.770 | 0.830 | 0.833 | **0.742** |
+| es | 0.715 | 0.800 | 0.788 | **0.713** |
+| recall@50 en / es | 0.806 / 0.746 | 0.943 / 0.924 | 0.982 / 0.967 | 0.821 / 0.811 |
+
+Read with three cautions, each of which makes the pictures' number a **lower
+bound**:
+
+- **Only 96 of the 120 products have a picture.** Twenty-four cannot be found
+  this way at all, whatever is asked.
+- **A quarter to a third of its first ten are unjudged** (`judged@10` 0.760 en,
+  0.679 es, where the other strategies are at 0.99): the golden set was judged
+  from what the words' strategies returned, and an unjudged result scores as
+  irrelevant. The pictures bring back products nobody graded.
+- The hybrid column is **without the reranker** — fused by rank only — so it is
+  not the 0.839 / 0.855 of the table above and its *FAIL* against floors set
+  with the reranker means nothing here. The run was not a gate.
+
+By the kind of query, where it stops being one number:
+
+| kind | queries en / es | lexical en / es | hybrid en / es | pictures en / es |
+|---|---|---|---|---|
+| product-type | 21 / 20 | 0.815 / 0.808 | 0.881 / 0.863 | **0.900 / 0.889** |
+| feature | 17 / 18 | 0.897 / 0.855 | 0.897 / 0.845 | 0.732 / 0.706 |
+| use-case | 13 / 13 | 0.466 / 0.303 | 0.629 / 0.603 | 0.618 / 0.533 |
+| symptom | 3 / 3 | 0.545 / 0.347 | 0.519 / 0.435 | 0.428 / **0.513** |
+| exact | 3 / 3 | 1.000 / 1.000 | 1.000 / 1.000 | 0.639 / 0.639 |
+| compatibility | 3 / 3 | 0.990 / 0.985 | 0.991 / 0.987 | 0.652 / 0.626 |
+| abbreviation | 3 / 3 | 0.828 / 0.850 | 0.934 / 0.935 | 0.734 / 0.712 |
+
+- **A picture knows what a thing is, and nothing written on its box.** Asked
+  for a *kind* of product — *kettle*, *sofa*, *zapatillas* — the pictures alone
+  rank better than the fused search, in both languages, with a quarter of their
+  answers ungraded. Asked for a product by its exact name or for what fits what,
+  they are the worst thing in the table: a model number is not visible.
+- **Spanish costs the pictures almost nothing** (0.713 against 0.742), where it
+  costs the lexical index five points. One model reads both languages and a
+  picture has neither.
+- So the second half of the question — whether it helps **as a leg** — is worth
+  asking, and it is not answered here: it needs the pictures fused with the
+  other two and the newly returned products judged first, or the fusion would
+  be scored against a ruler that cannot see a third of what it adds.
+
+**What a floor would separate.** A nearest neighbour always exists, so each
+question needs a similarity below which it answers nothing. Cosine of the
+nearest catalogue picture:
+
+| Asked with | n | Least | Tenth | Median | Ninth tenth | Most |
+|---|---:|---:|---:|---:|---:|---:|
+| a catalogue picture — its nearest *other* product | 96 | 0.724 | 0.806 | 0.863 | 0.927 | 0.971 |
+| a drawn shape that is no product (blank, noise, gradient, a page of text) | 4 | 0.638 | 0.638 | 0.688 | 0.743 | 0.743 |
+| words (en) — the first picture is a right answer | 43 | 0.075 | 0.093 | 0.136 | 0.155 | 0.167 |
+| words (en) — the first picture is not | 20 | 0.077 | 0.080 | 0.113 | 0.135 | 0.142 |
+| words (en) — for something the shop does not sell | 7 | 0.069 | 0.069 | 0.074 | 0.077 | 0.092 |
+| words (es) — the first picture is a right answer | 45 | 0.073 | 0.095 | 0.133 | 0.152 | 0.162 |
+| words (es) — the first picture is not | 18 | 0.074 | 0.081 | 0.102 | 0.133 | 0.138 |
+| words (es) — for something the shop does not sell | 7 | 0.061 | 0.063 | 0.066 | 0.082 | 0.086 |
+
+- **For a picture there is no floor to be had from this.** A page of text is
+  as near a catalogue picture (0.743) as the least similar pair of real
+  products (0.724): the catalogue's pictures share a painter, a background and
+  a light, and that alone is most of the similarity. And the seed holds no
+  photograph of something the shop does not sell, so the lower distribution is
+  four shapes — a lower bound for *nothing*, not what a shopper photographs.
+  `MinPictureSimilarity` stays unset, and the storefront has to say *the
+  nearest things we have* rather than *we found these*.
+- **For words there is the beginning of one.** What the shop does not sell tops
+  out at 0.092 (en) and 0.086 (es); nine in ten right answers are above 0.093.
+  A floor near 0.08 would have silenced five or six of the seven and cost a few
+  right answers in a hundred — on seven queries a culture, which is a
+  direction and not a number. `MinTextSimilarity` stays unset too; it is the
+  author's to set with these beside it.
+
+**What it costs**, on the CPU of the machine it was measured on: 64 ms to embed
+a text and 267 ms a picture, decoding and resizing included, the first call's
+model load amortised over 96 — after the runtime was told how many threads to
+use. Left to its default it was 334 ms and 782 ms (see the images spec, *I-6*).
+
+## The pictures' pool, judged — and the pictures as a third leg (2026-10-08)
+
+The second half of the question above. In the order it had to go: judge what
+the pictures bring back, then fuse, then compare.
+
+**Judged.** 360 results that the pictures put in a first ten and nobody had
+graded: 153 in English, 207 in Spanish (1,426 and 1,463 judgments now).
+Each took, in order, the grade its pair already had in the other language; a
+grade decided for it with a reason; for a brand query, 3 or 0 by its brand; and
+otherwise 0.
+
+| Grade | Results | What they are |
+|---|---:|---|
+| 0 | 306 | a product that only LOOKS like the answer: a round mirror for a lamp, a bamboo rack for a chair, a toaster for a coffee maker |
+| 1 | 44 | mostly gifts — a kitchen appliance for a grandmother, possible and impersonal |
+| 2 | 7 | a toaster and a blender as *a gift for the kitchen*, an olive tree for a grandmother |
+| 3 | 3 | the bike pannier for *azul marino* — navy is one of its three colours, which only its variants say — and two products of a brand asked by name |
+
+**Eighty-five in a hundred of what the pictures add at the tail is noise**, and
+that is the number to keep beside the one in the section above: the pictures
+are right about what a thing is, and their fifth to tenth results are whatever
+is the same shape.
+
+**The pictures alone, with nothing unjudged**: 0.751 en / 0.726 es (it was a
+lower bound of 0.742 / 0.713), recall@50 0.827 / 0.820.
+
+**The ruler moved, and the recall floors with it.** Fifty-four products are now
+known to be relevant that the words' strategies were never asked for, so the
+same engine finds a smaller share of what there is to find. Three runs alike:
+
+| | NDCG@10 before → now | recall@50 before → now | recall floor before → now |
+|---|---|---|---|
+| lexical es | 0.711 → 0.709 | 0.746 → 0.733 | 0.73 → **0.71** |
+| lexical en | 0.768 → 0.767 | 0.806 → 0.798 | 0.79 → **0.78** |
+| hybrid + reranker es | 0.839 → 0.836 | 0.924 → 0.905 | 0.91 → **0.89** |
+| hybrid + reranker en | 0.855 → 0.848 | 0.943 → 0.932 | 0.92 → **0.91** |
+
+The NDCG floors did not need to move and did not. `--ci` passes on the engine
+as it ships.
+
+**The third leg.** `Search:Hybrid:PictureDepth` — zero, which is off — makes
+the pictures a third list in the fusion: the query embedded as text by the
+picture model, the nearest catalogue pictures, each product once, fused by rank
+with the words and their meaning, and the head reranked as always. Hybrid with
+the reranker, three runs of each, identical to the third decimal:
+
+| | NDCG@10 en | NDCG@10 es | recall@50 en | recall@50 es | mean ms en / es |
+|---|---:|---:|---:|---:|---:|
+| two legs (as it ships) | 0.848 | 0.836 | 0.932 | 0.905 | 98 / 96 |
+| + pictures, depth 10 | **0.853** | **0.852** | **0.956** | **0.965** | 247 / 197 |
+| + pictures, depth 20 | 0.855 | 0.849 | 0.964 | 0.969 | 249 / 203 |
+
+| kind (depth 10 against two legs) | en | es |
+|---|---|---|
+| product-type | 0.865 → 0.873 | 0.895 → 0.905 |
+| use-case | 0.658 → 0.670 | 0.608 → 0.657 |
+| abbreviation | 0.985 → 0.987 | 0.933 → 0.968 |
+| feature | 0.920 → 0.920 | 0.896 → 0.900 |
+| symptom | 0.704 → 0.704 | 0.646 → 0.652 |
+| exact, compatibility | unchanged | unchanged |
+
+- **It helps, and nothing gets worse.** Half a point in English, a point and a
+  half in Spanish, and no kind of query below where it was — including the
+  exact names the pictures alone were worst at, because the reranker reads the
+  text of whatever the pictures propose and the junk does not survive it. The
+  pictures propose; the words decide.
+- **What it really buys is recall**: six points in Spanish. Products the words
+  and their meaning never fetched are in the first fifty.
+- **Spanish gains three times what English does**, as the pictures alone
+  suggested it would: a picture has no language.
+- **It costs a hundred to a hundred and fifty milliseconds a search**, the text
+  tower on the CPU — more than the rest of the search together. Ten is the
+  depth: twenty buys nothing in NDCG and starts returning unjudged products.
+- **Off in the code, on where the pictures are** (the author, 2026-10-09). The
+  default stays zero — what a shop without the picture model runs, and what
+  the floors above are held against — and the AppHost sets ten for the API
+  wherever visual search is already running, so the model it needs is the one
+  already loaded. It is a setting; nothing else changes, a shop without the
+  picture model searches on two legs, and a picture leg that fails or is slow
+  costs only itself — counted as its own stage, `pictures`.
+- Eleven hand mutations of the leg, ten red. The survivor is equivalent: asking
+  a shop that has no model is answered by the stand-in saying so, which the
+  leg treats as the leg not being there.

@@ -38,6 +38,28 @@ public interface IIllustrationGenerator : IDisposable
 }
 
 /// <summary>
+/// A generator that can take a picture and give it back changed (phase 13a,
+/// I-4d). **Its own interface, because one adapter has it and the other does
+/// not**: the hosted model edits an image it is shown; the local pipeline only
+/// draws from noise. A product sold in two colours is one object photographed
+/// twice, and two drawings from the same words are two different objects — so a
+/// variant's picture is made from its product's cover, not from the description
+/// again; and so is another view of it.
+/// </summary>
+public interface IPictureEditor
+{
+    /// <param name="reference">The picture to start from, as PNG.</param>
+    /// <param name="instruction">What to change, and that nothing else is to change.</param>
+    /// <param name="sameFrame">
+    /// Whether the result is the same drawing in the same place — another colour.
+    /// Then the reference's background is restored on it, and how much of the
+    /// reference's shape it still has is measured. Not for another view, which
+    /// is a different shape on purpose.
+    /// </param>
+    GeneratedImage Edit(string itemId, byte[] reference, string instruction, bool sameFrame, Action<string> say);
+}
+
+/// <summary>
 /// The tail every adapter shares: measure, inset, repaint, encode.
 ///
 /// It lives outside both of them on purpose. The guarantees this tool actually

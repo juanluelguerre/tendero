@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ElGuerre.Tendero.SearchEval.Copilot;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
 namespace ElGuerre.Tendero.SearchEval.Tests;
@@ -100,6 +101,68 @@ public sealed class CopilotScoringTests
     public void The_language_is_read_from_the_answers_opening(string? answer, string? expected)
     {
         Assert.Equal(expected, CopilotScoring.LanguageOf(answer));
+    }
+
+    // ---------- the dry run's script, held to the cases it rehearses ----------
+
+    private static string Committed(string file)
+    {
+        var folder = new DirectoryInfo(AppContext.BaseDirectory);
+        while (folder is not null && !File.Exists(Path.Combine(folder.FullName, "Tendero.slnx")))
+            folder = folder.Parent;
+        return File.ReadAllText(Path.Combine(folder!.FullName, "tools", "SearchEval", "Copilot", file));
+    }
+
+    /// <summary>What the script says to a message: its first step whose <c>when</c> the message contains, as the scripted model matches.</summary>
+    private static string? Scripted(JsonElement script, string message) =>
+        script.EnumerateArray()
+            .Where(step => message.Contains(step.GetProperty("when").GetString()!, StringComparison.OrdinalIgnoreCase))
+            .Select(step => step.GetProperty("say").GetString())
+            .FirstOrDefault();
+
+    /// <summary>
+    /// **A language case is rehearsed whole, or it rehearses nothing.** When an
+    /// answer comes in another language than the screen's, the turn asks the model
+    /// to say it again — with the answer as the message. A script with no step for
+    /// that second message answers *I was not scripted for that*, in English: so
+    /// the case that expects English passed on a line nobody wrote for it, and its
+    /// twin, which expects Spanish, failed. Every language case therefore has, in
+    /// the script, the answer in the wrong language and the step that says it
+    /// again in the right one.
+    ///
+    /// **And the first answer is one the turn can tell is in the wrong language.**
+    /// The turn's detector (<see cref="WrittenLanguage"/>) counts function words
+    /// and is not the suite's: *There are no returns opened today* holds none of
+    /// its words, so the turn let it stand and nothing was said again.
+    /// </summary>
+    [Fact]
+    public void The_dry_run_says_each_language_case_again_in_the_language_it_expects()
+    {
+        var cases = JsonSerializer.Deserialize<CopilotCases>(Committed("cases.json"), CopilotScoring.Json)!
+            .Cases.Where(expected => expected.AnswerLanguage is not null).ToList();
+        var script = Json(Committed("dry-run.json"));
+
+        Assert.NotEmpty(cases);
+        Assert.All(cases, expected =>
+        {
+            var first = Scripted(script, expected.Question);
+            Assert.NotNull(first);
+            // The rehearsal is of the repair: the first answer is in the message's language, not the
+            // screen's — plainly, by the turn's own detector, or the turn asks for nothing.
+            Assert.NotEqual(expected.AnswerLanguage, CopilotScoring.LanguageOf(first));
+            Assert.True(
+                WrittenLanguage.Of(first) is { } written && written != expected.AnswerLanguage,
+                $"{expected.Id}: the turn cannot tell \"{first}\" is not in {expected.AnswerLanguage}, and would let it stand.");
+
+            var again = Scripted(script, first);
+            Assert.True(again is not null, $"{expected.Id}: the script has no step for saying \"{first}\" again.");
+            Assert.Equal(expected.AnswerLanguage, CopilotScoring.LanguageOf(again));
+            // And the turn takes what was said again only when it is plainly in the screen's language:
+            // *No hay devoluciones abiertas hoy* holds none of its words, and the first answer stood.
+            Assert.True(
+                WrittenLanguage.Of(again) == expected.AnswerLanguage,
+                $"{expected.Id}: the turn cannot tell \"{again}\" is in {expected.AnswerLanguage}, and would keep the first answer.");
+        });
     }
 
     [Fact]

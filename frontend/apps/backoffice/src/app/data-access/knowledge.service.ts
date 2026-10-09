@@ -4,6 +4,9 @@ import type {
   ClaimApprovalsResponse,
   ClaimsForReviewPage,
   ClaimSupportFilter,
+  DecidePictureDoubtResponse,
+  PictureDoubtDecision,
+  PictureDoubtsPage,
   ReviewClaimResponse,
 } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
@@ -30,18 +33,21 @@ export class KnowledgeService {
     page = 1,
     pageSize = 20,
     product: string | null = null,
+    culture: string | null = null,
   ): Observable<ClaimsForReviewPage> {
     let params = new HttpParams().set('support', support).set('page', page).set('pageSize', pageSize);
+    // The reader's language: what the catalogue holds is worded in it beside a claim that says otherwise.
+    if (culture) params = params.set('culture', culture);
     // One product's: where a claim opened from its bulk review is on the first page.
     if (product) params = params.set('product', product);
     return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, { params });
   }
 
   /** One product's claims waiting for review, every one: its bulk review reads them all. */
-  claimsOf(productId: string): Observable<ClaimsForReviewPage> {
-    return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, {
-      params: new HttpParams().set('support', 'All').set('product', productId).set('page', 1).set('pageSize', 100),
-    });
+  claimsOf(productId: string, culture: string | null = null): Observable<ClaimsForReviewPage> {
+    let params = new HttpParams().set('support', 'All').set('product', productId).set('page', 1).set('pageSize', 100);
+    if (culture) params = params.set('culture', culture);
+    return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, { params });
   }
 
   /** Approves a product's claims together; the server refuses each weak one on its row. */
@@ -55,5 +61,22 @@ export class KnowledgeService {
    */
   decide(claimId: string, decision: ClaimDecision): Observable<ReviewClaimResponse> {
     return this.http.post<ReviewClaimResponse>(`${this.baseUrl}/api/knowledge/claims/${claimId}/${decision}`, {});
+  }
+
+  /** A page of the doubts about pictures that wait for a person, the oldest first, worded in the reader's language. */
+  pictureDoubts(page = 1, pageSize = 20, culture: string | null = null): Observable<PictureDoubtsPage> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (culture) params = params.set('culture', culture);
+    return this.http.get<PictureDoubtsPage>(`${this.baseUrl}/api/knowledge/picture-doubts`, { params });
+  }
+
+  /** What a person says of a doubted picture. It changes nothing but the doubt: the catalogue is theirs to correct. */
+  decideDoubt(doubtId: string, decision: PictureDoubtDecision): Observable<DecidePictureDoubtResponse> {
+    return this.http.post<DecidePictureDoubtResponse>(
+      `${this.baseUrl}/api/knowledge/picture-doubts/${doubtId}/decide`,
+      {
+        decision,
+      },
+    );
   }
 }

@@ -13,7 +13,8 @@ public sealed record ProposedAction(string Command, JsonElement Payload, string 
 
 /// <summary>Which model, under which prompt, in which conversation. Who asked is
 /// not here: it is the principal's.</summary>
-public sealed record ProposalSource(string? Profile, string? Model, string? PromptVersion, string? ConversationId);
+/// <param name="Proposer">What is proposing, by its name among <see cref="Proposers"/>.</param>
+public sealed record ProposalSource(string? Profile, string? Model, string? PromptVersion, string? ConversationId, string? Proposer = null);
 
 /// <summary>
 /// Stores what a model proposed (phase 12), each action checked by the entry of
@@ -41,6 +42,7 @@ public sealed class ProposeActionsValidator : AbstractValidator<ProposeActionsCo
         RuleFor(x => x.Source.Model).MaximumLength(200);
         RuleFor(x => x.Source.PromptVersion).MaximumLength(200);
         RuleFor(x => x.Source.ConversationId).MaximumLength(200);
+        RuleFor(x => x.Source.Proposer).MaximumLength(50);
         RuleForEach(x => x.Actions).ChildRules(action =>
         {
             action.RuleFor(a => a.Command).NotEmpty().MaximumLength(100);
@@ -76,7 +78,8 @@ public sealed class ProposeActionsHandler(
             command.Source.PromptVersion,
             command.Source.ConversationId,
             Activity.Current?.TraceId.ToString(),
-            principal.DisplayName ?? principal.Subject ?? "unknown");
+            principal.DisplayName ?? principal.Subject ?? "unknown",
+            command.Source.Proposer);
 
         var rows = new List<ProposedRow>(command.Actions.Count);
         foreach (var (action, index) in command.Actions.Select((action, index) => (action, index)))

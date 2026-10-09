@@ -43,12 +43,12 @@ public sealed class SetProductTranslationProposal(IServiceProvider services, IPr
         var code = culture.ToUpperInvariant();
         List<ProposalChange> changes =
         [
-            new(LocalizedText.Both($"Name · {code}", $"Nombre · {code}"), ProposalChange.Written(culture, now.Name), ProposalChange.Written(culture, command.Name)),
+            new(LocalizedText.Both($"Name · {code}", $"Nombre · {code}"), ProposalChange.Written(culture, now.Name), ProposalChange.Written(culture, command.Name), "name"),
         ];
         if (command.Description is not null)
         {
             changes.Add(new(LocalizedText.Both($"Description · {code}", $"Descripción · {code}"),
-                ProposalChange.Written(culture, now.Description), ProposalChange.Written(culture, command.Description)));
+                ProposalChange.Written(culture, now.Description), ProposalChange.Written(culture, command.Description), "description"));
         }
 
         return new ProposalSubject(product.Code, now, new ProposalDisplay(product.Name, KindIn(culture), changes));

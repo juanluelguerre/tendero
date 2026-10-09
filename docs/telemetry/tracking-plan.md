@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-42 features: **37** answered by a signal emitted today,
+46 features: **41** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -36,6 +36,7 @@ everything here that is not *planned* is emitted.
 | Browsing trail | Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it? | If many clear it, the trail is felt as surveillance; show less, or ask first. | `trail_cleared` | emitted |
 | Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
 | Tino | Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? | Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. | `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`, `tendero.tino.turns` | emitted |
+| Search with a picture | Does anyone search with a picture, and does the picture find what they wanted? | If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. | `search_by_image_submitted`, `search_by_image_result_followed` | emitted |
 
 ### Backoffice
 
@@ -47,7 +48,8 @@ everything here that is not *planned* is emitted.
 | Catalogue import | Does an import bring products in? | None beyond the run itself. | — An import is an operator's batch, answered by its own result and its span; a counter would say what the result already says. | none |
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
 | Claims from descriptions | How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it? | A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it. | `tendero.knowledge.claims.proposed`, `tendero.knowledge.claims.dropped`, `tendero.knowledge.proposals.failed`, `tendero.knowledge.descriptions.failed` | emitted |
-| Claim review | Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones? | A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. | `tendero.knowledge.claims.reviewed` | emitted |
+| Claim review | Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones? | A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. And of the sure answers a picture gave (sure_answer = true), more than one in ten rejected means the line they clear is too low: raise ProductClaim.SureAnswer before anything is applied without a person. | `tendero.knowledge.claims.reviewed` | emitted |
+| Picture doubts | When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised? | Mostly 'the picture is fine' means the line is too low or two colours are one to the shop: raise PictureDoubt.SureDifference, or declare the two as mistaken for each other. A share of 'replace the picture' worth having is what would justify a doubt holding a picture back from being the cover. | `tendero.knowledge.picture_doubts.decided`, `tendero.knowledge.picture_doubts.retagged`, `backoffice_view_opened`, `backoffice_action_taken` | emitted |
 | Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
 | Agent registry | Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered? | A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet. | `tendero.checkout.attempts` | emitted |
 | Shopkeeper dashboard | Does the shopkeeper start the day on the dashboard, and over which period do they read it? | If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records. | — Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time. | none |
@@ -57,6 +59,8 @@ everything here that is not *planned* is emitted.
 | Palette and list shortcuts | Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row? | R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3. | `backoffice_affordance_used`, `backoffice_action_taken` | emitted |
 | Stock search and filters | Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which? | If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count. | `backoffice_affordance_used` | emitted |
 | Steward | Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? | Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. | `steward_opened`, `steward_answered`, `proposals_reviewed`, `steward_unavailable` | emitted |
+| Alt text for pictures | Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read? | Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes. | `tendero.alt_text.pictures`, `image_alt_proposal_decided` | emitted |
+| Pictures read for claims | Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for? | Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events. | `tendero.picture_reading.pictures` | emitted |
 
 ### Agents
 
@@ -71,7 +75,7 @@ everything here that is not *planned* is emitted.
 
 | Feature | Question | Decision it changes | Signals | Status |
 |---|---|---|---|---|
-| AI search layer | How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss? | Whether the AI stages can be on by default, which service to fix first, and when a reindex is due. | `tendero.search.degraded`, `tendero.search.vector_projection.failed` | emitted |
+| AI search layer | How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss? | Whether the AI stages can be on by default, which service to fix first, and when a reindex is due. | `tendero.search.degraded`, `tendero.search.vector_projection.failed`, `tendero.search.picture_projection.failed` | emitted |
 | Outbox | Is eventual consistency still eventual? | When a second worker replica, and the row locking it needs, is worth building. | `tendero.outbox.lag` | emitted |
 | Model-call metering | Are model-call rows being lost before they reach telemetry.ai_invocations? | Whether the in-process log needs a larger bound, or a durable queue, before the cost line and the AI usage dashboard can be trusted. | `tendero.ai.invocations.dropped` | emitted |
 | AI usage and cost | What do the models cost per day and per model, how fast do they answer, and how often does no model answer Steward? | Which profile is Steward's default and which its fallback, and whether a hosted model is worth its price over the local one (S-7). | `tendero.ai.calls`, `tendero.ai.cost`, `tendero.steward.turns` | emitted |
@@ -180,12 +184,13 @@ browser event, staff. The shopkeeper opened a backoffice screen (R-0 of the rede
 
 Answers:
 
+- **Picture doubts** — When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?
 - **Dashboard tabs and the wall** — Which parts of the shop does the shopkeeper watch — which of the dashboard's tabs are opened — and does anybody put a tab on a monitor of its own?
 - **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `view` | string | `dashboard`, `dashboard.sales`, `dashboard.operations`, `dashboard.growth`, `dashboard.agents`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9). |
+| `view` | string | `dashboard`, `dashboard.sales`, `dashboard.operations`, `dashboard.growth`, `dashboard.agents`, `review`, `catalogue`, `claims`, `doubts`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9). |
 
 ### `backoffice_action_taken`
 
@@ -193,13 +198,14 @@ browser event, staff. The shopkeeper did what a screen is for — published, app
 
 Answers:
 
+- **Picture doubts** — When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?
 - **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
 - **Palette and list shortcuts** — Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen it was done on. |
-| `action` | string | `publish`, `withdraw`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate`, `campaign_create`, `campaign_update`, `campaign_schedule`, `campaign_unschedule`, `campaign_end` | What was done, from a closed list. |
+| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `doubts`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen it was done on. |
+| `action` | string | `publish`, `withdraw`, `import`, `claim_approve`, `claim_reject`, `doubt_decide`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate`, `campaign_create`, `campaign_update`, `campaign_schedule`, `campaign_unschedule`, `campaign_end` | What was done, from a closed list. |
 | `outcome` | string | `done`, `refused`, `failed` | done; refused when the server said no (a 4xx, a rule); failed when it could not answer. |
 | `via` | string | `row`, `pane`, `page` | Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane). |
 
@@ -300,7 +306,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `view` | string | `dashboard`, `dashboard.sales`, `dashboard.operations`, `dashboard.growth`, `dashboard.agents`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen it was opened on. |
+| `view` | string | `dashboard`, `dashboard.sales`, `dashboard.operations`, `dashboard.growth`, `dashboard.agents`, `review`, `catalogue`, `claims`, `doubts`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen it was opened on. |
 
 ### `steward_answered`
 
@@ -402,6 +408,44 @@ Answers:
 |---|---|---|---|
 | `cause` | string | `no_profile`, `model`, `time`, `budget`, `shop`, `too_long`, `scorer`, `too_many`, `network`, `not_available` | The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. |
 
+### `image_alt_proposal_decided`
+
+browser event, staff. A proposed alt text for a product picture was decided by a person: approved as the model wrote it, approved after the person corrected it, or rejected. The decision and the language of the screen, never the words.
+
+Answers:
+
+- **Alt text for pictures** — Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `decision` | string | `approved`, `edited`, `rejected` | What the person did with the proposal. |
+
+### `search_by_image_submitted`
+
+browser event, behavioural. A shopper gave the shop a picture to search with (phase 13a). Only with analytics consent; never the picture, its name or anything read from it.
+
+Answers:
+
+- **Search with a picture** — Does anyone search with a picture, and does the picture find what they wanted?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `how` | string | `chosen`, `dropped`, `pasted`, `camera` | How the picture was given. |
+| `outcome` | string | `answered`, `refused`, `too_many`, `down` | What the shop did with it: an answer, a refusal of the file, the minute's limit, or not answering. |
+| `results` | number | — | How many products came back; 0 when none did or it was not answered. |
+
+### `search_by_image_result_followed`
+
+browser event, behavioural. A shopper opened a product from the answer to a picture (phase 13a). Only with analytics consent.
+
+Answers:
+
+- **Search with a picture** — Does anyone search with a picture, and does the picture find what they wanted?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `position` | number | — | Its place in the answer, from 1. |
+
 ## Metrics
 
 Created by a Tendero `Meter` (`TelemetrySources`), as a static field. No
@@ -422,6 +466,16 @@ Answers:
 ### `tendero.search.vector_projection.failed`
 
 counter, unit `{change}`. Product changes the vector layer could not take; the lexical index took them.
+
+Answers:
+
+- **AI search layer** — How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss?
+
+No attributes.
+
+### `tendero.search.picture_projection.failed`
+
+counter, unit `{change}`. Product changes the picture vectors could not take; the lexical index took them.
 
 Answers:
 
@@ -587,7 +641,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `extractor` | string | `rules`, `chat` | Which extractor read the description: the rules, or the model. |
+| `extractor` | string | `rules`, `chat`, `picture` | Which extractor read the source: the rules or the model for a description, and for a picture's reading the code that reads back what the picture answered. |
 
 ### `tendero.knowledge.claims.dropped`
 
@@ -632,6 +686,31 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `decision` | string | `approve`, `reject` | ReviewDecision, labelled by MetricLabels. |
+| `sure_answer` | string | `true`, `false` | Whether the claim was a picture's own answer the model was sure of (at or above ProductClaim.SureAnswer): the ones a person may approve in bulk. |
+
+### `tendero.knowledge.picture_doubts.decided`
+
+counter, unit `{doubt}`. Doubts about a picture a person decided, by what they said of it.
+
+Answers:
+
+- **Picture doubts** — When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `decision` | string | `picture_is_fine`, `replace_the_picture`, `belongs_to_another_variant` | PictureDoubtDecision, labelled by MetricLabels. |
+
+### `tendero.knowledge.picture_doubts.retagged`
+
+counter, unit `{picture}`. Pictures Catalog was asked to file under another variant after a doubt was decided, by what it answered.
+
+Answers:
+
+- **Picture doubts** — When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `outcome` | string | `shown`, `unchanged`, `no_such_image`, `not_sold`, `archived`, `not_found` | ImageShowsOutcome, labelled by MetricLabels: 'not_sold' is a person saying a picture is of a colour no variant is sold in. |
 
 ### `tendero.knowledge.claims.applied`
 
@@ -711,3 +790,27 @@ Answers:
 | `status` | string | `answered`, `unavailable` | TinoStatus, labelled by MetricLabels. |
 | `cause` | string | `none`, `no_profile`, `model`, `time`, `budget`, `shop`, `too_long`, `scorer` | TinoCause, labelled by MetricLabels; none when Tino answered. |
 | `kind` | string | `none`, `products`, `shop`, `ask`, `no_data`, `order` | TinoKind, labelled by MetricLabels; none when Tino did not answer. |
+
+### `tendero.alt_text.pictures`
+
+counter, unit `{picture}`. Pictures the alt-text job took, by what became of each.
+
+Answers:
+
+- **Alt text for pictures** — Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `outcome` | string | `proposed`, `skipped`, `failed` | proposed: a description was stored for a person to review. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be proposed. |
+
+### `tendero.picture_reading.pictures`
+
+counter, unit `{picture}`. Pictures the reading job took, by what became of each.
+
+Answers:
+
+- **Pictures read for claims** — Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `outcome` | string | `read`, `skipped`, `failed` | read: the model's description was kept as a document, in both languages. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be kept. |

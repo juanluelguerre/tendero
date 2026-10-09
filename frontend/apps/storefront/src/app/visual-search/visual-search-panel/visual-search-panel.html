@@ -1,0 +1,76 @@
+<ng-container *transloco="let t; prefix: 'visualSearch'">
+  <section
+    class="flex flex-col gap-3 rounded-md border border-hairline-strong bg-surface p-4 text-body shadow-pop"
+    role="dialog"
+    aria-labelledby="visual-search-title"
+  >
+    <h2 id="visual-search-title" class="m-0 text-md font-semibold">{{ t('title') }}</h2>
+
+    <!-- The two inputs are the browser's own pickers; the buttons below are their labels. -->
+    <input
+      #file
+      class="sr-only"
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      tabindex="-1"
+      aria-hidden="true"
+      data-visual-search-file
+      (change)="chosen(file, 'chosen')"
+    />
+    <input
+      #camera
+      class="sr-only"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      tabindex="-1"
+      aria-hidden="true"
+      (change)="chosen(camera, 'camera')"
+    />
+
+    @if (store.looking()) {
+      <p class="m-0 flex min-h-tap items-center justify-center gap-2 rounded-md bg-raised p-5 text-muted" role="status">
+        <lib-icon class="size-icon-md" name="search" />
+        {{ t('looking') }}
+      </p>
+    } @else {
+      <!-- A place to drop a picture, where there is a pointer to drop it with. -->
+      <div
+        class="flex flex-col items-center gap-1 rounded-md border border-dashed border-hairline-strong bg-raised p-5 text-center max-md:hidden"
+        [class.border-accent]="over()"
+        [class.bg-accent-tint]="over()"
+        data-visual-search-drop
+        (dragover)="held($event, true)"
+        (dragleave)="held($event, false)"
+        (drop)="dropped($event)"
+      >
+        <lib-icon class="size-icon-lg text-muted" name="camera" />
+        <span class="font-semibold">{{ over() ? t('dropIt') : t('drop') }}</span>
+        <span class="text-sm text-muted">{{ t('orPaste') }}</span>
+      </div>
+
+      <!-- On a phone, the camera first: it is what a phone is holding. -->
+      <button type="button" class="button button--quiet md:hidden" (click)="camera.click()">
+        <lib-icon class="size-icon" name="camera" />
+        {{ t('takePhoto') }}
+      </button>
+      <button type="button" class="button button--quiet" data-visual-search-choose (click)="file.click()">
+        {{ t('choose') }}
+      </button>
+    }
+
+    @switch (store.phase()) {
+      @case ('refused') {
+        <lib-notice tone="bad" live="assertive">{{ t('refused') }}</lib-notice>
+      }
+      @case ('tooMany') {
+        <lib-notice tone="warn" live="assertive">{{ t('tooMany') }}</lib-notice>
+      }
+      @case ('down') {
+        <lib-notice tone="warn" live="assertive">{{ t('down') }}</lib-notice>
+      }
+    }
+
+    <p class="m-0 text-sm text-muted">{{ t('promise') }}</p>
+  </section>
+</ng-container>

@@ -57,6 +57,9 @@
 | [0053](0053-one-model-port.md) | One model port: profiles in configuration, one pipeline, one row per call in `telemetry.ai_invocations` | accepted |
 | [0054](0054-read-tools-belong-to-their-contexts.md) | Read tools belong to their contexts: a context decides what a model may read of it, through `IReadTool` and a DTO with no customer in it — amended in phase 12b: a read has an audience | accepted |
 | [0055](0055-an-answer-is-a-list-of-cited-facts.md) | An answer to a shopper is a list of cited facts, never prose of a model's own: a schema built from the turn's reads, grounding in code before anything is shown, the shop's card and not the model's | accepted |
+| [0056](0056-a-category-declares-its-attributes.md) | A category declares its products' attributes: inherited down the branch, offered to whoever reads a source for claims and never enforced on a product; what a picture can show is the attribute's own to say. **Amended the same day**: a declared attribute is expected or *required*; a product without a required one is incomplete — shown, never refused | accepted |
+| [0057](0057-a-picture-says-what-it-shows.md) | A picture says which of the product's axis values it shows; a variant has no picture of its own and its gallery is derived; a level between product and variant is deferred, with what would bring it back | accepted |
+| [0058](0058-pictures-are-a-vector-space-of-their-own.md) | Pictures are a vector space of their own: SigLIP 2 in process, one point a picture keyed on the hash of its bytes, asked at endpoints beside the search and never inside it; a shopper's picture is never kept; the floors and the leg are left open with what was measured | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

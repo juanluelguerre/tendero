@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Reranking;
@@ -21,6 +22,9 @@ public static class HybridSearchServiceCollectionExtensions
 
         services.AddVectorLayer(configuration);
         services.AddRerankerIfConfigured(configuration);
+        // Pictures as vectors (phase 13a): the model and its collection where a
+        // folder and a store were given, a named stand-in for each where not.
+        services.AddPictureVectors(configuration);
 
         services.AddOptions<HybridSearchOptions>().Bind(configuration.GetSection(HybridSearchOptions.Section));
 

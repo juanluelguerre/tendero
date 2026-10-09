@@ -1,5 +1,10 @@
 # Imágenes por generar
 
+> **2026-10-09: ya no falta ninguna.** Los 120 productos del catálogo tienen
+> imagen; las veintisiete últimas esperan a que el autor las acepte
+> (`IMAGES.md`). Lo que sigue se conserva como se escribió: es el registro de
+> cómo se decidió quién las dibuja, y las cuentas son las de entonces.
+
 Los 100 productos del catálogo de muestra, con el nombre y la descripción de
 cada uno para poder generar su imagen. **18 ya están hechas** y van marcadas;
 faltan 82.
@@ -244,6 +249,18 @@ Plain light warm grey background, even lighting, minimal soft shadow.
 One single object, isolated and centred, three-quarter view,
 at most 70% of the frame height, with wide empty margins above and below.
 ```
+
+**Un juego no es «un único objeto».** Para un producto que declara `piezas`
+mayor que uno, la línea de composición es otra (2026-10-07):
+
+```
+Exactly <número, en palabra> of them, each one whole and none hidden behind another, grouped and centred, three-quarter view,
+```
+
+El lote 4 devolvió cuatro cuchillos para un juego de tres y siete vasos para
+uno de seis: el prompt nombraba el número y a continuación pedía un solo
+objeto. El número va en palabra y no en cifra, porque una cifra en el prompt
+acaba rotulada sobre el producto.
 
 **El color del producto y no el de la marca.** Hubo una versión con
 `Limited warm palette: terracotta, canvas, ink, olive` y el modelo **pintó la

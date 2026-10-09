@@ -40,7 +40,7 @@ public sealed class ReviewClaimsTests
         Propose("brazo articulado", 0.97);
         Propose("tres temperaturas de color", 0.64);
 
-        var queue = await new ListClaimsForReviewHandler(this.knowledge)
+        var queue = await new ListClaimsForReviewHandler(this.knowledge, Held.Nothing)
             .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken);
 
         Assert.Equal([0.64, 0.97], queue.Items.Select(claim => claim.Support));
@@ -62,7 +62,7 @@ public sealed class ReviewClaimsTests
             [new Evidence(document.Id, document.Locate("gres")!, 0.9)],
             new Provenance("chat", "m", "r", "p", "run", this.clock.GetUtcNow()), this.clock));
 
-        var queue = await new ListClaimsForReviewHandler(this.knowledge).HandleAsync(
+        var queue = await new ListClaimsForReviewHandler(this.knowledge, Held.Nothing).HandleAsync(
             new ListClaimsForReviewQuery(Product: this.lamp), TestContext.Current.CancellationToken);
 
         Assert.Equal((1, this.lamp.ToString()), (queue.Total, Assert.Single(queue.Items).ProductId));
@@ -77,7 +77,7 @@ public sealed class ReviewClaimsTests
 
         Assert.Equal(ReviewOutcome.Approved, result.Outcome);
         Assert.Equal(("Ana Tendera", ClaimStatus.Approved), (claim.ReviewedBy, claim.Status));
-        Assert.Empty((await new ListClaimsForReviewHandler(this.knowledge)
+        Assert.Empty((await new ListClaimsForReviewHandler(this.knowledge, Held.Nothing)
             .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken)).Items);
     }
 
@@ -88,7 +88,7 @@ public sealed class ReviewClaimsTests
         await Review(claim, ReviewDecision.Reject, "Ana Tendera");
 
         Assert.Equal(ReviewOutcome.NotWaiting, (await Review(claim, ReviewDecision.Approve, "Luis")).Outcome);
-        Assert.Equal(ReviewOutcome.NotFound, (await new ReviewClaimHandler(this.knowledge, new Reviewer("Luis"), this.knowledge, this.clock)
+        Assert.Equal(ReviewOutcome.NotFound, (await new ReviewClaimHandler(this.knowledge, new Reviewer("Luis"), this.knowledge, this.clock, Held.Nothing)
             .HandleAsync(new ReviewClaimCommand(ClaimId.New(), ReviewDecision.Approve), TestContext.Current.CancellationToken)).Outcome);
         Assert.Equal(("Ana Tendera", ClaimStatus.Rejected), (claim.ReviewedBy, claim.Status));
     }
@@ -112,7 +112,7 @@ public sealed class ReviewClaimsTests
     {
         Propose("brazo articulado", 0.97);
 
-        var queued = Assert.Single((await new ListClaimsForReviewHandler(this.knowledge)
+        var queued = Assert.Single((await new ListClaimsForReviewHandler(this.knowledge, Held.Nothing)
             .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken)).Items);
 
         Assert.Equal(("Tiene brazo articulado.", "It has brazo articulado."), (queued.StatementSpanish, queued.StatementEnglish));
@@ -190,10 +190,10 @@ public sealed class ReviewClaimsTests
         Assert.False(new ListClaimsForReviewValidator().Validate(new ListClaimsForReviewQuery((ClaimSupportFilter)7)).IsValid);
 
     private Task<ClaimsForReviewPage> Queue(ListClaimsForReviewQuery query) =>
-        new ListClaimsForReviewHandler(this.knowledge).HandleAsync(query, TestContext.Current.CancellationToken);
+        new ListClaimsForReviewHandler(this.knowledge, Held.Nothing).HandleAsync(query, TestContext.Current.CancellationToken);
 
     private Task<ReviewClaimResult> Review(ProductClaim claim, ReviewDecision decision, string reviewer) =>
-        new ReviewClaimHandler(this.knowledge, new Reviewer(reviewer), this.knowledge, this.clock)
+        new ReviewClaimHandler(this.knowledge, new Reviewer(reviewer), this.knowledge, this.clock, Held.Nothing)
             .HandleAsync(new ReviewClaimCommand(claim.Id, decision), TestContext.Current.CancellationToken);
 
     private sealed class Reviewer(string name) : IPrincipalAccessor

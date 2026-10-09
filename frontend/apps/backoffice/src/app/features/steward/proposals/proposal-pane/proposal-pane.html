@@ -4,16 +4,56 @@
       <p class="eyebrow m-0 text-accent">{{ proposal.topic }} · {{ t('proposals.status.' + proposal.status) }}</p>
       <p class="m-0 font-mono text-xs text-muted">{{ proposal.subject }}</p>
 
+      @if (proposal.image; as image) {
+        <!-- The picture a proposal is about, beside the words proposed for it: whoever
+             approves a description has to see what is described. -->
+        <figure
+          class="relative m-0 aspect-square w-full flex-none overflow-hidden rounded-lg border border-hairline bg-raised"
+        >
+          <img
+            class="object-contain"
+            [ngSrc]="images.of(image)"
+            fill
+            [alt]="t('proposals.picture', { title: proposal.title })"
+          />
+        </figure>
+      }
+
       @if (proposal.changes.length > 0) {
         <dl class="m-0 grid gap-2 rounded-lg border border-hairline bg-raised p-4">
           @for (change of proposal.changes; track change.field) {
             <div class="grid gap-hair">
               <dt class="text-xs text-muted">{{ change.field }}</dt>
               <dd class="m-0 text-xs text-muted">{{ change.now ?? t('proposals.blank') }}</dd>
-              <dd class="m-0 font-medium">→ {{ change.proposed ?? t('proposals.blank') }}</dd>
+              @if (!correctable()) {
+                <dd class="m-0 font-medium">→ {{ change.proposed ?? t('proposals.blank') }}</dd>
+              }
             </div>
           }
         </dl>
+      }
+
+      @if (correctable()) {
+        <!-- The words a person may correct before approving: only the ones the proposal
+             offers (its changes with a key), never what it is about. -->
+        <section class="pane-section">
+          <h3 class="eyebrow">{{ t('proposals.proposedWords') }}</h3>
+          @for (draft of draftsForm; track $index) {
+            <label class="grid gap-1 text-xs text-muted">
+              <span>{{ drafts()[$index].field }}</span>
+              <textarea
+                class="rounded-md border border-hairline-strong bg-surface p-2 text-sm text-body"
+                rows="3"
+                [formField]="draft.text"
+              ></textarea>
+            </label>
+          }
+          @if (store.refusal(); as refusal) {
+            <p class="m-0 text-xs text-danger" role="alert">{{ t('proposals.refused') }} {{ refusal }}</p>
+          } @else {
+            <p class="m-0 text-3xs text-muted">{{ t('proposals.correctHint') }}</p>
+          }
+        </section>
       }
 
       <section class="pane-section">
@@ -23,7 +63,10 @@
 
       <dl class="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-xs">
         <dt class="text-muted">{{ t('proposals.provenance.proposedBy') }}</dt>
-        <dd class="m-0 text-end">Steward · {{ proposal.provenance.model ?? proposal.provenance.profile ?? '—' }}</dd>
+        <dd class="m-0 text-end">
+          {{ t('proposals.proposer.' + proposal.provenance.proposer) }} ·
+          {{ proposal.provenance.model ?? proposal.provenance.profile ?? '—' }}
+        </dd>
         <dt class="text-muted">{{ t('proposals.provenance.prompt') }}</dt>
         <dd class="m-0 text-end font-mono">{{ proposal.provenance.promptVersion ?? '—' }}</dd>
         <dt class="text-muted">{{ t('proposals.provenance.askedBy') }}</dt>
@@ -45,9 +88,9 @@
               type="button"
               class="button pane-primary flex-1"
               [disabled]="store.busy() === proposal.id"
-              (click)="store.approve(proposal)"
+              (click)="approve(proposal)"
             >
-              {{ t('proposals.approve') }}
+              {{ corrections() ? t('proposals.approveCorrected') : t('proposals.approve') }}
             </button>
             <button
               type="button"
@@ -76,6 +119,9 @@
         @default {
           <p class="m-0 text-xs">
             {{ t('proposals.decided.' + proposal.status, { by: proposal.decidedBy ?? '—' }) }}
+            @if (proposal.edited) {
+              <span class="text-muted"> {{ t('proposals.edited') }}</span>
+            }
             @if (proposal.result; as result) {
               <span class="text-muted"> — {{ result }}</span>
             }

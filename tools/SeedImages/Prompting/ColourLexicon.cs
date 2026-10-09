@@ -20,7 +20,13 @@ public sealed class ColourLexicon
 
     private readonly Dictionary<string, string> englishBySpanish;
 
-    private ColourLexicon(Dictionary<string, string> englishBySpanish) => this.englishBySpanish = englishBySpanish;
+    /// <summary>Pairs of English labels the catalogue says may be taken for each other, each written both ways.</summary>
+    private readonly HashSet<(string, string)> mistaken;
+
+    private readonly Dictionary<string, string> swatchBySpanish;
+
+    private ColourLexicon(Dictionary<string, string> englishBySpanish, HashSet<(string, string)> mistaken, Dictionary<string, string> swatchBySpanish) =>
+        (this.englishBySpanish, this.mistaken, this.swatchBySpanish) = (englishBySpanish, mistaken, swatchBySpanish);
 
     public static ColourLexicon Read(string path)
     {
@@ -45,8 +51,38 @@ public sealed class ColourLexicon
                 pairs[spanish] = english;
         }
 
-        return new ColourLexicon(pairs);
+        // What may be taken for what is declared on one option and true of both
+        // (`mistakenFor`, by code): stainless steel names grey, and grey is then
+        // stainless steel's too. The shop reads the same field — one declaration.
+        var englishByCode = (colour.Options ?? [])
+            .Where(option => option.Label?.ContainsKey("en") == true)
+            .ToDictionary(option => option.Code, option => option.Label!["en"], StringComparer.OrdinalIgnoreCase);
+        var mistaken = new HashSet<(string, string)>();
+        foreach (var option in colour.Options ?? [])
+        {
+            foreach (var other in option.MistakenFor ?? [])
+            {
+                if (englishByCode.TryGetValue(option.Code, out var one) && englishByCode.TryGetValue(other, out var another))
+                {
+                    mistaken.Add((one.ToLowerInvariant(), another.ToLowerInvariant()));
+                    mistaken.Add((another.ToLowerInvariant(), one.ToLowerInvariant()));
+                }
+            }
+        }
+
+        var swatches = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var option in colour.Options ?? [])
+        {
+            if (option.Label?.GetValueOrDefault("es") is { } spanish && option.Swatch is { } swatch)
+                swatches[spanish] = swatch;
+        }
+
+        return new ColourLexicon(pairs, mistaken, swatches);
     }
+
+    /// <summary>Whether the catalogue says these two colours, by their English labels, are one to the eye.</summary>
+    public bool MayBeTakenFor(string english, string another) =>
+        this.mistaken.Contains((english.ToLowerInvariant(), another.ToLowerInvariant()));
 
     /// <summary>The English label, or null when the catalogue says a colour this
     /// file has never heard of — which is a seed that drifted, not a prompt to
@@ -60,7 +96,17 @@ public sealed class ColourLexicon
     /// </summary>
     public IReadOnlyList<string> EnglishLabels => [.. this.englishBySpanish.Values.Distinct().Order()];
 
+    /// <summary>
+    /// Every colour as the catalogue paints it (<c>#C0643F</c>), in the order it
+    /// declares them: what the defects board draws a product in when it draws
+    /// it in the wrong one.
+    /// </summary>
+    public IReadOnlyList<string> Swatches => [.. this.swatchBySpanish.Values];
+
+    /// <summary>The swatch of the colour a product declares, or null for one the catalogue does not paint.</summary>
+    public string? Swatch(string spanishLabel) => this.swatchBySpanish.GetValueOrDefault(spanishLabel);
+
     private sealed record Definition(string Code, Option[]? Options);
 
-    private sealed record Option(string Code, Dictionary<string, string>? Label);
+    private sealed record Option(string Code, Dictionary<string, string>? Label, string[]? MistakenFor = null, string? Swatch = null);
 }

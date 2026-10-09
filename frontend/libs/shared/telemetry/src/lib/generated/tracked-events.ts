@@ -102,6 +102,9 @@ export interface TrackedEvents {
   /**
    * The shopkeeper opened a backoffice screen (R-0 of the redesign). A staff event: sent by default under the shop's notice to staff, and never with who they are.
    *
+   * Picture doubts: When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?
+   * Decides: Mostly 'the picture is fine' means the line is too low or two colours are one to the shop: raise PictureDoubt.SureDifference, or declare the two as mistaken for each other. A share of 'replace the picture' worth having is what would justify a doubt holding a picture back from being the cover.
+   *
    * Dashboard tabs and the wall: Which parts of the shop does the shopkeeper watch — which of the dashboard's tabs are opened — and does anybody put a tab on a monitor of its own?
    * Decides: A tab unopened for a month folds into the Overview or goes. If no tab is put on the screen whole in a month, the wall's density and its minute's refresh stay as they are and real time (R-10) is not built for walls.
    *
@@ -110,11 +113,14 @@ export interface TrackedEvents {
    */
   readonly backoffice_view_opened: {
     /** The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9). */
-    readonly view: 'dashboard' | 'dashboard.sales' | 'dashboard.operations' | 'dashboard.growth' | 'dashboard.agents' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
+    readonly view: 'dashboard' | 'dashboard.sales' | 'dashboard.operations' | 'dashboard.growth' | 'dashboard.agents' | 'review' | 'catalogue' | 'claims' | 'doubts' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
   };
 
   /**
    * The shopkeeper did what a screen is for — published, approved, shipped, decided, suspended — and how the server answered (R-0). A staff event.
+   *
+   * Picture doubts: When the model is sure a picture shows another colour than the catalogue holds, is the picture wrong — or is the model raising what nobody needed raised?
+   * Decides: Mostly 'the picture is fine' means the line is too low or two colours are one to the shop: raise PictureDoubt.SureDifference, or declare the two as mistaken for each other. A share of 'replace the picture' worth having is what would justify a doubt holding a picture back from being the cover.
    *
    * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
    * Decides: A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.
@@ -124,9 +130,9 @@ export interface TrackedEvents {
    */
   readonly backoffice_action_taken: {
     /** The screen it was done on. */
-    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
+    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'doubts' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
     /** What was done, from a closed list. */
-    readonly action: 'publish' | 'withdraw' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate' | 'campaign_create' | 'campaign_update' | 'campaign_schedule' | 'campaign_unschedule' | 'campaign_end';
+    readonly action: 'publish' | 'withdraw' | 'import' | 'claim_approve' | 'claim_reject' | 'doubt_decide' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate' | 'campaign_create' | 'campaign_update' | 'campaign_schedule' | 'campaign_unschedule' | 'campaign_end';
     /** done; refused when the server said no (a 4xx, a rule); failed when it could not answer. */
     readonly outcome: 'done' | 'refused' | 'failed';
     /** Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane). */
@@ -227,7 +233,7 @@ export interface TrackedEvents {
    */
   readonly steward_opened: {
     /** The screen it was opened on. */
-    readonly view: 'dashboard' | 'dashboard.sales' | 'dashboard.operations' | 'dashboard.growth' | 'dashboard.agents' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
+    readonly view: 'dashboard' | 'dashboard.sales' | 'dashboard.operations' | 'dashboard.growth' | 'dashboard.agents' | 'review' | 'catalogue' | 'claims' | 'doubts' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
   };
 
   /**
@@ -338,6 +344,43 @@ export interface TrackedEvents {
     /** The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. */
     readonly cause: 'no_profile' | 'model' | 'time' | 'budget' | 'shop' | 'too_long' | 'scorer' | 'too_many' | 'network' | 'not_available';
   };
+
+  /**
+   * A proposed alt text for a product picture was decided by a person: approved as the model wrote it, approved after the person corrected it, or rejected. The decision and the language of the screen, never the words.
+   *
+   * Alt text for pictures: Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read?
+   * Decides: Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes.
+   */
+  readonly image_alt_proposal_decided: {
+    /** What the person did with the proposal. */
+    readonly decision: 'approved' | 'edited' | 'rejected';
+  };
+
+  /**
+   * A shopper gave the shop a picture to search with (phase 13a). Only with analytics consent; never the picture, its name or anything read from it.
+   *
+   * Search with a picture: Does anyone search with a picture, and does the picture find what they wanted?
+   * Decides: If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong.
+   */
+  readonly search_by_image_submitted: {
+    /** How the picture was given. */
+    readonly how: 'chosen' | 'dropped' | 'pasted' | 'camera';
+    /** What the shop did with it: an answer, a refusal of the file, the minute's limit, or not answering. */
+    readonly outcome: 'answered' | 'refused' | 'too_many' | 'down';
+    /** How many products came back; 0 when none did or it was not answered. */
+    readonly results: number;
+  };
+
+  /**
+   * A shopper opened a product from the answer to a picture (phase 13a). Only with analytics consent.
+   *
+   * Search with a picture: Does anyone search with a picture, and does the picture find what they wanted?
+   * Decides: If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong.
+   */
+  readonly search_by_image_result_followed: {
+    /** Its place in the answer, from 1. */
+    readonly position: number;
+  };
 }
 
 /**
@@ -371,4 +414,7 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   tino_answered: 'behavioural',
   tino_result_followed: 'behavioural',
   tino_unavailable: 'behavioural',
+  image_alt_proposal_decided: 'staff',
+  search_by_image_submitted: 'behavioural',
+  search_by_image_result_followed: 'behavioural',
 };

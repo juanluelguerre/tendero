@@ -4,6 +4,7 @@ import { patchState, signalStore, withComputed, withMethods, withProps, withStat
 import { extendResource } from '@ngrx/signals/resource';
 import type { BulkApprovalOutcome, ClaimForReview } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
+import { CultureStore } from '@tendero/shared-i18n';
 import { KnowledgeService } from '../../../data-access/knowledge.service';
 import { readStatus } from '../../../read-status';
 import { BackofficeUsage } from '../../../usage';
@@ -11,7 +12,7 @@ import { BackofficeUsage } from '../../../usage';
 /** A row of the review: the claim, whether it may go together with others, and what became of it. */
 export interface ClaimRow {
   readonly claim: ClaimForReview;
-  /** Still waiting and well supported: a weak claim is never approved together. */
+  /** Still waiting and free to go with others: a weak claim, or one read from a picture, never is. */
   readonly tickable: boolean;
   readonly ticked: boolean;
   readonly outcome: BulkApprovalOutcome | null;
@@ -19,9 +20,11 @@ export interface ClaimRow {
 
 /**
  * The bulk review's own state (ADR 0047: one dialog uses it, so the dialog
- * provides it). A product's waiting claims, every one ticked but the weakly
- * supported — the server's rule, sent as `isWeak`, never a copy of the line here
- * — and each row's outcome once the server answered.
+ * provides it). A product's waiting claims, every one ticked but those decided on
+ * their own — the weakly supported, and the ones read from a picture, whose
+ * support is a model's sentence held to a model's description. The server's
+ * rule, sent as `decidedAlone`, never a copy of it here — and each row's outcome
+ * once the server answered.
  */
 export const ClaimsBulkReviewStore = signalStore(
   withState({
@@ -34,23 +37,27 @@ export const ClaimsBulkReviewStore = signalStore(
   }),
   withProps((store) => {
     const knowledge = inject(KnowledgeService);
+    const culture = inject(CultureStore);
     const claims = extendResource(
       rxResource({
-        params: () => store.productId() ?? undefined,
-        stream: ({ params }) => knowledge.claimsOf(params),
+        params: () => {
+          const productId = store.productId();
+          return productId ? { productId, culture: culture.active() } : undefined;
+        },
+        stream: ({ params }) => knowledge.claimsOf(params.productId, params.culture),
       }),
     );
     return { _knowledge: knowledge, _usage: inject(BackofficeUsage), _claims: claims, ...readStatus(claims) };
   }),
   withComputed((store) => {
-    // The rows that can go together first, the weak after them, as the mock-up draws it.
+    // The rows that can go together first, those decided on their own after them, as the mock-up draws it.
     const claims = computed(() =>
-      [...(store._claims.value()?.items ?? [])].sort((a, b) => Number(a.isWeak) - Number(b.isWeak)),
+      [...(store._claims.value()?.items ?? [])].sort((a, b) => Number(!!a.decidedAlone) - Number(!!b.decidedAlone)),
     );
     const rows = computed<ClaimRow[]>(() =>
       claims().map((claim) => {
         const outcome = store.outcomes()[claim.claimId] ?? null;
-        const tickable = !outcome && !claim.isWeak;
+        const tickable = !outcome && !claim.decidedAlone;
         return { claim, tickable, ticked: tickable && !store.untickedIds().includes(claim.claimId), outcome };
       }),
     );
@@ -62,10 +69,11 @@ export const ClaimsBulkReviewStore = signalStore(
       /** Every claim the product has waiting: more than the review shows past its hundred. */
       total: computed(() => store._claims.value()?.total ?? 0),
       approved: computed(() => rows().filter((row) => row.outcome === 'Approved').length),
-      /** How many may go together: well supported and still waiting. */
+      /** How many may go together: still waiting, and not decided on their own. */
       together: computed(() => rows().filter((row) => row.tickable).length),
-      weak: computed(() => rows().filter((row) => !row.outcome && row.claim.isWeak).length),
-      firstWeak: computed(() => rows().find((row) => !row.outcome && row.claim.isWeak)?.claim ?? null),
+      /** How many are opened one by one: weakly supported, or read from a picture. */
+      alone: computed(() => rows().filter((row) => !row.outcome && row.claim.decidedAlone).length),
+      firstAlone: computed(() => rows().find((row) => !row.outcome && row.claim.decidedAlone)?.claim ?? null),
       selected,
       canApprove: computed(() => selected() > 0 && !store.busy()),
     };
@@ -86,8 +94,8 @@ export const ClaimsBulkReviewStore = signalStore(
     /** Approves the ticked; `answered` runs once the server said what became of each. */
     approve(answered?: () => void): void {
       if (!store.canApprove()) return;
-      // The weak ones were proposed too, and could not go together: they count as shown, not as unticked.
-      const [proposed, unticked] = [store.together() + store.weak(), store.together() - store.selected()];
+      // Those decided on their own were proposed too, and could not go together: they count as shown, not as unticked.
+      const [proposed, unticked] = [store.together() + store.alone(), store.together() - store.selected()];
       patchState(store, { busy: true, approveFailed: false });
       store._knowledge
         .approveMany(

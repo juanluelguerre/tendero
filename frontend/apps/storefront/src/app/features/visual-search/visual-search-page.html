@@ -1,0 +1,53 @@
+<ng-container *transloco="let t; prefix: 'visualSearch'">
+  <section class="flex flex-col gap-5 pt-6 pb-8">
+    @if (cards(); as hits) {
+      <header class="flex flex-wrap items-center gap-4">
+        @if (store.preview(); as preview) {
+          <!-- The shopper's own picture, from this page's memory: never from the shop. -->
+          <!-- A plain img on purpose: the optimised one refuses a blob: address, and this picture has no other. -->
+          <span
+            class="block size-thumb-xl flex-none overflow-hidden rounded-md border border-hairline-strong bg-surface"
+          >
+            <img class="size-full object-cover" [src]="preview" [alt]="t('yourPicture')" />
+          </span>
+        }
+        <div class="flex min-w-0 flex-1 flex-col gap-1">
+          <h1 class="m-0 text-2xl">{{ t('nearest') }}</h1>
+          <p class="m-0 max-w-measure-lg text-muted">{{ t('nearestLede') }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-4">
+          <button type="button" class="button button--quiet" data-visual-search-again (click)="store.open()">
+            <lib-icon class="size-icon" name="camera" />
+            {{ t('another') }}
+          </button>
+          <a class="font-semibold text-accent" [routerLink]="links.home()">{{ t('byWords') }}</a>
+        </div>
+      </header>
+
+      @if (hits.length > 0) {
+        <ul
+          class="grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 p-0 max-2xs:grid-cols-2 max-2xs:gap-3"
+        >
+          @for (hit of hits; track hit.productId; let index = $index) {
+            <li class="flex" [attr.data-position]="index + 1">
+              <storefront-product-card class="flex-1" [hit]="hit" [priority]="index < 4" />
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="blank">
+          <span class="blank__text">{{ t('nothing') }}</span>
+        </p>
+      }
+    } @else {
+      <!-- Reloaded, or opened from a link: the picture was only ever in this page's memory. -->
+      <div class="blank">
+        <p class="blank__text">{{ t('noPicture') }}</p>
+        <button type="button" class="button button--quiet" (click)="store.open()">
+          <lib-icon class="size-icon" name="camera" />
+          {{ t('title') }}
+        </button>
+      </div>
+    }
+  </section>
+</ng-container>

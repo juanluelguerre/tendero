@@ -134,7 +134,7 @@ public sealed class MyOrdersTool(IQueryDispatcher queries, ShopperScreen screen,
     public override string Name => "my_orders";
 
     public override string Description =>
-        "The orders of the shopper who is asking: the one they are looking at, and their most recent ones when they are signed in. For each: when it was placed and delivered, its status, what it holds, and what can still be returned and until which day. It takes no order number — never ask the shopper for one.";
+        "The orders of the shopper who is asking: the one they are looking at, and their most recent ones when they are signed in. For each: when it was placed and delivered, its status, what it holds, and what can still be returned and until which day. It takes no order number — never ask the shopper for one. It knows nothing about shipping in general — where the shop delivers, what delivery costs, how long it takes: for those, do not call it.";
 
     protected override async Task<(OrdersForShopper Data, int Rows, int? Total)> ReadAsync(
         MyOrdersArguments arguments, IQueryDispatcher queries, CancellationToken cancellationToken)

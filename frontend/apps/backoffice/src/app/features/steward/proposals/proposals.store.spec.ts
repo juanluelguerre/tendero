@@ -135,4 +135,105 @@ describe('the proposals store', () => {
 
     expect(http.expectOne(`${Proposals}/reject`).request.body).toEqual({ ids: ['p2'], reason: 'Too literal.' });
   });
+
+  // ---------- approved with the person's own words ----------
+
+  const altText = (id: string) =>
+    ({ ...proposal(id), command: 'SetImageAltText', image: '9f2c' }) as unknown as ProposalView;
+
+  /** The third decision: the words corrected, sent by the key of the change they belong to; then the list moves on as after any approval. */
+  it('approves with the corrected words, by the key of each, and opens the next', async () => {
+    const store = await at('/?proposal=p1');
+    store.approveEdited(proposal('p1'), { english: 'Olive green backpack.' });
+    const approval = http.expectOne(`${Proposals}/p1/approve-edited`);
+    expect(approval.request.body).toEqual({ edits: { english: 'Olive green backpack.' } });
+    approval.flush({ id: 'p1', outcome: 'Applied', reason: null });
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+
+    expect([TestBed.inject(Router).url, store.refusal()]).toEqual(['/?proposal=p2', null]);
+  });
+
+  /** Words the server refuses leave the proposal open with the reason beside it: the person corrects again, nothing was decided. */
+  it('keeps the proposal open and says why when the corrected words are refused', async () => {
+    const store = await at('/?proposal=p1');
+    store.approveEdited(proposal('p1'), { english: ' ' });
+    http
+      .expectOne(`${Proposals}/p1/approve-edited`)
+      .flush({ id: 'p1', outcome: 'Invalid', reason: 'English must say what the picture shows.' });
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+
+    expect([TestBed.inject(Router).url, store.refusal(), store.busy()]).toEqual([
+      '/?proposal=p1',
+      'English must say what the picture shows.',
+      null,
+    ]);
+    expect(telemetry.trackEvent).not.toHaveBeenCalled();
+  });
+
+  /** What became of a proposed alt text is its own event: approved as written, corrected first, or rejected. */
+  it('reports what a person did with a proposed alt text, and nothing of the kind for other proposals', async () => {
+    const store = await at('/?proposal=p1');
+
+    store.approve(altText('p1'));
+    http.expectOne(`${Proposals}/approve`).flush({ rows: [{ id: 'p1', outcome: 'Applied', reason: null }] });
+    store.approveEdited(altText('p1'), { english: 'Olive green backpack.' });
+    http.expectOne(`${Proposals}/p1/approve-edited`).flush({ id: 'p1', outcome: 'Applied', reason: null });
+    store.reject(altText('p1'), 'Not what it shows.');
+    http
+      .expectOne(`${Proposals}/reject`)
+      .flush({ rows: [{ id: 'p1', outcome: 'Rejected', reason: 'Not what it shows.' }] });
+    store.approve(proposal('p2'));
+    http.expectOne(`${Proposals}/approve`).flush({ rows: [{ id: 'p2', outcome: 'Applied', reason: null }] });
+
+    const decided = telemetry.trackEvent.mock.calls.filter(([name]) => name === 'image_alt_proposal_decided');
+    expect(decided).toEqual([
+      ['image_alt_proposal_decided', { decision: 'approved' }],
+      ['image_alt_proposal_decided', { decision: 'edited' }],
+      ['image_alt_proposal_decided', { decision: 'rejected' }],
+    ]);
+  });
+
+  /** A proposal that did not go through — stale, already decided — was not decided by this person: no event. */
+  it('reports no alt-text decision when the approval did not apply', async () => {
+    const store = await at('/?proposal=p1');
+    store.approve(altText('p1'));
+    http.expectOne(`${Proposals}/approve`).flush({ rows: [{ id: 'p1', outcome: 'Stale', reason: null }] });
+
+    expect(telemetry.trackEvent.mock.calls.filter(([name]) => name === 'image_alt_proposal_decided')).toEqual([]);
+  });
+
+  // ---------- a batch of alt texts ----------
+
+  /** Five pictures at a time, asked for by a person, in the language of their screen; then the list is read again to show them. */
+  it('asks for a batch of five alt texts and reads the list again', async () => {
+    const store = await at('/');
+    store.describePictures();
+    const asked = http.expectOne((req) => req.url === 'http://api/api/steward/alt-text/propose');
+    expect([asked.request.body, asked.request.params.get('culture'), store.describing()]).toEqual([
+      { count: 5 },
+      'en',
+      true,
+    ]);
+    asked.flush({ status: 'Ran', proposals: ['a', 'b'], skipped: 1, failed: 0 });
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+
+    expect([store.describing(), store.described(), http.match((req) => req.url === Proposals).length]).toEqual([
+      false,
+      { status: 'Ran', proposals: ['a', 'b'], skipped: 1, failed: 0 },
+      1,
+    ]);
+  });
+
+  it('stops waiting when the batch could not be asked for, and says nothing was described', async () => {
+    const store = await at('/');
+    store.describePictures();
+    http
+      .expectOne((req) => req.url === 'http://api/api/steward/alt-text/propose')
+      .flush('down', { status: 503, statusText: 'Unavailable' });
+
+    expect([store.describing(), store.described()]).toEqual([false, null]);
+  });
 });

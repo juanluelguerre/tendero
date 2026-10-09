@@ -20,13 +20,34 @@ public enum ProposalStatus
 
 /// <summary>Where a proposal came from. Who asked is the principal's name, never
 /// a value from the request.</summary>
+/// <param name="Proposer">What proposed it (<see cref="Proposers"/>): Steward in a
+/// conversation, or a job. Null on proposals made before a second proposer
+/// existed, which were all Steward's.</param>
 public sealed record ProposalProvenance(
     string? Profile,
     string? Model,
     string? PromptVersion,
     string? ConversationId,
     string? TraceId,
-    string AskedBy);
+    string AskedBy,
+    string? Proposer = null);
+
+/// <summary>
+/// What may propose (phase 13a): a closed set of names, stored on the proposal so
+/// the review says whose it is. A person reads its words in their language; this
+/// is the name those words are filed under.
+/// </summary>
+public static class Proposers
+{
+    /// <summary>The backoffice copilot, in a conversation.</summary>
+    public const string Steward = "Steward";
+
+    /// <summary>The job that reads product pictures and describes them.</summary>
+    public const string AltTextJob = "AltTextJob";
+
+    /// <summary>Whose a proposal is, for one stored before the name was.</summary>
+    public static string Of(ProposalProvenance provenance) => provenance.Proposer ?? Steward;
+}
 
 /// <summary>
 /// A command a model proposed, waiting for a person (phase 12). It carries values,
@@ -65,6 +86,16 @@ public sealed class ActionProposal : AggregateRoot
     public ProposalId Id { get; private set; }
     public string Command { get; private set; } = null!;
     public string Payload { get; private set; } = null!;
+
+    /// <summary>
+    /// The payload as it was proposed, kept when a person corrected its words before
+    /// approving (phase 13a); null when what was approved is what was proposed. An
+    /// edit is what a prompt is judged against as much as a rejection is.
+    /// </summary>
+    public string? ProposedPayload { get; private set; }
+
+    /// <summary>Whether a person corrected it before approving.</summary>
+    public bool Edited => ProposedPayload is not null;
     public string Subject { get; private set; } = null!;
     public string? Before { get; private set; }
 
@@ -112,6 +143,22 @@ public sealed class ActionProposal : AggregateRoot
     }
 
     public void Approve(string by, TimeProvider clock) => Decide(ProposalStatus.Approved, by, clock);
+
+    /// <summary>
+    /// The person's words in place of the model's, before the approval that applies
+    /// them: only while it still waits, and what the model wrote stays beside it.
+    /// </summary>
+    /// <param name="display">What a person reads of it now, as its context writes it for the new payload.</param>
+    public void Amend(string payload, string? display)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(payload);
+        if (Status != ProposalStatus.Proposed)
+            throw new InvalidOperationException($"Proposal {Id} is {Status}: only one still waiting is corrected.");
+
+        ProposedPayload ??= Payload;
+        Payload = payload;
+        Display = display ?? Display;
+    }
 
     public void Reject(string by, string reason, TimeProvider clock)
     {

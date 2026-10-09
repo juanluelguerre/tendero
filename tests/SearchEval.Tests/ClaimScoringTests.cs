@@ -127,4 +127,33 @@ public sealed class ClaimScoringTests
         Assert.Equal(1.0, score.RecallNew, 6);
         Assert.Equal(1 / 3.0, score.TypedAccuracy, 6);
     }
+    /// <summary>
+    /// The vocabulary by category (ADR 0056): a product is offered what its
+    /// branch declares, and one whose branch has not said is offered everything,
+    /// as before there were declarations.
+    /// </summary>
+    [Fact]
+    public void By_category_a_product_is_offered_what_its_branch_declares_and_everything_when_it_has_not_said()
+    {
+        var clock = TimeProvider.System;
+        var name = ElGuerre.Tendero.SharedKernel.LocalizedText.From("es", "x").With("en", "x");
+        var home = ElGuerre.Tendero.Catalog.Domain.Category.Define(clock, "HOME", name, attributes: ["MATERIAL"]);
+        var cookware = ElGuerre.Tendero.Catalog.Domain.Category.Define(clock, "COOKWARE", name, home, attributes: ["PIECES"]);
+        var gifts = ElGuerre.Tendero.Catalog.Domain.Category.Define(clock, "GIFTS", name);
+        var tree = new ElGuerre.Tendero.Catalog.Domain.CategoryTree([home, cookware, gifts]);
+        ElGuerre.Tendero.Knowledge.Extraction.AttributeSpec[] all =
+        [
+            new("MATERIAL", "Option", null, "material", []),
+            new("PIECES", "Number", null, "pieces", []),
+            new("CUPS", "Number", null, "cups", []),
+        ];
+
+        string[] Offered(string? category) =>
+            [.. ElGuerre.Tendero.SearchEval.Suites.ClaimsSuite.Offered(all, tree, category).Select(attribute => attribute.Code)];
+
+        Assert.Equal(["MATERIAL", "PIECES"], Offered("COOKWARE"));
+        Assert.Equal(["MATERIAL"], Offered("HOME"));
+        Assert.Equal(["MATERIAL", "PIECES", "CUPS"], Offered("GIFTS"));
+        Assert.Equal(["MATERIAL", "PIECES", "CUPS"], Offered(null));
+    }
 }

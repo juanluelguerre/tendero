@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -72,7 +73,18 @@ public static class ReindexTargets
 {
     public const string Lexical = "lexical";
     public const string Vector = "vector";
+
+    /// <summary>
+    /// The pictures' vectors (phase 13a), asked for by name and not part of
+    /// <see cref="All"/>: <c>all</c> is the two projections of a product's words,
+    /// and a shop started without visual search — every fresh clone — would have
+    /// its "rebuild everything" refused for a layer it never had.
+    /// </summary>
+    public const string Pictures = "pictures";
+
     public const string All = "all";
+
+    public const string Supported = "Supported targets: lexical, vector, pictures, all.";
 }
 
 public sealed record ReindexProductsResult(int Indexed, int Removed, double ElapsedSeconds);
@@ -84,8 +96,8 @@ public sealed class ReindexProductsValidator : AbstractValidator<ReindexProducts
         // A closed set, answered at the door: a target nobody implements would
         // otherwise rebuild nothing and report success.
         RuleFor(command => command.Target)
-            .Must(target => target is ReindexTargets.Lexical or ReindexTargets.Vector or ReindexTargets.All)
-            .WithMessage("Supported targets: lexical, vector, all.");
+            .Must(target => target is ReindexTargets.Lexical or ReindexTargets.Vector or ReindexTargets.Pictures or ReindexTargets.All)
+            .WithMessage(ReindexTargets.Supported);
     }
 }
 
@@ -96,7 +108,8 @@ public sealed class ReindexProductsEndpoint : ICarterModule
         // POST /api/search/reindex                        — rewrite the lexical documents
         // POST /api/search/reindex?recreate=true           — and rebuild the mapping first
         // POST /api/search/reindex?target=vector           — embed the catalogue again
-        // POST /api/search/reindex?target=all&recreate=true — both, from scratch
+        // POST /api/search/reindex?target=pictures         — embed the pictures the collection lacks
+        // POST /api/search/reindex?target=all&recreate=true — both projections of the words, from scratch
         app.MapPost("/api/search/reindex",
             async Task<Ok<ReindexProductsResult>> (
                    bool? recreate, string? target, ICommandDispatcher dispatcher, CancellationToken ct) =>
@@ -245,11 +258,66 @@ public sealed class RebuildVectorIndexAtStartupWorker(
     }
 }
 
+/// <summary>
+/// And for the pictures (phase 13a, P13-3). The model is in this process, so
+/// there is no layer to ask whether it is ready: the only thing that may not be
+/// there yet is the store, which on a cold stack starts after the worker. So it
+/// asks the collection itself, every fifteen seconds until it answers, rebuilds
+/// if it is empty, and stops. A process started without picture vectors stops
+/// at once.
+///
+/// In the background for the reason the words' is — nothing waits for an AI
+/// layer — and for one of its own: the first rebuild embeds every picture of the
+/// catalogue on the CPU, and the outbox does not wait for that.
+/// </summary>
+public sealed class RebuildPictureVectorsAtStartupWorker(
+    IServiceScopeFactory scopes,
+    TimeProvider clock,
+    ILogger<RebuildPictureVectorsAtStartupWorker> logger) : BackgroundService
+{
+    internal TimeSpan RetryEvery { get; init; } = TimeSpan.FromSeconds(15);
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                await using var scope = scopes.CreateAsyncScope();
+                // The stand-in is never empty, so a process without picture
+                // vectors asks once and is done.
+                if (await scope.ServiceProvider.GetRequiredService<IPictureVectorIndexer>().IsEmptyAsync(stoppingToken))
+                {
+                    var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
+                        .SendAsync(new ReindexProductsCommand(Target: ReindexTargets.Pictures), stoppingToken);
+
+                    logger.LogInformation(
+                        "The picture collection was empty and was rebuilt: the pictures of {Indexed} products, {Elapsed:F1}s",
+                        result.Indexed, result.ElapsedSeconds);
+                }
+
+                return;
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // An exception out of a BackgroundService stops the host, and this
+                // host drains the outbox that takes the money.
+                logger.LogWarning(
+                    "The picture collection could not be checked or rebuilt ({Reason}); trying again in {RetryEvery}",
+                    exception.Message, RetryEvery);
+            }
+
+            await Task.Delay(RetryEvery, clock, stoppingToken);
+        }
+    }
+}
+
 public sealed class ReindexProductsHandler(
     IProductReader products,
     IProductIndexer indexer,
     IProductVectorIndexer vectors,
-    IVectorLayer vectorLayer)
+    IVectorLayer vectorLayer,
+    IPictureVectorIndexer pictures)
     : ICommandHandler<ReindexProductsCommand, ReindexProductsResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
@@ -266,20 +334,26 @@ public sealed class ReindexProductsHandler(
         {
             ReindexTargets.Lexical => [indexer],
             ReindexTargets.Vector => [vectors],
+            ReindexTargets.Pictures => [pictures],
             ReindexTargets.All => [indexer, vectors],
-            _ => throw new ArgumentOutOfRangeException(nameof(command), command.Target, "Supported targets: lexical, vector, all.")
+            _ => throw new ArgumentOutOfRangeException(nameof(command), command.Target, ReindexTargets.Supported)
         };
 
         // Asked before anything is touched. The vector projection's own failures
         // are swallowed on the outbox path, on purpose; a person who pressed
         // "rebuild the vectors" is owed the reason it cannot, not a count of
         // products that were silently skipped.
-        if (command.Target is not ReindexTargets.Lexical)
+        if (command.Target is ReindexTargets.Vector or ReindexTargets.All)
         {
             var status = await vectorLayer.CheckAsync(cancellationToken);
             if (!status.IsAvailable && !(command.Recreate && status.IsConfigured))
                 throw new SearchUnavailableException("reindexing the vectors", status.Reason);
         }
+
+        // The same debt for the pictures: the stand-in writes nothing, and a walk
+        // of the catalogue that wrote nothing must not answer "120 indexed".
+        if (command.Target is ReindexTargets.Pictures && !pictures.IsConfigured)
+            throw new SearchUnavailableException("reindexing the pictures", NoPictureVectors.Reason);
 
         // Before anything is written, so the documents land in an index whose
         // mapping matches them.

@@ -45,6 +45,7 @@ public sealed class ApproveClaimsTests
         services.AddTenderoCqrs(typeof(ApproveClaimsCommand).Assembly);
         services.AddSingleton<IKnowledgeRepository>(this.knowledge);
         services.AddSingleton<IUnitOfWork>(this.knowledge);
+        services.AddSingleton<ICatalogueValues>(Held.Nothing);
         services.AddSingleton<TimeProvider>(this.clock);
         services.AddSingleton<IPrincipalAccessor>(new Reviewer("Ana Tendera"));
         services.AddSingleton<IAuditWriter>(this.audit);

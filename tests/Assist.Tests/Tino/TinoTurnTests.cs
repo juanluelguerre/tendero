@@ -153,13 +153,14 @@ public sealed class TinoTurnTests
             return rows;
         }
 
-        public Task<TinoAnswer> Ask(string question, TinoContext? context = null) => Ask([new TurnMessage("user", question)], context);
+        public Task<TinoAnswer> Ask(string question, TinoContext? context = null, string culture = "es") =>
+            Ask([new TurnMessage("user", question)], context, culture);
 
-        public async Task<TinoAnswer> Ask(IReadOnlyList<TurnMessage> conversation, TinoContext? context = null)
+        public async Task<TinoAnswer> Ask(IReadOnlyList<TurnMessage> conversation, TinoContext? context = null, string culture = "es")
         {
             await using var scope = provider.CreateAsyncScope();
             return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(
-                new TinoTurnCommand(conversation, context, "conv-1", "es"), TestContext.Current.CancellationToken);
+                new TinoTurnCommand(conversation, context, "conv-1", culture), TestContext.Current.CancellationToken);
         }
 
         public ValueTask DisposeAsync() => provider.DisposeAsync();
@@ -331,7 +332,41 @@ public sealed class TinoTurnTests
 
         Assert.Equal(0, Sales.Read);
         Assert.Empty(answer.Reads);
-        Assert.Equal((TinoKind.NoData, "We don't have that information."), (answer.Kind, answer.NoData!.Sentence));
+        // Asked in English on the shop's Spanish page: the answer is the page's.
+        Assert.Equal((TinoKind.NoData, "No tenemos ese dato."), (answer.Kind, answer.NoData!.Sentence));
+    }
+
+    // ---------- the page's language ----------
+
+    /// <summary>
+    /// A read is asked in the page's language whatever the model wrote there:
+    /// the script's order read says "en", its search and its specs "es".
+    /// </summary>
+    [Theory]
+    [InlineData("es")]
+    [InlineData("en")]
+    public async Task Every_read_is_asked_in_the_pages_language_whatever_the_model_passes(string culture)
+    {
+        (MyOrders.Handed, MyOrders.Asked) = (null, null);
+        await using var shop = Compose();
+
+        await shop.Ask("where is my order? typed", culture: culture);
+        var searched = await shop.Ask(Question, culture: culture);
+
+        Assert.Equal(culture, MyOrders.Asked!.Value.GetProperty("culture").GetString());
+        Assert.All(searched.Reads, read => Assert.Equal(culture, read.Arguments.GetProperty("culture").GetString()));
+    }
+
+    [Fact]
+    public async Task What_code_says_is_said_in_the_pages_language()
+    {
+        await using var shop = Compose(support: (_, _) => 0.01);
+
+        var unknown = await shop.Ask("what were the sales this month?", culture: "en");
+        var silent = await shop.Ask(Question, new TinoContext(TinoContextKind.Product, "PAN-1"), "en");
+
+        Assert.Equal("We don't have that information.", unknown.NoData!.Sentence);
+        Assert.Equal("This product's details don't say what you asked.", silent.NoData!.Sentence);
     }
 
     // ---------- the shopper's own order ----------
@@ -411,6 +446,50 @@ public sealed class TinoTurnTests
         await using var shop = Compose(support: (_, _) => 0.01);
 
         AssertUnavailable(await shop.Ask("¿cuántos días tengo para devolver algo?"), TinoCause.Model, "¿cuántos días tengo para devolver algo?");
+    }
+
+    // ---------- a card with nothing said ----------
+
+    /// <summary>
+    /// Every reason fell, and a card with nothing said of it answers nothing (the
+    /// author, 2026-10-06): the turn ends as the model's failure, and the storefront
+    /// shows the search for the same words.
+    /// </summary>
+    [Fact]
+    public async Task Products_with_nothing_left_to_say_of_them_are_not_an_answer_and_the_search_is_what_there_is()
+    {
+        await using var shop = Compose(support: (_, _) => 0.01);
+
+        AssertUnavailable(await shop.Ask(Question), TinoCause.Model, Question);
+    }
+
+    /// <summary>On a product's page there is something truer to say than nothing: its details do not say what was asked.</summary>
+    [Fact]
+    public async Task On_a_products_page_nothing_left_to_say_is_that_its_details_do_not_say()
+    {
+        await using var shop = Compose(support: (_, _) => 0.01);
+
+        var answer = await shop.Ask(Question, new TinoContext(TinoContextKind.Product, "PAN-1"));
+
+        Assert.Equal((TinoStatus.Answered, TinoKind.NoData), (answer.Status, answer.Kind));
+        Assert.Equal(("PAN-1", "La ficha de este producto no indica lo que preguntas."), (answer.NoData!.Code, answer.NoData.Sentence));
+        Assert.Empty(answer.NoData.Nearest);
+        Assert.Empty(answer.Products);
+        // One the reply's reader dropped and the three grounding did: still counted.
+        Assert.Equal(4, answer.ReasonsDropped);
+    }
+
+    /// <summary>One product explained and one not: the one with nothing said of it is left out, the other stays.</summary>
+    [Fact]
+    public async Task A_product_with_nothing_left_to_say_of_it_is_left_out_of_an_answer_that_has_others()
+    {
+        await using var shop = Compose(support: (_, sentence) => sentence == "Pesa 2,3 kg." ? 0.1 : 0.95);
+
+        var answer = await shop.Ask(Question);
+
+        Assert.Equal(TinoKind.Products, answer.Kind);
+        Assert.Equal(["PAN-1"], answer.Products.Select(product => product.Code));
+        Assert.Equal(2, answer.ReasonsDropped);
     }
 
     // ---------- held to its facts ----------
@@ -517,7 +596,8 @@ public sealed class TinoTurnTests
         Assert.Equal((TinoStatus.Answered, "second", true), (answer.Status, answer.Profile, answer.FellBack));
         Assert.Equal(["PAN-2"], answer.Products.Select(product => product.Code));
         // What the first profile read is not the answer's: the fallback read for itself.
-        Assert.Equal(["search_products"], answer.Reads.Select(read => read.Tool));
+        Assert.Equal(["search_products", "get_product_specs"], answer.Reads.Select(read => read.Tool));
+        Assert.Equal(["Pesa 2,3 kg."], answer.Products.Single().Reasons.Select(reason => reason.Text));
     }
 
     [Fact]

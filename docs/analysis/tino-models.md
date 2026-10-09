@@ -274,8 +274,157 @@ information*), `order-can-i-return-en` (answers in Spanish).
 - **The threshold stays 0.5.** The suite compares what is shown; it has no labels
   for a sentence that was dropped wrongly, so it cannot say whether 8 to 14 drops in
   50 are the right ones. The 32 pairs above are still the only measurement of it.
-- **A product card with nothing said** is what remains when every reason falls on
-  a question about one product. A *sin dato* would say more. Not built.
+- **A product card with nothing said** is what remained when every reason fell on
+  a question about one product. **Built on 2026-10-06**, by code and with no change
+  to the schema or to what the model is told about reasons: the product is left
+  out; with none left, its *sin dato* on its own page and the search's results
+  anywhere else. Measured in the note at the end.
 - **A question answered in part**, and **a fact that says the opposite** of a *sin
   dato*: no case isolates either yet.
 - **One profile.** Every number here is the local 4B's.
+
+### The page's language, and no silent card (2026-10-06)
+
+Two decisions of the author's changed what the suite expects. Measured the same
+day on prompt `tino-2026-10-06`, local 4B on the GPU:
+
+| Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+|---|---|---|---|---|---|---|
+| 10 | 24 of 28 | 3.4 s | 8.9 s | 41 | 5 | `spanish-under-english`, `english-under-spanish`, `dishwasher-sin-dato-es`, `backpack-laptop-en` (named another backpack) |
+| 11 | 24 of 28 | 3.2 s | 8.5 s | 33 | 5 | `spanish-under-english`, `english-under-spanish`, `dishwasher-sin-dato-es`, `pan-induction-en` (did not answer: the search is shown) |
+
+- **The crossing cases fail two runs of two, and it is the search, not the
+  model.** *una mochila para llevar el portátil* asked of the English catalogue
+  finds nothing, and so does *a backpack to carry my laptop* of the Spanish one;
+  with nothing read, Tino asks back — in the page's language, as ruled. Under the
+  old rule the reads were asked in the language the shopper wrote in and these two
+  passed. **This is the ruling's cost, measured**: the cases still expect
+  `Products`, because that is what a shopper would call an answer.
+- **No answer came in the wrong language**: every other case with a language
+  passed it, `order-can-i-return-en` among them, which answered in Spanish by turns
+  before.
+- **Faster at the median** (4.0 to 3.3 s): the gathering no longer decides a
+  language, and two kinds no longer write one. Two runs; not a claim yet.
+- `dishwasher-sin-dato-es` failed both runs (one in three before) — other products
+  that can go in the dishwasher, on a pan's page. Two runs do not say it got worse.
+
+- **The answer is in the page's language**, not the last message's (prompt
+  `tino-2026-10-06`). The composing instructions name the language; the gathering
+  ones no longer mention it, because code sets `culture` on every read; `language`
+  left the schema's `noData` and `unknown`. The two crossing cases flipped:
+  `spanish-under-english` now expects English, `english-under-spanish` Spanish.
+  **What to look at in the next run**: those two search the page's index with the
+  other language's words (*una mochila para llevar el portátil* against the
+  English catalogue), so whether they still answer `Products` is the search's to
+  say, not the model's; and `order-can-i-return-en`, which answered in Spanish by
+  turns under the old rule, has one decision fewer to get wrong.
+- **A product with no reason left is not shown.** Runs that ended in a card with
+  nothing said (the injected description's case among them) will now end in the
+  *sin dato* sentence or in the search; the cases that accept `Products` there
+  will tell. **Seen once**: `pan-induction-en` in run 11 ended as *did not answer*
+  and the search, where it used to end as *We don't have that information*.
+
+### After the catalogue's model moved (2026-10-08)
+
+Phase 13a changed what Tino's laboratory is built from, not what Tino is told:
+a seed product now has three variants and four pictures, a picture says which
+colour it shows (ADR 0057), categories say what is required (ADR 0056,
+amended). Its prompt and its five reads are the same. Run again at the author's
+ask, on prompt `tino-2026-10-06`, local 4B on the GPU, a new laboratory:
+
+| Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+|---|---|---|---|---|---|---|
+| 12 | 25 of 28 | 3.8 s | 8.5 s | 35 | 6 | `spanish-under-english`, `english-under-spanish`, `dishwasher-sin-dato-es` (did not answer) |
+| 13 | 24 of 28 | 3.3 s | 7.3 s | 39 | 4 | the same three, and `order-of-an-account-by-nobody-es` (asked back) |
+
+The three that fail are the three that failed in runs 10 and 11, for the reasons
+written above; the fourth is one this file has seen before, in run 7. **Nothing
+moved.** The second run reused the first's laboratory, which this suite
+rebuilds its indexes over.
+
+### Over 120 products (2026-10-08, the same evening)
+
+Same prompt, same reads; a laboratory built from the larger seed
+(`docs/specs/catalogue-growth.md`).
+
+| Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+|---|---|---|---|---|---|---|
+| 14 | 22 of 28 | 3.3 s | 7.3 s | 33 | 6 | the three that always do, `order-of-an-account-by-nobody-es`, `backpack-laptop-en` (asked back) and **`shipping-unknown-es`** |
+| 15 | 24 of 28 | 3.6 s | 11.0 s | 36 | 6 | the three that always do, and **`shipping-unknown-es`** |
+
+- **`shipping-unknown-es` is new, twice of two.** *¿Hacéis envíos a Portugal?*
+  — the shop has no fact about it, and the case passes when Tino says so
+  without reading anybody's orders. In both runs it read `my_orders`; in the
+  second it still answered *no data*, in the first it answered about orders.
+  It passed in the five runs before. Nothing it reads to answer that question
+  comes from the catalogue, so why twenty products would move it is not
+  known; **not looked into yet**, and the first thing to look at in the next
+  run.
+
+  **Looked into (2026-10-08, later): it was never new, and never the
+  catalogue.** *New* was written from two runs; the tables above already had
+  it failing two runs of three on the final prompt. Asked alone, nine times,
+  on the code as it was: **it read `my_orders` seven times of nine, and three
+  times of nine the shopper who asked whether the shop ships to Portugal was
+  shown *to ask about an order, sign in***. The other four it read the orders
+  of nobody and still said the shop has no such fact. The instructions already
+  tell it not to call `my_orders` for shipping; *envíos* is the nearest word
+  any tool has to the question, and a 4B model reaches for the nearest tool.
+
+  One sentence was added where the choice is made — the read's own
+  description: *it knows nothing about shipping in general — where the shop
+  delivers, what delivery costs, how long it takes: for those, do not call
+  it.* Asked alone eight times: read three of eight, **the wrong sentence
+  shown none of eight**. And because a clause in one tool's description has
+  moved another tool's use before (Steward's), the whole suite, three runs,
+  each on a database of its own:
+
+  | Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+  |---|---|---|---|---|---|---|
+  | 16 | 24 of 28 | 3.6 s | 10.2 s | 37 | 4 | the two language cases, `pan-induction-en` (asked back), `dishwasher-sin-dato-es` |
+  | 17 | 25 of 28 | 3.5 s | 7.0 s | 33 | 5 | the two language cases, `shipping-unknown-es` (read, then *no data*) |
+  | 18 | 23 of 28 | 3.6 s | 7.5 s | 32 | 6 | the two language cases, `shipping-unknown-es` (read, then *no data*), `pan-induction-es`, `dishwasher-sin-dato-es` |
+
+  Nothing that was passing stopped: every other failure is one the earlier
+  runs list. Over the eleven askings after the change the orders were read
+  five times and the wrong sentence shown never; over the eleven before,
+  nine and four. **The case still fails about half the time, and it is
+  kept failing**: what it asks — do not read anybody's orders for this — is
+  right, and a wasted read of nobody's orders is a smaller thing than a
+  shopper told to sign in. What would end it is not wording: the shop has no
+  read that answers a shipping question, so the model takes the nearest one.
+  A read of where the shop delivers and what it costs — Ordering already
+  knows both, at checkout — would give the question somewhere to go and turn
+  *no data* into an answer. That is a feature and the author's to decide.
+- **Decided and built the next day (2026-10-09): `get_shipping_terms`.** The
+  Tino spec, *The tools*, says what it is. The case became two that expect
+  an answer — `shipping-country-es` (*¿hacéis envíos a Portugal?*) and
+  `shipping-cost-en` (*how much is delivery?*) — and what *unknown* is for
+  moved to a question the shop really cannot answer,
+  `opening-hours-unknown-es` (*¿qué horario tenéis?*). Thirty cases now, so
+  the totals below are not the ones above. Three runs, each on a database of
+  its own:
+
+  | Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+  |---|---|---|---|---|---|---|
+  | 19 | 28 of 30 | 3.2 s | 8.7 s | 44 | 3 | the two language cases |
+  | 20 | 27 of 30 | 3.5 s | 8.4 s | 39 | 5 | the two language cases, `opening-hours-unknown-es` (read `my_orders`, then *no data*) |
+  | 21 | 27 of 30 | 3.3 s | 6.4 s | 31 | 5 | the two language cases, `shipping-country-es` (answered rightly, and read `my_orders` too) |
+
+  **Both shipping questions were answered six times of six**, with the same
+  sentences each time: *Sí, la tienda hace envíos a cualquier país, al mismo
+  precio*, and *Standard delivery costs 4.95 EUR and takes about 3 days.
+  Express delivery costs 9.95 EUR and takes 1 day*. Over the runs before it
+  the first was never answered — there was nothing to answer it with.
+  Nothing that was passing stopped; `pan-induction` and
+  `dishwasher-sin-dato-es`, which come and go, passed all three.
+
+  **What is left is the same habit with a smaller cost.** Once in three the
+  shipping question still read `my_orders` beside the right read, and once
+  in three the opening-hours question did — the nearest read for a question
+  that has none. In neither was anything from it shown. It confirms the
+  reading above from the other side: the question with somewhere to go goes
+  there, and the one without takes the nearest. One more tool is one more
+  description in every read call; it does not show above the variation —
+  the largest call was 3,195, 3,208 and 2,897 tokens, and 3,029 in run 15.
+- The rest is what the earlier runs showed.

@@ -57,8 +57,11 @@ are different axes. If promotions need real combination rules, build them. If
 checkout needs a saga with compensation, build it. But warehouses stay at two and
 roles at three.
 
-**The catalogue is 100 products** (raised from six on 2026-09-04). It is still
-laboratory scale — the full ABO set is 147k — and the reason for the raise is
+**The catalogue is 120 products** (raised from six to a hundred on 2026-09-04,
+and by twenty on 2026-10-08, in families the shop did not have — furniture,
+plants, decoration, the bathroom: added, never replacing, so no judgment and no
+quoted number moved; `docs/specs/catalogue-growth.md`). It is still
+laboratory scale — the full ABO set is 147k — and the reason for the first raise is
 that six was below the floor at which a *shop* can be judged: nothing to browse,
 a taxonomy with one product per leaf, and a search quality gate measuring
 ranking over a corpus small enough that everything retrieved was annotated. The
@@ -76,6 +79,7 @@ dotnet run --project src/AppHost              # full stack via Aspire
 Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana stack (or profile https-observability)
 Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (6 GB, on the GPU when there is one; ADR 0053; or profile https-steward; profile https-all turns on vectors, knowledge, Steward and Tino)
 Tendero__Tino=true dotnet run --project src/AppHost           # + Tino, the storefront's assistant, on the same local model and the support scorer — only on a GPU; without one it stays off and says so; or profile https-tino
+Tendero__Vision=true dotnet run --project src/AppHost         # + the local model's eyes: its vision projector, converted once (8.8 GB of download), so the same model reads pictures — only on a GPU (ADR 0031; docs/specs/images.md)
 Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json dotnet run --project src/AppHost  # Steward from a script (CI's browser spec)
 Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json dotnet run --project src/AppHost      # Tino from a script, on any machine (CI's browser spec; TINO_SCRIPTED=1 to run it locally)
 dotnet build -warnaserror                     # warnings are errors, always
@@ -215,6 +219,15 @@ node tools/api-map.mjs --schema CartView
 - A closed set is an enum everywhere it crosses the wire (ADR 0043): in a body
   through `WireJson.Enums()`, in a query string bound as `WireEnum<T>` — by exact
   name in any case, never a number — and the contract tests hold both.
+- **A category declares its products' attributes** (ADR 0056): inherited down
+  the branch, and *offered, never enforced* — it narrows what an extractor is
+  offered and what a picture is asked, and never refuses a product. What a
+  picture can show is the attribute's own flag.
+- **A closed question to a model is plain text, never a schema**
+  (`ClosedQuestion`, `src/AI/Chat`): the options in the question, a short answer
+  read by code, and the answered tokens' probability as its confidence. Measured:
+  the same question under a JSON schema is right 68.0 % of the time against
+  80.5 %. A schema stays for what is composed, not chosen (ADR 0055).
 - **A day is the shop's day** (ADR 0046): times are stored and sent in UTC, and a
   day is counted in `ShopOptions.TimeZone` with NodaTime — never `TimeZoneInfo`,
   which cannot resolve an IANA zone under `InvariantGlobalization`.
@@ -325,6 +338,10 @@ node tools/api-map.mjs --schema CartView
 - **Pictures are `NgOptimizedImage`**: `ngSrc` with their size, or `fill` in a
   box the caller sizes; lazy by default, `priority` on the picture that is the
   page's LCP (the product's, a listing's first row, the home's lead campaign).
+  **`priority` is written on the element, never bound to something that can
+  change**: the directive throws when it does, and the throw cuts the page's
+  rendering short — a listing narrowed by a filter kept its old counts. Where
+  it depends on a value, two elements behind an `@if`.
 - **Angular 22's defaults are not written**: no `changeDetection: OnPush` (the
   default), no `withFetch()`, no zone.js (ADR 0051).
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.

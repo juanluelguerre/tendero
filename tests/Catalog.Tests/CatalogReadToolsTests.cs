@@ -48,6 +48,16 @@ public sealed class CatalogReadToolsTests
 
         Assert.Equal("foundProducts: code Text, name Text, price Money, status Term, missingCultures Text", Shape(Assert.Single(found.Tables!)));
         Assert.Equal("catalogueGaps: code Text, name Text", Shape(Assert.Single(gaps.Tables!)));
+        // The one kind that is about several things at once says which, in a third column.
+        var incomplete = await Tools().Single(tool => tool.Name == "catalogue_gaps")
+            .ReadAsync(Arguments("""{"kind":"MissingRequiredAttribute"}"""), TestContext.Current.CancellationToken);
+        Assert.Equal("catalogueGaps: code Text, name Text, lacks Text", Shape(Assert.Single(incomplete.Tables!)));
+
+        // What a model reads is every field of every row: a kind with nothing to say there writes no field for it.
+        Assert.DoesNotContain("acks", JsonSerializer.Serialize((Gaps)gaps.Data, JsonSerializerOptions.Web), StringComparison.Ordinal);
+        Assert.Contains(
+            "\"lacks\":[\"material\"]",
+            JsonSerializer.Serialize(new GapItem("p1", "PAN", "Sartén", ["material"]), JsonSerializerOptions.Web), StringComparison.Ordinal);
 
         // And the rows are the products': the code, the name, the price, the status as a term, what is missing.
         var row = Assert.Single(found.Tables![0].Rows);

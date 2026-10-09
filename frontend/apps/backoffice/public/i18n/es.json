@@ -45,6 +45,7 @@
     "commands": {
       "AddToCartCommand": "Añadir al carrito",
       "ApproveProposalsCommand": "Aprobar propuestas",
+      "ApproveEditedProposalCommand": "Aprobar una propuesta con correcciones",
       "CancelCheckoutSessionCommand": "Cancelar un pago",
       "ChangeAgentTrustCommand": "Cambiar la confianza de un agente",
       "ClaimCartCommand": "Conservar el carrito al iniciar sesión",
@@ -52,6 +53,7 @@
       "CompleteCheckoutSessionCommand": "Completar un pago",
       "CountStockCommand": "Contar existencias",
       "CreateCampaignCommand": "Crear una campaña",
+      "DecidePictureDoubtCommand": "Decidir una duda sobre una imagen",
       "DecideReturnCommand": "Decidir una devolución",
       "DefineVariantsCommand": "Definir variantes",
       "EndCampaignCommand": "Terminar una campaña",
@@ -64,11 +66,14 @@
       "PaymentWebhookCommand": "Aviso del proveedor de pago",
       "PlaceOrderCommand": "Hacer un pedido",
       "ProposeActionsCommand": "Proponer cambios",
-      "ProposeClaimsCommand": "Proponer afirmaciones de una descripción",
+      "ProposeAltTextCommand": "Proponer texto alternativo para imágenes",
+      "ProposeClaimsCommand": "Proponer afirmaciones de una descripción o de la lectura de una imagen",
       "PublishProductCommand": "Publicar un producto",
+      "ReadPicturesCommand": "Leer imágenes de productos",
       "RecordBrowsingCommand": "Registrar un producto visto o una búsqueda",
       "RecordClaimApplicationCommand": "Aplicar una afirmación aprobada",
       "RecordDescriptionCommand": "Registrar una descripción",
+      "RecordPictureReadingCommand": "Registrar la lectura de una imagen",
       "RegisterAgentCommand": "Registrar un agente",
       "ReindexProductsCommand": "Reconstruir el índice de búsqueda",
       "ReinstateAgentCommand": "Readmitir un agente",
@@ -78,6 +83,8 @@
       "ScheduleCampaignCommand": "Programar una campaña",
       "SetBrowsingCommand": "Activar o desactivar un historial de navegación",
       "SetCartLineCommand": "Cambiar una línea del carrito",
+      "SetImageAltTextCommand": "Describir una imagen de producto",
+      "SetImageShowsCommand": "Decir qué muestra una imagen de producto",
       "SetProductAttributeCommand": "Fijar un atributo de producto",
       "SetProductTranslationCommand": "Traducir un producto",
       "StewardTurnCommand": "Preguntar a Steward",
@@ -153,6 +160,7 @@
     "search": "Calidad de búsqueda",
     "stock": "Stock",
     "claims": "Afirmaciones",
+    "doubts": "Dudas de imagen",
     "dashboard": "Panel",
     "groups": {
       "home": "Inicio",
@@ -570,12 +578,28 @@
     "created": "{{count}} variantes creadas",
     "back": "Volver a la cola"
   },
+  "doubts": {
+    "title": "Dudas de imagen",
+    "hint": "Imágenes que el modelo está seguro de que muestran otro color que el del catálogo. Ninguna duda detiene el producto. Decir que la imagen está bien o que hay que sustituirla no cambia nada en el catálogo; decir que es de otra variante la pasa a esa variante, la del color que el modelo ve.",
+    "loading": "Cargando las dudas…",
+    "failed": "No se han podido cargar las dudas.",
+    "empty": "Ninguna imagen está en duda.",
+    "pictureAlt": "Imagen en duda de {{product}}",
+    "seen": "El modelo ve {{seen}}; el catálogo dice {{held}}.",
+    "anotherVariant": "El {{seen}} es el color de otra variante de este producto: puede que la imagen sea la suya.",
+    "sure": "Leída por {{model}}, con una confianza del {{confidence}}.",
+    "decision": {
+      "PictureIsFine": "La imagen está bien",
+      "ReplaceThePicture": "Hay que sustituirla",
+      "BelongsToAnotherVariant": "Es de otra variante"
+    }
+  },
   "claims": {
     "title": "Afirmaciones por revisar",
     "loading": "Cargando las afirmaciones…",
     "failed": "No se han podido cargar las afirmaciones. Vuelve a intentarlo.",
     "empty": "No hay afirmaciones esperando revisión.",
-    "hint": "Lo que un modelo leyó en la descripción de cada producto. Nada cambia en el catálogo hasta que lo apruebas. Primero las de respaldo débil: su cita puede no decir lo que afirman.",
+    "hint": "Lo que un modelo leyó en la descripción de cada producto, y en sus imágenes. Nada cambia en el catálogo hasta que lo apruebas. Primero las de respaldo débil: su cita puede no decir lo que afirman.",
     "column": {
       "product": "Producto",
       "claim": "Afirmación",
@@ -584,6 +608,15 @@
       "action": "Decisión"
     },
     "proposedBy": "Propuesta por {{extractor}}",
+    "fromPicture": "Leída de una imagen",
+    "sureAnswer": "Respuesta segura del modelo",
+    "pictureNotice": "Un modelo describió esta imagen y la afirmación sale de esa descripción. Las citas de abajo son palabras del modelo, no texto de la tienda. Comprueba la afirmación con la imagen antes de aprobarla.",
+    "pictureAlt": "La imagen de {{product}} de la que se leyó esta afirmación",
+    "readBy": "imagen leída por {{model}}",
+    "contradicts": "El catálogo dice otra cosa",
+    "catalogueSays": "El catálogo tiene, para {{attribute}}",
+    "claimSays": "Esta afirmación dice",
+    "contradictsNotice": "Una de las dos está mal, y nada aquí dice cuál. Aprobar esta afirmación sustituye lo que tiene el catálogo; rechazarla lo deja como está.",
     "supportExplained": "Cuánto respalda la cita a la afirmación, medido por un modelo de inferencia textual — no lo que el extractor dice de sí mismo.",
     "approve": "Aprobar",
     "reject": "Rechazar",
@@ -963,7 +996,23 @@
     "yes": "Sí",
     "no": "No",
     "loading": "Cargando el producto…",
-    "failed": "No se ha podido cargar este producto."
+    "failed": "No se ha podido cargar este producto.",
+    "altText": {
+      "title": "Qué dice cada imagen",
+      "hint": "Texto alternativo: lo que se le dice a quien no puede ver la imagen. En los dos idiomas, una frase en cada uno.",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "notSaved": "No se guardó: hace falta una frase en cada idioma, de 300 caracteres como mucho."
+    },
+    "shows": {
+      "label": "Qué {{axis}} muestra",
+      "none": "Ninguno en particular: es de todas las variantes",
+      "notShown": "No se guardó: ninguna variante en venta tiene ese valor."
+    },
+    "missingRequired": {
+      "title": "Le falta lo que su categoría pide",
+      "hint": "Se puede publicar igualmente: queda como incompleto en los huecos del catálogo."
+    }
   },
   "palette": {
     "title": "Ir a, o buscar",
@@ -997,7 +1046,7 @@
   },
   "proposals": {
     "title": "Propuestas",
-    "hint": "Lo que Steward propuso. Nada de aquí ha cambiado la tienda hasta que alguien lo apruebe.",
+    "hint": "Lo que propusieron Steward y el trabajo de texto alternativo. Nada de esto ha cambiado la tienda hasta que alguien lo aprueba.",
     "filterLabel": "Mostrar propuestas",
     "filter": {
       "ToReview": "Por revisar",
@@ -1055,6 +1104,26 @@
       "confirm": "Rechazar",
       "keep": "Conservarla",
       "reason": "¿Por qué no? Es con lo que se juzgará el próximo prompt."
+    },
+    "picture": "La imagen de {{title}} de la que trata esta propuesta",
+    "proposedWords": "Propuesto: corrígelo si no es correcto",
+    "correctHint": "Al aprobar se envían tus palabras. Lo que escribió el modelo se guarda junto a ellas.",
+    "refused": "Estas palabras no se aceptaron:",
+    "approveCorrected": "Aprobar con correcciones",
+    "edited": "Una persona corrigió antes sus palabras.",
+    "proposer": {
+      "Steward": "Steward",
+      "AltTextJob": "Trabajo de texto alternativo"
+    },
+    "altText": {
+      "describe": "Describir {{count}} imágenes",
+      "describing": "Leyendo las imágenes…",
+      "notDescribed": "{{count}} no se pudieron describir.",
+      "result": {
+        "Ran": "{{proposed}} descripciones esperan abajo tu revisión.",
+        "NothingToDescribe": "Todas las imágenes están descritas o tienen una propuesta esperando.",
+        "NoModel": "No hay ningún modelo que lea imágenes en marcha. Escribe el texto alternativo en el producto."
+      }
     }
   },
   "proposalReview": {
@@ -1121,6 +1190,7 @@
       "status": "Estado",
       "price": "Precio",
       "missingCultures": "Sin nombre en",
+      "lacks": "Le falta",
       "period": "Periodo",
       "revenue": "Ingresos",
       "orders": "Pedidos",
@@ -1202,7 +1272,7 @@
   "claimsBulk": {
     "door": "Revisar juntas las afirmaciones de este producto",
     "heading": "Revisar {{count}} afirmaciones · {{product}}",
-    "lede": "La misma revisión que las propuestas de Steward: qué cambia y en qué se apoya. Las afirmaciones con apoyo débil no se aprueban juntas: ábrelas una a una.",
+    "lede": "La misma revisión que las propuestas de Steward: qué cambia y en qué se apoya. Las afirmaciones con apoyo débil, las que el catálogo contradice y las leídas de una imagen no se aprueban juntas: ábrelas una a una.",
     "failed": "No se pudieron cargar las afirmaciones. Inténtalo de nuevo.",
     "column": {
       "pick": "Aprobar",
@@ -1211,25 +1281,35 @@
       "evidence": "Evidencia",
       "result": "Resultado"
     },
-    "weak": "Apoyo débil — ábrela para decidir",
-    "tally": "{{together}} de {{count}} pueden ir juntas · {{weak}} débiles",
+    "openAlone": "Abrir la que queda fuera",
+    "openFirstAlone": "Abrir la primera que queda fuera",
+    "alone": {
+      "WeakSupport": "Apoyo débil — ábrela para decidir",
+      "ContradictsTheCatalogue": "El catálogo dice otra cosa — ábrela para decidir",
+      "ReadFromAPicture": "Leída de una imagen — ábrela para decidir"
+    },
+    "aloneFor": {
+      "WeakSupport": "{{attribute}}: apoyo débil — ábrela para decidir",
+      "ContradictsTheCatalogue": "{{attribute}}: el catálogo dice otra cosa — ábrela para decidir",
+      "ReadFromAPicture": "{{attribute}}: leída de una imagen — ábrela para decidir"
+    },
+    "tally": "{{together}} de {{count}} pueden ir juntas · {{alone}} se abren una a una",
     "selected": "{{selected}} de {{count}} seleccionadas",
     "cancel": "Cancelar",
     "close": "Cerrar",
-    "openWeak": "Abrir la débil",
-    "openFirstWeak": "Abrir la primera débil",
     "approve": "Aprobar {{count}}",
     "outcome": {
       "Approved": "Aprobada",
       "WeakSupport": "Apoyo débil — no aprobada",
+      "ReadFromAPicture": "Leída de una imagen — no aprobada",
+      "ContradictsTheCatalogue": "El catálogo dice otra cosa — no aprobada",
       "NotWaiting": "Ya decidida",
       "NotFound": "No encontrada"
     },
     "headingOne": "Revisar 1 afirmación · {{product}}",
     "loading": "Cargando las afirmaciones de {{product}}…",
     "capped": "Se muestran las {{shown}} primeras de {{total}}; el resto espera en la cola.",
-    "tallyOne": "{{together}} de {{count}} pueden ir juntas · 1 débil",
-    "weakFor": "{{attribute}}: apoyo débil — ábrela para decidir",
+    "tallyOne": "{{together}} de {{count}} pueden ir juntas · 1 se abre aparte",
     "approveFailed": "La aprobación no se completó. Lo decidido aparece en su fila; vuelve a intentar el resto.",
     "done": "{{approved}} aprobadas."
   }

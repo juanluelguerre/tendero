@@ -1,8 +1,16 @@
 <ng-container *transloco="let t">
   @let source = src();
   @if (source && !broken()) {
-    <!-- `fill`: the image is the caller's box, whatever size the caller gave it (NgOptimizedImage). -->
-    <img class="[object-fit:inherit]" [ngSrc]="source" fill [priority]="priority()" [alt]="alt()" (error)="fail()" />
+    <!-- `fill`: the image is the caller's box, whatever size the caller gave it (NgOptimizedImage).
+         **Two elements, and `priority` written on one of them, never bound**: the
+         directive refuses a priority changed after it started, and throws — and a
+         listing's first row changes every time the listing is narrowed. A picture
+         that gains or loses its priority is drawn again as the other element. -->
+    @if (priority()) {
+      <img class="[object-fit:inherit]" [ngSrc]="source" fill priority [alt]="alt()" (error)="fail()" />
+    } @else {
+      <img class="[object-fit:inherit]" [ngSrc]="source" fill [alt]="alt()" (error)="fail()" />
+    }
   } @else {
     <!-- A default state, not a gap: a product with no picture has to look deliberate. -->
     <storefront-product-image-placeholder

@@ -1,0 +1,80 @@
+{
+  "good": 122,
+  "false_alarms": {
+    "Text": 2,
+    "Mark": 3,
+    "Scene": 22,
+    "Colour": 7,
+    "Count": 2,
+    "Description": 7
+  },
+  "kinds": {
+    "Lettering": {
+      "pictures": 123,
+      "caught": {
+        "Text": 121,
+        "Mark": 22,
+        "Scene": 87,
+        "Count": 1,
+        "Description": 3
+      },
+      "by_none": 1
+    },
+    "Emblem": {
+      "pictures": 123,
+      "caught": {
+        "Text": 52,
+        "Mark": 116,
+        "Scene": 40,
+        "Description": 1
+      },
+      "by_none": 4
+    },
+    "Scene": {
+      "pictures": 122,
+      "caught": {
+        "Scene": 100,
+        "Colour": 1,
+        "Count": 2,
+        "Description": 1,
+        "Register": 110
+      },
+      "by_none": 0
+    },
+    "Colour": {
+      "pictures": 24,
+      "caught": {
+        "Scene": 1,
+        "Colour": 24,
+        "Description": 1
+      },
+      "by_none": 0
+    },
+    "Count": {
+      "pictures": 23,
+      "caught": {
+        "Scene": 3,
+        "Colour": 1,
+        "Count": 18,
+        "Description": 3
+      },
+      "by_none": 4
+    },
+    "Background": {
+      "pictures": 122,
+      "caught": {
+        "Mark": 1,
+        "Scene": 6,
+        "Colour": 1,
+        "Count": 1,
+        "Register": 119
+      },
+      "by_none": 3
+    },
+    "Form": {
+      "pictures": 1,
+      "caught": {},
+      "by_none": 1
+    }
+  }
+}

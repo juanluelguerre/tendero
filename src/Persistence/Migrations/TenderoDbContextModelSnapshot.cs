@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261003111407_AIInvocationSubject";
+    public override string LastMigrationId => "20261009122512_AccentsFoldedInTheListsOfWork";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -26,6 +26,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
             .HasAnnotation("ProductVersion", "11.0.0-preview.6.26359.118")
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+        NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "unaccent");
         NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
         modelBuilder.Entity("ElGuerre.Tendero.AI.AIInvocation", b =>
@@ -293,6 +294,10 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("proposed_at");
 
+                b.Property<string>("ProposedPayload")
+                    .HasColumnType("jsonb")
+                    .HasColumnName("proposed_payload");
+
                 b.Property<string>("Reason")
                     .IsRequired()
                     .HasMaxLength(2000)
@@ -341,6 +346,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
 
                         b1.Property<string>("PromptVersion")
                             .HasJsonPropertyName("promptVersion");
+
+                        b1.Property<string>("Proposer")
+                            .HasJsonPropertyName("proposer");
 
                         b1.Property<string>("TraceId")
                             .HasJsonPropertyName("traceId");
@@ -456,6 +464,10 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .IsRequired()
                             .HasJsonPropertyName("id");
 
+                        b1.Property<string>("Shows")
+                            .IsRequired()
+                            .HasJsonPropertyName("shows");
+
                         b1.Property<int>("SortOrder")
                             .HasJsonPropertyName("sortOrder");
 
@@ -479,11 +491,6 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("uuid")
                     .HasColumnName("id");
-
-                b.Property<string>("Image")
-                    .HasMaxLength(64)
-                    .HasColumnType("character varying(64)")
-                    .HasColumnName("image_id");
 
                 b.Property<Guid?>("ProductId")
                     .HasColumnType("uuid")
@@ -634,6 +641,106 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDatabaseName("ix_stock_items_sku");
 
                 b.ToTable("stock_items", "inventory");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Knowledge.Domain.PictureDoubt", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<string>("AttributeCode")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("attribute_code");
+
+                b.Property<double>("Confidence")
+                    .HasColumnType("double precision")
+                    .HasColumnName("confidence");
+
+                b.Property<DateTimeOffset?>("DecidedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("decided_at");
+
+                b.Property<string>("DecidedBy")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("decided_by");
+
+                b.Property<string>("Decision")
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("decision");
+
+                b.Property<string>("Held")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("held");
+
+                b.Property<string>("HeldLabel")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("held_label");
+
+                b.Property<string>("PictureId")
+                    .IsRequired()
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)")
+                    .HasColumnName("picture_id");
+
+                b.Property<Guid>("ProductId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("product_id");
+
+                b.Property<DateTimeOffset>("RaisedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("raised_at");
+
+                b.Property<string>("ReadByModel")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("read_by_model");
+
+                b.Property<string>("ReadWithPrompt")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("read_with_prompt");
+
+                b.Property<string>("Seen")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("seen");
+
+                b.Property<string>("SeenLabel")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("seen_label");
+
+                b.Property<bool>("SeenOnAnotherVariant")
+                    .HasColumnType("boolean")
+                    .HasColumnName("seen_on_another_variant");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.HasKey("Id")
+                    .HasName("pk_picture_doubts");
+
+                b.HasIndex("ProductId", "PictureId")
+                    .HasDatabaseName("ix_picture_doubts_product_id_picture_id");
+
+                b.HasIndex("Status", "RaisedAt")
+                    .HasDatabaseName("ix_picture_doubts_status_raised_at");
+
+                b.ToTable("picture_doubts", "knowledge");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Knowledge.Domain.ProductClaim", b =>
@@ -789,6 +896,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("character varying(500)")
                     .HasColumnName("last_failure");
 
+                b.Property<string>("PictureId")
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)")
+                    .HasColumnName("picture_id");
+
                 b.Property<Guid>("ProductId")
                     .HasColumnType("uuid")
                     .HasColumnName("product_id");
@@ -796,6 +908,16 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateTimeOffset?>("ProposedAt")
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("proposed_at");
+
+                b.Property<string>("ReadByModel")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("read_by_model");
+
+                b.Property<string>("ReadWithPrompt")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("read_with_prompt");
 
                 b.Property<DateTimeOffset>("RetrievedAt")
                     .HasColumnType("timestamp with time zone")

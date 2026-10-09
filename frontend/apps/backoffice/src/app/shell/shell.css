@@ -21,9 +21,11 @@
 
 /* From 1360 px (85 rem: the page keeps a narrow table's 44 rem beside a 26 rem pane
    and the open rail) the shell is the frame of the window and does not scroll itself
-   (the prototype's layout): the header spans the whole width; under it the screen and
-   the panes sit side by side — the screen, the pane of its open item, Steward — each
-   scrolling on its own, so opening one never moves another. The content's wrapper
+   (the prototype's layout): the header spans the screen and the pane of its open item,
+   which sit under it side by side, and Steward's panel stands beside all of it, the
+   window's whole height — header and footer included, as Tino's stands beside the shop
+   (the author, 2026-10-06). Each scrolls on its own, so opening one never moves
+   another. The content's wrapper
    steps aside (display: contents) so the header, the page and the panes are all items
    of this grid. Below, the page scrolls and a pane is a drawer over it, a sheet on a phone. */
 @media (min-width: 85rem) {
@@ -44,7 +46,7 @@
   }
 
   :host(.with-rail) > div > header {
-    grid-column: 2 / 5;
+    grid-column: 2 / 4;
     grid-row: 1;
   }
 
@@ -67,7 +69,7 @@
   :host(.with-rail) > backoffice-steward-dock {
     display: block;
     grid-column: 4;
-    grid-row: 2;
+    grid-row: 1 / span 2;
     min-height: 0;
   }
 }

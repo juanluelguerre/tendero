@@ -224,18 +224,19 @@ public sealed class ProductSearchDocumentTests
         Assert.Equal(["COLOR:NAVY_BLUE", "SIZE:38"], navy38.AxisValues.Order());
     }
 
-    /// <summary>Colour needs its own photo, size does not: the variant's image
-    /// when it has one, the product's cover otherwise — and the cover is the
-    /// lowest sort order, which is the aggregate's rule, not the list's order.</summary>
+    /// <summary>Colour needs its own photo, size does not: the first picture
+    /// that says it shows the variant's colour — every size of it, then — and
+    /// otherwise the first that is every variant's, which is the cover.</summary>
     [Fact]
-    public void A_variant_shows_its_own_image_and_otherwise_the_products_cover()
+    public void A_variant_shows_the_picture_of_its_colour_and_otherwise_the_products_cover()
     {
         var shirt = AShirt();
-        shirt.SetVariantImage(Clock, "SHIRT-BLACK-38", new ImageId("black"));
+        shirt.AddImage(Clock, new ImageId("black"));
+        shirt.Show(Clock, new ImageId("black"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
 
         var documents = Documents(shirt, "es");
 
-        Assert.Equal("black", documents.Single(doc => doc.Sku == "SHIRT-BLACK-38").ImageId);
+        Assert.All(documents.Where(doc => doc.AxisValues.Contains("COLOR:BLACK")), doc => Assert.Equal("black", doc.ImageId));
         Assert.Equal("cover", documents.Single(doc => doc.Sku == "SHIRT-NAVY-38").ImageId);
     }
 

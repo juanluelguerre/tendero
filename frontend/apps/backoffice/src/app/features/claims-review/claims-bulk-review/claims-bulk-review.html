@@ -39,7 +39,7 @@
               [checked]="row.ticked"
               [disabled]="!row.tickable || store.busy()"
               [attr.aria-label]="row.claim.attributeCode ?? statementIn(row.claim, culture.active())"
-              [attr.aria-describedby]="row.claim.isWeak ? headingId + '-weak-' + row.claim.claimId : null"
+              [attr.aria-describedby]="row.claim.decidedAlone ? headingId + '-alone-' + row.claim.claimId : null"
               (change)="store.toggle(row.claim.claimId)"
             />
           </td>
@@ -49,19 +49,22 @@
             @for (quote of row.claim.quotes; track quote.culture + quote.start) {
               <q class="block italic">{{ quote.text }}</q>
             }
-            @if (row.claim.isWeak && !row.outcome) {
+            @if (row.claim.decidedAlone && !row.outcome) {
+              <!-- Why it cannot go with the others, each reason in its own words:
+                   weak support, another value than the catalogue holds, or read
+                   from a picture a person has to see. -->
               <button
                 type="button"
                 class="mt-1 min-h-target text-xs text-warning underline"
-                [id]="headingId + '-weak-' + row.claim.claimId"
+                [id]="headingId + '-alone-' + row.claim.claimId"
                 [attr.aria-label]="
-                  t('claimsBulk.weakFor', {
+                  t('claimsBulk.aloneFor.' + row.claim.decidedAlone, {
                     attribute: row.claim.attributeCode ?? statementIn(row.claim, culture.active()),
                   })
                 "
                 (click)="openOne(row.claim.claimId)"
               >
-                {{ t('claimsBulk.weak') }}
+                {{ t('claimsBulk.alone.' + row.claim.decidedAlone) }}
               </button>
             }
           </td>
@@ -90,19 +93,19 @@
   <ng-container *transloco="let t" ngProjectAs="[reviewFoot]">
     <span class="me-auto text-xs text-muted">
       {{
-        store.weak() === 1
+        store.alone() === 1
           ? t('claimsBulk.tallyOne', { together: store.together(), count: store.count() })
-          : store.weak() > 1
-            ? t('claimsBulk.tally', { together: store.together(), count: store.count(), weak: store.weak() })
+          : store.alone() > 1
+            ? t('claimsBulk.tally', { together: store.together(), count: store.count(), alone: store.alone() })
             : t('claimsBulk.selected', { selected: store.selected(), count: store.together() })
       }}
     </span>
     <button type="button" class="button button--quiet" (click)="close()">
-      {{ store.together() === 0 && store.weak() === 0 ? t('claimsBulk.close') : t('claimsBulk.cancel') }}
+      {{ store.together() === 0 && store.alone() === 0 ? t('claimsBulk.close') : t('claimsBulk.cancel') }}
     </button>
-    @if (store.firstWeak(); as weak) {
-      <button type="button" class="button button--quiet" (click)="openOne(weak.claimId)">
-        {{ store.weak() === 1 ? t('claimsBulk.openWeak') : t('claimsBulk.openFirstWeak') }}
+    @if (store.firstAlone(); as alone) {
+      <button type="button" class="button button--quiet" (click)="openOne(alone.claimId)">
+        {{ store.alone() === 1 ? t('claimsBulk.openAlone') : t('claimsBulk.openFirstAlone') }}
       </button>
     }
     <button type="button" class="button" [disabled]="!store.canApprove()" (click)="approve()">

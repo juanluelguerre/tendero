@@ -51,7 +51,10 @@
           "es": "acero inoxidable",
           "en": "stainless steel"
         },
-        "swatch": "#B8BCC0"
+        "swatch": "#B8BCC0",
+        "mistakenFor": [
+          "GREY"
+        ]
       },
       {
         "code": "GREY",
@@ -263,6 +266,41 @@
           "es": "acero al carbono",
           "en": "carbon steel"
         }
+      },
+      {
+        "code": "OAK",
+        "label": {
+          "es": "roble",
+          "en": "oak"
+        }
+      },
+      {
+        "code": "PINE",
+        "label": {
+          "es": "pino",
+          "en": "pine"
+        }
+      },
+      {
+        "code": "WOOL",
+        "label": {
+          "es": "lana",
+          "en": "wool"
+        }
+      },
+      {
+        "code": "TERRACOTTA_CLAY",
+        "label": {
+          "es": "barro cocido",
+          "en": "terracotta clay"
+        }
+      },
+      {
+        "code": "UPHOLSTERY_FABRIC",
+        "label": {
+          "es": "tela de tapicería",
+          "en": "upholstery fabric"
+        }
       }
     ]
   },
@@ -397,6 +435,102 @@
     "label": {
       "es": "piezas",
       "en": "pieces"
+    },
+    "isShownInPictures": true
+  },
+  {
+    "code": "WIDTH_CM",
+    "aliases": [
+      "ancho_cm"
+    ],
+    "kind": "Number",
+    "unit": "cm",
+    "label": {
+      "es": "ancho",
+      "en": "width"
+    }
+  },
+  {
+    "code": "DEPTH_CM",
+    "aliases": [
+      "fondo_cm"
+    ],
+    "kind": "Number",
+    "unit": "cm",
+    "label": {
+      "es": "fondo",
+      "en": "depth"
+    }
+  },
+  {
+    "code": "HEIGHT_CM",
+    "aliases": [
+      "alto_cm"
+    ],
+    "kind": "Number",
+    "unit": "cm",
+    "label": {
+      "es": "alto",
+      "en": "height"
+    }
+  },
+  {
+    "code": "SEATS",
+    "aliases": [
+      "plazas"
+    ],
+    "kind": "Number",
+    "unit": "",
+    "label": {
+      "es": "plazas",
+      "en": "seats"
+    }
+  },
+  {
+    "code": "LIGHT_NEEDS",
+    "aliases": [
+      "luz"
+    ],
+    "kind": "Option",
+    "isFacet": true,
+    "label": {
+      "es": "luz que necesita",
+      "en": "light it needs"
+    },
+    "options": [
+      {
+        "code": "FULL_SUN",
+        "label": {
+          "es": "sol directo",
+          "en": "full sun"
+        }
+      },
+      {
+        "code": "BRIGHT_INDIRECT",
+        "label": {
+          "es": "luz indirecta",
+          "en": "bright indirect light"
+        }
+      },
+      {
+        "code": "LOW_LIGHT",
+        "label": {
+          "es": "poca luz",
+          "en": "low light"
+        }
+      }
+    ]
+  },
+  {
+    "code": "PET_SAFE",
+    "aliases": [
+      "apta_mascotas"
+    ],
+    "kind": "Boolean",
+    "isFacet": true,
+    "label": {
+      "es": "apta para mascotas",
+      "en": "pet safe"
     }
   }
 ]

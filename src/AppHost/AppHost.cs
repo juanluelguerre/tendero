@@ -407,7 +407,39 @@ var steward = string.Equals(builder.Configuration["Tendero:Steward"], "true",
 // It shares the one slot with Steward until a second is measured.
 var tino = inference.UsesGpu && string.Equals(builder.Configuration["Tendero:Tino"], "true",
     StringComparison.OrdinalIgnoreCase);
-var localModel = steward || tino;
+
+// THE LOCAL MODEL'S EYES (phase 13a, I-2), by their own switch:
+//
+//   Tendero__Vision=true dotnet run --project src/AppHost
+//
+// Qwen3.5-4B reads pictures, and llama.cpp serves that half from a second file,
+// the projector, which no maker publishes: `scripts/prepare-vision.sh` converts it
+// from the same pinned revision and holds it to its SHA-256 (ADR 0031, amended
+// 2026-10-06). The same container then serves text and pictures — two models do
+// not fit the card — and the API is told the profile reads them.
+//
+// ONLY ON A GPU, as Tino: it was measured there (5.7 GB of the card's 8 against
+// 4.8 without, 1.4 s a question about a picture) and not on a CPU, where a
+// picture is about a thousand tokens of prompt before a word is asked. Without a
+// GPU the switch starts nothing, the profile says it reads no pictures, and what
+// needs one read says so and proposes nothing (the images spec, *Degraded path*).
+var vision = inference.UsesGpu && string.Equals(builder.Configuration["Tendero:Vision"], "true",
+    StringComparison.OrdinalIgnoreCase);
+var localModel = steward || tino || vision;
+
+// The projector, prepared once into the model's own volume. Its download is the
+// whole revision (8.8 GB) for a 672 MB file, so it is its own step and only a
+// stack that reads pictures takes it. The conversion peaked at 2.6 GB of its own memory (sampled; the page cache of an 8.8 GB download fills whatever the limit leaves); the limit is
+// the peak and a gigabyte and a little, because a sample every two seconds can miss the top.
+var visionProjector = builder.AddContainer("vision-projector", "ghcr.io/ggml-org/llama.cpp", "full-" + llamaCppRelease)
+    .WithEntrypoint("sh")
+    .WithArgs("/scripts/prepare-vision.sh")
+    .WithBindMount(Path.Combine(builder.AppHostDirectory, "scripts"), "/scripts", isReadOnly: true)
+    .WithVolume("tendero-extractor-models", "/models")
+    .WithContainerRuntimeArgs("--memory=4g", "--memory-swap=4g", Cpus(8));
+
+if (!vision)
+    visionProjector.WithExplicitStart();
 
 var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama.cpp",
         (inference.UsesGpu ? "server-cuda-" : "server-") + llamaCppRelease)
@@ -427,6 +459,9 @@ var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama
 
 if (inference.UsesGpu)
     stewardModel.WithArgs("-ngl", "99").WithContainerRuntimeArgs("--gpus", "all");
+
+if (vision)
+    stewardModel.WithArgs("--mmproj", "/models/qwen3.5-4b-mmproj-f16.gguf").WaitForCompletion(visionProjector);
 
 if (!localModel)
     stewardModel.WithExplicitStart();
@@ -648,6 +683,29 @@ var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
 if (vectors)
     api.WithReference(qdrant).WithReference(embeddingsEndpoint);
 
+// THE PICTURES' VECTORS (phase 13a, P13-3). The model is not a container: SigLIP 2
+// runs inside the API and the worker, from the folder our own export leaves
+// outside git (`src/AppHost/scripts/prepare-siglip.py`, 1.5 GB). So there is no
+// switch of its own and nothing to start — **the folder is the opt-in**: where
+// the vector store runs and the export is whole, both processes are told where it
+// is; where either is missing they are told nothing, get the named stand-in, and
+// the shop has no visual search and says so. A folder half written is "missing":
+// handing it over would be a model that fails on its first picture.
+var pictureModels = Path.Combine(repositoryRoot, "models", "siglip2");
+var pictures = vectors && new[] { "vision.onnx", "text.onnx", "tokenizer.model" }
+    .All(file => File.Exists(Path.Combine(pictureModels, file)));
+
+// And where the pictures are, they are a third leg of the search (the author's
+// ruling, 2026-10-09, on the measurement in `docs/search-evaluation.md`): ten
+// products from the pictures fused with the words and their meaning, +0.005 /
+// +0.016 of NDCG@10 and +0.024 / +0.060 of recall@50, for 100 to 150 ms a
+// search. Zero in the code, which is what a shop without the picture model
+// runs and what the gate's floors are held against; ten here, where the model
+// is already loaded for visual search.
+if (pictures)
+    api.WithEnvironment("Search__Images__Models", pictureModels)
+        .WithEnvironment("Search__Hybrid__PictureDepth", "10");
+
 // The reranker by the same rule, one step narrower: `rerank` is `vectors` on a
 // GPU. It has no equivalent of the vector layer's read-time check before its
 // first call, which is one more reason never to hand over an address nothing
@@ -661,6 +719,12 @@ if (rerank)
 if (localModel)
     api.WithEnvironment("Steward__Models__local__Endpoint",
         ReferenceExpression.Create($"{stewardModel.GetEndpoint("http")}/v1/"));
+
+// And that it reads pictures only where it was started with its projector: a
+// profile that says so and cannot is a call that fails; one that does not say so
+// is a feature that takes its path without a model.
+if (vision)
+    api.WithEnvironment("Steward__Models__local__ReadsPictures", "true");
 
 // Tino by the same rule, one step further: it is on only where its model runs, and
 // off it does not answer and says so (GET /api/assistant/status).
@@ -773,6 +837,11 @@ var workers = builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
 // — hostage.
 if (vectors)
     workers.WithReference(qdrant).WithReference(embeddingsEndpoint);
+
+// And the pictures' (P13-3): the worker is the one that embeds the catalogue's,
+// on the CPU and in the background.
+if (pictures)
+    workers.WithEnvironment("Search__Images__Models", pictureModels);
 
 // The worker proposes claims (P10-4) and is handed the models only when the
 // switch started them — the same rule: an address nothing answers would fail

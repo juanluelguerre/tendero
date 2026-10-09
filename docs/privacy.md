@@ -109,3 +109,36 @@ no hosted profile is configured for it. One would receive the shopper's question
 and catalogue text, and — once orders are read — a signed-in shopper's order
 status; that is a decision the author takes with this page in front of them, not
 a default.
+
+## A picture a shopper searches with
+
+Searching by picture (phase 13a, `docs/specs/images.md`, *I-6*) takes a
+photograph from anyone, signed in or not. **It is never kept.**
+
+| What | Where it goes |
+|---|---|
+| The picture's bytes | memory, for the length of one request: read, turned into the model's 224 by 224 pixels, embedded, discarded. Never the image store, a file, a log or a trace |
+| Its metadata — where and when it was taken, the device | **not read**. The only thing taken from it is which way up the picture is; nothing else in it is parsed, and nothing of it is written anywhere |
+| What the request leaves behind | a span with three facts — the picture's width, its height and its format — how many products were found, and how near the nearest was. No pixels, no file name, no hash of the picture |
+| The vector the model made of it | memory, for the same request; it is compared and dropped, and never joins the catalogue's collection |
+
+**The model runs inside the shop's own process**, on its own CPU: the picture is
+not sent to a model server, hosted or local. Nothing about it leaves the machine.
+
+The storefront makes the picture small in the browser before sending it —
+longest side 1,024, redrawn as a JPEG — so what travels is a redrawn copy
+without the file's metadata, and the original never leaves the device. The
+picture shown beside the results is read from the page's own memory and is
+gone with the tab. None of the server's behaviour above depends on that: the
+endpoint can be called by anything, so what it does with a picture is decided
+on the server.
+
+What is counted is who asked how often — twelve visual searches a minute for a
+client, by the person when one is signed in and by the address when nobody is —
+and that count is not kept either: it lives in the process and is gone with the
+minute.
+
+Words asked against the pictures (`GET /api/search/pictures`) are a search like
+any other: the words are embedded in the same process and are not recorded by
+the endpoint; a signed-in customer's own history keeps a search only where the
+storefront says so, above.

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Catalog.Rendering;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -12,9 +13,9 @@ using Microsoft.AspNetCore.Routing;
 namespace ElGuerre.Tendero.Catalog.Features.CatalogueGaps;
 
 /// <summary>
-/// What the catalogue lacks (phase 12, S-3a). "Missing a required attribute" is
-/// not here: the domain has no such thing yet (the backlog's *Required attributes
-/// per category*).
+/// What the catalogue lacks (phase 12, S-3a). *Missing a required attribute*
+/// joined in phase 13a, once a category could say what a product must have
+/// (ADR 0056, amended).
 /// </summary>
 public enum CatalogueGap
 {
@@ -27,6 +28,9 @@ public enum CatalogueGap
     MissingImageAlt,
 
     DraftWaiting,
+
+    /// <summary>An attribute its category requires and it has no value for: an incomplete product.</summary>
+    MissingRequiredAttribute,
 }
 
 /// <summary>
@@ -43,7 +47,9 @@ public sealed record CatalogueGapsQuery(
 /// <param name="Total">All the products with the gap, not only the rows shown.</param>
 public sealed record CatalogueGaps(CatalogueGap Kind, string? Culture, int Total, IReadOnlyList<GapRow> Rows);
 
-public sealed record GapRow(string ProductId, string Code, string Name, ProductStatus Status);
+/// <param name="Lacks">For <see cref="CatalogueGap.MissingRequiredAttribute"/>: the attributes it lacks, by
+/// their labels in the reader's culture. Empty for the other kinds — the kind says what is missing.</param>
+public sealed record GapRow(string ProductId, string Code, string Name, ProductStatus Status, IReadOnlyList<string> Lacks);
 
 /// <summary>One rule per kind; the Products list's "missing" filter is the same
 /// rule for a name, in SQL (S-3a).</summary>
@@ -52,13 +58,16 @@ public static class CatalogueGapRules
     public static bool NeedsCulture(CatalogueGap kind) =>
         kind is CatalogueGap.MissingName or CatalogueGap.MissingImageAlt;
 
-    public static bool Has(Product product, CatalogueGap kind, string? culture) => kind switch
+    /// <param name="tree">What each category requires; only <see cref="CatalogueGap.MissingRequiredAttribute"/>
+    /// reads it, and with none nothing is required.</param>
+    public static bool Has(Product product, CatalogueGap kind, string? culture, CategoryTree? tree = null) => kind switch
     {
         CatalogueGap.MissingName => !product.Name.Cultures.Contains(Culture.Normalize(culture!)),
         CatalogueGap.MissingImage => product.Images.Count == 0,
         CatalogueGap.MissingImageAlt => product.Images.Any(image =>
             image.Alt is null || !image.Alt.Cultures.Contains(Culture.Normalize(culture!))),
         CatalogueGap.DraftWaiting => product.Status == ProductStatus.Draft,
+        CatalogueGap.MissingRequiredAttribute => product.MissingRequired(tree ?? CategoryTree.Empty).Count > 0,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "No rule for this gap."),
     };
 }
@@ -85,7 +94,9 @@ public sealed class CatalogueGapsValidator : AbstractValidator<CatalogueGapsQuer
     }
 }
 
-public sealed class CatalogueGapsHandler(IProductCatalogReader products) : IQueryHandler<CatalogueGapsQuery, CatalogueGaps>
+public sealed class CatalogueGapsHandler(
+    IProductCatalogReader products, ICategoryReader categories, IAttributeDefinitionReader definitions)
+    : IQueryHandler<CatalogueGapsQuery, CatalogueGaps>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Catalog);
 
@@ -95,10 +106,15 @@ public sealed class CatalogueGapsHandler(IProductCatalogReader products) : IQuer
         activity?.SetTag("catalog.gap", query.Kind.ToString());
         activity?.SetTag("catalog.culture", query.Culture);
 
+        // Only the one kind reads what categories require, and names what is lacking.
+        var byCategory = query.Kind == CatalogueGap.MissingRequiredAttribute;
+        var tree = byCategory ? await categories.AllAsync(cancellationToken) : CategoryTree.Empty;
+        var labels = byCategory ? await definitions.AllAsync(cancellationToken) : AttributeDefinitions.Empty;
+
         // In memory over the live catalogue: a hundred products (the scale rule's
         // "deferred with its number"); the full catalogue makes it SQL.
         var gaps = (await products.LiveAsync(cancellationToken))
-            .Where(product => CatalogueGapRules.Has(product, query.Kind, query.Culture))
+            .Where(product => CatalogueGapRules.Has(product, query.Kind, query.Culture, tree))
             .OrderBy(product => product.Code, StringComparer.Ordinal)
             .ToList();
 
@@ -107,7 +123,9 @@ public sealed class CatalogueGapsHandler(IProductCatalogReader products) : IQuer
         return new CatalogueGaps(query.Kind, query.Culture is { } asked ? Culture.Normalize(asked) : null, gaps.Count,
         [
             .. gaps.Take(query.Limit).Select(product =>
-                new GapRow(product.Id.Value.ToString(), product.Code, product.Name.In(query.DisplayCulture), product.Status)),
+                new GapRow(
+                    product.Id.Value.ToString(), product.Code, product.Name.In(query.DisplayCulture), product.Status,
+                    [.. ProductAttributes.Missing(product, tree, labels, query.DisplayCulture).Select(missing => missing.Label)])),
         ]);
     }
 }

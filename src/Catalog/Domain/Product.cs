@@ -10,13 +10,56 @@ public enum ProductStatus
     Archived    // out of the catalogue, kept for order history
 }
 
+/// <summary>One value on one of a product's variant axes: <c>COLOR</c>, <c>NAVY_BLUE</c>.</summary>
+public sealed record AxisValue(string Axis, string Value);
+
 /// <summary>
 /// A product image. It stores the KEY in our own store, not a URL: the URL is
 /// composed on read, so changing CDN or domain is not an UPDATE over millions of
 /// rows. The alternative text is user-facing, hence LocalizedText (invariant 6):
 /// a screen reader in English cannot read out Spanish.
 /// </summary>
-public sealed record ProductImage(ImageId Id, LocalizedText? Alt, int SortOrder);
+public sealed record ProductImage(ImageId Id, LocalizedText? Alt, int SortOrder)
+{
+    /// <summary>
+    /// **What the picture shows of the product's variants**: at most one value of
+    /// each axis — the colour, usually. A picture that says nothing shows the
+    /// product and no variant in particular: the back, a detail, the box.
+    ///
+    /// The picture says it, and not the variant: a colour then has as many
+    /// pictures as say so, every size of the colour has them without repeating
+    /// anything, and which variant a picture is of is one fact in one place
+    /// (`docs/analysis/catalogue-model.md`, proposal 1).
+    ///
+    /// Never null, whatever set it: a picture stored before pictures said
+    /// anything has no such key in its JSON, and what is not said is nothing.
+    /// </summary>
+    public IReadOnlyList<AxisValue> Shows
+    {
+        get => field ?? [];
+        init;
+    }
+
+    /// <summary>Whether a variant at these coordinates is one this picture shows: every value it names is the variant's.</summary>
+    public bool IsOf(IReadOnlyDictionary<string, string> coordinates) =>
+        Shows.Count > 0 && Shows.All(shown =>
+            coordinates.TryGetValue(shown.Axis, out var value) && string.Equals(value, shown.Value, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Whether it already shows exactly these values.</summary>
+    public bool ShowsExactly(IReadOnlyList<AxisValue> values) =>
+        Shows.Count == values.Count && Shows.All(values.Contains);
+
+    /// <summary>
+    /// Whether the picture is already described in exactly these words. Compared by
+    /// the WORDS: <see cref="LocalizedText"/> has reference equality, and every
+    /// import and every command builds a new one.
+    /// </summary>
+    public bool Says(LocalizedText? alt) =>
+        Alt is null || alt is null
+            ? Alt is null && alt is null
+            : Alt.Values.Count == alt.Values.Count &&
+              Alt.Values.All(pair => alt.Values.TryGetValue(pair.Key, out var other) && other == pair.Value);
+}
 
 // The key across N connectors: (source, external id). E.g. ("shopify", "gid://shopify/Product/123")
 public sealed record ExternalReference(string Source, string ExternalId);
@@ -33,6 +76,10 @@ public sealed class Product : AggregateRoot
     public const int NameMaxLength = 200;
 
     public const int DescriptionMaxLength = 4000;
+
+    /// <summary>What a picture shows, in one language, at most. A screen reader reads
+    /// it whole, so it is a sentence or two; the limit is what refuses an essay.</summary>
+    public const int ImageAltMaxLength = 300;
 
     private readonly List<ProductImage> images = [];
     private readonly List<AttributeValue> attributes = [];
@@ -228,6 +275,28 @@ public sealed class Product : AggregateRoot
         this.attributes.FirstOrDefault(value =>
             string.Equals(value.Code, code, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>
+    /// The attributes its category requires and it has no value for (ADR 0056,
+    /// amended) — what makes it *incomplete*. It is told, never refused: an
+    /// incomplete product is imported, kept and may be published, with what it
+    /// lacks shown.
+    ///
+    /// **An axis counts as held when a variant still sold holds it.** A shirt in
+    /// two colours says no colour of its own — its variants say it — and it is
+    /// not missing one.
+    /// </summary>
+    public IReadOnlyList<string> MissingRequired(CategoryTree tree)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+
+        return
+        [
+            .. tree.RequiredOf(Category).Where(code =>
+                AttributeFor(code) is null &&
+                !Sold.Any(variant => variant.AxisValues.Keys.Contains(code, StringComparer.OrdinalIgnoreCase))),
+        ];
+    }
+
     // Idempotent by content identity: re-importing the same photo does not
     // duplicate it, because the content hash IS the key.
     public void AddImage(TimeProvider clock, ImageId id, LocalizedText? alt = null)
@@ -255,9 +324,17 @@ public sealed class Product : AggregateRoot
     {
         ArgumentNullException.ThrowIfNull(gallery);
 
+        // What the source does not say, the product keeps: a seed with no alt text
+        // must not erase the one a person approved (phase 13a). A source that does
+        // describe its picture has the last word.
         var replacement = gallery
             .DistinctBy(image => image.Id)
-            .Select((image, index) => new ProductImage(image.Id, image.Alt, index))
+            .Select((image, index) => new ProductImage(
+                image.Id, image.Alt ?? this.images.FirstOrDefault(kept => kept.Id == image.Id)?.Alt, index)
+            {
+                // And what a picture that stays shows: the source's gallery says nothing of it.
+                Shows = this.images.FirstOrDefault(kept => kept.Id == image.Id)?.Shows ?? [],
+            })
             .ToList();
 
         if (replacement.SequenceEqual(this.images.OrderBy(image => image.SortOrder), SameImage.Instance))
@@ -266,6 +343,114 @@ public sealed class Product : AggregateRoot
         this.images.Clear();
         this.images.AddRange(replacement);
         Touch(clock);
+    }
+
+    /// <summary>
+    /// Says what one of the product's pictures shows (phase 13a): what a shopkeeper
+    /// types, and what a model proposes and a person approves. The picture keeps its
+    /// place in the gallery. The same words again are not a change — no timestamp,
+    /// no event.
+    /// </summary>
+    /// <returns>False when the product has no such picture.</returns>
+    public bool DescribeImage(TimeProvider clock, ImageId id, LocalizedText alt)
+    {
+        ArgumentNullException.ThrowIfNull(alt);
+
+        var at = this.images.FindIndex(image => image.Id == id);
+        if (at < 0)
+            return false;
+        if (this.images[at].Says(alt))
+            return true;
+
+        this.images[at] = this.images[at] with { Alt = alt };
+        Touch(clock);
+        return true;
+    }
+
+    /// <summary>
+    /// Says which of the product's variants a picture shows: a value of one or
+    /// more of its axes, or nothing — and then the picture is the product's and
+    /// no variant's in particular.
+    ///
+    /// **Only what somebody sells.** An axis the product does not vary by, or a
+    /// value no live variant holds, would be a picture that shows on nothing: it
+    /// is refused, not stored. The values are kept in the order of the product's
+    /// axes and as its variants spell them. The same tag again is not a change.
+    /// </summary>
+    /// <returns>False when the product has no such picture.</returns>
+    public bool Show(TimeProvider clock, ImageId picture, IReadOnlyDictionary<string, string> values)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+
+        var at = this.images.FindIndex(image => image.Id == picture);
+        if (at < 0)
+            return false;
+
+        List<AxisValue> shown = [];
+        foreach (var axis in this.variantAxes)
+        {
+            var named = values.FirstOrDefault(value => string.Equals(value.Key.Trim(), axis, StringComparison.OrdinalIgnoreCase));
+            if (named.Key is null)
+                continue;
+
+            var held = Sold
+                .Select(variant => variant.AxisValues.GetValueOrDefault(axis))
+                .FirstOrDefault(value => string.Equals(value, named.Value.Trim(), StringComparison.OrdinalIgnoreCase))
+                ?? throw new InvalidOperationException($"No variant of this product is {axis} = {named.Value}: a picture cannot show it.");
+
+            shown.Add(new AxisValue(axis, held));
+        }
+
+        if (shown.Count != values.Count)
+        {
+            var unknown = values.Keys.Where(key => !this.variantAxes.Contains(key.Trim(), StringComparer.OrdinalIgnoreCase));
+            throw new InvalidOperationException(
+                $"This product does not vary by {string.Join(", ", unknown)}: a picture cannot show it. " +
+                $"Its axes: {(this.variantAxes.Count == 0 ? "(none)" : string.Join(", ", this.variantAxes))}.");
+        }
+
+        if (this.images[at].ShowsExactly(shown))
+            return true;
+
+        this.images[at] = this.images[at] with { Shows = shown };
+        Touch(clock);
+        return true;
+    }
+
+    /// <summary>
+    /// A variant's pictures: those of the gallery that say they show it, in the
+    /// gallery's order, and then those that say nothing — a detail of the sole is
+    /// every colour's. Derived, never stored: every size of a colour has the
+    /// colour's pictures without any of them being written twice.
+    /// </summary>
+    public IReadOnlyList<ProductImage> PicturesOf(Variant variant)
+    {
+        ArgumentNullException.ThrowIfNull(variant);
+        var gallery = this.images.OrderBy(image => image.SortOrder).ToList();
+
+        return [.. gallery.Where(image => image.IsOf(variant.AxisValues)), .. gallery.Where(image => image.Shows.Count == 0)];
+    }
+
+    /// <summary>
+    /// The picture a cart line, a search result and an agent's feed show for a
+    /// variant: the first of its own. With none of its own and none untagged —
+    /// every picture is another colour's — the cover, which is still the product.
+    /// </summary>
+    public ProductImage? PictureOf(Variant variant) =>
+        PicturesOf(variant) is [var first, ..] ? first : PrimaryImage;
+
+    /// <summary>The variants somebody can buy: what a picture may be said to show.</summary>
+    private IEnumerable<Variant> Sold => this.variants.Where(variant => variant.Status != VariantStatus.Discontinued);
+
+    /// <summary>A picture that shows a value no variant is sold in any more goes back to being the product's.</summary>
+    private void ForgetWhatNobodySells()
+    {
+        for (var at = 0; at < this.images.Count; at++)
+        {
+            var image = this.images[at];
+            if (image.Shows.Count > 0 && !Sold.Any(variant => image.IsOf(variant.AxisValues)))
+                this.images[at] = image with { Shows = [] };
+        }
     }
 
     /// <summary>
@@ -282,15 +467,10 @@ public sealed class Product : AggregateRoot
             a is not null && b is not null &&
             a.Id == b.Id &&
             a.SortOrder == b.SortOrder &&
-            SameWords(a.Alt, b.Alt);
+            a.Says(b.Alt) &&
+            a.ShowsExactly(b.Shows);
 
         public int GetHashCode(ProductImage image) => HashCode.Combine(image.Id, image.SortOrder);
-
-        private static bool SameWords(LocalizedText? a, LocalizedText? b) =>
-            a is null || b is null
-                ? a is null && b is null
-                : a.Values.Count == b.Values.Count &&
-                  a.Values.All(pair => b.Values.TryGetValue(pair.Key, out var other) && other == pair.Value);
     }
 
     // Idempotent: re-importing from the same source does not duplicate references.
@@ -361,8 +541,7 @@ public sealed class Product : AggregateRoot
         string sku,
         Money price,
         IReadOnlyDictionary<string, string>? axisValues = null,
-        string? taxClass = null,
-        ImageId? image = null)
+        string? taxClass = null)
     {
         if (VariantBySku(sku) is { } existing)
             return existing;
@@ -388,7 +567,7 @@ public sealed class Product : AggregateRoot
                 $"A variant already exists for {string.Join(", ", values.Select(v => $"{v.Key}={v.Value}"))}.");
         }
 
-        var variant = Variant.Create(sku, price, values, taxClass, image);
+        var variant = Variant.Create(sku, price, values, taxClass);
         this.variants.Add(variant);
         Touch(clock);
         return variant;
@@ -403,12 +582,7 @@ public sealed class Product : AggregateRoot
     public void DiscontinueVariant(TimeProvider clock, string sku)
     {
         Required(sku).Discontinue();
-        Touch(clock);
-    }
-
-    public void SetVariantImage(TimeProvider clock, string sku, ImageId? image)
-    {
-        Required(sku).SetImage(image);
+        ForgetWhatNobodySells();
         Touch(clock);
     }
 

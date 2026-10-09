@@ -30,4 +30,9 @@ public static class ProposalLimits
     /// <summary>"A hundred English names, each reviewed" (the spec): one batch, for
     /// proposing, approving and rejecting alike.</summary>
     public const int MaxBatch = 100;
+
+    /// <summary>Proposals still waiting that a job looks through to see what it has
+    /// already proposed. The catalogue is a hundred products; past this many waiting,
+    /// the look becomes a query of its own.</summary>
+    public const int MaxOpenScan = 500;
 }

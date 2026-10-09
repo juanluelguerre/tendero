@@ -11,8 +11,18 @@ import { ClaimsBulkReviewStore } from './claims-bulk-review.store';
 
 const Claims = 'http://api/api/knowledge/claims';
 
-const claim = (claimId: string, isWeak = false) =>
-  ({ claimId, productId: 'p1', attributeCode: claimId, value: 'v', isWeak, quotes: [] }) as unknown as ClaimForReview;
+const claim = (claimId: string, isWeak = false, fromPicture = false) =>
+  ({
+    claimId,
+    productId: 'p1',
+    attributeCode: claimId,
+    value: 'v',
+    isWeak,
+    picture: fromPicture ? { imageId: 'img', readBy: 'model', promptVersion: 'v1' } : null,
+    // The server's word on why a claim is decided on its own: weak first, then read from a picture.
+    decidedAlone: isWeak ? 'WeakSupport' : fromPicture ? 'ReadFromAPicture' : null,
+    quotes: [],
+  }) as unknown as ClaimForReview;
 
 /**
  * A product's claims reviewed together (Steward spec, *The bulk review of
@@ -59,7 +69,7 @@ describe('the claims bulk review store', () => {
       ['c', true, true],
       ['b', false, false],
     ]);
-    expect([store.together(), store.weak(), store.selected(), store.firstWeak()?.claimId]).toEqual([2, 1, 2, 'b']);
+    expect([store.together(), store.alone(), store.selected(), store.firstAlone()?.claimId]).toEqual([2, 1, 2, 'b']);
   });
 
   it('approves only the ticked, and shows each row its outcome', async () => {
@@ -71,6 +81,22 @@ describe('the claims bulk review store', () => {
     approval.flush({ rows: [{ claimId: 'a', outcome: 'Approved' }] });
 
     expect(store.rows().map((row) => row.outcome)).toEqual(['Approved', null, null]);
+  });
+
+  /**
+   * A claim read from a picture rests on a model's description of it: the person
+   * is the only check that is not a model, so it is never ticked to go with
+   * others — the server's rule (`decidedAlone`), not a copy of it here.
+   */
+  it('leaves a claim read from a picture unticked, as it leaves a weak one', async () => {
+    const { store } = await reviewing([claim('a'), claim('p', false, true), claim('w', true)]);
+
+    expect(store.rows().map((row) => [row.claim.claimId, row.ticked, row.tickable])).toEqual([
+      ['a', true, true],
+      ['p', false, false],
+      ['w', false, false],
+    ]);
+    expect([store.together(), store.alone(), store.firstAlone()?.claimId]).toEqual([1, 2, 'p']);
   });
 
   /** The rows that can go together first, the weak ones after them, as the mock-up draws it. */

@@ -41,6 +41,21 @@
       </div>
     </dl>
 
+    @if (product.missingRequired.length > 0) {
+      <!-- What its category requires and it has no value for (ADR 0056, amended).
+           It is said before publishing and does not stop it: an incomplete
+           product is the shopkeeper's call, and the catalogue's gaps keep it. -->
+      <section class="grid gap-1" role="note" data-test="missing-required">
+        <h3 class="eyebrow text-warning">{{ t('missingRequired.title') }}</h3>
+        <ul class="m-0 flex list-none flex-wrap gap-1 p-0">
+          @for (missing of product.missingRequired; track missing.code) {
+            <li class="tag">{{ missing.label }}</li>
+          }
+        </ul>
+        <p class="m-0 text-3xs text-muted">{{ t('missingRequired.hint') }}</p>
+      </section>
+    }
+
     @for (culture of cultures; track culture) {
       <section class="grid gap-1">
         <h3 class="eyebrow">{{ t('culture.' + culture) }}</h3>
@@ -55,6 +70,77 @@
           <!-- The finding the review is for: the storefront would fall back to
                the other language here and nobody would notice. -->
           <p class="text-xs font-semibold text-warning">{{ t('missing') }}</p>
+        }
+      </section>
+    }
+
+    @if (product.images.length > 0) {
+      <!-- What each picture says, per language as stored: an empty box is a picture a
+           screen reader has nothing to say about. Typed here, with no model: the same
+           command an approved proposal runs (phase 13a). -->
+      <section class="grid gap-2">
+        <h3 class="eyebrow">{{ t('altText.title') }}</h3>
+        <p class="m-0 text-3xs text-muted">{{ t('altText.hint') }}</p>
+        @for (draft of altsForm; track $index; let at = $index) {
+          @let picture = alts()[$index];
+          <!-- The picture as stored, by its place: inside the axes' loop `$index` is the axis's. -->
+          @let stored = product.images[at];
+          <div class="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+            <span class="relative size-control-xl overflow-hidden rounded-md border border-hairline bg-raised">
+              <img class="object-contain" [ngSrc]="images.of(picture.id)" fill alt="" />
+            </span>
+            <div class="grid gap-1">
+              @for (culture of cultures; track culture) {
+                <label class="grid gap-hair text-3xs text-muted">
+                  <span>{{ t('culture.' + culture) }}</span>
+                  <textarea
+                    class="rounded-md border border-hairline-strong bg-surface p-2 text-xs text-body"
+                    rows="2"
+                    [formField]="draft[culture]"
+                  ></textarea>
+                </label>
+              }
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="button button--quiet"
+                  [disabled]="!changed($index) || store.saving() === picture.id"
+                  (click)="save(product.productId, $index)"
+                >
+                  {{ store.saving() === picture.id ? t('altText.saving') : t('altText.save') }}
+                </button>
+                @if (store.notSaved() === picture.id) {
+                  <span class="text-3xs text-danger" role="alert">{{ t('altText.notSaved') }}</span>
+                }
+              </div>
+              <!-- Which of the product's variants the picture shows (ADR 0057): one
+                   value an axis, or none — a picture that says nothing is every
+                   variant's. Only the values a variant still sold holds are offered,
+                   which is the rule the catalogue applies. Chosen, it is written. -->
+              @for (axis of product.axes; track axis.code) {
+                <label class="grid gap-hair text-3xs text-muted">
+                  <span>{{ t('shows.label', { axis: axis.label }) }}</span>
+                  <select
+                    class="field"
+                    [disabled]="store.showing() === picture.id"
+                    (change)="show(product.productId, at, axis.code, $any($event.target).value)"
+                  >
+                    <option value="" [selected]="!stored.shows[axis.code]">
+                      {{ t('shows.none') }}
+                    </option>
+                    @for (option of axis.options; track option.code) {
+                      <option [value]="option.code" [selected]="stored.shows[axis.code] === option.code">
+                        {{ option.label }}
+                      </option>
+                    }
+                  </select>
+                </label>
+              }
+              @if (store.notShown() === picture.id) {
+                <span class="text-3xs text-danger" role="alert">{{ t('shows.notShown') }}</span>
+              }
+            </div>
+          </div>
         }
       </section>
     }

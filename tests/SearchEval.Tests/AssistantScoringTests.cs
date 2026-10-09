@@ -166,7 +166,7 @@ public sealed class AssistantScoringTests
         var path = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "tools", "SearchEval", "Assistant", "cases.json");
         var cases = JsonSerializer.Deserialize<AssistantCases>(File.ReadAllText(path), CopilotScoring.Json)!;
 
-        Assert.True(cases.Cases.Count >= 28);
+        Assert.True(cases.Cases.Count >= 30);
         Assert.Equal(cases.Cases.Count, cases.Cases.Select(item => item.Id).Distinct().Count());
         Assert.All(cases.Cases, item => Assert.True(
             item.Expect is { Kinds.Count: > 0 } or { NotOrder: not null } or { NotSays.Count: > 0 }, item.Id));

@@ -2,6 +2,7 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Workers;
@@ -63,6 +64,7 @@ public sealed class WorkerContainerTests
     [Theory]
     [InlineData(typeof(IProductIndexer))]
     [InlineData(typeof(IProductVectorIndexer))]
+    [InlineData(typeof(IPictureVectorIndexer))]
     [InlineData(typeof(IDomainEventHandler<ProductUpserted>))]
     [InlineData(typeof(IDomainEventHandler<ProductArchived>))]
     [InlineData(typeof(IDomainEventHandler<StockLevelChanged>))]

@@ -16,6 +16,16 @@ type Schemas = components['schemas'];
  * shows both and recomputes neither.
  */
 export type ClaimForReview = Schemas['ClaimForReview'];
+
+/**
+ * A doubt about a picture (phase 13a, I-4d): the model is sure it shows another
+ * colour than the catalogue holds. Not a claim — it says something of the
+ * picture, and a person says what.
+ */
+export type PictureDoubtView = Schemas['PictureDoubtView'];
+export type PictureDoubtsPage = Schemas['PictureDoubtsPage'];
+export type PictureDoubtDecision = Schemas['PictureDoubtDecision'];
+export type DecidePictureDoubtResponse = Schemas['DecidePictureDoubtResponse'];
 export type ClaimsForReviewPage = Schemas['ClaimsForReviewPage'];
 export type ClaimSupportFilter = Schemas['ClaimSupportFilter'];
 export type QuoteForReview = Schemas['QuoteForReview'];

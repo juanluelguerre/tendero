@@ -113,6 +113,7 @@ public static class OrderingServiceCollectionExtensions
 
         // And what the storefront's assistant may read of it (phase 12b): a shopper's.
         services.AddScoped<IReadTool, Features.Returns.ReturnPolicyTool>();
+        services.AddScoped<IReadTool, Features.ShippingTerms.ShippingTermsTool>();
         services.AddScoped<IReadTool, Features.ShopperOrders.MyOrdersTool>();
 
         // What the shopper is looking at, for my_orders: filled by the turn, never by a model.

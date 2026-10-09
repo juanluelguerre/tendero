@@ -32,6 +32,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<SourceDocument> SourceDocuments => Set<SourceDocument>();
     public DbSet<ProductClaim> Claims => Set<ProductClaim>();
+    public DbSet<PictureDoubt> PictureDoubts => Set<PictureDoubt>();
     public DbSet<ActionProposal> Proposals => Set<ActionProposal>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -53,6 +54,11 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // What the backoffice's lists match a typed text with: "portatil" finds
+        // "portátil". ILIKE folds case and not accents, and nobody types an accent
+        // to search. Postgres ships it; the migration creates it.
+        modelBuilder.HasPostgresExtension("unaccent");
+
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
         modelBuilder.ApplyConfiguration(new AgentConfiguration());
         modelBuilder.ApplyConfiguration(new BrowsingHistoryConfiguration());
@@ -66,6 +72,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ReservationConfiguration());
         modelBuilder.ApplyConfiguration(new SourceDocumentConfiguration());
         modelBuilder.ApplyConfiguration(new ProductClaimConfiguration());
+        modelBuilder.ApplyConfiguration(new PictureDoubtConfiguration());
         modelBuilder.ApplyConfiguration(new ActionProposalConfiguration());
         modelBuilder.ApplyConfiguration(new CampaignConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());

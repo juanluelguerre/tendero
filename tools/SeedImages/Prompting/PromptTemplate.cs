@@ -1,5 +1,15 @@
 namespace ElGuerre.Tendero.SeedImages;
 
+/// <summary>Another view of a product that already has a picture.</summary>
+public enum PictureView
+{
+    /// <summary>From behind.</summary>
+    Back,
+
+    /// <summary>From the side.</summary>
+    Side,
+}
+
 /// <summary>
 /// What the model is asked for, built from the register published in
 /// <c>seed/IMAGES-TODO.md</c>.
@@ -39,7 +49,7 @@ public static class PromptTemplate
         "Bold clean outlines, solid saturated colours, flat shading.",
         "Plain unmarked surfaces with no writing, no labels and no badges.",
         "Plain light warm grey background, even lighting, minimal soft shadow.",
-        "One single object, isolated and centred, three-quarter view,",
+        OneObject,
         "at most 70% of the frame height, with wide empty margins above and below."
     ];
 
@@ -84,7 +94,70 @@ public static class PromptTemplate
     /// names the object without the invented brand — a generator has never heard
     /// of a "Pulse Runner" and reads "cushioned running shoes" perfectly well.
     /// </summary>
-    public static string Positive(SeedProduct product, ColourLexicon colours)
+    /// <summary>
+    /// What a picture is told to become when it is another colour of the same
+    /// product (phase 13a, I-4d). **Everything it must keep is named, because
+    /// what is not named gets redrawn**: the object, its lines, its place and
+    /// size in the frame, the background. And the one thing a dark colour needs
+    /// said — the first black pannier came back as a flat silhouette — is that
+    /// its seams and parts stay drawn, in a lighter line.
+    /// </summary>
+    /// <param name="from">The colour the reference is, in English, or null when the catalogue does not say.</param>
+    /// <param name="to">The colour it is to be, in English.</param>
+    public static string Recolour(string? from, string to, string? hint = null) =>
+        $"""
+         This is a product illustration from a shop's catalogue. Give back the same
+         illustration with one change: the product's main colour{(from is null ? string.Empty : $", which is {from},")} becomes {to}.
+
+         Keep everything else exactly as it is: the same object, the same shape and
+         proportions, the same outlines, seams, pockets, straps, buckles, handles
+         and hooks in the same places, the same viewing angle, the same size and
+         position in the frame, the same plain background and the same soft shadow.
+         Do not redraw the object, do not add or remove any part, and do not add
+         any text, logo, label or second object.
+
+         Only the surfaces that are {from ?? "the main colour"} change. Parts that are another
+         colour — dark straps, buckles, hooks, zips — keep their own colour, unless
+         they would no longer be told apart from the new colour: then make them a
+         mid grey. Keep every outline and seam visible: on a dark object draw them
+         in a lighter grey, so that it still reads as a detailed illustration and
+         never as a flat silhouette.{(string.IsNullOrWhiteSpace(hint) ? string.Empty : " " + hint.Trim())}
+         """;
+
+    /// <summary>
+    /// What a picture is told to become when it is another view of the same
+    /// product (phase 13a, I-4d): the same object, turned. **This is a redraw,
+    /// and says so** — a recolour moves nothing and can be held to the original
+    /// pixel by pixel; a view from behind is a different shape on purpose, and
+    /// what it is held to is a person's eye. So everything the object is — its
+    /// colours, its materials, its parts, the way it is drawn — is named as what
+    /// stays, and the angle as the one thing that changes.
+    /// </summary>
+    public static string View(PictureView view, string? hint = null) =>
+        $"""
+         This is a product illustration from a shop's catalogue. Draw the same
+         product again, {Angle(view)}.
+
+         It is the same object: the same colours, the same materials, the same
+         proportions, and every part it has — seams, pockets, straps, buckles,
+         handles, hooks — where it would be from this side. Do not invent a part
+         the object does not have, and do not leave out one it has.
+
+         Draw it the same way: a flat illustration with clean outlines and flat
+         colours, the same plain light background with a soft shadow, the object
+         alone, centred, the same size in the frame, with wide empty margins. No
+         text, logo, label or second object anywhere.{(string.IsNullOrWhiteSpace(hint) ? string.Empty : " " + hint.Trim())}
+         """;
+
+    private static string Angle(PictureView view) => view switch
+    {
+        PictureView.Back => "seen from behind: the side that faces away in this picture",
+        PictureView.Side => "seen from the side: turned a quarter turn, so its side faces the viewer",
+        _ => throw new ArgumentOutOfRangeException(nameof(view)),
+    };
+
+    /// <param name="hint">For a redraw: what was wrong with the last drawing, said as what the object is. It follows the description.</param>
+    public static string Positive(SeedProduct product, ColourLexicon colours, string? hint = null)
     {
         // Thirty-five products declare no colour, and one of them says why in
         // seed/IMAGES-TODO.md: the packing cubes are three cubes of three
@@ -105,14 +178,39 @@ public static class PromptTemplate
         // modifies "pannier" for a reader and is a second object for a diffusion
         // model. The eight illustrations made by hand used the description alone
         // and none of them drew the wrong thing.
-        var description = WithoutMeasurements(product.EnglishDescription);
+        var description = WithoutCareInstructions(WithoutMeasurements(product.EnglishDescription));
+
+        if (!string.IsNullOrWhiteSpace(hint))
+            description = $"{description} {hint.Trim()}";
 
         var subject = colour is null
             ? $"The object: {description}"
             : $"The object is {colour}: {description}";
 
-        return string.Join(Environment.NewLine, [StyleLines[0], subject, .. StyleLines[1..]]);
+        // A set is not "one single object", and saying both got four knives for
+        // three and seven tumblers for six.
+        var composition = product.Pieces is > 1 and var pieces
+            ? StyleLines[1..].Select(line => line == OneObject ? SetOf(pieces) : line)
+            : StyleLines[1..];
+
+        return string.Join(Environment.NewLine, [StyleLines[0], subject, .. composition]);
     }
+
+    /// <summary>The line a set replaces: it asks for one object, and a set is several.</summary>
+    private const string OneObject = "One single object, isolated and centred, three-quarter view,";
+
+    private static readonly string[] Numbers =
+        ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+
+    /// <summary>
+    /// How many to draw, for a product that declares its pieces. **In a word, not
+    /// a figure**: a figure in a prompt is what gets lettered onto the product.
+    /// "Each one whole" because the generator stacks and overlaps a set, and an
+    /// overlapped set is one nobody can count — the model that checks it least of all.
+    /// </summary>
+    public static string SetOf(int pieces) =>
+        $"Exactly {(pieces < Numbers.Length ? Numbers[pieces] : pieces.ToString(System.Globalization.CultureInfo.InvariantCulture))} of them, "
+        + "each one whole and none hidden behind another, grouped and centred, three-quarter view,";
 
     /// <summary>
     /// The description with its figures taken out.
@@ -155,6 +253,33 @@ public static class PromptTemplate
     }
 
     /// <summary>
+    /// The description without the sentences that say how the thing is washed.
+    ///
+    /// **Bought with two identical failures.** A house slipper described as "Hand
+    /// washable." came back twice with a round emblem on its side: the hand-wash
+    /// symbol, as a care label carries it. The same lesson as the measurements, one
+    /// kind of sentence over: what a draughtsman cannot draw as the object, the model
+    /// draws as something printed on it.
+    ///
+    /// Narrow on purpose. Fifteen sentences of the catalogue mention washing, an
+    /// iron or a dishwasher, and fourteen of them are the product itself — a wash
+    /// bag, washed linen, a cast iron pan. Only an instruction of the kind a care
+    /// label carries goes.
+    /// </summary>
+    public static string WithoutCareInstructions(string description)
+    {
+        var sentences = description
+            .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(sentence => !CareInstruction.IsMatch(sentence));
+
+        return String.Join(". ", sentences) + ".";
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex CareInstruction = new(
+        @"\b(?:hand|machine)[\s-]wash(?:able)?\b|\bdry[\s-]clean",
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    /// <summary>
     /// A figure with a unit attached: `4 mm`, `12 cups`, `24-hour`, `UPF 30`.
     ///
     /// **A run of figures sharing one unit is one measurement**, because only the
@@ -165,7 +290,10 @@ public static class PromptTemplate
         @"\b(?:UPF|SPF|IPX)\s*\d+\b"
         + @"|\b\d+(?:[.,]\d+)?(?:\s*(?:,|and|y)\s*\d+(?:[.,]\d+)?)*"
         + @"\s*-?\s*(?:mm|cm|m|g|kg|ml|l|w|v|"
-        + @"hour|hours|cup|cups|litre|litres|liter|liters|inch|inches)\b",
+        + @"hour|hours|cup|cups|litre|litres|liter|liters|inch|inches|"
+        // An angle, with what it measures: "350 degrees of rotation" leaves
+        // nothing behind, where "350 degrees" alone would leave "of rotation".
+        + @"degrees?(?:\s+of\s+\w+)?)\b",
         System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
     private static readonly System.Text.RegularExpressions.Regex BeforePunctuation =

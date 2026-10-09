@@ -1,0 +1,27 @@
+[
+  {
+    "when": "Cafetera",
+    "pictures": 1,
+    "reply": "The product's name reached the model: the job told it what the picture is of."
+  },
+  {
+    "when": "Describe the picture",
+    "pictures": 1,
+    "reply": {
+      "es": "Una cafetera italiana de metal plateado. Tiene un mango negro y una tapa con pomo.",
+      "en": "A silver metal moka pot. It has a black handle and a lid with a knob."
+    },
+    "inputTokens": 1100,
+    "outputTokens": 60
+  },
+  {
+    "when": "how many separate items",
+    "pictures": 1,
+    "say": "1"
+  },
+  {
+    "when": "main colour",
+    "pictures": 1,
+    "say": "grey"
+  }
+]

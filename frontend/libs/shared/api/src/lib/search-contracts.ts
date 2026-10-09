@@ -52,6 +52,15 @@ export type CultureEvaluation = Schemas['CultureEvaluation'];
 export type StrategyScore = Schemas['StrategyScore'];
 export type QueryEvaluation = Schemas['QueryEvaluation'];
 
+/**
+ * Searching with a picture (phase 13a): the products whose pictures are
+ * nearest, each with the picture that matched — its id, composed into a URL as
+ * a card's is — and whether this shop can be asked at all.
+ */
+export type VisualSearchResult = Schemas['VisualSearchResult'];
+export type VisualMatch = Schemas['VisualMatch'];
+export type VisualSearchAvailability = Schemas['VisualSearchAvailability'];
+
 /** Search's stages, their state and since when, for the dashboard (R-9, D-7). */
 export type SearchStatus = Schemas['SearchStatus'];
 export type StageStatus = Schemas['StageStatus'];

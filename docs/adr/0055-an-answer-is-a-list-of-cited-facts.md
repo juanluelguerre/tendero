@@ -67,8 +67,10 @@ Two things were measured before deciding (`docs/analysis/tino-models.md`):
 - A sentence can still be wrong in what it means while right in what it cites.
   The measured limits stand as written (`docs/analysis/tino-models.md`): what the
   product's **name** says passes under any fact's chip; a fact that **denies** a
-  *the details do not say* is not seen; a card may be shown with nothing said. The
-  `assistant` suite holds the first two as cases.
+  *the details do not say* is not seen. The `assistant` suite holds both as
+  cases. (A card shown with nothing said was the third until 2026-10-06: a product
+  left with no reason is now left out, and an answer left with no product is the
+  product's *sin dato* on its page and the search's results anywhere else.)
 - Every turn costs a second model call and one scorer call per sentence. On the
   local model that is 4 s at the median and 9 to 11 s at p95, of a turn's 20; the
   caps are three products and two reasons, from the measurement, not the four and

@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
 
 namespace ElGuerre.Tendero.Catalog.Rendering;
 
@@ -15,6 +16,9 @@ public sealed record ProductAttributeView(
     decimal? Number,
     string? Unit,
     bool? Flag);
+
+/// <summary>An attribute a product's category requires and the product has no value for, named in a culture.</summary>
+public sealed record MissingAttributeView(string Code, string Label);
 
 /// <summary>
 /// How a product's attribute reads in a culture. Moved down from GetProduct when
@@ -38,4 +42,13 @@ public static class ProductAttributes
             value.Number,
             definition?.Unit,
             value.Flag);
+
+    /// <summary>
+    /// What the product lacks of what its category requires (ADR 0056, amended),
+    /// each by its label — or by its code, when the catalogue never defined it:
+    /// a gap is shown, not hidden behind a second gap.
+    /// </summary>
+    public static IReadOnlyList<MissingAttributeView> Missing(
+        Product product, CategoryTree tree, AttributeDefinitions definitions, string culture) =>
+        [.. product.MissingRequired(tree).Select(code => new MissingAttributeView(code, definitions.ByCode(code)?.Label.In(culture) ?? code))];
 }

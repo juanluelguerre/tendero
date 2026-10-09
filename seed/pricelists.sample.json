@@ -286,7 +286,15 @@
         "amount": 39.0
       },
       {
-        "sku": "B13BAG0711-DEFAULT",
+        "sku": "B13BAG0711-OLIVE",
+        "amount": 79.9
+      },
+      {
+        "sku": "B13BAG0711-BLACK",
+        "amount": 79.9
+      },
+      {
+        "sku": "B13BAG0711-NAVY",
         "amount": 79.9
       },
       {
@@ -404,6 +412,86 @@
       {
         "sku": "B15KIT1204-DEFAULT",
         "amount": 39.9
+      },
+      {
+        "sku": "B16FUR1301-DEFAULT",
+        "amount": 129.0
+      },
+      {
+        "sku": "B16FUR1302-DEFAULT",
+        "amount": 289.0
+      },
+      {
+        "sku": "B16FUR1303-DEFAULT",
+        "amount": 749.0
+      },
+      {
+        "sku": "B16FUR1304-DEFAULT",
+        "amount": 59.0
+      },
+      {
+        "sku": "B16FUR1305-DEFAULT",
+        "amount": 549.0
+      },
+      {
+        "sku": "B16FUR1306-DEFAULT",
+        "amount": 399.0
+      },
+      {
+        "sku": "B16FUR1307-DEFAULT",
+        "amount": 89.0
+      },
+      {
+        "sku": "B16FUR1308-DEFAULT",
+        "amount": 199.0
+      },
+      {
+        "sku": "B16FUR1309-DEFAULT",
+        "amount": 459.0
+      },
+      {
+        "sku": "B16FUR1310-DEFAULT",
+        "amount": 379.0
+      },
+      {
+        "sku": "B16FUR1311-DEFAULT",
+        "amount": 119.0
+      },
+      {
+        "sku": "B16FUR1312-DEFAULT",
+        "amount": 289.0
+      },
+      {
+        "sku": "B16PLA1401-DEFAULT",
+        "amount": 29.9
+      },
+      {
+        "sku": "B16PLA1402-DEFAULT",
+        "amount": 69.0
+      },
+      {
+        "sku": "B16PLA1403-DEFAULT",
+        "amount": 34.5
+      },
+      {
+        "sku": "B16PLA1404-DEFAULT",
+        "amount": 24.9
+      },
+      {
+        "sku": "B16DEC1501-DEFAULT",
+        "amount": 79.0
+      },
+      {
+        "sku": "B16DEC1502-DEFAULT",
+        "amount": 249.0
+      },
+      {
+        "sku": "B16BAT1601-DEFAULT",
+        "amount": 49.9
+      },
+      {
+        "sku": "B16BAT1602-DEFAULT",
+        "amount": 44.0
       }
     ]
   },
@@ -694,7 +782,15 @@
         "amount": 35.1
       },
       {
-        "sku": "B13BAG0711-DEFAULT",
+        "sku": "B13BAG0711-OLIVE",
+        "amount": 71.9
+      },
+      {
+        "sku": "B13BAG0711-BLACK",
+        "amount": 71.9
+      },
+      {
+        "sku": "B13BAG0711-NAVY",
         "amount": 71.9
       },
       {
@@ -812,6 +908,86 @@
       {
         "sku": "B15KIT1204-DEFAULT",
         "amount": 35.9
+      },
+      {
+        "sku": "B16FUR1301-DEFAULT",
+        "amount": 116.1
+      },
+      {
+        "sku": "B16FUR1302-DEFAULT",
+        "amount": 260.1
+      },
+      {
+        "sku": "B16FUR1303-DEFAULT",
+        "amount": 674.1
+      },
+      {
+        "sku": "B16FUR1304-DEFAULT",
+        "amount": 53.1
+      },
+      {
+        "sku": "B16FUR1305-DEFAULT",
+        "amount": 494.1
+      },
+      {
+        "sku": "B16FUR1306-DEFAULT",
+        "amount": 359.1
+      },
+      {
+        "sku": "B16FUR1307-DEFAULT",
+        "amount": 80.1
+      },
+      {
+        "sku": "B16FUR1308-DEFAULT",
+        "amount": 179.1
+      },
+      {
+        "sku": "B16FUR1309-DEFAULT",
+        "amount": 413.1
+      },
+      {
+        "sku": "B16FUR1310-DEFAULT",
+        "amount": 341.1
+      },
+      {
+        "sku": "B16FUR1311-DEFAULT",
+        "amount": 107.1
+      },
+      {
+        "sku": "B16FUR1312-DEFAULT",
+        "amount": 260.1
+      },
+      {
+        "sku": "B16PLA1401-DEFAULT",
+        "amount": 26.91
+      },
+      {
+        "sku": "B16PLA1402-DEFAULT",
+        "amount": 62.1
+      },
+      {
+        "sku": "B16PLA1403-DEFAULT",
+        "amount": 31.05
+      },
+      {
+        "sku": "B16PLA1404-DEFAULT",
+        "amount": 22.41
+      },
+      {
+        "sku": "B16DEC1501-DEFAULT",
+        "amount": 71.1
+      },
+      {
+        "sku": "B16DEC1502-DEFAULT",
+        "amount": 224.1
+      },
+      {
+        "sku": "B16BAT1601-DEFAULT",
+        "amount": 44.91
+      },
+      {
+        "sku": "B16BAT1602-DEFAULT",
+        "amount": 39.6
       }
     ]
   }

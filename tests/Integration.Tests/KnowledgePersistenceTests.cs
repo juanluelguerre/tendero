@@ -107,6 +107,78 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// What a model read in a picture is the product's document and never its
+    /// description (phase 13a, I-4), said in SQL: a reading newer than the
+    /// description does not become "what the description says now", and comes back
+    /// with the picture, the model and the prompt it was stored with — each
+    /// picture's newest, by culture. And it is a source of its own in the queue: a
+    /// product waits while one of its pictures' current readings does, a reading
+    /// replaced by a newer one of the same picture is history, and a product is in
+    /// the queue once however many of its sources wait.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_pictures_reading_is_kept_apart_from_the_description_and_comes_back_with_who_read_it()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("knowledge_readings");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var clock = new TestClock();
+        var pan = ProductId.New();
+        var front = new PictureReading(new ImageId("front"), "Qwen/Qwen3.5-4B", "picture-2026-10-07");
+        var side = front with { Picture = new ImageId("side") };
+
+        // One picture read and still waiting, and a later one already proposed from:
+        // the later reading is another picture's, and does not make this one history.
+        var two = ProductId.New();
+        var early = SourceDocument.Depict(two, "es", "Una olla.", front, clock);
+        clock.Advance(TimeSpan.FromMinutes(1));
+        var later = SourceDocument.Depict(two, "es", "Una tapa.", side, clock);
+        later.MarkProposed(clock);
+        clock.Advance(TimeSpan.FromMinutes(1));
+
+        var description = SourceDocument.Describe(pan, "es", "Sartén de hierro fundido.", clock);
+        description.MarkProposed(clock);
+        clock.Advance(TimeSpan.FromMinutes(1));
+        var old = SourceDocument.Depict(pan, "es", "Una sartén.", front, clock);
+        clock.Advance(TimeSpan.FromMinutes(1));
+        var spanish = SourceDocument.Depict(pan, "es", "Una sartén de hierro con mango largo.", front, clock);
+        var english = SourceDocument.Depict(pan, "en", "An iron pan with a long handle.", front, clock);
+        var other = SourceDocument.Depict(pan, "es", "Una sartén vista de lado.", side, clock);
+        clock.Advance(TimeSpan.FromMinutes(1));
+        var onlyRead = ProductId.New();
+        var alone = SourceDocument.Depict(onlyRead, "es", "Un cazo.", front, clock);
+        var done = ProductId.New();
+        var proposed = SourceDocument.Depict(done, "es", "Una jarra.", front, clock);
+        proposed.MarkProposed(clock);
+
+        await using (var context = factory.Create())
+        {
+            context.SourceDocuments.AddRange(early, later, description, old, spanish, english, other, alone, proposed);
+            await context.SaveChangesAsync(ct);
+        }
+
+        var repository = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString)
+            .BuildServiceProvider().CreateScope().ServiceProvider.GetRequiredService<IKnowledgeRepository>();
+
+        Assert.Equal([description.Id], (await repository.CurrentDocumentsAsync(pan, ct)).Select(document => document.Id));
+        // The pan once, for its two pictures; the product with only a reading; not the one already proposed from.
+        Assert.Equal([two, pan, onlyRead], await repository.WaitingAsync(10, ct));
+        Assert.Equal([two], await repository.WaitingAsync(1, ct));
+        Assert.Equal(
+            [english.Id, other.Id, spanish.Id],
+            (await repository.CurrentReadingsAsync(pan, ct)).Select(document => document.Id).OrderBy(id => id.Value == english.Id.Value ? 0 : id.Value == other.Id.Value ? 1 : 2));
+
+        var readings = await repository.CurrentReadingsAsync(pan, front.Picture, ct);
+        Assert.Equal([english.Id, spanish.Id], readings.OrderBy(document => document.Culture).Select(document => document.Id));
+        Assert.All(readings, document => Assert.Equal(front, document.Reading));
+        Assert.Equal([other.Id], (await repository.CurrentReadingsAsync(pan, side.Picture, ct)).Select(document => document.Id));
+    }
+
+    /// <summary>
     /// The review queue pages and counts in Postgres (R-7.2), over support that
     /// lives in the evidence's jsonb: a claim's support is its weakest quote, weak
     /// is under 0.8 and 0.8 itself is not, four claims tie on support and time and
@@ -171,5 +243,70 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
         var lamps = await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.All, 1, 20, lamp, ct);
         var none = await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.All, 1, 20, ProductId.New(), ct);
         Assert.Equal((8, 0, 0), (lamps.Total, none.Total, none.CountBySupport[ClaimSupportFilter.Weak]));
+    }
+    /// <summary>
+    /// A doubt about a picture, against a real Postgres (phase 13a, I-4d): its two
+    /// labels survive their jsonb columns, a decision comes back with who made
+    /// it, the queue is the open ones oldest first, and what was ever doubted of
+    /// one picture is found whatever became of it — and is nobody else's.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_picture_doubt_comes_back_and_the_queue_is_the_open_ones_oldest_first()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("knowledge_picture_doubts");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var clock = new TestClock();
+        var (sleeve, pack) = (ProductId.New(), ProductId.New());
+        PictureDoubt Doubted(ProductId product, string picture, string seen)
+        {
+            clock.Advance(TimeSpan.FromMinutes(1));
+            return PictureDoubt.Raise(
+                product,
+                new PictureReading(new ImageId(picture), "qwen3.5-4b-q8_0", "picture-reading-test"),
+                new ColourSeen(
+                    "COLOR", seen, LocalizedText.From("es", "gris").With("en", "grey"), "BLACK", LocalizedText.From("es", "negro").With("en", "black"),
+                    0.94, false, OfAnotherVariant: seen == "OLIVE"),
+                clock)!;
+        }
+
+        var (first, decided, withdrawn, last) = (Doubted(sleeve, "front", "GREY"), Doubted(sleeve, "front", "OLIVE"), Doubted(pack, "front", "GREY"), Doubted(pack, "side", "GREY"));
+        decided.Decide(PictureDoubtDecision.BelongsToAnotherVariant, "Ana Tendera", clock);
+        withdrawn.Withdraw(clock);
+
+        await using (var context = factory.Create())
+        {
+            // Not in the order they were raised: the queue's order is the table's, not the insert's.
+            context.PictureDoubts.AddRange(last, withdrawn, decided, first);
+            await context.SaveChangesAsync(ct);
+        }
+
+        await using var provider = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString).BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var doubts = scope.ServiceProvider.GetRequiredService<IPictureDoubtRepository>();
+
+        var stored = await doubts.FindDoubtAsync(decided.Id, ct);
+        Assert.NotNull(stored);
+        Assert.Equal(
+            (sleeve, "front", "COLOR", "OLIVE", "BLACK", 0.94, "qwen3.5-4b-q8_0", "picture-reading-test"),
+            (stored.ProductId, stored.PictureId, stored.AttributeCode, stored.Seen, stored.Held, stored.Confidence, stored.ReadByModel, stored.ReadWithPrompt));
+        Assert.Equal(("gris", "black"), (stored.SeenLabel.In("es"), stored.HeldLabel.In("en")));
+        Assert.True(stored.SeenOnAnotherVariant);
+        Assert.False((await doubts.FindDoubtAsync(first.Id, ct))!.SeenOnAnotherVariant);
+        Assert.Equal(
+            (PictureDoubtStatus.Decided, (PictureDoubtDecision?)PictureDoubtDecision.BelongsToAnotherVariant, "Ana Tendera"),
+            (stored.Status, stored.Decision, stored.DecidedBy));
+
+        var queue = await doubts.OpenDoubtsAsync(1, 1, ct);
+        var next = await doubts.OpenDoubtsAsync(2, 1, ct);
+        Assert.Equal((2, first.Id), (queue.Total, Assert.Single(queue.Doubts).Id));
+        Assert.Equal(last.Id, Assert.Single(next.Doubts).Id);
+
+        var ofTheSleevesFront = await doubts.DoubtsAboutAsync(sleeve, new ImageId("front"), ct);
+        Assert.Equal(new[] { first.Id.Value, decided.Id.Value }.Order(), ofTheSleevesFront.Select(doubt => doubt.Id.Value).Order());
     }
 }

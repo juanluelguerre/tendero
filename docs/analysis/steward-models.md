@@ -8,7 +8,7 @@ laboratory, so the rows compare.
 
 ## How
 
-`tools/SearchEval --suite copilot` (its README): 24 cases in es and en (26 from
+`tools/SearchEval --suite copilot` (its README): 24 cases in es and en (28 from 2026-10-08; 26 from
 2026-10-05, with two on the answer's language) over the
 seed catalogue (100 products), in a disposable Postgres the suite migrates and
 seeds; each case a fresh conversation through the turn the API runs. A case
@@ -178,3 +178,161 @@ not acting; code cannot propose for it, and a hosted profile is S-7's question.
 23 and 23 with failures of a different kind (a proposal for the wrong product, a search
 for the new name). They are not counted above. A database per run, or the comparison
 means nothing.
+
+### The screen's language (2026-10-06): the 4B does not follow it from Spanish
+
+The author changed the rule for both agents: an answer is in the language of the
+screen, not of the last message (prompt `steward-2026-10-06`; the line about
+switching language on request went with it — the backoffice has a switch). The
+suite's two language cases flipped with it: `spanish-under-english` expects
+English, `english-under-spanish` Spanish.
+
+**Measured the same day, local 4B on the GPU, four runs:**
+
+| Case | Passed | What happens |
+|---|---|---|
+| `english-under-spanish` | 4 of 4 | an English question on the Spanish screen is answered in Spanish |
+| `spanish-under-english` | **0 of 4** | a Spanish question on the English screen is answered in Spanish: *"Las ventas de la última semana han sido de 0 €…"* |
+
+Steward's answer is the model's prose, so here the rule is only a line of the
+instructions — unlike Tino, where code sets the language of the reads and writes
+its own sentences. Two of the four runs had a second line, last in the prompt
+(*Write your answer in English only.*, `…06b`): **it changed nothing, and was taken
+out again.** A Spanish question pulls the 4B to Spanish whatever it is told.
+**Ruled by the author the same day: both agents answer in the language chosen in
+the menu.** So code holds it (prompt `steward-2026-10-06b`): an answer plainly in
+another language than the screen's — told by its function words, no model
+(`WrittenLanguage`, in the kernel, the count Knowledge already held a claim's
+statement to) — is handed back to the same profile to be said again, with no tools
+and nothing else to read. What comes back is shown only if it is in the screen's
+language **and states the same figures, no more and no fewer**; otherwise the
+answer stands as first written. One more call, only on the turns that need it.
+
+| Run (a database each) | `spanish-under-english` | The answer | Whole suite |
+|---|---|---|---|
+| 5 | pass, 2.9 s | *Last week's sales were 0 € in revenue, 0 orders, 0 units…* | 24 of 26 |
+| 6 | **answered in English**; scored *no language it could be told* | *\*\*Last week's data (no prior comparison):\*\** and a list | 23 of 26 |
+| 7 | pass, 4.1 s | *Sales data for the last week shows zero across all metrics…* | 24 of 26 |
+
+Three of three in English, against none of four. Run 6 is the judge's miss, not
+Steward's: `CopilotScoring.LanguageOf` reads the answer's opening paragraph, which
+there is a heading with no function word in it. The case costs one to two seconds
+more than its twin, the second call. `english-under-spanish` still passes without
+it, three of three.
+
+**Whole suite: 24 of 26 on the first run** (`translate-beanie-spanish`, a known
+one, and the language case). **The other three runs do not count for anything but
+the two language cases**: they reused the first run's database, against this
+file's own rule above, and failed 2 to 4 cases of the kind that leaves
+(`withdraw-padel`, `translate-this-one`, `restock-barcelona`). The language cases
+only read, so their eight results stand.
+
+## A fifth kind of gap, and what a longer description cost (2026-10-08)
+
+Phase 13a gave `catalogue_gaps` a kind, *missing a required attribute* (ADR
+0056, amended), and the suite was run again at the author's ask. Local 4B on
+the GPU, prompt unchanged, **every run on a database created for it**:
+
+| Code | Runs, passed of 26 | Right tools | What failed beyond the two known |
+|---|---|---|---|
+| Before the kind | 22 · 25 · 23 | 100 % · 100 % · 100 % | `withdraw-espadrilles` twice; once `gaps-drafts`, the model's window overflowed (9,577 tokens of 8,192) |
+| With the kind, as first written | 22 · 22 · 23 · 22 | 92 % · 96 % · 96 % · 96 % | in **every** run a case that proposed without reading first — `propose_withdraw_product` or `propose_set_product_translation` on a name, never `find_products` |
+| With the kind, as it is now | **24 · 24 · 25** | 100 % · 100 % · 100 % | none: only `restock-barcelona` and `translate-beanie-spanish`, the two this file has always had |
+
+Two things had changed in what the model reads, and each was undone without
+losing the kind:
+
+- **The tool's description had grown a clause**, naming the new kind. With it,
+  four runs of four had a case where the model went straight to proposing;
+  without it, none of six. The description is back to the words it was measured
+  with; the kind is named where an argument's values are — its own description
+  and the schema's enum. Seven runs are not a proof of cause, and the direction
+  was the same in all of them.
+- **Every row of every kind carried `"lacks":null`**: fifty rows, about 350
+  tokens, on the read that had already overflowed the window once before any of
+  this. The field is now written only by the kind that has something to say
+  there, and a test holds it.
+
+The five gap cases passed in every run of every row — the kind itself was never
+what failed. **No case asks for the new kind yet**; one is owed, and it needs a
+laboratory product that lacks a required attribute, which the seed, complete on
+purpose, does not have.
+
+`gaps-drafts` at 9,577 tokens is its own finding and older than this change: a
+hundred drafts in a fresh laboratory, fifty rows of them read twice in one turn.
+It passed in nine runs of ten.
+
+### The two things that were owed (2026-10-08, later)
+
+**Two cases for the new kind** — `gaps-required-en` and `gaps-required-es`, 28
+cases now. They need no incomplete product in the laboratory, and saying they
+did was wrong: as with every gap case, what is judged is the read the model
+chose, not what the read found. Three runs, each on a new database:
+
+| Run | Passed of 28 | Right tools | The new cases | What failed |
+|---|---|---|---|---|
+| 17 | 26 | 96 % | both | `restock-barcelona`, `withdraw-padel` (proposed without reading) |
+| 18 | 26 | 100 % | both | `restock-barcelona`, `translate-beanie-spanish` |
+| 19 | 26 | 100 % | both | `restock-barcelona`, `translate-thermometer` (proposed another product) |
+
+The model asks for `MissingRequiredAttribute` from the argument's description
+and the enum alone, six times of six, in both languages. *Proposing without
+reading* came back once in three runs: it is not gone with the clause, it is
+rarer — one run of six without it, four of four with it.
+
+**The read that overflowed.** A read asked again in the same turn with the same
+arguments is now answered with a line saying where its rows are, not with the
+rows a second time (`StewardTools`, held by tests and four hand mutations).
+**What this does not establish**: that the one turn at 9,577 tokens was that.
+It is the likeliest reading — fifty rows are about 4,000 tokens and nothing
+else in that turn is that size — but the report of that run went with the
+throwaway checkout it was made in, and the overflow was one turn in some
+seventeen runs, so three clean runs since say nothing. Two different gap reads
+in one turn would overflow all the same, and the turn would end as it did:
+unavailable, said so, nothing stored.
+
+**The dry run scored 27 of 28, and the one that passed was the wrong one**
+(corrected the same day; what was first written here — *the case has no entry in
+the script* — was not true). Both language cases had their entry, each answering
+in the message's language. The turn then asks for the answer again in the
+screen's, with the answer as the message, and the script had no step for *that*
+message: it said *I was not scripted for that*, in English. So
+`spanish-under-english`, which expects English, passed on a line nobody wrote
+for it, and `english-under-spanish` failed. Since 2026-10-06, when the ruling
+changed what the two cases expect.
+
+Putting it right took three tries, each a rule of the turn the script had to
+meet, and each now held by a test over the committed script
+(`The_dry_run_says_each_language_case_again_in_the_language_it_expects`):
+
+1. A step for the second message, saying the answer in the screen's language.
+2. A first answer **the turn can tell is in the wrong language**. Its detector
+   (`WrittenLanguage`) counts function words and is not the suite's: *There are
+   no returns opened today* holds none of them, so the turn let it stand.
+3. A second answer **the turn can tell is in the right one**: it keeps what was
+   said again only when that is plainly the screen's language, and *No hay
+   devoluciones abiertas hoy* holds none of its Spanish words either.
+
+28 of 28 on a new database. **What 2 and 3 say about the shop, not the script**:
+a short answer with none of some thirty function words is left as it came, in
+either direction. That is the cautious side to fail on — an answer is never
+replaced by one that cannot be vouched for — and no measured run of the 4B has
+shown it, its answers being longer. Not changed: the same detector vets claims
+(phase 10), and its word list is not to be moved without that suite.
+
+### Over 120 products (2026-10-08, the same evening)
+
+The catalogue grew by twenty (`docs/specs/catalogue-growth.md`); the code
+Steward runs did not change. Three runs, each on a new database:
+
+| Run | Passed of 28 | Right tools | What failed |
+|---|---|---|---|
+| 20 | 25 | 96 % | `restock-barcelona`, `translate-beanie-spanish`, `spanish-under-english` (answered in Spanish) |
+| 21 | 24 | 96 % | `restock-barcelona`, `translate-beanie-spanish`, `withdraw-padel`, `withdraw-espadrilles` |
+| 22 | 25 | 100 % | `restock-barcelona`, `translate-beanie-spanish`, `translate-this-one` |
+
+One case under the three runs over a hundred products (26, 26, 26), and every
+case that failed is one this file has seen fail before. **Three runs against
+three do not say the catalogue did it**; they say it did not help. The reads
+return more rows — a hundred and twenty drafts where there were a hundred —
+and the largest call stayed under 6,400 tokens.

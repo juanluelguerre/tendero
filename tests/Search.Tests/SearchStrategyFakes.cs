@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.Search.Strategies;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -21,8 +22,11 @@ internal static class Strategies
         IVectorProductSearch vectors,
         ISearchHitReader? cards = null,
         IReranker? reranker = null,
-        HybridSearchOptions? options = null) =>
+        HybridSearchOptions? options = null,
+        IImageEmbeddingGenerator? pictureModel = null,
+        IPictureSearch? pictures = null) =>
         new(lexical, vectors, cards ?? new Cards(), reranker ?? new NoReranker(),
+            pictureModel ?? new NoImageEmbeddings(), pictures ?? new NoPictureVectors(),
             Options.Create(options ?? new HybridSearchOptions()), NullLogger<HybridSearchStrategy>.Instance);
 
     /// <summary>A lexical engine that "matched" these products, in this order.</summary>

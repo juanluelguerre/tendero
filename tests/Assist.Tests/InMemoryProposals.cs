@@ -133,7 +133,7 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
     /// <summary>What a person reads: the subject, the change, the value now and proposed.</summary>
     public static ProposalDisplay Display(string subject, string now, string proposed) =>
         new(LocalizedText.From("en", subject), LocalizedText.From("en", "Value"),
-            [new ProposalChange(LocalizedText.From("en", "Value"), LocalizedText.From("en", now), LocalizedText.From("en", proposed))]);
+            [new ProposalChange(LocalizedText.From("en", "Value"), LocalizedText.From("en", now), LocalizedText.From("en", proposed), "value")]);
 
     public static JsonElement Payload(string subject, string value) =>
         JsonDocument.Parse(JsonSerializer.Serialize(new { subject, value })).RootElement.Clone();
