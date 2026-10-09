@@ -1,8 +1,8 @@
 # Spec: the kit solver — a recommendation that shows its arithmetic
 
-**Status**: draft, written 2026-10-09. **Waits for the author**: nothing is
-built until the questions at the end are decided. Phase 13c of
-`docs/delivery-plan.md` (`P13-5` to `P13-8`).
+**Status**: written 2026-10-09 and **accepted the same day**: the author read
+it and took its eight decisions as proposed (*Decisions taken with the
+author*). Building. Phase 13c of `docs/delivery-plan.md` (`P13-5` to `P13-8`).
 **Slice(s)**: `Search` (a pure solver under `Kits/`, the slice `Features/BuildKit`
 and its read for agents); `Pricing` through the adapter Search already has;
 `Mcp` (one tool); the storefront (a page); `AI` only for the two optional
@@ -90,7 +90,9 @@ a candidate of two slots and is chosen for one at most.
 
 **A candidate's relevance is its rank, not its score.** Scores of two
 different searches are not comparable; a rank is. Candidate *i* of *n* is
-worth *(n − i) / n*.
+worth *(n − i) / n*, **in whole points of a thousand**: a sum of fractions is
+not the same sum in every order, and a kit must not change with the order
+its candidates arrived in.
 
 ### The solver
 
@@ -111,7 +113,8 @@ the SharedKernel, which is what lets properties be stated about it.
 
 Branch and bound over the slots, exact: at five slots and twenty candidates it
 is about four million leaves before any pruning (twenty candidates or nothing, five times), and the bound — the best
-relevance still reachable with the money left — cuts nearly all of them. **A
+relevance still reachable with the money left — cuts nearly all of them:
+77,693 nodes in the hard case, where the better ranked is always the dearer. **A
 ceiling on nodes explored is part of the contract**: a solver that stopped at
 its ceiling says so in the solution, and the answer is then *the best found*,
 never passed off as the best there is.
@@ -250,9 +253,10 @@ rate-limited; the OpenAPI document and the frontend's types regenerated.
   anything else.
 - The server's `tendero.agent.tool_calls` already counts `build_kit` over MCP.
 
-## Decisions for the author
+## Decisions taken with the author (2026-10-09)
 
-Each has what is proposed above and what it would be otherwise.
+All eight as proposed. Each is written with what it would have been
+otherwise, because two of them go against the roadmap.
 
 1. **Where it lives: in `Search`.** The roadmap said `Knowledge/Features/BuildKit`,
    and Knowledge cannot reference Search — it knows the model port and the
