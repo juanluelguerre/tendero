@@ -53,7 +53,7 @@ dos idiomas y la especificación (1400 × 1400, WebP, ≤ 120 KB), en
 | `B13BAG0711-BACK.webp` | La misma alforja vista por detrás (`view`): una imagen de la galería que no es de ninguna variante |
 | `B13BAG0712.webp` | Organizadores de equipaje, juego de 3 |
 
-## Las veintisiete últimas, pendientes de que el autor las acepte (2026-10-09)
+## Las veintisiete últimas, aceptadas por el autor el 2026-10-09
 
 Con ellas **los 120 productos tienen imagen**. Mismo modelo y mismo prompt:
 28 llamadas en la tanda (una repetida por el propio generador, porque la tinta
@@ -83,8 +83,29 @@ bajo el tope de 1,50 $ que se fijó para esta tanda. La hoja de contacto está e
 | `B14ORG0903`, `B14ORG0904` | la falsa alarma de escena de siempre: lista las partes del propio objeto |
 | `B12LAM0608`, `B12LAM0610`, `B14HOM0802`, `B15APP1001`, `B15APP1004`, `B15APP1005`, `B15APP1006`, `B15APP1008` | fuera de la zona segura: ocupan más del 75 % del alto, como la ropa y los muebles altos de la tanda anterior |
 
-El tablero de defectos **no se ha regrabado** con estas veintisiete: se regraba
-cuando estén aceptadas o redibujadas, como la vez anterior.
+El tablero de defectos (`known-bad/baseline.json`) **se regrabó el 2026-10-09**,
+ya aceptadas, sobre las 123 imágenes del catálogo (antes 96): unos 85 minutos
+de GPU.
+
+| Defecto | Imágenes | Lo ve su pregunta | No lo ve ninguna | Antes (de 96) |
+|---|---|---|---|---|
+| Rótulo | 123 | 121 (texto) | 1 | 94, 1 |
+| Emblema | 123 | 116 (marca) | 4 | 91, 3 |
+| Escena | 122 | 100 (escena); 110 el registro | 0 | 76; 87, 0 |
+| Color | 32 | 21 | 11 | 16 de 21, 5 |
+| Número de piezas | 25 | 18 | 6 | 17 de 20, 2 |
+| Fondo | 122 | 119 (registro) | 3 | 93, 2 |
+
+Falsas alarmas sobre las 122 imágenes tal cual: escena 22, color 7,
+descripción 7, marca 3, texto 2, número 2 — las mismas proporciones que con
+96, y con la misma salvedad: varias son dudas acertadas sobre imágenes
+aceptadas con un defecto conocido.
+
+**Lo que empeora es el color y el número.** De las once imágenes nuevas con
+color declarado, la pregunta de color caza el cambio en cinco y ninguna
+pregunta lo ve en seis; de las cinco nuevas con número de piezas, una. Son
+ropa y menaje de esta tanda, y es donde hay que mirar antes de fiarse de
+esas dos preguntas con el catálogo entero.
 
 ## Cuarenta imágenes más, aceptadas por el autor el 2026-10-08
 

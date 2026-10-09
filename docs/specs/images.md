@@ -1163,12 +1163,30 @@ store, a log or a trace — a span carries its dimensions and nothing else. `doc
 - Twenty-four hand mutations. One survived and was a real gap: nothing held
   the status to *no* with the model and no store. A test does now.
 
+**The board over the whole catalogue (2026-10-09).** The author accepted the
+last twenty-seven pictures and the board was re-recorded over all 123 —
+about eighty-five minutes of GPU. Lettering 121 of 123 by its own question,
+emblem 116 of 123, scene 100 of 122 (110 by the register), background 119 of
+122: the shares it had over 96. **Colour and count fell**: colour 21 of 32
+with 11 caught by no question (it was 16 of 21 with 5), count 18 of 25 with 6
+(17 of 20 with 2). Of the eleven new pictures with a declared colour, the
+colour question catches the change in five; of the five new ones with a
+count, one. That is where to look before either question is trusted over the
+whole catalogue; it is recorded, not explained. `seed/IMAGES.md` has the
+table.
+
+**It takes this long because it asks everything of everything**: each
+picture as it is, then spoilt in each of five to seven ways, every version
+asked every question — some forty calls a picture. Three ways to shorten it
+were set out for the author and none taken yet: keep the result a picture so
+that only new pictures are asked (the board is sums); more than one slot on
+the model, if the card has room; or a fixed sample.
+
 **Every product has a picture (2026-10-09).** The last twenty-seven were drawn
 — about $0.96 with three redraws, under the ceiling the author set for the
 batch — so the picture collection covers the whole catalogue and no product is
-invisible to a search by picture. They wait for the author's acceptance, with
-the model's seven notes and the three redraws listed in `seed/IMAGES.md`; the
-board is re-recorded once they are accepted. The measurements in
+invisible to a search by picture. The author accepted them the same day, with
+the model's seven notes and the three redraws listed in `seed/IMAGES.md`. The measurements in
 `docs/search-evaluation.md` were taken over 96 pictures and are not re-run here.
 
 **The storefront's control (2026-10-09)** — the mock-up first

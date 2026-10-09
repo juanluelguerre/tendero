@@ -1,75 +1,75 @@
 {
-  "good": 95,
+  "good": 122,
   "false_alarms": {
     "Text": 2,
     "Mark": 3,
-    "Scene": 19,
-    "Colour": 6,
-    "Count": 1,
-    "Description": 4
+    "Scene": 22,
+    "Colour": 7,
+    "Count": 2,
+    "Description": 7
   },
   "kinds": {
     "Lettering": {
-      "pictures": 96,
+      "pictures": 123,
       "caught": {
-        "Text": 94,
-        "Mark": 18,
-        "Scene": 69,
+        "Text": 121,
+        "Mark": 22,
+        "Scene": 87,
         "Count": 1,
-        "Description": 2
+        "Description": 3
       },
       "by_none": 1
     },
     "Emblem": {
-      "pictures": 96,
+      "pictures": 123,
       "caught": {
-        "Text": 39,
-        "Mark": 91,
-        "Scene": 33,
+        "Text": 52,
+        "Mark": 116,
+        "Scene": 40,
         "Description": 1
       },
-      "by_none": 3
+      "by_none": 4
     },
     "Scene": {
-      "pictures": 95,
+      "pictures": 122,
       "caught": {
-        "Scene": 76,
+        "Scene": 100,
         "Colour": 1,
         "Count": 2,
         "Description": 1,
-        "Register": 87
+        "Register": 110
       },
       "by_none": 0
     },
     "Colour": {
-      "pictures": 21,
+      "pictures": 32,
       "caught": {
         "Scene": 1,
-        "Colour": 16,
+        "Colour": 21,
         "Description": 1
       },
-      "by_none": 5
+      "by_none": 11
     },
     "Count": {
-      "pictures": 20,
+      "pictures": 25,
       "caught": {
         "Scene": 3,
         "Colour": 1,
-        "Count": 17,
+        "Count": 18,
         "Description": 3
       },
-      "by_none": 2
+      "by_none": 6
     },
     "Background": {
-      "pictures": 95,
+      "pictures": 122,
       "caught": {
         "Mark": 1,
-        "Scene": 5,
+        "Scene": 6,
         "Colour": 1,
         "Count": 1,
-        "Register": 93
+        "Register": 119
       },
-      "by_none": 2
+      "by_none": 3
     },
     "Form": {
       "pictures": 1,
