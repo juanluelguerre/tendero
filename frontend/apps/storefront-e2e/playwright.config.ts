@@ -24,6 +24,10 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
 
+  // The shop's window first: a stack brought up from nothing sells three
+  // products, and these specs were written against the whole catalogue.
+  globalSetup: './src/global-setup.ts',
+
   // Retries in CI only. A green retry locally hides a flake; a red one in CI
   // that passes on the second attempt is still a signal worth keeping in the
   // report rather than in the build's exit code.
