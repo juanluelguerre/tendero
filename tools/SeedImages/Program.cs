@@ -869,6 +869,11 @@ static int Defects(
         return 2;
     }
 
+    // The catalogue's colours, once: the names the examiner holds an answer
+    // to, and the swatches a colour defect is drawn in.
+    var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
+    var swatches = colours.Swatches;
+
     // The set, for a person to look at before any model does: a defect nobody
     // can see in the picture measures the forge and not the question.
     if (drawOnly)
@@ -887,7 +892,7 @@ static int Defects(
             var itemId = Path.GetFileNameWithoutExtension(file);
             foreach (var defect in Enum.GetValues<Defect>())
             {
-                if (DefectForge.Draw(defect, File.ReadAllBytes(file)) is not { } bad)
+                if (DefectForge.Draw(defect, File.ReadAllBytes(file), swatches) is not { } bad)
                     continue;
 
                 File.WriteAllBytes(Path.Combine(dump, $"{itemId}-{defect.ToString().ToLowerInvariant()}.png"), bad);
@@ -906,9 +911,7 @@ static int Defects(
     var memory = Path.Combine(root, "tools", "SeedImages", "known-bad", "answers.jsonl");
     var model = new RememberedVision(asked, fresh ? new Dictionary<string, string>() : AnswerMemory.Read(memory));
 
-    var examiner = new PictureExaminer(
-        new VisionChecks(model),
-        ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json")));
+    var examiner = new PictureExaminer(new VisionChecks(model), colours);
 
     reference ??= "B10SHO0101";
     var referenceFile = Path.Combine(root, "seed", "images", reference + ".webp");
@@ -923,6 +926,9 @@ static int Defects(
             .Examine(picture, product, string.Equals(product.ItemId, reference, StringComparison.OrdinalIgnoreCase) ? null : referenceBytes, reference)
             .Doubts.Select(doubt => doubt.Question),
     ];
+
+    bool DeclaresAHue(SeedProduct product) =>
+        product.SpanishColour is { } declared && colours.Swatch(declared) is { } swatch && DefectForge.HasHue(swatch);
 
     List<Trial> trials = [];
     var kept = new KnownBad(Path.Combine(root, "tools", "SeedImages", "known-bad"));
@@ -948,11 +954,21 @@ static int Defects(
             {
                 // A count is held to the pieces a product declares, and a colour to the
                 // one it declares: with nothing declared there is nothing the defect
-                // could be caught against, and the miss would be the set's.
-                if ((defect == Defect.Count && product.Pieces is null) || (defect == Defect.Colour && product.SpanishColour is null))
+                // could be caught against, and the miss would be the set's. So would
+                // it be for a product declared cream or white: what has a hue in its
+                // picture is its trim, and its trim in another colour is no defect.
+                if ((defect == Defect.Count && product.Pieces is null) || (defect == Defect.Colour && !DeclaresAHue(product)))
                     continue;
 
-                if (DefectForge.Draw(defect, good) is not { } bad)
+                // Nor is it a trial when the right picture is already doubted on
+                // that very thing: only a doubt the defect adds is counted, and a
+                // forest green rucksack the model reads as olive cannot be doubted
+                // on its colour twice. That is a false alarm, counted where those
+                // are -- `as they are` -- and it was showing here as a miss too.
+                if ((defect == Defect.Count && before.Contains(Question.Count)) || (defect == Defect.Colour && before.Contains(Question.Colour)))
+                    continue;
+
+                if (DefectForge.Draw(defect, good, swatches) is not { } bad)
                     continue;
 
                 if (dump is not null)

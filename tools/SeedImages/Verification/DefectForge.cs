@@ -50,15 +50,14 @@ public static class DefectForge
     /// <summary>How far a pixel may be from the declared background and still be it: WebP's noise is a few levels.</summary>
     private const int BackgroundTolerance = 24;
 
-    /// <summary>Below this a pixel is grey for the purpose of turning its hue.</summary>
+    /// <summary>Below this a pixel — or a colour of the catalogue — is grey for the purpose of turning a hue.</summary>
     private const float Chromatic = 0.25f;
-
-    private const float HueTurn = 120f;
 
     private static readonly SKColor Ink = new(0x22, 0x22, 0x22);
 
     /// <summary>The picture with the defect drawn into it, as PNG — or null when this picture cannot carry that defect.</summary>
-    public static byte[]? Draw(Defect defect, byte[] picture)
+    /// <param name="swatches">The catalogue's colours as it declares them (`#C0643F`): what a product drawn in the wrong colour is drawn in.</param>
+    public static byte[]? Draw(Defect defect, byte[] picture, IReadOnlyList<string> swatches)
     {
         using var good = Decode(picture);
 
@@ -67,7 +66,7 @@ public static class DefectForge
             Defect.Lettering => Lettered(good),
             Defect.Emblem => Stamped(good),
             Defect.Scene => OnASurface(good),
-            Defect.Colour => Recoloured(good),
+            Defect.Colour => Recoloured(good, swatches),
             Defect.Count => Twice(good),
             Defect.Background => Graded(good),
             Defect.Form => null,
@@ -80,6 +79,21 @@ public static class DefectForge
         using var image = SKImage.FromBitmap(bad);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         return encoded.ToArray();
+    }
+
+    /// <summary>
+    /// Whether one of the catalogue's colours (`#C0643F`) has a hue at all.
+    /// White, cream, grey and black have none worth the name, and what has
+    /// one in the picture of a product declared so is its trim: cream towels
+    /// with their stripe turned navy are cream towels. The board draws no
+    /// colour defect into those — six of the eleven that went unseen were this.
+    /// </summary>
+    public static bool HasHue(string swatch) => HasHue(SKColor.Parse(swatch));
+
+    private static bool HasHue(SKColor colour)
+    {
+        colour.ToHsv(out _, out var saturation, out _);
+        return saturation / 100f >= Chromatic;
     }
 
     private static SKBitmap Decode(byte[] picture)
@@ -256,15 +270,28 @@ public static class DefectForge
     }
 
     /// <summary>
-    /// The product's hue turned a third of the way round, the background left —
-    /// or nothing, for a product with no hue to turn: a grey shoe turned is the
-    /// same grey shoe, and handing it back as a bad picture would count a miss
-    /// that is the forge's.
+    /// The product in **another of the catalogue's colours** — the one furthest
+    /// round from its own — with its light and shade kept and the background
+    /// left. That is the defect a generator makes: the navy variant drawn
+    /// terracotta.
+    ///
+    /// It was the hue turned by a fixed third, and that measured the forge. A
+    /// forest green gilet came out a purple and an olive apron a teal: colours
+    /// the catalogue has no name for, about which a question answered with the
+    /// catalogue's names has nothing to say — eleven colour defects of
+    /// thirty-two went unseen, and four of them were these.
+    ///
+    /// **Or nothing**, for a product with no hue to turn: a grey shoe turned is
+    /// the same grey shoe, and handing it back as a bad picture would count a
+    /// miss that is the forge's. A fifth of it having one is enough — a
+    /// terracotta lamp is mostly its white shade — and whether the hue it has is
+    /// its colour or its trim is not something pixels say: the board asks the
+    /// catalogue (<see cref="HasHue(string)"/>).
     /// </summary>
-    private static SKBitmap? Recoloured(SKBitmap good)
+    private static SKBitmap? Recoloured(SKBitmap good, IReadOnlyList<string> swatches)
     {
-        var bad = good.Copy();
-        var (product, turned) = (0, 0);
+        var (product, chromatic) = (0, 0);
+        var (across, up, saturations, values) = (0d, 0d, 0d, 0d);
 
         for (var y = 0; y < good.Height; y++)
         {
@@ -275,20 +302,77 @@ public static class DefectForge
                     continue;
 
                 product++;
-                pixel.ToHsv(out var hue, out var saturation, out var value);
-                if (saturation / 100f < Chromatic)
+                if (!HasHue(pixel))
                     continue;
 
-                turned++;
-                bad.SetPixel(x, y, SKColor.FromHsv((hue + HueTurn) % 360f, saturation, value));
+                // A hue is an angle: red is at both ends of it, and the mean
+                // of 350 and 10 is 0, not 180.
+                chromatic++;
+                pixel.ToHsv(out var hue, out var saturation, out var value);
+                across += Math.Cos(hue * Math.PI / 180) * saturation;
+                up += Math.Sin(hue * Math.PI / 180) * saturation;
+                saturations += saturation;
+                values += value;
             }
         }
 
-        if (product > 0 && turned * 5 >= product)
-            return bad;
+        if (chromatic == 0 || chromatic * 5 < product)
+            return null;
 
-        bad.Dispose();
-        return null;
+        var own = (float)(((Math.Atan2(up, across) * 180 / Math.PI) + 360) % 360);
+        if (Furthest(own, swatches) is not { } becomes)
+            return null;
+
+        becomes.ToHsv(out var toHue, out var toSaturation, out var toValue);
+        var turn = toHue - own + 360f;
+        var (richer, lighter) = (toSaturation / (float)(saturations / chromatic), toValue / (float)(values / chromatic));
+
+        var bad = good.Copy();
+
+        for (var y = 0; y < good.Height; y++)
+        {
+            for (var x = 0; x < good.Width; x++)
+            {
+                var pixel = good.GetPixel(x, y);
+                if (IsBackground(pixel) || !HasHue(pixel))
+                    continue;
+
+                pixel.ToHsv(out var hue, out var saturation, out var value);
+                bad.SetPixel(x, y, SKColor.FromHsv(
+                    (hue + turn) % 360f,
+                    Math.Clamp(saturation * richer, 0f, 100f),
+                    Math.Clamp(value * lighter, 0f, 100f)));
+            }
+        }
+
+        return bad;
+    }
+
+    /// <summary>
+    /// The catalogue's colour whose hue is furthest round from this one, among
+    /// those that have a hue: white, grey and cream are not something a hue is
+    /// turned to. The first declared, of two as far.
+    /// </summary>
+    private static SKColor? Furthest(float hue, IReadOnlyList<string> swatches)
+    {
+        SKColor? furthest = null;
+        var apart = -1f;
+
+        foreach (var swatch in swatches)
+        {
+            var colour = SKColor.Parse(swatch);
+            if (!HasHue(colour))
+                continue;
+
+            colour.ToHsv(out var its, out _, out _);
+
+            var round = Math.Abs(its - hue) % 360f;
+            var between = Math.Min(round, 360f - round);
+            if (between > apart)
+                (furthest, apart) = (colour, between);
+        }
+
+        return furthest;
     }
 
     /// <summary>The product at half its size, twice, side by side on the catalogue's background.</summary>

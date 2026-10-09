@@ -298,6 +298,24 @@ code, so it is free and the same on every run), asks every question of the
 picture as it is and with the defect in, and counts which question newly doubted
 it. The pictures a person rejects are kept with `reject` and measured beside them.
 
+**A defect that is not in the picture measures the forge.** Three rules came
+from finding that out on the colour defect, which looked as if its question had
+got worse over the whole catalogue (11 of 32 unseen) and was 24 of 24 once the
+defect was really drawn:
+
+- A colour defect is the product **in another of the catalogue's colours** —
+  the one furthest round from its own, from the swatches
+  `attributes.sample.json` declares. Turned by a fixed angle it came out a
+  purple the catalogue has no name for, and the question answers with the
+  catalogue's names.
+- None is drawn into a product declared white, cream, grey or black: what has
+  a hue in its picture is its trim.
+- A colour or count defect is not a trial when the right picture is already
+  doubted on that very thing: only a doubt the defect adds is counted, and
+  that picture's false alarm is in `as they are`.
+
+Look at the drawn set (`--draw-only --dump`) before believing a miss.
+
 ```bash
 dotnet run --project tools/SeedImages -- defects --provider llama            # the board, held to the recorded one
 dotnet run --project tools/SeedImages -- defects --provider llama --record   # after a change that is meant

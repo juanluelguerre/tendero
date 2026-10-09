@@ -42,23 +42,23 @@
       "by_none": 0
     },
     "Colour": {
-      "pictures": 32,
+      "pictures": 24,
       "caught": {
         "Scene": 1,
-        "Colour": 21,
+        "Colour": 24,
         "Description": 1
       },
-      "by_none": 11
+      "by_none": 0
     },
     "Count": {
-      "pictures": 25,
+      "pictures": 23,
       "caught": {
         "Scene": 3,
         "Colour": 1,
         "Count": 18,
         "Description": 3
       },
-      "by_none": 6
+      "by_none": 4
     },
     "Background": {
       "pictures": 122,

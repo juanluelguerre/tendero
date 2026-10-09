@@ -178,7 +178,7 @@ asking through one `PictureExaminer`.
 - **The set is drawn by code, not by the generator.** The rejected pictures were
   gone and each redraw is a paid call, so `DefectForge` puts one defect of each
   kind into every picture there is: lettering (`4 mm`, in strokes), an emblem, a
-  surface with a second object, the hue turned, the product twice, a graded
+  surface with a second object, the product in another of the catalogue's colours, the product twice, a graded
   background. Free, the same on every run, and **the easy case**: a stamped
   emblem is cleaner than a drawn one. `reject` keeps a picture a person rejects,
   with its defect, in `tools/SeedImages/known-bad/` — the hard half, empty today.
@@ -1174,6 +1174,54 @@ colour question catches the change in five; of the five new ones with a
 count, one. That is where to look before either question is trusted over the
 whole catalogue; it is recorded, not explained. `seed/IMAGES.md` has the
 table.
+
+**Explained the same day: the colour question had not got worse, the defect
+had never been drawn.** The eleven were looked at one by one, the forged
+picture beside the model's answer, and they were three things — none of them
+the question failing to see a wrong colour:
+
+- **Four were a colour the catalogue has no name for.** The forge turned the
+  hue by a fixed third, so a forest green gilet came out purple and an olive
+  apron teal. The question answers with one of the catalogue's nine colours,
+  and an answer that is none of them is nothing to hold against the one
+  declared: asked about a purple gilet, the model said *forest green* or
+  nothing usable. The first twenty-one pictures had been navy and terracotta
+  mostly, whose third-turns happen to land near a named colour.
+- **Six were products declared white or cream.** What has a hue in the
+  picture of a cream espadrille is its sole and its trim; turned, it is a
+  cream espadrille with a different trim, and the model that goes on calling
+  it cream is right.
+- **One was a right picture already doubted.** A forest green rucksack the
+  model reads as olive raises the colour doubt as it is, and the board counts
+  only a doubt the defect adds — so its defect could never be caught.
+
+So the forge was changed, not the question. A colour defect is now **the
+product in another of the catalogue's colours** — the one furthest round
+from its own, its light and shade kept (`DefectForge.Recoloured`, given the
+swatches `attributes.sample.json` declares): the defect a generator really
+makes, the navy variant drawn terracotta. None is drawn into a product
+declared in a colour without hue, and a defect whose own question already
+doubts the right picture is not a trial — that false alarm is counted where
+false alarms are. Re-recorded with 154 questions asked and the rest
+remembered:
+
+| | Pictures | Caught by its question | By none |
+|---|---:|---:|---:|
+| Colour, as it was | 32 | 21 | 11 |
+| Colour, now | 24 | 24 | 0 |
+| Count, as it was | 25 | 18 | 6 |
+| Count, now | 23 | 18 | 4 |
+
+**What this says, and what it does not.** A product drawn in another colour
+of the catalogue is seen every time. A product drawn in a colour *outside*
+the catalogue's list is not something this question can doubt, by
+construction — measured once, by accident, and now no longer measured at
+all; it would take an "another colour" option in the question, which is a
+change to the question the shop asks too and is not made here. And **count
+is a real limit, not an artefact**: two of its six were right pictures
+already doubted, and the other four — a utensil set, tea towels, oven mitts,
+napkins — are sets of like pieces drawn twice over, where the model's count
+of eight is as unsure as its count of four.
 
 **It takes this long because it asks everything of everything**: each
 picture as it is, then spoilt in each of five to seven ways, every version

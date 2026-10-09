@@ -92,8 +92,8 @@ de GPU.
 | Rótulo | 123 | 121 (texto) | 1 | 94, 1 |
 | Emblema | 123 | 116 (marca) | 4 | 91, 3 |
 | Escena | 122 | 100 (escena); 110 el registro | 0 | 76; 87, 0 |
-| Color | 32 | 21 | 11 | 16 de 21, 5 |
-| Número de piezas | 25 | 18 | 6 | 17 de 20, 2 |
+| Color | 24 | 24 | 0 | 16 de 21, 5 |
+| Número de piezas | 23 | 18 | 4 | 17 de 20, 2 |
 | Fondo | 122 | 119 (registro) | 3 | 93, 2 |
 
 Falsas alarmas sobre las 122 imágenes tal cual: escena 22, color 7,
@@ -101,11 +101,25 @@ descripción 7, marca 3, texto 2, número 2 — las mismas proporciones que con
 96, y con la misma salvedad: varias son dudas acertadas sobre imágenes
 aceptadas con un defecto conocido.
 
-**Lo que empeora es el color y el número.** De las once imágenes nuevas con
-color declarado, la pregunta de color caza el cambio en cinco y ninguna
-pregunta lo ve en seis; de las cinco nuevas con número de piezas, una. Son
-ropa y menaje de esta tanda, y es donde hay que mirar antes de fiarse de
-esas dos preguntas con el catálogo entero.
+**El color parecía empeorar y no era la pregunta.** La primera grabación
+sobre las 123 dio color 21 de 32 con 11 que no veía ninguna pregunta, y
+número 18 de 25 con 6. Miradas una a una, las once de color eran tres cosas:
+cuatro, un color que el catálogo no nombra (el tono se giraba un tercio fijo:
+un chaleco verde bosque salía morado, y una pregunta que responde con los
+nueve colores del catálogo no tiene nada que decir de un morado); seis,
+productos declarados blanco o crema, donde lo único con tono es el ribete;
+y una, una imagen buena de la que la pregunta ya dudaba (la mochila verde
+bosque que el modelo lee como oliva), que no puede dudar dos veces.
+
+El defecto de color es ahora **el producto en otro color del catálogo**, el
+más alejado del suyo y con sus luces y sombras; no se dibuja en un producto
+declarado en un color sin tono, y un defecto cuya propia pregunta ya duda de
+la imagen buena no cuenta como prueba (esa falsa alarma se cuenta arriba,
+con las demás). Regrabado así: color **24 de 24**. El número de piezas sí es
+un límite real: dos de sus seis eran imágenes ya dudadas, y las otras cuatro
+—un juego de utensilios, paños, manoplas, servilletas— son conjuntos de
+piezas iguales dibujados dos veces, donde el modelo cuenta ocho con la misma
+inseguridad que cuatro. `docs/specs/images.md` lo cuenta entero.
 
 ## Cuarenta imágenes más, aceptadas por el autor el 2026-10-08
 
