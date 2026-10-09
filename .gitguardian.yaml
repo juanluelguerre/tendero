@@ -1,0 +1,12 @@
+# GitGuardian's command line and editor extension (ggshield) read this file.
+# Its GitHub app does not: the checks on a pull request follow the workspace's
+# own settings, where the same path is excluded
+# (dashboard.gitguardian.com → Settings → Secrets detection → Filepath exclusions).
+version: 2
+
+secret:
+  ignored_paths:
+    # Pencil writes a `fileToken` in every .pen: the file's id, a UUID, which
+    # the generic high-entropy detector takes for a secret. A mock-up holds
+    # drawings and copy, never a credential.
+    - '**/*.pen'
