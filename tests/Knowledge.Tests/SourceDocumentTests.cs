@@ -94,7 +94,7 @@ public sealed class SourceDocumentTests
         Assert.Equal(
             SourceDocumentId.Of(product, "es", "Cortavientos de 140 g."),
             SourceDocument.Describe(product, "es", "Cortavientos de 140 g.", Clock).Id);
-        Assert.Equal("1603bc13",SourceDocumentId.Of(product, "es", "Cortavientos de 140 g.").Value[..8]);
+        Assert.Equal("1603bc13", SourceDocumentId.Of(product, "es", "Cortavientos de 140 g.").Value[..8]);
     }
 
     [Fact]

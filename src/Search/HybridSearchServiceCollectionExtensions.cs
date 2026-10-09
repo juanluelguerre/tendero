@@ -1,6 +1,6 @@
-using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.Search.Reranking;
 using ElGuerre.Tendero.Search.Strategies;
 using Microsoft.Extensions.Configuration;

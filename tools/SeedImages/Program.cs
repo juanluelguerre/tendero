@@ -981,7 +981,7 @@ static int Defects(
             }
         }
 
-            foreach (var rejected in kept.Read())
+        foreach (var rejected in kept.Read())
         {
             if (!products.TryGetValue(rejected.ItemId, out var product)
                 || (wanted is not null && !wanted.Contains(rejected.ItemId, StringComparer.OrdinalIgnoreCase)))

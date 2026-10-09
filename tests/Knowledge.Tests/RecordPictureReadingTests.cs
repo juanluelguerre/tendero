@@ -1,6 +1,6 @@
 using ElGuerre.Tendero.Knowledge.Domain;
-using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
 using ElGuerre.Tendero.Knowledge.Features.ReadPictures;
+using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
