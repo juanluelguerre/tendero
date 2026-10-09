@@ -200,6 +200,30 @@ public sealed class ReadPicturesTests
         Assert.Contains(shop.Knowledge.Documents, document => document.Reading?.PromptVersion == PictureReadingPrompt.Version);
     }
 
+    /// <summary>
+    /// A picture is read when BOTH its languages were read under today's
+    /// instructions by this model — not when one of them was. A batch interrupted
+    /// between the two, or a reading replaced in one language only, leaves a
+    /// picture half read: its claims would rest on words of two different
+    /// instructions, so it is read again whole.
+    /// </summary>
+    [Theory]
+    [InlineData("picture-reading-2026-10-07", "scripted-model")]
+    [InlineData(null, "another-model")]
+    public async Task A_picture_read_in_one_language_only_under_these_instructions_is_read_again(string? olderPrompt, string byModel)
+    {
+        var pot = Picture("Cafetera", "pot-cover");
+        await using var shop = Compose([pot]);
+        var today = new PictureReading(new ImageId("pot-cover"), "scripted-model", PictureReadingPrompt.Version);
+        var other = new PictureReading(new ImageId("pot-cover"), byModel, olderPrompt ?? PictureReadingPrompt.Version);
+        shop.Knowledge.Add(SourceDocument.Depict(new ProductId(pot.ProductId), "es", "Una cafetera.", today, Clock));
+        shop.Knowledge.Add(SourceDocument.Depict(new ProductId(pot.ProductId), "en", "A coffee maker.", other, Clock));
+
+        var result = await shop.Ask();
+
+        Assert.Equal((PictureReadingStatus.Ran, 1), (result.Status, result.Read));
+    }
+
     [Fact]
     public async Task A_batch_takes_no_more_pictures_than_it_was_asked_for()
     {

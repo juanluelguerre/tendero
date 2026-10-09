@@ -905,9 +905,10 @@ another program's containers.
   fusion of two.
 - **`Knowledge`** (165). `ReadPictures` 23: its operation names and log lines,
   two bounds redundant with the check beside them (**equivalent**), and one
-  that is **a real gap, written down and not closed**: `readings.All` as `Any`
-  — a picture with one reading from this model and one from an older prompt
-  would be taken as current. `RulesClaimExtractor` 23, `SourceDocument` 20 and
+  that was **a real gap, closed the day after**: `readings.All` as `Any` — a
+  picture with one language read under these instructions and the other under
+  older ones, or by another model, taken as read. The rule was right and
+  nothing held it; a test does now, and fails against the mutant by hand. `RulesClaimExtractor` 23, `SourceDocument` 20 and
   `ProductClaim` 16 predate the phase.
 - **`Assist`** (109). In the alt-text job, three mutants on the counter's
   declaration that Stryker cannot toggle in a static initialiser (**noise**),
