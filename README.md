@@ -101,8 +101,7 @@ catalogue and **buy** over MCP or UCP:
   stored with what it should have — no judge model
   ([docs/analysis/steward-models.md](docs/analysis/steward-models.md)). With no
   model answering, the backoffice is unchanged.
-- **Pictures, and a catalogue model that can hold them** (phase 13a, in
-  progress). The local model answers closed questions about a product's picture
+- **Pictures, and a catalogue model that can hold them** (phase 13a). The local model answers closed questions about a product's picture
   — how many pieces, what colour — and code, not the model, writes the claim a
   person approves; a colour it is sure does not match raises a *doubt* about the
   picture, which is not a claim about the product. Two things in the model moved
@@ -744,8 +743,8 @@ deferred with its measured number — is
 | R | The redesign: backoffice by job, storefront navigation, the dashboard | 🚧 measured against a baseline walkthrough |
 | 12 | **Steward**, the backoffice copilot | ✅ it proposes commands a person approves, never prose; six typed reads owned by their contexts; a local model measured by a suite with no judge. The hosted profiles and the AI panel wait |
 | 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
-| 13a | Images: a model that reads a picture, claims and doubts from it, the catalogue's model under them, and visual search | 🚧 a category declares its attributes; a picture says what it shows; the shop is searched with a picture |
-| 13 | Visual search and the kit solver | 🔜 |
+| 13a | Images: a model that reads a picture, claims and doubts from it, the catalogue's model under them, and visual search | ✅ a category declares its attributes; a picture says what it shows; the shop is searched with a picture, and the pictures are a third leg of the search where they are |
+| 13c | The kit solver | 🔜 |
 
 ## Blog series
 

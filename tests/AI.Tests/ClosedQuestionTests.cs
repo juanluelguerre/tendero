@@ -73,10 +73,13 @@ public sealed class ClosedQuestionTests
     {
         public List<(IReadOnlyList<ChatMessage> Messages, ChatOptions? Options)> Asked { get; } = [];
 
+        /// <summary>What the provider's own client answered with, when the test says: where the probabilities travel.</summary>
+        public object? Raw { get; init; }
+
         public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             Asked.Add(([.. messages], options));
-            return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, text)));
+            return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, text)) { RawRepresentation = Raw });
         }
 
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
@@ -115,6 +118,57 @@ public sealed class ClosedQuestionTests
         Assert.NotNull(options.RawRepresentationFactory);
         // The caller's own options are not written on.
         Assert.Null(mine.Temperature);
+    }
+
+    /// <summary>
+    /// The confidence is read off what the SERVER sent back: the probability it
+    /// gave each token of the answer. Reading a list of tokens is tested above;
+    /// this is the step before it — that the tokens are taken from the response
+    /// at all, and not replaced by none.
+    /// </summary>
+    // The factory that builds a provider's answer for a test is marked experimental by its SDK.
+#pragma warning disable OPENAI001
+    [Fact]
+    public async Task The_confidence_comes_from_the_probabilities_the_server_sent_with_its_answer()
+    {
+        var model = new Says("Low Heel")
+        {
+            Raw = OpenAI.Chat.OpenAIChatModelFactory.ChatCompletion(contentTokenLogProbabilities:
+            [
+                OpenAI.Chat.OpenAIChatModelFactory.ChatTokenLogProbabilityDetails("Low", MathF.Log(0.8f)),
+                OpenAI.Chat.OpenAIChatModelFactory.ChatTokenLogProbabilityDetails(" Heel", MathF.Log(0.9f)),
+            ]),
+        };
+
+        var choice = await ClosedQuestion.AskAsync(model, [], "What is the Heel Height?", Heels, cancellationToken: TestContext.Current.CancellationToken);
+        var counted = await ClosedQuestion.CountAsync(
+            new Says("3") { Raw = OpenAI.Chat.OpenAIChatModelFactory.ChatCompletion(contentTokenLogProbabilities: [OpenAI.Chat.OpenAIChatModelFactory.ChatTokenLogProbabilityDetails("3", MathF.Log(0.6f))]) },
+            [], "How many pans?", cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("Low Heel", choice.Option);
+        Assert.Equal(0.72, choice.Confidence!.Value, 4);
+        Assert.Equal((3, 0.6), (counted.Number, Math.Round(counted.Confidence!.Value, 4)));
+    }
+
+#pragma warning restore OPENAI001
+
+    /// <summary>A model that is not there, and nothing to show it, are the caller's mistakes and are said at the door.</summary>
+    [Fact]
+    public async Task What_is_asked_needs_a_model_something_to_show_and_the_choices()
+    {
+        var model = new Says("Flat");
+        var ct = TestContext.Current.CancellationToken;
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ClosedQuestion.AskAsync(null!, [], "?", Heels, cancellationToken: ct));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ClosedQuestion.AskAsync(model, null!, "?", Heels, cancellationToken: ct));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ClosedQuestion.AskAsync(model, [], "?", null!, cancellationToken: ct));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ClosedQuestion.CountAsync(null!, [], "?", cancellationToken: ct));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => ClosedQuestion.CountAsync(model, null!, "?", cancellationToken: ct));
+        Assert.Throws<ArgumentNullException>(() => ClosedQuestion.Read(null!, [], Heels));
+        Assert.Throws<ArgumentNullException>(() => ClosedQuestion.Read("Flat", null!, Heels));
+        Assert.Throws<ArgumentNullException>(() => ClosedQuestion.Read("Flat", [], null!));
+        Assert.Throws<ArgumentNullException>(() => ClosedQuestion.ReadNumber(null!, []));
+        Assert.Throws<ArgumentNullException>(() => ClosedQuestion.ReadNumber("3", null!));
     }
 
     // ---------- how many ----------

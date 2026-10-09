@@ -89,14 +89,14 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 
 | project | mutated with | of covered | of total | set |
 |---|---|---:|---:|---|
-| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 83.21 % | 60.06 % | 2026-09-29 · R-7/R-8 close, first run 79.11 % |
+| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 83.38 % | 59.53 % | 2026-10-08 · phase 13a's close, one run, the model-held tests left out; eleven gaps closed after it |
 | `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 70.95 % | 62.50 % | 2026-09-26 |
 | `tools/TrafficSim` | `TrafficSim.Tests` | 87.66 % | 87.10 % | 2026-09-26 · `Model/`, `Scheduling/`, `Queries/` |
-| `src/Knowledge` | `Knowledge.Tests` | 72.33 % | 57.91 % | 2026-09-27 · first run 49.76 % |
+| `src/Knowledge` | `Knowledge.Tests` | 77.34 % | 67.91 % | 2026-10-09 · phase 13a's close, with the picture reading in it |
 | `src/Accounts` | `Accounts.Tests` | 80.08 % | 58.31 % | 2026-09-29 · R-7/R-8 close, first run 75.52 % |
 | `src/Pricing` | `Pricing.Tests` | 83.06 % | 62.59 % | 2026-09-29 · first baseline, first run 81.41 % |
-| `src/Assist` | `Assist.Tests` | 86.26 % | 80.03 % | 2026-10-06 · phase 12b's close, with Tino in it; first run 84.69 %, under phase 12's 84.76 % |
-| `src/AI` | `AI.Tests` | 72.02 % | 57.35 % | 2026-10-05 · phase 12's close, first baseline, one run |
+| `src/Assist` | `Assist.Tests` | 86.31 % | 79.42 % | 2026-10-09 · phase 13a's close, with the alt-text job in it; first run 85.30 %, under phase 12b's 86.26 % |
+| `src/AI` | `AI.Tests` | 75.00 % | 58.54 % | 2026-10-09 · phase 13a's close; first run 71.88 %, under phase 12's 72.02 % |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -817,6 +817,126 @@ above are the runs' and not what those tests would now give.
   `Api.Tests`' contract and policy tests, which this run does not mutate with.
 - **Steward's survivors are phase 12's**, classified above; none is new.
 
+**Phase 13a's close (2026-10-09)** — the images: a model that reads a picture,
+a category that declares its attributes, a picture that says what it shows, and
+the shop searched with one. Four projects whole — `Search`, `Knowledge`,
+`Assist` and `AI` each carry a part of it — and three scoped to the phase's
+files. Every run alone, one after the other, with no stack running. Reports are
+in `docs/blog/reports/2026-10-06-phase-13a-images/stryker/`.
+
+| project | mutated with | run 1 | last run | survivors |
+|---|---|---:|---:|---:|
+| `src/Search` | `Search.Tests`, `SearchEval.Tests` | **83.38 %** | — | 185 |
+| `src/Knowledge` | `Knowledge.Tests` | 77.34 % | **77.34 %** | 165 → 165 |
+| `src/Assist` | `Assist.Tests` | 85.30 % | **86.31 %** (run 3; run 2 86.18 %) | 117 → 109 |
+| `src/AI` | `AI.Tests` | 71.88 % | **75.00 %** | 63 → 56 |
+| `src/Catalog`, scoped (17 files of the phase) | `Catalog.Tests` | 76.35 % | — | 131 |
+| `src/SharedKernel`, scoped (`ProductPictures.cs`, `Proposals.cs`, `UndescribedPictures.cs`, `WrittenLanguage.cs`) | its three suites | 89.25 % | — | 10 |
+| `tools/SearchEval`, scoped (7 files of the phase) | `SearchEval.Tests` | 52.52 % | — | 132 |
+
+**Two projects came in under their baselines**, as `Assist` had at the close
+before: `Assist` by a point and `AI` by a seventh of one. Each had gained a file
+of the phase with weaker tests than the project around it — the alt-text job,
+the closed question. `Assist` took three runs: the second stopped eight
+hundredths short, one mutant, and the third run is the one above.
+
+**`Search` ran without its model-held tests** (`TENDERO_SIGLIP_MODELS` pointed
+at a folder that is not there). With them every mutant costs the forty seconds
+the model takes to load and answer, and 1,113 mutants are twelve hours. So the
+resize's arithmetic in `SiglipPicture` shows nine survivors that the suite
+holding a picture to the maker's embedding at 0.999998 kills where the model
+is; they are counted here as what Stryker saw, not as what is untested. The run
+took an hour and twenty-eight minutes as it was — on a machine shared with
+another program's containers.
+
+**What Stryker found, and what closed it.**
+
+- **A see-through picture's blend had a test that could not tell it from the
+  blend with its sign wrong.** The first test written for the survivor used
+  black at half: 255 × (255 + 128) overflows a byte back to the very 127 the
+  right arithmetic gives. Found by mutating by hand what the new test was
+  meant to kill, and seeing it live. A dark grey a quarter opaque tells them
+  apart.
+- **A bound tested on one side only, three times**: a picture exactly at the
+  weight limit, an upload at the height limit, and a catalogue picture at the
+  height limit (`>` survived as `>=`; only width and one-over were asked).
+- **The half-configured shop, again, in the registration**: removing either of
+  the picture adapter's two registrations left a test that counted one
+  descriptor, because the stand-in then filled the gap. Both ports are now
+  resolved and are the same adapter. And an empty folder counted as a model.
+- **A picture nobody can buy gave up its rank** in the mutant of the third leg
+  (the pictures' list cut to what has a card even without filters), and no
+  test held the rule the words' nearest list already had.
+- **The thread rule was equivalent on the machine that measured it**
+  (`processors * 2` clamps to eight on sixteen, as `/ 2` does). It is a
+  function of its own now, held at one, two, four, twelve, sixteen and
+  sixty-four.
+- **A point's id was version 8 by luck**: one id was asserted, and its hash
+  happened to allow the mutant. Sixty-four ids now, and the variant bits too.
+- **The alt-text job's reason was compared with itself** —
+  `Reason("en")` against `Reason("en")` — so the mutant that swapped the two
+  languages passed. It is read as words now. Its counter of what became of
+  each picture was asserted nowhere; nor that an outcome nothing happened to is
+  not counted as zero; nor that the product's words leave nothing where a
+  description would have been; nor that the job reads with the local profile
+  unless told otherwise.
+- **The closed question never proved the confidence came from the server.**
+  Reading a list of token probabilities was tested; taking them from the
+  response was not, and the mutant that replaced them with none survived. A
+  provider's answer built with its own SDK's factory holds it, for a choice
+  and for a count.
+- **A doubt raised said nothing to the outbox** in the mutant, and nothing
+  noticed: the event a doubt raises was asserted only for a doubt decided.
+- **The same tag, and the same description, again answered *no*** in the
+  mutants of `Product.Show` and `Product.DescribeImage`: the tests held that
+  nothing changed, not what was answered — and *no* means *no such picture*.
+
+**Left, and what each is.**
+
+- **`Search`** (185). `ProductFacets` 23, `Elasticsearch.cs` 17, `SearchProducts`
+  14 and the reranker's registration 18 are older than the phase and were in
+  the baseline. Of the phase's: the nine in `SiglipPicture`'s resize, above;
+  the worker's and the handlers' statements that only log or count
+  (`ProjectProductToPictureVectors` 7, the same seven its twin for the words
+  has); `SearchPicturesByText`'s validator, whose messages and property names
+  survive because the tests ask whether a query is valid and not what it is
+  told; `HybridSearchStrategy` L139 and L169 — **equivalent**: a union with no
+  pictures is the nearest list, and a fusion with an empty third list is the
+  fusion of two.
+- **`Knowledge`** (165). `ReadPictures` 23: its operation names and log lines,
+  two bounds redundant with the check beside them (**equivalent**), and one
+  that is **a real gap, written down and not closed**: `readings.All` as `Any`
+  — a picture with one reading from this model and one from an older prompt
+  would be taken as current. `RulesClaimExtractor` 23, `SourceDocument` 20 and
+  `ProductClaim` 16 predate the phase.
+- **`Assist`** (109). In the alt-text job, three mutants on the counter's
+  declaration that Stryker cannot toggle in a static initialiser (**noise**),
+  two bounds redundant with the blank check beside them (**equivalent**), and
+  the model's failure filter. `StewardTools` L99 — the arguments ordered
+  descending instead of ascending — is **equivalent**: any one order is the
+  same key. `ActionProposal` 10 and `StewardTurn` 21 are older.
+- **`AI`** (56). `ScriptedChatClient` 22, the test double, as at the close
+  before; the guards of `ClosedQuestion` are killed now.
+- **`Catalog`, scoped** (131). `Product.cs` 48, most of them the argument guards
+  and `Touch` calls of operations older than the phase, mutated here because
+  the file was in scope. Of the phase's: the refusal's wording when a picture
+  is told an axis the product does not have; `ForgetWhatNobodySells`'s
+  `Count > 0` (**equivalent**); and the `?? []` on a picture new to a replaced
+  gallery, **equivalent** — the record already turns none into an empty list,
+  which the test written for it found by not failing. `ImportProducts` 16 are
+  its batch counters, proven against a real Postgres by the integration
+  suite and not by `Catalog.Tests`.
+- **`SharedKernel`, scoped** (10): wording, and `WrittenLanguage`'s tie
+  (`>` as `>=` when a sentence is as Spanish as it is English, which the
+  callers treat as neither).
+- **`tools/SearchEval`, scoped** (132): 109 of them strings — the usage text
+  and the option names of `EvaluationOptions`, the reasons `CopilotScoring`
+  writes. `PictureFloors` and what `SeedCorpus` does with pictures have no
+  unit test at all: they are the measured run itself, which was run
+  (`docs/search-evaluation.md`).
+- **`tools/SeedImages`** has no Stryker configuration; its phase code is proven
+  by the hand mutations in its commits and by the defects board.
+
 ## Property-based (CsCheck)
 
 Value objects carry the invariants worth generating inputs for:
@@ -1036,6 +1156,16 @@ argument is that a system saying *no* is the interesting part — a suppressed
 discount, a declined card, a denied mandate — a tool designed to turn a refusal
 into a pass is pointed the wrong way. Use the agent to explain a failure; let a
 person write the fix.
+
+**Both suites run in CI, one after the other** (the storefront's since
+2026-10-09). The backoffice's had been there from the start and the storefront's
+was run by hand, which is to say not run: three of its specs were red for weeks,
+one of them for a real defect, and it took running them for another reason to
+see it. They share the stack the job has already brought up and run in
+sequence, never beside each other — both move real stock in the one database.
+One of the storefront's (a return opened from a delivered order) failed once in
+a whole run on a development machine and passed alone; CI retries a spec once,
+and a second failure there is to be read, not retried again.
 
 ## Naming
 

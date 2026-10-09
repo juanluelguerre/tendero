@@ -155,7 +155,25 @@ public sealed class ProductPicturesOfVariantsTests
         var later = new TestClock();
         later.Advance(TimeSpan.FromHours(1));
 
-        shoe.Show(later, new ImageId("navy-side"), Of("navy_blue"));
+        // And it is still a yes: the picture exists and shows what was said. False is "no such picture".
+        Assert.True(shoe.Show(later, new ImageId("navy-side"), Of("navy_blue")));
+
+        Assert.Equal(before, shoe.UpdatedAt);
+    }
+
+    /// <summary>The same sentence again is the same answer, as the tag's is: the picture is there and says it.</summary>
+    [Fact]
+    public void The_same_description_again_is_still_a_yes_and_not_a_change()
+    {
+        var shoe = Shoe();
+        var words = LocalizedText.From("es", "Zapatilla azul, de lado").With("en", "Navy shoe, side view");
+        Assert.True(shoe.DescribeImage(Clock, new ImageId("navy-side"), words));
+        var before = shoe.UpdatedAt;
+        var later = new TestClock();
+        later.Advance(TimeSpan.FromHours(1));
+
+        Assert.True(shoe.DescribeImage(later, new ImageId("navy-side"), words));
+        Assert.False(shoe.DescribeImage(later, new ImageId("never-there"), words));
 
         Assert.Equal(before, shoe.UpdatedAt);
     }
@@ -189,5 +207,19 @@ public sealed class ProductPicturesOfVariantsTests
 
         Assert.Equal([new AxisValue("COLOR", "BLACK")], shoe.Images.Single(image => image.Id.Value == "black-side").Shows);
         Assert.Equal(["black-side", "navy-side"], shoe.Images.OrderBy(image => image.SortOrder).Select(image => image.Id.Value));
+    }
+
+    /// <summary>A picture the source brings for the first time shows nothing yet — an empty list, never a missing one, so it is every variant's.</summary>
+    [Fact]
+    public void A_picture_new_to_the_gallery_shows_nothing_and_is_every_variants()
+    {
+        var shoe = Shoe();
+
+        shoe.ReplaceImages(Clock, [(new ImageId("navy-side"), null), (new ImageId("lifestyle"), null)]);
+
+        var brought = shoe.Images.Single(image => image.Id.Value == "lifestyle");
+        Assert.NotNull(brought.Shows);
+        Assert.Empty(brought.Shows);
+        Assert.Contains("lifestyle", PicturesOf(shoe, "SHOE-BLACK-38"));
     }
 }

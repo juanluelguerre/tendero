@@ -32,6 +32,10 @@ public sealed class PictureDoubtTests
             (doubt.ProductId, doubt.PictureId, doubt.AttributeCode, doubt.Seen, doubt.Held, doubt.Confidence, doubt.Status));
         Assert.Equal(("gris", "black"), (doubt.SeenLabel.In("es"), doubt.HeldLabel.In("en")));
         Assert.Equal((Front.Model, Front.PromptVersion), (doubt.ReadByModel, doubt.ReadWithPrompt));
+
+        // And it says so: the outbox carries a doubt raised as it carries one decided.
+        var raised = Assert.IsType<PictureDoubtRaised>(Assert.Single(doubt.DomainEvents));
+        Assert.Equal((doubt.Id, Sleeve, doubt.RaisedAt), (raised.DoubtId, raised.ProductId, raised.OccurredAt));
     }
 
     /// <summary>
