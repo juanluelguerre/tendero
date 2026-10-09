@@ -1,6 +1,6 @@
+using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using ElGuerre.Tendero.Search.Contracts;
 
 namespace ElGuerre.Tendero.Search.Images;
 

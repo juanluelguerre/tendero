@@ -1,8 +1,8 @@
 using System.Text.Json;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Catalog;
-using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Catalog.Adapters;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Extraction;
