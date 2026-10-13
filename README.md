@@ -385,6 +385,22 @@ passwords, only on Development:
 | `ana` | shopper | the storefront's account and orders |
 | `claude-desktop` · `claude-desktop-test` | agent (the second one places test orders) | MCP and UCP, see [docs/mcp.md](docs/mcp.md) |
 
+**An agent needs nothing published on the internet to buy here locally.** Its
+token comes from the development issuer, the platform profile the shop fetches
+may live at any `localhost` address, and a test credential pays with the
+sandbox handler. The one setting that names a public address,
+`Ucp:OwnSchemasUrl`, is empty on purpose and stays empty on your machine: it
+is where the shop's own UCP extension is published when the shop is deployed
+for agents you do not control, and it changes nothing a local run can show
+([docs/mcp.md](docs/mcp.md), *An agent of your own, on your own machine*).
+
+**To see the browser's own agent surface**, WebMCP, turn on
+`chrome://flags/#enable-webmcp-testing` (the same in Edge) and relaunch: the
+storefront's tools appear under DevTools → Application → WebMCP — seven
+registered from script and one that is the search form itself, declared in its
+markup (experimental) — and the *Model Context Tool Inspector* extension calls
+them by hand ([docs/mcp.md](docs/mcp.md), *Seeing the browser's tools*).
+
 If search ever comes back empty — Elasticsearch runs **without a volume** on
 purpose, so a recreated container loses its documents while Postgres keeps the
 catalogue — rebuild the index from Postgres instead of reimporting:

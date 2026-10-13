@@ -59,9 +59,10 @@ fact the data does not, and the data never has to be parsed out of a sentence.
   A line, an option, a total, a figure on the dashboard: each is readable
   alone.
 - **A request takes the same shape** wherever it takes an amount: the kit's
-  budget, a price filter in a body. A query string keeps a plain number in
-  major units (`?maxPrice=80`) — it is typed by a person into an address — and
-  the spec of each such parameter says so.
+  budget, a price filter in a body. A query string carries the bare whole
+  number of minor units (`?maxPrice=8000`), the currency being the shop's —
+  first written here as major units, and decided otherwise (see *Decided by
+  the author*, below).
 - **The exponent stops being a constant in the converter.** `Money.Decimals`
   is two today and the catalogue is in euros; the converter asks a table by
   currency, which today has the currencies the seed uses. Multi-currency stays
@@ -70,10 +71,17 @@ fact the data does not, and the data never has to be parsed out of a sentence.
   that is not a whole number of minor units when it reaches the wire is a bug
   in whoever produced it, and the converter throws rather than rounds.
 
-The UCP mappers lose `Minor()` and `Major()`: both contracts now say money the
-same way. The front ends' `price` pipe takes the object and formats it in the
-reader's culture — the author's second point: the API returns the value and
-the currency, the client formats.
+**It is UCP's `price.json` and ACP's feed `Price`, member for member** — read
+against the live schemas on 2026-10-13 (the analysis, *Second pass*). Two
+things follow from holding it to them. The integer is bounded at 2⁵³ − 1, as
+UCP's is: the largest a JavaScript client reads exactly. And one rule on our
+wire — the object everywhere — is a choice: UCP itself says the currency
+once at the top of a checkout and writes bare integers under it. So the UCP
+mappers get one exponent table instead of a `* 100`, and do not disappear.
+
+The front ends' `price` pipe takes the object and formats it in the reader's
+culture — the author's second point: the API returns the value and the
+currency, the client formats.
 
 ### 2 · A refusal is a problem with a code
 
@@ -187,14 +195,92 @@ contract is wrong for an agent.
 4. **The front end composes and formats**; the API returns the value, the
    currency, the code — and its own sentence for a reader with no front end.
 
-## Open, for the author's reading of this text
+## Found by the second pass, and taken into the phase
 
-- **A query-string amount stays in major units** (`?maxPrice=80`). The
-  alternative is minor units there too — consistent, and `?maxPrice=8000` in an
-  address a person reads.
-- **`type` URIs under `https://tendero.dev/problems/…`**: a URI RFC 9457 asks
-  for and nobody has to serve. The alternative is `about:blank` and the `code`
-  alone.
+The audit of every surface (the analysis, *Second pass*) found more than this
+spec set out to fix. The author took all of it into the phase on 2026-10-13
+(*adelante con todo*), and it was built with the rest — see *Built*, below:
+
+- **REST**: no security declared in the document; 200 where 201 with
+  `Location` belongs; no 429 declared; the idempotency key in a body.
+- **MCP**: `Origin` not validated and no rate limit on `/mcp` (both MUST);
+  no annotations, so read-only tools are announced as destructive; a
+  checkout call without a token answers 200.
+- **WebMCP**: the storefront calls an API the current draft no longer
+  defines, and its browser spec fakes the old one.
+- **UCP**: schema URLs that answer 404, no validation of the platform's
+  version, no `Cache-Control` on the profile (all MUST); idempotency's 409.
+- **Money**: whether a discount is a negative `Money` or a positive one
+  under its name.
+
+## Built (2026-10-13), and what is still owed
+
+Everything above is built on `feature/phase-13b-wire`, recorded in ADR 0059:
+
+- **Money**: the sixty-two fields the audit found are `Money`; the ratchet in
+  `WireMoneyContractTests` is empty. Both front ends format and never divide.
+- **Refusals**: every 4xx the contract declares is `application/problem+json`
+  with a closed set of codes (`WireConventionsContractTests`): the forty bare
+  strings, the twenty-six empty bodies and the ten conflict records.
+- **Messages**: `Message<TCode>`; the kit's explanation carries `KitSaid`.
+- **REST**: the version and its header, the bearer scheme and each operation's
+  policies, `201` with `Location` on the three operations that create something
+  with an address, `429` with `Retry-After`, `Idempotency-Key` in its header.
+- **MCP**: `Origin` validated, tool calls limited, every tool annotated, the
+  shop's own tools with structured content and an output schema, and refusing
+  with the same problem. UCP's protocol errors are JSON-RPC errors with its codes.
+- **UCP**: versioned schema URLs, `Cache-Control`, `version_unsupported`,
+  idempotency with its 409, the exponent table, and the authority binding of
+  the shop's own extension (`Ucp:OwnSchemasUrl`).
+- **WebMCP**: `document.modelContext.registerTool`, one call a tool, with
+  `readOnlyHint`, as the draft of 9 October 2026 defines it.
+- **After a walk through both front ends in a browser** (the same day): a
+  checkout tool with no token is a 401 with `WWW-Authenticate` and RFC 9728
+  metadata, a person's token a 403, a token that is not good a 401;
+  `server/discover` and the tool list's caching hints are held by a test, the
+  list `public` for five minutes; and both front ends ask the API in the
+  language the screen is in (`tenderoCultureInterceptor`) — a Spanish
+  backoffice in an English browser was being refused in English.
+- **A promotion that did not apply says so as a message**: `reasonCode` a
+  closed set, `requires` (the condition, money as `Money`), `shortBy` and
+  `unitsShort` (how far the cart is, worked out by the shop), `winner`; the
+  storefront composes its sentence and the server's stays for an agent.
+- **The till asks the shelf before the bank** (ADR 0025, amended): a cart that
+  asks for more than there is is a 409 `InsufficientStock` carrying each
+  article's asked and available, with nothing charged; a basket line carries
+  `available`; and a status whose refusals carry different things declares
+  each by its code.
+
+Still owed before the phase is closed: **Stryker** over what it touched, the
+notebook and the book's map — and the author's reading of the three points
+below.
+
+## Decided by the author on 2026-10-13, after reading this text
+
+- **A price is asked for in the unit it is answered in.** This text proposed
+  major units in a query string (`?maxPrice=80`), for the person who types
+  it. Decided the other way once it was seen who types it: the filter was also
+  the MCP tool's, described as *Lowest price, inclusive* with no unit, beside
+  facets whose ends are minor units — an agent that sent a facet's `3000`
+  back was asking for what costs three thousand euros, and got an empty page
+  with no error. `minPrice` and `maxPrice` are whole minor units on REST and
+  on MCP; a fraction is refused by name. The storefront's own address keeps
+  what a person types (`/c/HOME?price=30-60`) and converts when it asks. The
+  shop's own assistant's tool keeps major units, in and out: its reader is a
+  small model that says what it is handed.
+- **`type` URIs under `https://tendero.dev/problems/…`**: accepted as built,
+  behind its one constant (`ProblemTypes.Base`).
+- **Where the shop's own UCP schema is published: nowhere, for now.** A
+  platform accepts `com.elguerre.tendero.knowledge` only from a host under
+  `elguerre.com` (UCP's authority binding), and nothing a local run can show
+  depends on it: `Ucp:OwnSchemasUrl` stays empty, the shop serves the schema
+  itself, and a platform that follows the binding to the letter drops that one
+  extension and goes on with UCP's own. It is a deployment step — `docs/mcp.md`
+  (*An agent of your own, on your own machine*) and the README say so.
+- **An agent's registration and a return keep answering 200.** A 201 names
+  where what was created lives, and neither has an address of its own; nothing
+  reads one today, and a return's would be a public endpoint with the order's
+  access rule to keep, added for a status code.
 - **The branch**: `feature/phase-13b-wire`, cut from the kit solver's branch
   at K-4, with K-5 resuming on top of it — one stack, in the order built.
 

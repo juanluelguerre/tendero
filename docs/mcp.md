@@ -120,7 +120,7 @@ different ways in, and they discover the shop differently:
 | **Starts at** | the endpoint you configured | `GET /.well-known/ucp` |
 | **Then** | `initialize` → `tools/list` | reads `services["dev.ucp.shopping"]`, finds `transport: mcp` and its `endpoint` |
 | **Calls** | any of the eight tools | the three the binding fixes |
-| **Gets back** | this shop's own shapes, in `result.content` | the UCP envelope, in `result.structuredContent` |
+| **Gets back** | this shop's own shapes, in `result.structuredContent` under a declared `outputSchema`, and the same JSON as text in `result.content` | the UCP envelope — its `ucp` member is what tells it apart — in `result.structuredContent` |
 | **Needs** | nothing | nothing yet — the read half is anonymous |
 
 The same `/mcp` route serves both, because the binding says the transport is MCP
@@ -153,6 +153,17 @@ same applies to `/mcp` and to the development issuer. It does not make them
 private — they are public and callable either way.
 
 ## What the server offers
+
+**Every tool says what it does to the shop** (since 2026-10-13, phase 13b): the
+twelve that only read carry `readOnlyHint`, and the checkout's four that change
+something say whether it can be taken back — completing and cancelling cannot.
+Left unsaid, the specification's defaults announce a tool as destructive, and a
+careful host asks a person before every search.
+
+**The endpoint has two guards the specification requires of a server**: an
+`Origin` it does not know is answered 403 — a request with none, as an agent
+that is not a browser sends, is served — and a client is limited to 120 calls a
+minute, after which it is answered 429.
 
 Eight tools, and they are two different contracts on one server.
 
@@ -253,6 +264,37 @@ TOKEN=$(curl -s -X POST http://localhost:5130/dev-issuer/connect/token   -d gran
 curl -s -X POST http://localhost:5130/ucp/checkout-sessions   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json'   -H 'UCP-Agent: profile="http://localhost:5130/dev-platforms/claude-desktop-test/profile.json"'   -d '{"line_items":[{"item":{"id":"B11COO0301-DEFAULT"},"quantity":1}]}'
 ```
 
+### An agent of your own, on your own machine — nothing to publish
+
+Everything above runs on `localhost` as it comes, and so does an agent you
+write yourself. **Nothing has to be published on the internet to try the shop
+locally.** What a local agent needs:
+
+| What | Where it comes from locally |
+|---|---|
+| A token that says it is an agent | The development issuer: `claude-desktop-test` (test orders) or `claude-desktop`, at `/dev-issuer/connect/token`. An agent nobody registered buys too, as untrusted, under stricter limits; register it in the backoffice under *Agentes* to vouch for it |
+| A platform profile the shop will fetch | Any URL on `localhost`, on any port: Development trusts that host (`Ucp:TrustedPlatformHosts`). Use the seeded one — `/dev-platforms/{agent}/profile.json` — or serve your own from your agent's process |
+| A way to settle | The sandbox handler `com.elguerre.tendero.fake`, offered to a test credential |
+
+**The one thing a local shop cannot do**, and it stops nothing: have its *own*
+extension accepted by a platform that follows UCP to the letter. The shop
+declares `com.elguerre.tendero.knowledge` beside UCP's standard capabilities,
+and UCP's **authority binding** says a platform accepts a capability only when
+its schema is served from a host its name reverses to — here, one under
+`elguerre.com`, over `https`. That is how a name proves whose it is: without
+it anybody could declare capabilities in somebody else's name. `localhost` is
+nobody's domain, so such a platform treats that one extension as absent and
+goes on with the rest: discovery, the catalogue, checkout and AP2 are all
+`dev.ucp.*` and bind from `ucp.dev`. An agent of your own that does not check
+the binding sees the extension as well.
+
+`Ucp:OwnSchemasUrl` is where those schemas are published, and it is **empty on
+purpose**: unset, they are served by the shop itself, wherever it runs. Set it
+only when the shop is deployed for agents you do not control — to an `https`
+origin under `elguerre.com` that serves, at `/ucp/schemas/…`, the files in
+`src/Ucp/Schemas/` — and the shop refuses to start if the address could not
+bind (`UcpAuthority`). It is a deployment step, not a development one.
+
 ### Tendero's own
 
 Answers UCP has no capability for, in this shop's own shapes.
@@ -281,13 +323,16 @@ search), `facets` (`CODE:VALUE` pairs such as `COLOR:BLACK`), `minPrice`,
 add up; across filters they narrow. The answer's `facets` say what to send: each
 facet's `code`, each option's `value` and the `count` of products it would leave,
 so an agent narrows from the answer it already holds, never from a label it
-translated.
+translated. **A price goes back in the unit it came in**: `minPrice` and
+`maxPrice` are whole minor units, as every price in the answer is — `10000` is
+100.00 EUR, and the price facet's `min` and `max` can be sent as they are. A
+fraction is refused by name.
 
 ```bash
 curl -sS -X POST http://localhost:5130/mcp   -H 'Content-Type: application/json'   -H 'Accept: application/json, text/event-stream'   -d '{"jsonrpc":"2.0","id":3,"method":"tools/call",
        "params":{"name":"search_products",
                  "arguments":{"category":"SHOES","brands":["Vertex"],
-                              "facets":["COLOR:BLACK"],"maxPrice":100,"sort":"PriceAsc"}}}'
+                              "facets":["COLOR:BLACK"],"maxPrice":10000,"sort":"PriceAsc"}}}'
 ```
 
 **`list_campaigns` is `GET /api/pricing/campaigns`**, the same query and the same
@@ -341,8 +386,60 @@ curl -sS -X POST http://localhost:5130/mcp \
 A batch beyond fifty identifiers is refused by name and number too; that one is
 easier to try from a script than from a shell.
 
-Both come back as `isError` with the sentence in them, rather than a stack trace.
-That is the transport's job: over HTTP the same refusal is a ProblemDetails.
+Both come back as `isError`, rather than a stack trace. That is the transport's
+job: over HTTP the same refusal is a problem (RFC 9457).
+
+**The shop's own tools refuse with that same problem** (since 2026-10-13, phase
+13b; ADR 0059): the text of the error is JSON and nothing around it — a `code`
+to branch on, the shop's `title` and `detail` in the language asked, and for a
+request that did not validate, `errors`: each argument to what is wrong with it.
+
+```json
+{"code":"Invalid","title":"La petición no es válida.","errors":{"Text":["…at least 2 characters…"]}}
+{"code":"ProductNotFound","title":"Ese producto no existe en la tienda.","detail":"No hay ningún producto con el código «NOPE»."}
+```
+
+**An argument left out or misnamed is told which**, on every tool: `Invalid`
+again, with `detail` naming the argument and the binder's own sentence as
+`reason` — not the SDK's *An error occurred invoking…*, which is what a tool
+that broke says and tells an agent nothing it can correct.
+
+```json
+{"code":"Invalid","title":"La petición no es válida.","detail":"Falta el argumento «code».","reason":"The arguments dictionary is missing a value for the required parameter 'code'."}
+```
+
+UCP's tools keep UCP's own wording, because the refusal is the protocol's to
+spell — and its **protocol** errors (no profile, a profile on a host nobody
+trusts, another protocol version) are JSON-RPC errors and not tool results:
+`-32001` for discovery, `-32000` for the rest, with UCP's `code` and `content`
+in `error.data`.
+
+**Who may call a tool is HTTP's to say** (MCP, Authorization; RFC 9728). The
+endpoint is open and the five checkout tools are not, so the door is decided
+per call, before the server is reached:
+
+```bash
+# No token on a checkout tool: 401, and where to get one.
+curl -sS -i -X POST http://localhost:5130/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call",
+       "params":{"name":"get_checkout","arguments":{"id":"x","meta":{}}}}'
+# HTTP/1.1 401 Unauthorized
+# WWW-Authenticate: Bearer resource_metadata="http://localhost:5130/.well-known/oauth-protected-resource/mcp"
+
+curl -sS http://localhost:5130/.well-known/oauth-protected-resource/mcp
+# {"resource":"http://localhost:5130/mcp","authorization_servers":["…the issuer…"],"bearer_methods_supported":["header"],…}
+```
+
+A person's token on one of those tools is a 403; a token that is not good is a
+401 with `error="invalid_token"` on any call, even one that needed none. What
+reads the catalogue, and asking what the server offers, ask for nothing.
+
+**The 2026-07-28 revision's own questions are answered** — `server/discover`
+with the versions spoken, a version not spoken with `-32022` and the ones that
+are, and a tool list with its caching hints: `cacheScope: "public"` (the list
+is the same for whoever asks) and `ttlMs` of five minutes.
 
 ## What it will not do
 
@@ -372,3 +469,106 @@ list the shopper has on screen and `apply_filter` narrows THAT list, by one
 facet at a time, as a click would — the shopper watches it change and the back
 button undoes it. An external process has no screen to change, so this server's
 `search_products` takes the filters as arguments instead.
+
+### Seeing the browser's tools: a flag, DevTools, and an inspector
+
+WebMCP is **native to the browser** — no extension is needed for the tools to
+exist — and it is behind a flag. Tried on 2026-10-13 in Edge 155; the flag is
+the same in Chrome.
+
+1. **Turn it on**: `edge://flags/#enable-webmcp-testing` or
+   `chrome://flags/#enable-webmcp-testing` (*WebMCP for testing*), then
+   **relaunch the browser** — reloading the tab is not enough.
+2. **Open the storefront** (`http://localhost:4200`; `localhost` is a secure
+   context, which the API requires). The shell registers seven tools as the
+   page starts, and the header's search form is an eighth by itself (below).
+   In the console, `document.modelContext` is an object, and
+   `await document.modelContext.getTools()` lists them.
+3. **DevTools → Application → WebMCP** shows them without any extension:
+   *Available Tools*, each with the description the shop wrote for a model,
+   and *Tool Activity*, every call with its status and — selected — its input.
+   A call the shop refuses reads *Completed* there: the browser reports that
+   the tool answered, and the refusal is in the answer, as `isError`.
+
+**To call a tool by hand**, the extension **WebMCP - Model Context Tool
+Inspector** adds a side panel: the tools with their input schemas and
+annotations, a tool to pick, its arguments as JSON pre-filled from the schema,
+and *Execute Tool*, which shows what came back — for instance, on the home
+page, where there is no list to narrow:
+
+```json
+{"content":[{"type":"text","text":"There is no product list on screen. Filters narrow a search or category page the shopper is on."}],"isError":true}
+```
+
+It is listed among the developer utilities of `GoogleChromeLabs/webmcp-tools`
+(which says of itself that it is not an officially supported Google product)
+and its source is `beaufortfrancois/model-context-tool-inspector`; it is in the
+Chrome Web Store, and installs in Edge too:
+<https://chromewebstore.google.com/detail/webmcp-model-context-tool/gbpdfapgefenggkahomfgkhfehlcenpd>.
+Two things to know before using it:
+
+- **Executing a tool needs no key and sends nothing anywhere**: it is the
+  browser calling the page. The panel's *User Prompt* box is another matter —
+  it asks for a Gemini API key and sends the prompt and the page's tools to
+  that service, which is not something the shop needs in order to be tried.
+- **What a tool does, it does**: `add_to_cart` puts a line in the cart of the
+  session the tab is in, exactly as the button would.
+
+### The eighth tool, declared in the markup — experimental
+
+Seven of the tools are registered from script, the way the draft defines
+(`document.modelContext.registerTool`). The eighth, **`show_search_results`**,
+is not registered by anything: it is the header's search form, with attributes.
+
+```html
+<form role="search"
+      toolname="show_search_results"
+      tooldescription="Shows the shopper the results page for what they are looking for: …"
+      toolautosubmit>
+  <input type="search" name="q"
+         toolparamdescription="What to look for, in the language the page is in. At least two characters.">
+</form>
+```
+
+The browser makes the tool from the form: its name and description from the
+form's attributes, its input schema from the controls (`q`, a string, with the
+description beside it), and — because of `toolautosubmit` — it fills the box
+and sends the form itself. The page then does what it does when a person
+presses Enter, and answers the agent through the `submit` event, which gains
+`agentInvoked` and `respondWith()`:
+
+```ts
+// apps/storefront/src/app/agent/search-form-tool.ts
+export function answerAgent(event: SubmitEvent, words: string, go: (query: string) => Promise<boolean>): boolean {
+  const sent = event as SubmitEvent & AgentSubmit;
+  if (!sent.agentInvoked || typeof sent.respondWith !== 'function') return false;   // a person: search as always
+
+  const query = words.trim();
+  sent.respondWith(
+    query.length < 2
+      ? Promise.resolve('A query needs at least two characters.')
+      : go(query).then(() => `The shopper is now looking at the results for "${query}".`),
+  );
+  return true;
+}
+```
+
+**Why it is there, and what it is not.** It is the other way to declare a
+tool, kept in the real shop so the two can be read side by side; and it does
+something `search_products` does not — that one hands the agent a list and
+leaves the page alone, this one **moves the shopper's page** to the results.
+
+**It is not in the specification.** This is WebMCP's *declarative* proposal
+(`declarative-api-explainer.md` in the Community Group's repository, whose
+README says *being explored … not part of the specification at this time*).
+It is in the browser all the same — tried in Edge 155 behind the flag on
+2026-10-13: the form appears in `getTools()`, executing it navigated to
+`?q=sartén` and came back with the sentence above, and one letter was refused
+without moving the page. It may change or go, and it is marked experimental in
+the template and in `search-form-tool.ts`. A browser that knows nothing of it
+ignores the attributes, and the form is the form it was — pressing Enter in
+it is unchanged.
+
+Without the flag — every other browser, and this one as it comes — none of
+this exists and the shop is the shop it was: `supportsModelContext()` is the
+whole degradation (`frontend/libs/shared/agent/src/lib/model-context.ts`).
