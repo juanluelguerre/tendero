@@ -148,7 +148,32 @@ a sentence a fact (the amounts below are an illustration, not the seed's):
 
 That text is the feature's non-AI path and is always there.
 
-**A model may reword it, and only reword it** (`P13-7`): given the sentences,
+*As built (K-3, 2026-10-13)*: `KitView.Explanation`, a list of sentences, each
+about a slot or about the kit, so the page can put each beside what it is
+about. `KitWords` is handed the kit and nothing else — not the search, the
+template or the solver — so there is nothing it could say that the kit does
+not carry, and a test holds every amount in it, in both languages and at
+eight budgets, to the kit's own. As written:
+
+> *Kit de cocina: 113.90 EUR de 120.00 EUR.*
+> *Sartén: Sartén de hierro fundido de 26 cm, 49.90 EUR.*
+> *Cuchillo: Cuchillo de chef de 20 cm, 64.00 EUR. Juego de 3 cuchillos está
+> mejor valorado y no cabía: cuesta 55.00 EUR más y quedaban 6.10 EUR.*
+> *Sin tabla de cortar: lo más barato cuesta 24.90 EUR y quedaban 6.10 EUR.*
+
+Amounts are written as an order's total and the shipping terms are for the
+same reader — two decimals and the currency's code — because the host runs
+with invariant globalization; the page formats the kit's own numbers in the
+reader's culture and shows these sentences as the shop said them. **It does
+not say *the best ranked that fits induction***, as the illustration above
+did: a slot's sentence names what it holds and what ranked higher, and a
+claim about why a product ranked where it did is the search's to make, not
+the kit's. A kit from a search that stopped at its ceiling says it is the
+best found; one missing a slot it needs says it is not complete; a
+requirement no slot could be held to is named.
+
+**A model may reword it, and only reword it** (`P13-7`, not built yet — see
+*Open* below): given the sentences,
 it writes them as one paragraph in the page's language. Before it is shown,
 code holds it to the trace as Tino's answers are held to their facts (ADR
 0055): every amount and every product named in it must be one of the trace's,
@@ -304,6 +329,16 @@ otherwise, because two of them go against the roadmap.
 8. **An ADR at the close**: *a recommendation is solved, not generated* —
    the four stages, the objective's order, the trace as the explanation's only
    source.
+
+## Open
+
+- **Where the rewording lives.** Search does not reference the model port
+  (`AI`), and Assist may not reference Search. A reworder takes sentences and
+  gives a paragraph, and the grounding check is code over strings — it needs
+  no search at all. Three places it could go, the author's to choose with the
+  mock-up: Search gains a reference to `AI`; a small slice in `Assist` that
+  rewords any list of sentences it is handed, with Tino's grounding beside it;
+  or it waits until the page shows whether the sentences need it.
 
 ## Building it, in order
 

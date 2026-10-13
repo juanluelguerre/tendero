@@ -6483,6 +6483,24 @@
           }
         }
       },
+      "KitSentence": {
+        "required": [
+          "slot",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
       "KitSlotView": {
         "required": [
           "code",
@@ -6618,7 +6636,8 @@
           "complete",
           "exact",
           "slots",
-          "unusedRequirements"
+          "unusedRequirements",
+          "explanation"
         ],
         "type": "object",
         "properties": {
@@ -6662,6 +6681,12 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "explanation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KitSentence"
             }
           }
         }

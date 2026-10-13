@@ -79,10 +79,10 @@ public sealed class BuildKitTests
 
     private static async Task<(BuildKitResult Result, Shop Shop)> Build(
         decimal budget, string culture = "es", string[]? requirements = null, Func<ProductSearchQuery, SearchHit[]>? answers = null,
-        string template = "KITCHEN_STARTER", KitTemplate? kit = null)
+        string template = "KITCHEN_STARTER", KitTemplate? kit = null, IKitSolver? solver = null)
     {
         var shop = new Shop(answers ?? TheStory);
-        var handler = new BuildKitHandler(new Templates(kit ?? Kitchen), new Tree(Categories()), shop, new BranchAndBoundKitSolver());
+        var handler = new BuildKitHandler(new Templates(kit ?? Kitchen), new Tree(Categories()), shop, solver ?? new BranchAndBoundKitSolver());
         var result = await handler.HandleAsync(new BuildKitQuery(template, budget, culture, requirements ?? []), TestContext.Current.CancellationToken);
         return (result, shop);
     }
@@ -251,6 +251,149 @@ public sealed class BuildKitTests
         Assert.Equal((KitGapReason.NoCandidate, null, null),
             (result.Kit!.Slots[1].Gap!.Reason, result.Kit.Slots[1].Gap!.Cheapest, result.Kit.Slots[1].Gap!.Short));
         Assert.False(result.Kit.Complete);
+    }
+
+    // ---------- the explanation: written by code from the trace ----------
+
+    private static (string? Slot, string Text)[] Said(KitView kit) => [.. kit.Explanation.Select(sentence => (sentence.Slot, sentence.Text))];
+
+    /// <summary>The solver, stopped after so many nodes: what a search that ran out of its budget gives.</summary>
+    private sealed class StoppedAt(int nodes) : IKitSolver
+    {
+        public KitSolution Solve(KitProblem problem) => new BranchAndBoundKitSolver().Solve(problem with { NodeCeiling = nodes });
+    }
+
+    /// <summary>
+    /// **The spec's story, said.** A sentence a fact: the kit against its
+    /// budget; each slot with what it holds; the knives that ranked higher and
+    /// did not fit, by how much; the board there was no money for. Every amount
+    /// is the trace's, or the difference of two of them.
+    /// </summary>
+    [Fact]
+    public async Task The_explanation_says_what_each_slot_holds_what_ranked_higher_and_what_did_not_fit()
+    {
+        var (result, _) = await Build(120m);
+
+        Assert.Equal(
+        [
+            (null, "Kit de cocina: 113.90 EUR de 120.00 EUR."),
+            ("pan", "Sartén: Name of PAN-IRON, 49.90 EUR."),
+            ("knife", "Cuchillo: Name of KNIFE-CHEF, 64.00 EUR. Name of KNIVES-3 está mejor valorado y no cabía: cuesta 55.00 EUR más y quedaban 6.10 EUR."),
+            ("board", "Sin tabla de cortar: lo más barato cuesta 24.90 EUR y quedaban 6.10 EUR."),
+        ], Said(result.Kit!));
+    }
+
+    [Fact]
+    public async Task The_explanation_is_said_in_english_when_asked_to()
+    {
+        var (result, _) = await Build(120m, culture: "en");
+
+        Assert.Equal(
+        [
+            (null, "Kitchen starter kit: 113.90 EUR of 120.00 EUR."),
+            ("pan", "Frying pan: Name of PAN-IRON, 49.90 EUR."),
+            ("knife", "Knife: Name of KNIFE-CHEF, 64.00 EUR. Name of KNIVES-3 ranks higher and did not fit: it costs 55.00 EUR more and 6.10 EUR was left."),
+            ("board", "No chopping board: the cheapest costs 24.90 EUR and 6.10 EUR was left."),
+        ], Said(result.Kit!));
+    }
+
+    /// <summary>A kit that took the best of everything has nothing to explain beyond what it holds.</summary>
+    [Fact]
+    public async Task A_kit_held_back_by_nothing_says_what_it_holds_and_no_more()
+    {
+        var (result, _) = await Build(500m);
+
+        Assert.Equal(
+        [
+            (null, "Kit de cocina: 193.80 EUR de 500.00 EUR."),
+            ("pan", "Sartén: Name of PAN-IRON, 49.90 EUR."),
+            ("knife", "Cuchillo: Name of KNIVES-3, 119.00 EUR."),
+            ("board", "Tabla de cortar: Name of BOARD, 24.90 EUR."),
+        ], Said(result.Kit!));
+    }
+
+    /// <summary>Nothing to choose from is said as that, and a kit missing what it needs says it is not whole — last, about the kit.</summary>
+    [Theory]
+    [InlineData("es", "Sin cuchillo: no hay nada en stock que encaje.", "El kit no está completo: le falta algo que necesita.")]
+    [InlineData("en", "No knife: nothing in stock fits.", "The kit is not complete: something it needs is missing.")]
+    public async Task A_slot_with_nothing_to_choose_from_and_a_kit_that_is_not_whole_are_said(string culture, string nothing, string notWhole)
+    {
+        var (result, _) = await Build(500m, culture, answers: query => query.Text is "cuchillo" or "knife" ? [] : TheStory(query));
+
+        Assert.Contains(("knife", nothing), Said(result.Kit!));
+        Assert.Equal((null, notWhole), Said(result.Kit!)[^1]);
+    }
+
+    /// <summary>An optional slot left empty does not make the kit incomplete, and nothing says it does.</summary>
+    [Fact]
+    public async Task A_kit_missing_only_what_it_can_do_without_does_not_say_it_is_incomplete()
+    {
+        var (result, _) = await Build(120m);
+
+        Assert.DoesNotContain(Said(result.Kit!), sentence => sentence.Text.Contains("completo", StringComparison.Ordinal));
+    }
+
+    /// <summary>What was asked and could not be held to anything is said, in the shopper's words for it: the facet as they sent it.</summary>
+    [Theory]
+    [InlineData("es", "No se ha podido exigir COLOR:BLACK: ningún hueco de este kit lo declara.")]
+    [InlineData("en", "COLOR:BLACK could not be required: no slot of this kit declares it.")]
+    public async Task A_requirement_that_was_not_used_is_said(string culture, string unused)
+    {
+        var (result, _) = await Build(120m, culture, requirements: ["INDUCTION:true", "COLOR:BLACK"]);
+
+        Assert.Contains((null, unused), Said(result.Kit!));
+        Assert.DoesNotContain(Said(result.Kit!), sentence => sentence.Text.Contains("INDUCTION", StringComparison.Ordinal));
+    }
+
+    /// <summary>A search that stopped at its ceiling gives the best kit it found, and the explanation never passes it off as the best there is.</summary>
+    [Theory]
+    [InlineData("es", "Es el mejor kit encontrado, no necesariamente el mejor: la búsqueda se detuvo en su límite.")]
+    [InlineData("en", "This is the best kit found, not necessarily the best there is: the search stopped at its limit.")]
+    public async Task A_kit_from_a_search_that_stopped_says_it_is_the_best_found(string culture, string bestFound)
+    {
+        var (stopped, _) = await Build(120m, culture, solver: new StoppedAt(1));
+        var (whole, _) = await Build(120m, culture);
+
+        Assert.False(stopped.Kit!.Exact);
+        Assert.Contains((null, bestFound), Said(stopped.Kit));
+        Assert.DoesNotContain((null, bestFound), Said(whole.Kit!));
+    }
+
+    /// <summary>
+    /// **The explanation says only the trace.** Every amount in it, in either
+    /// language and at any budget, is one the kit carries — a price, the total,
+    /// the budget, what was left — or how much more a better product costs,
+    /// which is two of those subtracted. The property a model's paragraph
+    /// cannot be given, stated here about the text it would be handed.
+    /// </summary>
+    [Theory]
+    [InlineData("es")]
+    [InlineData("en")]
+    public async Task Every_amount_the_explanation_names_is_one_the_kit_carries(string culture)
+    {
+        foreach (var budget in (decimal[])[10m, 60m, 75m, 115m, 120m, 140m, 190m, 500m])
+        {
+            var kit = (await Build(budget, culture)).Result.Kit!;
+
+            HashSet<decimal> carried = [kit.Budget, kit.Total, kit.Left];
+            foreach (var slot in kit.Slots)
+            {
+                if (slot.Product is { } product)
+                    carried.Add(product.PriceAmount);
+                if (slot.Gap?.Cheapest is { } cheapest)
+                    carried.Add(cheapest.PriceAmount);
+                if (slot is { Better: { } better, Product: { } held })
+                    carried.Add(better.Product.PriceAmount - held.PriceAmount);
+            }
+
+            var named = kit.Explanation
+                .SelectMany(sentence => System.Text.RegularExpressions.Regex.Matches(sentence.Text, @"(\d+\.\d{2}) EUR"))
+                .Select(match => decimal.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture))
+                .ToList();
+
+            Assert.NotEmpty(named);
+            Assert.All(named, amount => Assert.Contains(amount, carried));
+        }
     }
 
     // ---------- the kits the shop offers ----------

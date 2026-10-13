@@ -120,6 +120,14 @@ public sealed class KitsEndpointTests
         Assert.Equal(("Budget", true, true),
             (kit.GetProperty("binding").GetString(), kit.GetProperty("complete").GetBoolean(), kit.GetProperty("exact").GetBoolean()));
 
+        // Why, a sentence a fact, each beside the slot it is about — null for the kit as a whole.
+        Assert.Equal(
+        [
+            (null, "Kit de cocina: 49.90 EUR de 60.00 EUR."),
+            ("pan", "Sartén: Sartén de hierro, 49.90 EUR."),
+            ("board", "Sin tabla de cortar: lo más barato cuesta 24.90 EUR y quedaban 10.10 EUR."),
+        ], kit.GetProperty("explanation").EnumerateArray().Select(sentence => (sentence.GetProperty("slot").GetString(), sentence.GetProperty("text").GetString()!)));
+
         var (pan, board) = (kit.GetProperty("slots")[0], kit.GetProperty("slots")[1]);
         Assert.Equal(("PAN", "SKU-PAN"), (pan.GetProperty("product").GetProperty("code").GetString(), pan.GetProperty("product").GetProperty("matchedSku").GetString()));
         Assert.Equal("INDUCTION:true", pan.GetProperty("requirements")[0].GetString());

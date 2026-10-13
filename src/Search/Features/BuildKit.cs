@@ -97,7 +97,18 @@ public sealed record BuildKitResult(BuildKitOutcome Outcome, KitView? Kit);
 public sealed record KitView(
     string Template, string Name, decimal Budget, decimal Total, decimal Left, string Currency,
     KitBinding Binding, bool Complete, bool Exact,
-    IReadOnlyList<KitSlotView> Slots, IReadOnlyList<string> UnusedRequirements);
+    IReadOnlyList<KitSlotView> Slots, IReadOnlyList<string> UnusedRequirements)
+{
+    /// <summary>
+    /// Why the kit is what it is, **written by code from the fields above and
+    /// nothing else**, a sentence a fact, in the culture asked. The feature's
+    /// path with no model in it, and the only text a model may later reword.
+    /// </summary>
+    public required IReadOnlyList<KitSentence> Explanation { get; init; }
+}
+
+/// <param name="Slot">The slot the sentence is about, or null when it is about the kit as a whole.</param>
+public sealed record KitSentence(string? Slot, string Text);
 
 /// <param name="Requirements">The requirements this slot's candidates were held to.</param>
 /// <param name="Product">What it holds, as the shop's own search shows it; null when empty.</param>
@@ -232,10 +243,96 @@ public sealed class BuildKitHandler(
                         : null,
                     solved.Better is { } better ? new KitUpgradeView(hits[better.Candidate.Code], better.Short.Amount) : null)),
             ],
-            [.. query.Requirements.Where(requirement => applied.Values.All(of => !of.Contains(requirement)))]);
+            [.. query.Requirements.Where(requirement => applied.Values.All(of => !of.Contains(requirement)))])
+        {
+            // Said from the kit itself, so it is put together first and explained after.
+            Explanation = [],
+        };
 
-        return new BuildKitResult(BuildKitOutcome.Built, kit);
+        return new BuildKitResult(BuildKitOutcome.Built, kit with { Explanation = new KitWords(query.Culture).Of(kit) });
     }
+}
+
+/// <summary>
+/// A kit's explanation in the shopper's words, es and en (invariant 6) —
+/// **read off the kit and nothing else**. It is given the answer and not the
+/// search, the template or the solver, so there is nothing here it could say
+/// that the kit does not carry: every amount is one of the kit's, or how much
+/// more a better product costs, which is two of them subtracted.
+///
+/// A sentence a fact, each about a slot or about the kit, so a page can put
+/// each beside what it is about and a model handed these to reword can be held
+/// to them one by one.
+/// </summary>
+internal sealed class KitWords(string culture)
+{
+    private bool English => culture == "en";
+
+    public IReadOnlyList<KitSentence> Of(KitView kit)
+    {
+        List<KitSentence> says =
+        [
+            new(null, English
+                ? $"{kit.Name}: {Amount(kit.Total, kit)} of {Amount(kit.Budget, kit)}."
+                : $"{kit.Name}: {Amount(kit.Total, kit)} de {Amount(kit.Budget, kit)}."),
+        ];
+
+        foreach (var slot in kit.Slots)
+            says.Add(new KitSentence(slot.Code, Of(slot, kit)));
+
+        foreach (var unused in kit.UnusedRequirements)
+        {
+            says.Add(new KitSentence(null, English
+                ? $"{unused} could not be required: no slot of this kit declares it."
+                : $"No se ha podido exigir {unused}: ningún hueco de este kit lo declara."));
+        }
+
+        if (!kit.Exact)
+        {
+            says.Add(new KitSentence(null, English
+                ? "This is the best kit found, not necessarily the best there is: the search stopped at its limit."
+                : "Es el mejor kit encontrado, no necesariamente el mejor: la búsqueda se detuvo en su límite."));
+        }
+
+        if (!kit.Complete)
+        {
+            says.Add(new KitSentence(null, English
+                ? "The kit is not complete: something it needs is missing."
+                : "El kit no está completo: le falta algo que necesita."));
+        }
+
+        return says;
+    }
+
+    private string Of(KitSlotView slot, KitView kit)
+    {
+        // A slot's name inside a sentence: "Sin tabla de cortar", "No chopping board".
+        var inside = slot.Name.ToLowerInvariant();
+
+        switch (slot)
+        {
+            case { Product: { } product, Better: { } better }:
+                var more = Amount(better.Product.PriceAmount - product.PriceAmount, kit);
+                return English
+                    ? $"{slot.Name}: {product.Name}, {Amount(product.PriceAmount, kit)}. {better.Product.Name} ranks higher and did not fit: it costs {more} more and {Amount(kit.Left, kit)} was left."
+                    : $"{slot.Name}: {product.Name}, {Amount(product.PriceAmount, kit)}. {better.Product.Name} está mejor valorado y no cabía: cuesta {more} más y quedaban {Amount(kit.Left, kit)}.";
+
+            case { Product: { } product }:
+                return $"{slot.Name}: {product.Name}, {Amount(product.PriceAmount, kit)}.";
+
+            case { Gap.Cheapest: { } cheapest }:
+                return English
+                    ? $"No {inside}: the cheapest costs {Amount(cheapest.PriceAmount, kit)} and {Amount(kit.Left, kit)} was left."
+                    : $"Sin {inside}: lo más barato cuesta {Amount(cheapest.PriceAmount, kit)} y quedaban {Amount(kit.Left, kit)}.";
+
+            default:
+                return English ? $"No {inside}: nothing in stock fits." : $"Sin {inside}: no hay nada en stock que encaje.";
+        }
+    }
+
+    /// <summary>As an order's total and the shipping terms are written for the same reader: two decimals and the currency's code.</summary>
+    private static string Amount(decimal amount, KitView kit) =>
+        string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{amount:0.00} {kit.Currency}");
 }
 
 /// <summary>What a kit is asked with: its code is in the address.</summary>

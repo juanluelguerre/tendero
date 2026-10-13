@@ -2098,6 +2098,10 @@ export interface components {
             facet: string;
             label: string;
         };
+        KitSentence: {
+            slot: null | string;
+            text: string;
+        };
         KitSlotView: {
             code: string;
             name: string;
@@ -2138,6 +2142,7 @@ export interface components {
             exact: boolean;
             slots: components["schemas"]["KitSlotView"][];
             unusedRequirements: string[];
+            explanation: components["schemas"]["KitSentence"][];
         };
         LinkIdentityRequest: {
             displayName: null | string;
