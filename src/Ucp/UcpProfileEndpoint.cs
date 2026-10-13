@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 
 namespace ElGuerre.Tendero.Ucp;
 
@@ -26,8 +27,11 @@ public static class UcpProfileEndpoint
     {
         MapExtensionSchemas(endpoints);
         return endpoints
-            .MapGet(UcpSpecification.WellKnownPath, Ok<UcpProfile> (HttpContext http, Signing.IMerchantSigner signer) =>
-                TypedResults.Ok(Compose($"{http.Request.Scheme}://{http.Request.Host}", signer.PublishedKeys)))
+            .MapGet(UcpSpecification.WellKnownPath, Ok<UcpProfile> (HttpContext http, Signing.IMerchantSigner signer, IOptions<Negotiation.UcpOptions> options) =>
+            {
+                http.Response.Headers.CacheControl = UcpSpecification.PublishedCaching;
+                return TypedResults.Ok(Compose($"{http.Request.Scheme}://{http.Request.Host}", signer.PublishedKeys, options.Value.OwnSchemasUrl));
+            })
             .AllowAnonymous()
             // Out of the OpenAPI document, like `/mcp` and for a sharper reason:
             // this document POINTS AT schemas rather than being described by
@@ -42,10 +46,14 @@ public static class UcpProfileEndpoint
     /// profile that points at them — a contract nobody may read is not one.
     /// </summary>
     private static void MapExtensionSchemas(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGet("/ucp/schemas/{name}", IResult (string name) =>
-                typeof(UcpProfileEndpoint).Assembly.GetManifestResourceStream($"ucp-schema:{name}") is { } schema
-                    ? Results.Stream(schema, "application/schema+json")
-                    : Results.NotFound())
+        endpoints.MapGet("/ucp/schemas/{name}", IResult (string name, HttpContext http) =>
+            {
+                if (typeof(UcpProfileEndpoint).Assembly.GetManifestResourceStream($"ucp-schema:{name}") is not { } schema)
+                    return Results.NotFound();
+
+                http.Response.Headers.CacheControl = UcpSpecification.PublishedCaching;
+                return Results.Stream(schema, "application/schema+json");
+            })
             .AllowAnonymous()
             .WithMetadata(new ExcludeFromDescriptionAttribute());
 
@@ -54,11 +62,16 @@ public static class UcpProfileEndpoint
     ///
     /// Public and pure so it can be read in a test without a server, which is
     /// what makes the committed snapshot a comparison rather than a screenshot.
-    /// The keys are the deployment's, so they are handed in.
+    /// The keys are the deployment's, so they are handed in — and so is where
+    /// the shop's own schemas are published (<paramref name="ownSchemas"/>),
+    /// which is not where the shop is served unless nobody said otherwise: a
+    /// platform accepts `com.elguerre.tendero.*` only from a host under that
+    /// name's domain (<see cref="UcpAuthority"/>).
     /// </summary>
-    public static UcpProfile Compose(string baseUrl, IReadOnlyList<Signing.Jwk>? keys = null)
+    public static UcpProfile Compose(string baseUrl, IReadOnlyList<Signing.Jwk>? keys = null, string? ownSchemas = null)
     {
         var host = baseUrl.TrimEnd('/');
+        var published = ownSchemas ?? host;
 
         return new UcpProfile
         {
@@ -103,8 +116,8 @@ public static class UcpProfileEndpoint
                         new UcpCapabilityDeclaration
                         {
                             Version = capability.Version,
-                            Spec = UcpCapabilities.Absolute(capability.Spec, host),
-                            Schema = UcpCapabilities.Absolute(capability.Schema, host),
+                            Spec = UcpCapabilities.Absolute(capability.Spec, published),
+                            Schema = UcpCapabilities.Absolute(capability.Schema, published),
                             Extends = capability.Extends,
                             Config = capability.Config
                         }

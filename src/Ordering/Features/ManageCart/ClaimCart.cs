@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Carter;
+using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -73,7 +74,7 @@ public sealed class ClaimCartEndpoint : ICarterModule
     {
         // POST /api/cart/claim
         app.MapPost("/api/cart/claim",
-            async Task<Results<Ok<CartView>, NotFound, Conflict<string>>> (
+            async Task<Results<Ok<CartView>, NotFound, ProblemHttpResult>> (
                    string? culture, HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var token = http.Request.Headers[CartHeaders.Token].ToString();
@@ -91,12 +92,13 @@ public sealed class ClaimCartEndpoint : ICarterModule
                 return result.Outcome switch
                 {
                     ClaimCartOutcome.NotFound => TypedResults.NotFound(),
-                    ClaimCartOutcome.BelongsToSomebodyElse => TypedResults.Conflict(
-                        "That basket belongs to another account."),
+                    ClaimCartOutcome.BelongsToSomebodyElse => TypedResults.Problem(
+                        statusCode: CartRefusals.BelongsToSomebodyElse.Status, extensions: CartRefusals.BelongsToSomebodyElse.Said()),
                     _ => TypedResults.Ok(result.Cart!)
                 };
             })
             .RequireAuthorization()
+            .WithMetadata(new Refuses(CartRefusals.BelongsToSomebodyElse))
             .WithTags("Ordering")
             .WithName("ClaimCart");
     }
@@ -106,7 +108,8 @@ public sealed class ClaimCartHandler(
     ICartRepository carts,
     IPrincipalAccessor principals,
     IUnitOfWork unitOfWork,
-    TimeProvider clock)
+    TimeProvider clock,
+    IAvailabilityReader availability)
     : ICommandHandler<ClaimCartCommand, ClaimCartResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
@@ -133,7 +136,7 @@ public sealed class ClaimCartHandler(
             // with the cart rather than with a refusal, because from the
             // caller's side nothing is wrong.
             activity?.SetTag("ordering.outcome", nameof(ClaimCartOutcome.AlreadyTheirs));
-            return new ClaimCartResult(ClaimCartOutcome.AlreadyTheirs, GetCartHandler.View(cart, command.Culture));
+            return new ClaimCartResult(ClaimCartOutcome.AlreadyTheirs, await GetCartHandler.ViewAsync(cart, command.Culture, availability, cancellationToken));
         }
 
         if (cart.CustomerId is not null)
@@ -147,6 +150,6 @@ public sealed class ClaimCartHandler(
 
         activity?.SetTag("ordering.outcome", nameof(ClaimCartOutcome.Claimed));
 
-        return new ClaimCartResult(ClaimCartOutcome.Claimed, GetCartHandler.View(cart, command.Culture));
+        return new ClaimCartResult(ClaimCartOutcome.Claimed, await GetCartHandler.ViewAsync(cart, command.Culture, availability, cancellationToken));
     }
 }

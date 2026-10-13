@@ -4,6 +4,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CustomersWidget } from './customers-widget';
 import { openWidget, setUpWidgets } from '../widget-testing';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const FUNNEL = (newCustomers: number, returningCustomers: number) => ({
   period: 'Week',
   cartsStarted: 10,
@@ -17,11 +20,11 @@ const FUNNEL = (newCustomers: number, returningCustomers: number) => ({
 
 const point = (start: string, newCustomers: number, returningCustomers: number) => ({
   start,
-  revenue: 0,
+  revenue: eur(0),
   orders: 0,
   units: 0,
   agentOrders: 0,
-  agentRevenue: 0,
+  agentRevenue: eur(0),
   newCustomers,
   returningCustomers,
 });
@@ -29,7 +32,6 @@ const point = (start: string, newCustomers: number, returningCustomers: number) 
 /** The buyers day by day (R-9, D-7), from the series the key figures already read. */
 const SERIES = (newCustomers: number, returningCustomers: number) => ({
   period: 'Week',
-  currency: 'EUR',
   timeZone: 'Europe/Madrid',
   step: 'Day',
   current: [

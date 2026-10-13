@@ -149,6 +149,8 @@ public sealed class PromotionEngineTests
         Assert.Equal(RuleReasons.NotCombinableWithCode, loser.Reason!.Code);
         Assert.Equal("No acumulable con SUMMER25.", loser.Reason.Explanation.In("es"));
         Assert.Equal("Not combinable with SUMMER25.", loser.Reason.Explanation.In("en"));
+        // And who took the slot, by itself: a page says it its own way.
+        Assert.Equal("SUMMER25", loser.Reason.Winner!.In("es"));
     }
 
     [Fact]
@@ -236,6 +238,60 @@ public sealed class PromotionEngineTests
         var suppressed = Suppressed(outcome, "BIG");
         Assert.Equal(RuleReasons.ConditionNotMetCode, suppressed.Reason!.Code);
         Assert.Contains("50.00 EUR", suppressed.Reason.Explanation.In("en"));
+    }
+
+    /// <summary>
+    /// **What was missing is data, not only a sentence** (ADR 0059). The
+    /// sentence says *a minimum of 50.00 EUR*, which is right for an agent and
+    /// wrong on a page: a page formats money its reader's way and names a
+    /// category by its name, and can do neither from prose. So the reason
+    /// carries the condition it asked and how far the cart is from it — the
+    /// difference worked out here, because a front end adds no money.
+    /// </summary>
+    [Fact]
+    public void An_unmet_minimum_carries_what_it_asked_and_how_much_is_missing()
+    {
+        var condition = new PromotionCondition(MinimumSubtotal: Build.Money(50m), CategoryCode: "KITCHEN");
+        var cart = Build.Cart(0m, "retail", Build.Line("PAN", 39.99m, categoryPath: "HOME/KITCHEN/COOKWARE"));
+
+        var reason = Suppressed(this.engine.Apply(
+            [Build.Promotion("BIG", new PercentOffLine(10m), condition: condition)], cart, Build.At()), "BIG").Reason!;
+
+        Assert.Equal(condition, reason.Requires);
+        Assert.Equal(Build.Money(10.01m), reason.ShortBy);
+        Assert.Null(reason.UnitsShort);
+    }
+
+    [Fact]
+    public void An_unmet_quantity_carries_how_many_units_are_missing()
+    {
+        var cart = Build.Cart(0m, "retail", Build.Line("SHIRT", 20m, quantity: 1, categoryPath: "APPAREL/SHIRT"));
+
+        var reason = Suppressed(this.engine.Apply(
+        [
+            Build.Promotion("3X2", new PercentOffLine(10m),
+                condition: new PromotionCondition(CategoryCode: "SHIRT", MinimumQuantity: 3))
+        ], cart, Build.At()), "3X2").Reason!;
+
+        Assert.Equal(2, reason.UnitsShort);
+        Assert.Null(reason.ShortBy);
+    }
+
+    /// <summary>Nothing in the cart is what the promotion is for: it asks what it asks, and nothing is "short".</summary>
+    [Fact]
+    public void A_condition_no_line_reaches_is_short_of_nothing()
+    {
+        var cart = Build.Cart(0m, "retail", Build.Line("PAN", 100m, categoryPath: "HOME/KITCHEN"));
+
+        var reason = Suppressed(this.engine.Apply(
+        [
+            Build.Promotion("APPAREL10", new PercentOffLine(10m),
+                condition: new PromotionCondition(MinimumSubtotal: Build.Money(50m), CategoryCode: "APPAREL"))
+        ], cart, Build.At()), "APPAREL10").Reason!;
+
+        Assert.Equal("APPAREL", reason.Requires!.CategoryCode);
+        Assert.Null(reason.ShortBy);
+        Assert.Null(reason.UnitsShort);
     }
 
     /// <summary>

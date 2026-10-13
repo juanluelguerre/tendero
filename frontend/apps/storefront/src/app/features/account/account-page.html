@@ -99,9 +99,7 @@
                     class="grid justify-items-end gap-1 text-end max-sm:col-span-full max-sm:justify-items-start max-sm:text-start"
                   >
                     <span class="text-sm text-muted">{{ t('order.status.' + order.status) }}</span>
-                    <span class="numeric font-semibold">{{
-                      order.total | price: order.currency : culture.active()
-                    }}</span>
+                    <span class="numeric font-semibold">{{ order.total | price: culture.active() }}</span>
                   </span>
                 </a>
 

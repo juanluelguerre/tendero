@@ -10,6 +10,15 @@ public sealed class ShopOptions
     public const string SectionName = "Shop";
 
     /// <summary>
+    /// The currency the shop sells in when nothing it is looking at says: a
+    /// period with no orders, a search with no results. Every amount carries
+    /// its own currency (<see cref="Money"/>); this is only what an empty answer
+    /// is written in. One shop, one currency — laboratory scale, and said once
+    /// here where it was three literals in three contexts.
+    /// </summary>
+    public const string DefaultCurrency = "EUR";
+
+    /// <summary>
     /// The shop's time zone, as an IANA id. A day on the dashboard is the shop's
     /// calendar day, whoever reads it and from wherever — one Monday for everyone,
     /// as Shopify and Seller Central report (ADR 0046). Validated when the API

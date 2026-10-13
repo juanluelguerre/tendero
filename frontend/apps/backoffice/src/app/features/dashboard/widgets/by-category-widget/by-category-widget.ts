@@ -1,4 +1,4 @@
-import { formatPrice } from '@tendero/shared-util';
+import { formatMajor, majorUnits, ShopCurrency } from '@tendero/shared-util';
 import { PricePipe } from '@tendero/shared-ui';
 import { Component, computed, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -26,7 +26,7 @@ export class ByCategoryWidget {
 
   /** The chart's axis and figures: a function the chart calls, where a template would use the price pipe. */
   protected readonly money = (amount: number): string =>
-    formatPrice(amount, this.store.mix.value()?.currency ?? 'EUR', this.culture.active());
+    formatMajor(amount, this.store.mix.value()?.unrecorded.revenue.currency ?? ShopCurrency, this.culture.active());
 
   readonly period = input.required<DashboardPeriod>();
 
@@ -36,7 +36,7 @@ export class ByCategoryWidget {
       ? null
       : {
           categories: rows.map((row) => row.label),
-          series: [{ key: 'revenue', label: '', role: 'data', values: rows.map((row) => row.revenue) }],
+          series: [{ key: 'revenue', label: '', role: 'data', values: rows.map((row) => majorUnits(row.revenue)) }],
         };
   });
 

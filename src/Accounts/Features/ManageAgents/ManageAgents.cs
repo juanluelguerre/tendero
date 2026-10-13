@@ -173,6 +173,12 @@ public sealed record SuspendAgentRequest(string Reason);
 
 public sealed record AgentChangeResponse(AgentChange Change, AgentView Agent);
 
+public static class AgentRefusals
+{
+    public static readonly Refusal AlreadyRegistered = new(
+        "AlreadyRegistered", 409, "Ese agente ya está registrado.", "That agent is already registered.");
+}
+
 public sealed class ManageAgentsEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
@@ -185,35 +191,37 @@ public sealed class ManageAgentsEndpoints : ICarterModule
                 TypedResults.Ok(await dispatcher.SendAsync(new ListAgentsQuery(), ct)))
             .WithName("ListAgents");
 
-        agents.MapPost("/", async Task<Results<Ok<AgentChangeResponse>, BadRequest<string>, Conflict<string>>> (
+        agents.MapPost("/", async Task<Results<Ok<AgentChangeResponse>, ProblemHttpResult>> (
                 RegisterAgentRequest request, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(
                     new RegisterAgentCommand(new AgentId(request.AgentId.Trim()), request.DisplayName, request.Operator, request.Trust), ct);
 
                 return result.Change == AgentChange.AlreadyRegistered
-                    ? TypedResults.Conflict($"Agent '{request.AgentId}' is already registered.")
+                    ? TypedResults.Problem(
+                        statusCode: AgentRefusals.AlreadyRegistered.Status, extensions: AgentRefusals.AlreadyRegistered.Said(path: "$.agentId"))
                     : TypedResults.Ok(Answer(result));
             })
+            .WithMetadata(new Refuses(AgentRefusals.AlreadyRegistered))
             .WithName("RegisterAgent");
 
-        agents.MapPost("/{agentId}/trust", async Task<Results<Ok<AgentChangeResponse>, BadRequest<string>, NotFound>> (
+        agents.MapPost("/{agentId}/trust", async Task<Results<Ok<AgentChangeResponse>, NotFound>> (
                 string agentId, ChangeAgentTrustRequest request, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 Found(await dispatcher.SendAsync(new ChangeAgentTrustCommand(new AgentId(agentId), request.Trust), ct)))
             .WithName("ChangeAgentTrust");
 
-        agents.MapPost("/{agentId}/suspend", async Task<Results<Ok<AgentChangeResponse>, BadRequest<string>, NotFound>> (
+        agents.MapPost("/{agentId}/suspend", async Task<Results<Ok<AgentChangeResponse>, NotFound>> (
                 string agentId, SuspendAgentRequest request, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 Found(await dispatcher.SendAsync(new SuspendAgentCommand(new AgentId(agentId), request.Reason), ct)))
             .WithName("SuspendAgent");
 
-        agents.MapPost("/{agentId}/reinstate", async Task<Results<Ok<AgentChangeResponse>, BadRequest<string>, NotFound>> (
+        agents.MapPost("/{agentId}/reinstate", async Task<Results<Ok<AgentChangeResponse>, NotFound>> (
                 string agentId, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 Found(await dispatcher.SendAsync(new ReinstateAgentCommand(new AgentId(agentId)), ct)))
             .WithName("ReinstateAgent");
     }
 
-    private static Results<Ok<AgentChangeResponse>, BadRequest<string>, NotFound> Found(AgentResult result) =>
+    private static Results<Ok<AgentChangeResponse>, NotFound> Found(AgentResult result) =>
         result.Change == AgentChange.NotFound ? TypedResults.NotFound() : TypedResults.Ok(Answer(result));
 
     private static AgentChangeResponse Answer(AgentResult result) =>

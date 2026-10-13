@@ -22,7 +22,9 @@ test.describe('the checkout', () => {
     await payWith(page, 'card-ok');
 
     await expect(page).toHaveURL(/\/en\/orders\//);
-    await expect(page.getByText('Thank you. Your order is placed.')).toBeVisible();
+    // Received, and not yet *placed*: the payment is authorised and nobody has
+    // held the stock — the page says the one that is true.
+    await expect(page.getByText('Thank you. We have your order and are confirming it.')).toBeVisible();
   });
 
   test('a declined card keeps the shopper at the checkout, with the cart as it was', async ({ page }) => {

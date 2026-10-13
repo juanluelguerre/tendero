@@ -1259,9 +1259,10 @@
             "payment_declined",
             "payment_unavailable",
             "not_mandated",
-            "agent_refused"
+            "agent_refused",
+            "insufficient_stock"
           ],
-          "description": "PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve.",
+          "description": "PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve. insufficient_stock (phase 13b): the cart asked for more than the shelf had, refused at the till before any money — a share that grows says the basket's own note is not being read, or stock is being shown that is not there.",
           "from": "PlaceOrderOutcome"
         },
         "discounted": {
@@ -1400,6 +1401,10 @@
             "failed"
           ],
           "description": "Refused is the shop saying no; failed is the tool breaking."
+        },
+        "refusal": {
+          "type": "string",
+          "description": "The refusal's code when the shop said no with one (Invalid, ProductNotFound, TooFewToCompare): a closed set, the codes the tools declare. Absent when the call was answered or broke. A code that dominates is a tool whose description or contract is wrong for an agent."
         }
       }
     },

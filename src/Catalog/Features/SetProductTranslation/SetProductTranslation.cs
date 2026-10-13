@@ -109,7 +109,12 @@ public sealed record SetProductTranslationRequest(string Name, string? Descripti
 
 public sealed record SetProductTranslationResponse(string ProductId, TranslationOutcome Outcome);
 
-public sealed record SetProductTranslationConflict(string Title, string Detail);
+public static class TranslationRefusals
+{
+    /// <summary>An archived product is out of the catalogue: nothing about it changes until it is restored.</summary>
+    public static readonly Refusal Archived = new(
+        "ProductArchived", 409, "El producto está archivado.", "The product is archived.");
+}
 
 public sealed class SetProductTranslationEndpoint : ICarterModule
 {
@@ -117,7 +122,7 @@ public sealed class SetProductTranslationEndpoint : ICarterModule
     {
         // PUT /api/catalog/products/{id}/translations/en  { "name": "…", "description": "…" }
         app.MapPut("/api/catalog/products/{id:guid}/translations/{culture}",
-            async Task<Results<Ok<SetProductTranslationResponse>, NotFound, Conflict<SetProductTranslationConflict>>> (
+            async Task<Results<Ok<SetProductTranslationResponse>, NotFound, ProblemHttpResult>> (
                    Guid id, string culture, SetProductTranslationRequest body, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(
@@ -126,13 +131,16 @@ public sealed class SetProductTranslationEndpoint : ICarterModule
                 return result.Outcome switch
                 {
                     TranslationOutcome.NotFound => TypedResults.NotFound(),
-                    TranslationOutcome.Archived => TypedResults.Conflict(new SetProductTranslationConflict(
-                        "The product is archived.",
-                        "Archived products are out of the catalogue and are not translated.")),
+                    TranslationOutcome.Archived => TypedResults.Problem(
+                        statusCode: TranslationRefusals.Archived.Status,
+                        extensions: TranslationRefusals.Archived.Said(
+                            es: "Los productos archivados están fuera del catálogo y no se traducen.",
+                            en: "Archived products are out of the catalogue and are not translated.")),
                     _ => TypedResults.Ok(new SetProductTranslationResponse(result.ProductId.Value.ToString(), result.Outcome))
                 };
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(TranslationRefusals.Archived))
             .WithTags("Catalog")
             .WithName("SetProductTranslation");
     }

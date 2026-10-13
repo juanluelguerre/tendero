@@ -336,6 +336,18 @@ public sealed class CheckoutSessionsHandler(
                 await unitOfWork.SaveChangesAsync(cancellationToken);
                 return new CheckoutSessionResult(CheckoutSessionOutcome.NotPlaced, moved);
 
+            case PlaceOrderOutcome.InsufficientStock:
+                // Nothing charged. Each article there is not enough of is named
+                // by its line, with what was asked and what can be had, so the
+                // agent can ask for that many instead.
+                CheckoutIssue[] shortages =
+                [
+                    .. result.Shortages!.Select(line => new CheckoutIssue(
+                        CheckoutIssueCodes.ItemUnavailable, $"line:{line.Sku}",
+                        $"{line.Requested} asked for, {line.Available} available"))
+                ];
+                return new CheckoutSessionResult(CheckoutSessionOutcome.NotPlaced, await ViewAsync(session, cart, shortages, show: false, cancellationToken));
+
             default:
                 var issue = result.Outcome switch
                 {

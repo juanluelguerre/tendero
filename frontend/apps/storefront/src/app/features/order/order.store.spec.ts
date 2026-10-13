@@ -12,7 +12,6 @@ const order = (status = 'Delivered'): OrderView =>
   ({
     orderId: 'O-1',
     status,
-    currency: 'EUR',
     lines: [
       { sku: 'MUG', quantity: 3 },
       { sku: 'TEA', quantity: 1 },

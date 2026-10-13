@@ -52,7 +52,11 @@ public sealed class SearchSortBindingTests
         Assert.Null(asked);
     }
 
-    /// <summary>The refusal is problem details, titled as the caller's mistake, not a bare status.</summary>
+    /// <summary>
+    /// The refusal is problem details, not a bare status: the code a client
+    /// branches on, and the shop's sentence in the language asked — Spanish
+    /// when none is (ADR 0013), where it was English whoever read it.
+    /// </summary>
     [Fact]
     public async Task A_refused_order_is_answered_with_problem_details()
     {
@@ -63,7 +67,11 @@ public sealed class SearchSortBindingTests
         var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("\"title\":\"The request is not valid.\"", body, StringComparison.Ordinal);
+        Assert.Contains("\"code\":\"Invalid\"", body, StringComparison.Ordinal);
+        Assert.Contains("\"title\":\"La petición no es válida.\"", body, StringComparison.Ordinal);
+
+        var english = await client.GetAsync("/api/search?sort=1&culture=en", TestContext.Current.CancellationToken);
+        Assert.Contains("\"title\":\"The request is not valid.\"", await english.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
     }
 
     /// <summary>

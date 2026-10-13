@@ -127,7 +127,8 @@ public sealed class ProductFacetsIntegrationTests(ElasticsearchFixture elasticse
         Assert.Equal(4, page.Total);
 
         var price = Price(page);
-        Assert.Equal((18.50m, 119m, (decimal?)30m, (decimal?)100m), (price.Min, price.Max, price.ChosenMin, price.ChosenMax));
+        Assert.Equal((18.50m, 119m, (decimal?)30m, (decimal?)100m), (price.Min.Amount, price.Max.Amount, price.ChosenMin?.Amount, price.ChosenMax?.Amount));
+        Assert.Equal(("EUR", "EUR"), (price.Min.Currency, price.ChosenMax?.Currency));
     }
 
     [Fact]
@@ -140,9 +141,9 @@ public sealed class ProductFacetsIntegrationTests(ElasticsearchFixture elasticse
 
         foreach (var band in price.Bands)
         {
-            Assert.Equal(ProductsPricedWithin(band.From, band.To), band.Count);
+            Assert.Equal(ProductsPricedWithin(band.From?.Amount, band.To?.Amount), band.Count);
 
-            var chosen = await SearchAsync(Browse(filters: new SearchFilters { MinPrice = band.From, MaxPrice = band.To }));
+            var chosen = await SearchAsync(Browse(filters: new SearchFilters { MinPrice = band.From?.Amount, MaxPrice = band.To?.Amount }));
             Assert.Equal(band.Count, chosen.Total);
             Assert.Contains(Price(chosen).Bands, other => other.Chosen && other.From == band.From && other.To == band.To);
         }

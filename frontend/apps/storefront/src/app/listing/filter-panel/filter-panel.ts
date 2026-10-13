@@ -2,9 +2,10 @@ import { Component, computed, inject, input, linkedSignal, output, signal } from
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import type { FacetKind, FacetOption, PriceBand, SearchFacet } from '@tendero/shared-api';
+import type { FacetKind, FacetOption, Money, PriceBand, SearchFacet } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { Icon } from '@tendero/shared-ui';
+import { majorUnits, ShopCurrency } from '@tendero/shared-util';
 import { TaxonomyStore } from '../../taxonomy/taxonomy.store';
 import { ShopLinks } from '../../shop-links';
 import { isChosen, parseAmount, toggleOption, withPrice, type ListingFilters } from '../listing-filters';
@@ -45,7 +46,7 @@ export class FilterPanel {
   readonly mode = input<'column' | 'sheet'>('column');
   /** A category page's sections, as links; null on a search, where the category is a filter. */
   readonly navigation = input<readonly CategoryLink[] | null>(null);
-  readonly currency = input('EUR');
+  readonly currency = input<string>(ShopCurrency);
 
   /** The filters this choice would leave. */
   readonly changed = output<ListingFilters>();
@@ -99,9 +100,18 @@ export class FilterPanel {
     return safeSwatch(option.swatch);
   }
 
+  /**
+   * A band's end as the address and the boxes hold it: in major units, what a
+   * person types and reads. The API sends it as money — minor units and its
+   * currency — and the currency's own exponent turns one into the other.
+   */
+  private major(end: Money | null): number | null {
+    return end ? majorUnits(end) : null;
+  }
+
   /** A band is chosen when the boxes hold exactly its ends: the URL holds the range, never the band. */
   protected bandChosen(band: PriceBand): boolean {
-    return parseAmount(this.minText()) === band.from && parseAmount(this.maxText()) === band.to;
+    return parseAmount(this.minText()) === this.major(band.from) && parseAmount(this.maxText()) === this.major(band.to);
   }
 
   protected bandLabel(band: PriceBand): string {
@@ -110,10 +120,11 @@ export class FilterPanel {
       from: (min: string) => this.transloco.translate('listing.price.from', { price: min }),
       between: (min: string, max: string) => this.transloco.translate('listing.price.between', { min, max }),
     };
+    const currency = (band.from ?? band.to)?.currency ?? this.currency();
     return priceLabel(
-      band.from,
-      band.to,
-      (amount) => sayablePrice(amount, this.currency(), this.culture.active()),
+      this.major(band.from),
+      this.major(band.to),
+      (amount) => sayablePrice(amount, currency, this.culture.active()),
       words,
     );
   }
@@ -135,9 +146,10 @@ export class FilterPanel {
   /** A band fills the boxes and applies; choosing the chosen band again takes it off. */
   protected chooseBand(band: PriceBand): void {
     const off = this.bandChosen(band);
-    this.minText.set(off ? '' : this.amountText(band.from));
-    this.maxText.set(off ? '' : this.amountText(band.to));
-    this.changed.emit(withPrice(this.filters(), off ? null : band.from, off ? null : band.to));
+    const [from, to] = [this.major(band.from), this.major(band.to)];
+    this.minText.set(off ? '' : this.amountText(from));
+    this.maxText.set(off ? '' : this.amountText(to));
+    this.changed.emit(withPrice(this.filters(), off ? null : from, off ? null : to));
   }
 
   /** *Ir*, or on the phone's sheet the box losing focus: the range typed. */

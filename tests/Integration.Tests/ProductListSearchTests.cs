@@ -52,7 +52,13 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
             [.. (await reader.ListAsync(null, text, null, 1, 20, ct)).Items.Select(product => product.Code).Order()];
 
         // The keys of {"es": …, "en": …}: a match on them would be every product.
-        Assert.Empty(await Found("es"));
+        // Not *nothing*, which is what this said until 2026-10-13: a product's code is
+        // ten random characters, and one in forty of three products has "ES" in
+        // its own — a code the search is right to find. That was the test that
+        // failed once in five whole runs and never when it was run again.
+        string[] withEsInTheirCode = [.. new[] { backpack, kettle, lamp }
+            .Select(product => product.Code).Where(code => code.Contains("ES", StringComparison.OrdinalIgnoreCase)).Order()];
+        Assert.Equal(withEsInTheirCode, await Found("es"));
         Assert.Empty(await Found("\"en\""));
 
         Assert.Equal([backpack.Code], await Found("BACKPACK"));
@@ -125,7 +131,11 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
 
         Assert.Equal(["PACK-BLACK", "PACK-GREY"], (await reader.SkusOfProductsMatchingAsync("backpack", ct)).Order());
         Assert.Equal(["LAMP-DEFAULT"], await reader.SkusOfProductsMatchingAsync("FLEXO", ct));
-        Assert.Empty(await reader.SkusOfProductsMatchingAsync("es", ct));
+        // The JSON's keys match nothing; a code that happens to hold "ES" does (see above).
+        string[] skusOfCodesWithEs = [.. new[] { backpack, lamp }
+            .Where(product => product.Code.Contains("ES", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(product => product.Variants.Select(variant => variant.Sku)).Order()];
+        Assert.Equal(skusOfCodesWithEs, (await reader.SkusOfProductsMatchingAsync("es", ct)).Order());
     }
 
     /// <summary>

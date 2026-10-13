@@ -48,7 +48,7 @@ public sealed class UcpCheckoutAp2Tests : IDisposable
             .BuildServiceProvider();
     }
 
-    private UcpCheckoutOperations Operations => new(dispatcher, dispatcher, merchant, new CheckoutMandates(services, clock));
+    private UcpCheckoutOperations Operations => new(dispatcher, dispatcher, merchant, new CheckoutMandates(services, clock), new InMemoryIdempotencyStore(clock), new SystemPrincipalAccessor());
 
     private UcpCheckoutCall Call(bool ap2 = true) => new(
         new UcpNegotiated(

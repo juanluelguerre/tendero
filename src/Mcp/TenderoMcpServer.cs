@@ -4,6 +4,7 @@ using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
@@ -74,12 +75,46 @@ public static class TenderoMcpServer
             // that needs an agent's token, checked tool by tool (ADR 0039).
             .WithTools<UcpCheckoutTools>()
             // Every call counted once, by tool and outcome (the tracking plan).
-            .WithRequestFilters(filters => filters.AddCallToolFilter(ToolCallCounting.Filter))
+            .WithRequestFilters(filters => filters
+                .AddCallToolFilter(ToolCallCounting.Filter)
+                // *Servers MUST include caching hints* on a tool list (MCP,
+                // Caching). The SDK's are the safe ones — private, stale at
+                // once — and this list is the same for whoever asks and changes
+                // only with a deployment, which is what `public` is for.
+                .AddListToolsFilter(next => async (request, cancellationToken) =>
+                {
+                    var tools = await next(request, cancellationToken);
+                    tools.TimeToLive = ToolListFreshFor;
+                    tools.CacheScope = CacheScope.Public;
+                    return tools;
+                }))
             .Services;
 
-    public static IEndpointConventionBuilder MapTenderoMcp(this IEndpointRouteBuilder endpoints) =>
-        endpoints
+    /// <summary>How long a client may keep the tool list without asking again.</summary>
+    public static readonly TimeSpan ToolListFreshFor = TimeSpan.FromMinutes(5);
+
+    /// <summary>The rate limit's name: anybody may call, so what bounds a caller is how much.</summary>
+    public const string PerClient = "Mcp.PerClient";
+
+    public static IEndpointConventionBuilder MapTenderoMcp(this IEndpointRouteBuilder endpoints)
+    {
+        // What a 401 from here points at (RFC 9728).
+        endpoints.MapMcpResourceMetadata();
+
+        return endpoints
             .MapMcp(Path)
+            // *Servers MUST validate the Origin header on all incoming connections*
+            // (the specification, Streamable HTTP): a page on another site, open in
+            // a shopper's browser, can post here, and CORS only stops it reading the
+            // answer. The SDK does not do this for a server; found by asking, on
+            // 2026-10-13, with an Origin nobody knows — which was served.
+            .AddEndpointFilter(async (invocation, next) =>
+                KnownOrigin(invocation.HttpContext) ? await next(invocation) : Results.StatusCode(StatusCodes.Status403Forbidden))
+            // Who may call the tool this call names, said with HTTP's own statuses.
+            .AddEndpointFilter(async (invocation, next) =>
+                await McpAuthorization.RefusalAsync(invocation.HttpContext) ?? await next(invocation))
+            // And *Servers MUST rate limit tool invocations*.
+            .RequireRateLimiting(PerClient)
             // The explicit decision the endpoint-policy test insists on. Read
             // tools over a public catalogue; nothing here writes.
             .AllowAnonymous()
@@ -90,11 +125,37 @@ public static class TenderoMcpServer
             // Describing it as a POST that takes "anything" would make the
             // document less true, not more complete.
             .WithMetadata(new ExcludeFromDescriptionAttribute());
+    }
+
+    /// <summary>
+    /// Whether a request may be served by its `Origin`. One that names none is not
+    /// a browser's — an agent, a command line — and the rule is about a header
+    /// that is present. One that is present has to be the address this server
+    /// answers at, or one of the shop's own front ends: the same list CORS is
+    /// given, so there is one answer to *whose pages are ours*.
+    /// </summary>
+    private static bool KnownOrigin(HttpContext http)
+    {
+        if (!http.Request.Headers.TryGetValue("Origin", out var sent) || sent.Count == 0)
+            return true;
+
+        var origin = sent.ToString();
+        if (string.Equals(origin, $"{http.Request.Scheme}://{http.Request.Host}", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var ours = http.RequestServices.GetRequiredService<IConfiguration>().GetSection("Cors:Origins").Get<string[]>()
+            ?? DefaultOrigins;
+        return ours.Contains(origin, StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>The two Angular apps as a developer runs them: what CORS falls back to as well.</summary>
+    private static readonly string[] DefaultOrigins = ["http://localhost:4200", "http://localhost:4201"];
 
     private static JsonSerializerOptions AnswerOptions()
     {
         var options = new JsonSerializerOptions(McpJsonUtilities.DefaultOptions);
         options.Converters.Insert(0, WireJson.Enums());
+        options.Converters.Insert(0, WireJson.Money());
         options.MakeReadOnly();
         return options;
     }

@@ -78,7 +78,9 @@ describe('the product review store', () => {
     const store = TestBed.inject(ProductReviewStore);
 
     store.describe('p1', 'cover', { es: '', en: 'A white mug.' });
-    http.expectOne(`${Products}/p1/images/cover/alt`).flush('bad', { status: 400, statusText: 'Bad Request' });
+    http
+      .expectOne(`${Products}/p1/images/cover/alt`)
+      .flush({ code: 'Refused', status: 400, title: 'bad' }, { status: 400, statusText: 'Bad Request' });
 
     expect([store.saving(), store.notSaved(), reviews()]).toEqual([null, 'cover', []]);
   });
@@ -120,7 +122,9 @@ describe('the product review store', () => {
     TestBed.tick();
 
     store.show('p1', 'side', { COLOR: 'OLIVE' });
-    http.expectOne(`${Products}/p1/images/side/shows`).flush('no', { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(`${Products}/p1/images/side/shows`)
+      .flush({ code: 'Refused', status: 409, title: 'no' }, { status: 409, statusText: 'Conflict' });
     await new Promise((resolve) => setTimeout(resolve));
     TestBed.tick();
 

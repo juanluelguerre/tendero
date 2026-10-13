@@ -190,12 +190,12 @@ export class ProductPage {
 
     const culture = this.culture.active();
     const variant = this.store.chosen();
-    if (variant) return formatPrice(variant.priceAmount, variant.priceCurrency, culture);
+    if (variant) return formatPrice(variant.price, culture);
 
-    if (product.priceFrom < product.priceTo) {
-      return `${formatPrice(product.priceFrom, product.priceCurrency, culture)} – ${formatPrice(product.priceTo, product.priceCurrency, culture)}`;
+    if (product.priceFrom.amount < product.priceTo.amount) {
+      return `${formatPrice(product.priceFrom, culture)} – ${formatPrice(product.priceTo, culture)}`;
     }
-    return formatPrice(product.priceFrom, product.priceCurrency, culture);
+    return formatPrice(product.priceFrom, culture);
   });
 
   protected imageUrl(imageId: string): string {

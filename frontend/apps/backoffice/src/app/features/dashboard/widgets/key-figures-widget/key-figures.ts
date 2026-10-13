@@ -1,4 +1,5 @@
-import type { CheckoutFunnel, OperationsSummary, SalesSeries, SalesSummary } from '@tendero/shared-api';
+import type { CheckoutFunnel, Money, OperationsSummary, SalesSeries, SalesSummary } from '@tendero/shared-api';
+import { majorUnits } from '@tendero/shared-util';
 import { type Change, changeOf } from '../figures';
 
 export type KeyFigureKey =
@@ -21,7 +22,7 @@ export interface KeyFigureSources {
 }
 
 export interface KeyFigureFormats {
-  readonly money: (amount: number) => string;
+  readonly money: (amount: Money) => string;
   readonly share: (ratio: number) => string;
   /** A figure with decimals that is not money: units per order. */
   readonly decimal: (value: number) => string;
@@ -44,8 +45,8 @@ export function keyFigures(sources: KeyFigureSources, say: KeyFigureFormats): Ke
       {
         key: 'revenue',
         value: say.money(current.revenue),
-        change: changeOf(current.revenue, previous.revenue),
-        trend: trend((point) => point.revenue),
+        change: changeOf(current.revenue.amount, previous.revenue.amount),
+        trend: trend((point) => majorUnits(point.revenue)),
       },
       {
         key: 'orders',
@@ -62,8 +63,8 @@ export function keyFigures(sources: KeyFigureSources, say: KeyFigureFormats): Ke
       {
         key: 'averageOrder',
         value: say.money(current.averageOrderValue),
-        change: changeOf(current.averageOrderValue, previous.averageOrderValue),
-        trend: trend((point) => (point.orders === 0 ? 0 : point.revenue / point.orders)),
+        change: changeOf(current.averageOrderValue.amount, previous.averageOrderValue.amount),
+        trend: trend((point) => (point.orders === 0 ? 0 : majorUnits(point.revenue) / point.orders)),
       },
       {
         // How full a basket is, beside how dear (R-9, D-7).

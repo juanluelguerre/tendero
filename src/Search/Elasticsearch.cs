@@ -479,9 +479,13 @@ internal sealed partial class ElasticsearchLexicalSearch(
         var counts = FacetCounts.Read(response.Aggregations, filters);
         var products = response.Aggregations is null ? hits.Count : counts.Total;
 
-        var (bands, bandsTook) = await PriceBandsAsync(query, filters, counts.Price, ct);
+        // The facet's amounts are in the money the results are in; with no result
+        // on the page to ask, the shop's.
+        var currency = hits.Select(hit => hit.Price.Currency).FirstOrDefault() ?? ShopOptions.DefaultCurrency;
+
+        var (bands, bandsTook) = await PriceBandsAsync(query, filters, counts.Price, currency, ct);
         var facets = FacetAssembler.Build(
-            counts, bands, filters, query.Culture, await attributes.AllAsync(ct), await categories.AllAsync(ct));
+            counts, bands, filters, query.Culture, await attributes.AllAsync(ct), await categories.AllAsync(ct), currency);
 
         activity?.SetTag("search.total", products);
         activity?.SetTag("search.variants", response.Total);
@@ -572,7 +576,7 @@ internal sealed partial class ElasticsearchLexicalSearch(
     /// range to cut (<see cref="FacetAggregations.PriceBandCounts"/> says why).
     /// </summary>
     private async Task<(IReadOnlyList<PriceBand> Bands, long Took)> PriceBandsAsync(
-        ProductSearchQuery query, ProductFilters filters, PriceSpread? spread, CancellationToken ct)
+        ProductSearchQuery query, ProductFilters filters, PriceSpread? spread, string currency, CancellationToken ct)
     {
         if (spread is null)
             return ([], 0);
@@ -601,7 +605,7 @@ internal sealed partial class ElasticsearchLexicalSearch(
                 buckets.GetValueOrDefault(position.ToString(System.Globalization.CultureInfo.InvariantCulture)))
         ];
 
-        return (FacetAssembler.Bands(bands, counts, filters.Asked), response.Took);
+        return (FacetAssembler.Bands(bands, counts, filters.Asked, currency), response.Took);
     }
 
     /// <summary>

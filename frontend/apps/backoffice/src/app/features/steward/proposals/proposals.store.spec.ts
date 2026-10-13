@@ -124,7 +124,9 @@ describe('the proposals store', () => {
   it('reports nothing when the decision in the pane did not go through', async () => {
     const store = await at('/?proposal=p1');
     store.approve(proposal('p1'));
-    http.expectOne(`${Proposals}/approve`).flush('taken', { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(`${Proposals}/approve`)
+      .flush({ code: 'Refused', status: 409, title: 'taken' }, { status: 409, statusText: 'Conflict' });
 
     expect(telemetry.trackEvent).not.toHaveBeenCalled();
   });

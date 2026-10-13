@@ -30,7 +30,7 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 [McpServerToolType]
 public sealed class UcpCheckoutTools
 {
-    [McpServerTool(Name = "create_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
+    [McpServerTool(Name = "create_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer), ReadOnly = false, Destructive = false, Idempotent = false, OpenWorld = false)]
     [Description("""
         UCP: open a checkout session for line items (item.id is a variant SKU from the
         catalogue tools). Returns the checkout with its status and messages. Requires an
@@ -41,13 +41,13 @@ public sealed class UcpCheckoutTools
         IPlatformProfiles profiles, IOptions<UcpOptions> options,
         [Description("The checkout: line_items, and optionally buyer, fulfillment, discounts, context.")]
         UcpCheckoutRequest checkout,
-        [Description("`ucp-agent` with the platform `profile` URL.")]
+        [Description("`ucp-agent` with the platform `profile` URL; and optionally `idempotency-key`, so a retry opens no second session.")]
         IReadOnlyDictionary<string, JsonElement> meta,
         CancellationToken cancellationToken = default) =>
-        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
-            operations.CreateAsync(checkout, culture(checkout.Context?.Language), call, cancellationToken));
+        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, key) =>
+            operations.CreateAsync(checkout, key, culture(checkout.Context?.Language), call, cancellationToken));
 
-    [McpServerTool(Name = "get_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
+    [McpServerTool(Name = "get_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer), ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("UCP: the current state of a checkout session this agent opened.")]
     public static Task<JsonElement> GetCheckoutAsync(
         UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
@@ -59,7 +59,7 @@ public sealed class UcpCheckoutTools
         RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
             operations.GetAsync(Id(id), culture(null), call, cancellationToken));
 
-    [McpServerTool(Name = "update_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
+    [McpServerTool(Name = "update_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer), ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         UCP: replace a checkout session's line items, buyer, fulfillment and discount codes —
         a full replacement, not a patch.
@@ -69,13 +69,13 @@ public sealed class UcpCheckoutTools
         IPlatformProfiles profiles, IOptions<UcpOptions> options,
         [Description("The checkout session id.")] string id,
         [Description("The whole checkout as it should be now.")] UcpCheckoutRequest checkout,
-        [Description("`ucp-agent` with the platform `profile` URL.")]
+        [Description("`ucp-agent` with the platform `profile` URL; and optionally `idempotency-key`.")]
         IReadOnlyDictionary<string, JsonElement> meta,
         CancellationToken cancellationToken = default) =>
-        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
-            operations.UpdateAsync(Id(id), checkout, culture(checkout.Context?.Language), call, cancellationToken));
+        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, key) =>
+            operations.UpdateAsync(Id(id), checkout, key, culture(checkout.Context?.Language), call, cancellationToken));
 
-    [McpServerTool(Name = "complete_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
+    [McpServerTool(Name = "complete_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer), ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
     [Description("""
         UCP: place the order, paying with exactly one instrument from a payment handler the
         checkout offered. Requires `meta.idempotency-key`: a retry with the same key never
@@ -92,7 +92,7 @@ public sealed class UcpCheckoutTools
         RunAsync(requests, principals, profiles, options, meta, requireKey: true, cancellationToken, (call, culture, key) =>
             operations.CompleteAsync(Id(id), checkout, key, culture(null), call, cancellationToken));
 
-    [McpServerTool(Name = "cancel_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
+    [McpServerTool(Name = "cancel_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer), ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
     [Description("UCP: cancel a checkout session that is still open. Requires `meta.idempotency-key`.")]
     public static Task<JsonElement> CancelCheckoutAsync(
         UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
@@ -101,8 +101,8 @@ public sealed class UcpCheckoutTools
         [Description("`ucp-agent` with the platform `profile` URL, and `idempotency-key`.")]
         IReadOnlyDictionary<string, JsonElement> meta,
         CancellationToken cancellationToken = default) =>
-        RunAsync(requests, principals, profiles, options, meta, requireKey: true, cancellationToken, (call, culture, _) =>
-            operations.CancelAsync(Id(id), culture(null), call, cancellationToken));
+        RunAsync(requests, principals, profiles, options, meta, requireKey: true, cancellationToken, (call, culture, key) =>
+            operations.CancelAsync(Id(id), key, culture(null), call, cancellationToken));
 
     /// <summary>
     /// The part every tool shares: an agent, a well-formed <c>meta</c>, negotiation,
@@ -113,8 +113,10 @@ public sealed class UcpCheckoutTools
         IReadOnlyDictionary<string, JsonElement> meta, bool requireKey, CancellationToken cancellationToken,
         Func<UcpCheckoutCall, Func<string?, string>, string?, Task<UcpAnswer>> operation)
     {
+        // The endpoint has already answered nobody with a 401 and a person with
+        // a 403 (McpAuthorization); this is the tool not taking that on trust.
         if (!principals.Current.IsAgent)
-            throw new McpException("UCP checkout tools need an agent's bearer token: a checkout belongs to the agent that opens it.");
+            throw Protocol(new UcpAnswer(401, new UcpProtocolError("unauthorized", "UCP checkout tools need an agent's bearer token: a checkout belongs to the agent that opens it.")));
 
         string? profile;
         try
@@ -123,12 +125,12 @@ public sealed class UcpCheckoutTools
         }
         catch (ArgumentException exception)
         {
-            throw new McpException(exception.Message);
+            throw Protocol(new UcpAnswer(400, new UcpProtocolError("invalid_profile_url", exception.Message)));
         }
 
         var key = meta.TryGetValue("idempotency-key", out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
         if (requireKey && string.IsNullOrWhiteSpace(key))
-            throw new McpException("`meta.idempotency-key` is required: a retry must not happen twice.");
+            throw Protocol(new UcpAnswer(400, new UcpProtocolError("idempotency_key_required", "`meta.idempotency-key` is required: a retry must not happen twice.")));
 
         var (negotiated, refusal) = await UcpCheckoutOperations.NegotiateAsync(profile, profiles, cancellationToken);
         var http = requests.HttpContext;
@@ -139,11 +141,29 @@ public sealed class UcpCheckoutTools
 
         // A protocol error is a JSON-RPC error; a business outcome — even "there is
         // no checkout" — is a result the agent reads.
-        if (answer.Body is UcpProtocolError protocol)
-            throw new McpException($"{protocol.Code}: {protocol.Content}");
+        if (answer.Body is UcpProtocolError)
+            throw Protocol(answer);
 
         return JsonSerializer.SerializeToElement(answer.Body, answer.Body.GetType());
     }
+
+    /// <summary>
+    /// A protocol error the JSON-RPC way (UCP §Error Codes): an `error`, never a
+    /// result — `-32001` when what failed was discovery (the profile, or the
+    /// version it speaks), `-32602` for a call that is malformed, `-32000` for
+    /// the rest — with UCP's own `code` and `content` as its `data`, which is
+    /// what a platform reads to tell one refusal from another.
+    /// </summary>
+    private static McpProtocolException Protocol(UcpAnswer answer)
+    {
+        var error = (UcpProtocolError)answer.Body;
+        var code = Discovery.Contains(error.Code) ? -32001 : answer.Status == 400 ? -32602 : -32000;
+
+        return new McpProtocolException(error.Content, (McpErrorCode)code) { Data = { ["code"] = error.Code, ["content"] = error.Content } };
+    }
+
+    private static readonly HashSet<string> Discovery =
+        ["invalid_profile_url", "profile_unreachable", "profile_malformed", "version_unsupported"];
 
     private static Guid Id(string id) =>
         Guid.TryParse(id, out var parsed) ? parsed : throw new McpException($"'{id}' is not a checkout session id.");

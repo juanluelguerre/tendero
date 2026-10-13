@@ -3,7 +3,7 @@ import { ApplicationConfig, provideAppInitializer, provideBrowserGlobalErrorList
 import { provideRouter } from '@angular/router';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { AuthStore, tenderoAuthInterceptor } from '@tendero/shared-auth';
-import { provideTenderoI18n, provideTranslatedTitles } from '@tendero/shared-i18n';
+import { provideTenderoI18n, provideTranslatedTitles, tenderoCultureInterceptor } from '@tendero/shared-i18n';
 import { provideTelemetry } from '@tendero/shared-telemetry';
 import { appRoutes } from './app.routes';
 import { provideReadableResources } from '@tendero/shared-util';
@@ -22,7 +22,9 @@ export const appConfig: ApplicationConfig = {
     provideOAuthClient(),
     provideAppInitializer(() => inject(AuthStore).bootstrap()),
 
-    provideHttpClient(withInterceptors([tenderoAuthInterceptor])),
+    // The token, and the language the screen is in: a refusal is said in the
+    // language asked, and without the second that was the browser's.
+    provideHttpClient(withInterceptors([tenderoAuthInterceptor, tenderoCultureInterceptor])),
     // A failed resource reads as no value, not as a throw (ADR 0051).
     provideReadableResources(),
     provideTenderoI18n(),

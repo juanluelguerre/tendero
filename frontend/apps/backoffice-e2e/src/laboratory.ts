@@ -217,9 +217,9 @@ async function placeOrder(api: ShopkeeperApi, sku: string): Promise<void> {
       shippingOptionCode: option.code,
       quoteHash: quote.body.inputHash,
       instrument: 'card-ok',
-      idempotencyKey: `e2e-${sku}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     },
-    headers,
+    // The key in its header, as the storefront sends it: one key, one order.
+    { ...headers, 'Idempotency-Key': `e2e-${sku}-${Date.now()}-${Math.random().toString(36).slice(2)}` },
   );
 }
 

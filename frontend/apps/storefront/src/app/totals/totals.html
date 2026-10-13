@@ -1,16 +1,18 @@
 <dl *transloco="let t" class="grid gap-2">
   <div class="flex justify-between gap-4">
     <dt>{{ t('cart.subtotal') }}</dt>
-    <dd class="numeric">{{ subtotal() | price: currency() : culture.active() }}</dd>
+    <dd class="numeric">{{ subtotal() | price: culture.active() }}</dd>
   </div>
 
-  @if (discountTotal() > 0) {
+  @let off = discountTotal();
+  @if (off && off.amount > 0) {
     <div class="flex justify-between gap-4 text-positive">
       <dt>{{ t('cart.discounts') }}</dt>
-      <dd class="numeric">−{{ discountTotal() | price: currency() : culture.active() }}</dd>
+      <dd class="numeric">−{{ off | price: culture.active() }}</dd>
     </div>
   }
 
+  @let delivery = shipping();
   @switch (shippingState()) {
     @case ('at-checkout') {
       <div class="flex justify-between gap-4 text-sm text-muted">
@@ -23,8 +25,8 @@
         <dt>{{ shippingLabel() ?? t('cart.shipping') }}</dt>
         <dd class="numeric">
           {{
-            shippingState() === 'charged'
-              ? (shipping() | price: currency() : culture.active())
+            shippingState() === 'charged' && delivery
+              ? (delivery | price: culture.active())
               : t('cart.shippingAtCheckout')
           }}
         </dd>
@@ -34,10 +36,11 @@
 
   <div class="flex justify-between gap-4 border-t border-hairline pt-3 text-md font-bold">
     <dt>{{ t('cart.total') }}</dt>
-    <dd class="numeric">{{ total() | price: currency() : culture.active() }}</dd>
+    <dd class="numeric">{{ total() | price: culture.active() }}</dd>
   </div>
 
-  @if (taxTotal() > 0) {
-    <p class="text-xs text-muted">{{ t('cart.tax') }} · {{ taxTotal() | price: currency() : culture.active() }}</p>
+  @let tax = taxTotal();
+  @if (tax && tax.amount > 0) {
+    <p class="text-xs text-muted">{{ t('cart.tax') }} · {{ tax | price: culture.active() }}</p>
   }
 </dl>

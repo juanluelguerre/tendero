@@ -15,20 +15,24 @@ namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 // typed query and endpoint, so each widget asks for exactly what it draws and a
 // figure without a source is simply not built. Rehearsals are left out everywhere
 // (ADR 0038) — they are counted once, in the agents' figures, as rehearsals.
+//
+// Every amount of money is a Money (phase 13b): minor units and its currency on
+// the wire, so a figure says what it is in without a `currency` beside the
+// record that a reader has to carry to each number.
 
 // ---------- Sales ----------
 
 public sealed record SalesFigures(
-    decimal Revenue,
+    Money Revenue,
     int Orders,
     int Units,
-    decimal AverageOrderValue,
+    Money AverageOrderValue,
     /// <summary>Units over orders (R-9, D-7): how full a basket is, beside how dear.</summary>
     decimal UnitsPerOrder);
 
-public sealed record BestSeller(string Sku, string Name, int Units, decimal Revenue);
+public sealed record BestSeller(string Sku, string Name, int Units, Money Revenue);
 
-public sealed record SalesSummary(DashboardPeriod Period, string Currency, SalesFigures Current, SalesFigures Previous, IReadOnlyList<BestSeller> BestSellers);
+public sealed record SalesSummary(DashboardPeriod Period, SalesFigures Current, SalesFigures Previous, IReadOnlyList<BestSeller> BestSellers);
 
 public sealed record GetSalesSummaryQuery(DashboardPeriod Period) : IQuery<SalesSummary>;
 
@@ -38,7 +42,6 @@ public sealed record ReasonCount(ReturnReason Reason, int Count);
 
 public sealed record OperationsSummary(
     DashboardPeriod Period,
-    string Currency,
     /// <summary>Confirmed and paid, waiting for a parcel.</summary>
     int ToShip,
     /// <summary>To ship and confirmed more than <see cref="DashboardFigures.LateAfter"/> ago.</summary>
@@ -55,7 +58,7 @@ public sealed record OperationsSummary(
     string CancellationStanding,
     int OpenReturns,
     IReadOnlyList<ReasonCount> OpenReturnsByReason,
-    decimal Refunded,
+    Money Refunded,
     /// <summary>Returns opened in the period against orders placed in it, 0 to 1.</summary>
     decimal ReturnRate,
     /// <summary>
@@ -96,15 +99,14 @@ public sealed record GetCheckoutFunnelQuery(DashboardPeriod Period) : IQuery<Che
 
 // ---------- Agents ----------
 
-public sealed record AgentSalesRow(string AgentId, int Orders, decimal Revenue, int Mandated);
+public sealed record AgentSalesRow(string AgentId, int Orders, Money Revenue, int Mandated);
 
 public sealed record AgentSales(
     DashboardPeriod Period,
-    string Currency,
     int Orders,
-    decimal Revenue,
+    Money Revenue,
     int AgentOrders,
-    decimal AgentRevenue,
+    Money AgentRevenue,
     /// <summary>Agent orders placed under a verified mandate (P11-5).</summary>
     int Mandated,
     /// <summary>Test orders agents placed: rehearsals, never counted as sales.</summary>
@@ -154,18 +156,18 @@ public static class DashboardFigures
     public static SalesSummary Sales(DashboardPeriod period, IReadOnlyList<Order> current, IReadOnlyList<Order> previous)
     {
         var sales = current.Where(SalesRanking.IsSale).ToList();
+        var currency = DashboardCurrency.Of(current.Concat(previous));
 
         return new SalesSummary(
             period,
-            DashboardCurrency.Of(current.Concat(previous)),
-            Figures(sales),
-            Figures([.. previous.Where(SalesRanking.IsSale)]),
+            Figures(sales, currency),
+            Figures([.. previous.Where(SalesRanking.IsSale)], currency),
             // The ranking is Ordering's one rule (SalesRanking), which the shop's
             // public rows read too; the dashboard ranks variants, by SKU.
             [
                 .. SalesRanking.Rank(sales, SalesRanking.BySku)
                     .Take(TopRows)
-                    .Select(sold => new BestSeller(sold.Key, sold.Name, sold.Units, sold.Revenue))
+                    .Select(sold => new BestSeller(sold.Key, sold.Name, sold.Units, new Money(sold.Revenue, currency)))
             ]);
     }
 
@@ -184,7 +186,6 @@ public static class DashboardFigures
 
         return new OperationsSummary(
             period,
-            DashboardCurrency.Of(placed),
             toShip.Count,
             toShip.Count(order => order.UpdatedAt <= window.To - LateAfter),
             working.Count(order => order.Status is OrderStatus.Pending or OrderStatus.PaymentAuthorized),
@@ -202,9 +203,11 @@ public static class DashboardFigures
                     // Ties by name, not by the order the members were declared in.
                     .ThenBy(reason => reason.Reason.ToString(), StringComparer.Ordinal)
             ],
-            returns
-                .Where(request => request.Status == ReturnStatus.Refunded && request.UpdatedAt >= window.From && request.UpdatedAt < window.To)
-                .Sum(request => request.RefundAmount?.Amount ?? 0m),
+            new Money(
+                returns
+                    .Where(request => request.Status == ReturnStatus.Refunded && request.UpdatedAt >= window.From && request.UpdatedAt < window.To)
+                    .Sum(request => request.RefundAmount?.Amount ?? 0m),
+                DashboardCurrency.Of(placed)),
             Rate(opened, live.Count),
             defects,
             RateOrNone(defects, live.Count),
@@ -273,33 +276,35 @@ public static class DashboardFigures
     {
         var sales = placed.Where(SalesRanking.IsSale).ToList();
         var byAgents = sales.Where(order => order.PlacedBy is not null).ToList();
+        var currency = DashboardCurrency.Of(placed);
 
         return new AgentSales(
             period,
-            DashboardCurrency.Of(placed),
             sales.Count,
-            sales.Sum(order => order.Total.Amount),
+            new Money(sales.Sum(order => order.Total.Amount), currency),
             byAgents.Count,
-            byAgents.Sum(order => order.Total.Amount),
+            new Money(byAgents.Sum(order => order.Total.Amount), currency),
             byAgents.Count(order => order.Mandate is not null),
             placed.Count(order => order.PlacedBy is not null && order.Mode == OrderMode.Test),
             [
                 .. byAgents.GroupBy(order => order.PlacedBy!.Value)
-                    .Select(group => new AgentSalesRow(group.Key.Value, group.Count(), group.Sum(order => order.Total.Amount), group.Count(order => order.Mandate is not null)))
-                    .OrderByDescending(row => row.Revenue)
+                    .Select(group => new AgentSalesRow(group.Key.Value, group.Count(), new Money(group.Sum(order => order.Total.Amount), currency), group.Count(order => order.Mandate is not null)))
+                    .OrderByDescending(row => row.Revenue.Amount)
                     .ThenBy(row => row.AgentId, StringComparer.Ordinal)
                     .Take(TopRows)
             ]);
     }
 
-    private static SalesFigures Figures(IReadOnlyList<Order> sales)
+    private static SalesFigures Figures(IReadOnlyList<Order> sales, string currency)
     {
         var revenue = sales.Sum(order => order.Total.Amount);
         return new SalesFigures(
-            revenue,
+            new Money(revenue, currency),
             sales.Count,
             sales.Sum(order => order.Lines.Sum(line => line.Quantity)),
-            sales.Count == 0 ? 0m : Math.Round(revenue / sales.Count, Money.Decimals, MidpointRounding.AwayFromZero),
+            // An average is rounded here, to the currency's own cent: the wire
+            // refuses a fraction of a minor unit rather than rounding it at the door.
+            new Money(sales.Count == 0 ? 0m : MinorUnits.Round(revenue / sales.Count, currency), currency),
             sales.Count == 0 ? 0m : Math.Round((decimal)sales.Sum(order => order.Lines.Sum(line => line.Quantity)) / sales.Count, 2, MidpointRounding.AwayFromZero));
     }
 

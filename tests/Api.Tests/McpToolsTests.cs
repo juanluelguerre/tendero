@@ -131,7 +131,8 @@ public sealed class McpToolsTests
 
         await TenderoTools.SearchProductsAsync(
             dispatcher, NoHeader, category: "SHOES", brands: ["Vertex"], facets: ["COLOR:BLACK"],
-            maxPrice: 80m, inStock: true, cancellationToken: TestContext.Current.CancellationToken);
+            // In minor units, as every price the tool answers with is (ADR 0059).
+            maxPrice: 8000, inStock: true, cancellationToken: TestContext.Current.CancellationToken);
         var filtered = Assert.IsType<SearchProductsQuery>(dispatcher.Query).Filters;
 
         await TenderoTools.SearchProductsAsync(
@@ -160,6 +161,30 @@ public sealed class McpToolsTests
             TenderoTools.GetProductAsync(dispatcher, NoHeader, "NOPE", "es", TestContext.Current.CancellationToken));
 
         Assert.Contains("NOPE", refusal.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// **One refusal, two transports** (phase 13b, the wire's spec, W-6). What a
+    /// tool refuses with is the problem a REST refusal is — its code, the shop's
+    /// sentence in the language asked — as the text of the error an agent
+    /// reads. It was a bare sentence in English: nothing to branch on, and the
+    /// same words whoever asked.
+    /// </summary>
+    [Theory]
+    [InlineData("es", "No hay ningún producto con el código «NOPE».")]
+    [InlineData("en", "There is no product with code 'NOPE'.")]
+    public async Task A_tools_refusal_is_a_problem_with_a_code_in_the_language_asked(string culture, string detail)
+    {
+        var refusal = await Assert.ThrowsAnyAsync<Exception>(() =>
+            TenderoTools.GetProductAsync(new RecordingDispatcher(), NoHeader, "NOPE", culture, TestContext.Current.CancellationToken));
+
+        var problem = System.Text.Json.Nodes.JsonNode.Parse(refusal.Message)!;
+        Assert.Equal(("ProductNotFound", detail), (problem["code"]!.GetValue<string>(), problem["detail"]!.GetValue<string>()));
+        Assert.False(string.IsNullOrWhiteSpace(problem["title"]!.GetValue<string>()));
+
+        var tooFew = await Assert.ThrowsAnyAsync<Exception>(() =>
+            TenderoTools.CompareProductsAsync(new RecordingDispatcher(), NoHeader, ["ONE"], culture, TestContext.Current.CancellationToken));
+        Assert.Equal("TooFewToCompare", System.Text.Json.Nodes.JsonNode.Parse(tooFew.Message)!["code"]!.GetValue<string>());
     }
 
     /// <summary>

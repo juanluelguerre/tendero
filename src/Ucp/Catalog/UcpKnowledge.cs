@@ -69,7 +69,8 @@ public sealed record UcpEvidence
 /// **Negotiation here is optional, and never a refusal.** The catalogue is
 /// anonymous: an agent that sends no profile, or one on a host the shop does not
 /// fetch from, still reads the catalogue — it just does not get the extension.
-/// Only a trusted profile that speaks the extension at our version turns it on.
+/// Only a trusted profile, at the protocol version the shop implements, that speaks
+/// the extension at our version turns it on.
 /// </summary>
 public static class UcpKnowledgeExtension
 {
@@ -80,6 +81,7 @@ public static class UcpKnowledgeExtension
 
         var (profile, _) = await profiles.GetAsync(profileUrl, cancellationToken);
         return profile is not null
+               && profile.Version == UcpSpecification.Version
                && UcpNegotiation.Intersect(UcpCapabilities.Declared, profile).Contains(KnowledgeCapability.Name);
     }
 

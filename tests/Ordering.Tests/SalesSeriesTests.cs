@@ -4,6 +4,7 @@ using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using NodaTime;
 using Xunit;
+using static ElGuerre.Tendero.Ordering.Tests.Amounts;
 
 namespace ElGuerre.Tendero.Ordering.Tests;
 
@@ -107,9 +108,9 @@ public sealed class SalesSeriesTests
         var series = SalesSeriesFigures.Of(DashboardPeriod.Week, "Europe/Madrid", plan, orders);
 
         // 2 × 10 + 4.95 shipping, and 30 + 4.95.
-        Assert.Equal(new SalesPoint(plan.Current[5], 59.90m, 2, 3, 0, 0m, 2, 0), series.Current[5]);
-        Assert.Equal(new SalesPoint(plan.Previous[5], 14.95m, 1, 1, 0, 0m, 1, 0), series.Previous[5]);
-        Assert.Equal(("EUR", "Europe/Madrid", SeriesStep.Day), (series.Currency, series.TimeZone, series.Step));
+        Assert.Equal(new SalesPoint(plan.Current[5], Eur(59.90m), 2, 3, 0, Eur(0m), 2, 0), series.Current[5]);
+        Assert.Equal(new SalesPoint(plan.Previous[5], Eur(14.95m), 1, 1, 0, Eur(0m), 1, 0), series.Previous[5]);
+        Assert.Equal(("Europe/Madrid", SeriesStep.Day), (series.TimeZone, series.Step));
     }
 
     [Fact]
@@ -138,8 +139,7 @@ public sealed class SalesSeriesTests
         var series = SalesSeriesFigures.Of(DashboardPeriod.Week, "Europe/Madrid", plan, []);
 
         Assert.Equal(plan.Current, series.Current.Select(point => point.Start));
-        Assert.All(series.Current.Concat(series.Previous), point => Assert.Equal(new SalesPoint(point.Start, 0m, 0, 0, 0, 0m, 0, 0), point));
-        Assert.Equal("EUR", series.Currency);
+        Assert.All(series.Current.Concat(series.Previous), point => Assert.Equal(new SalesPoint(point.Start, Eur(0m), 0, 0, 0, Eur(0m), 0, 0), point));
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public sealed class SalesSeriesTests
 
         var series = SalesSeriesFigures.Of(DashboardPeriod.Week, "Europe/Madrid", plan, orders, orderedBefore: new HashSet<CustomerId> { regular });
 
-        Assert.Equal((0, 0m, 1, 1), (series.Current[4].AgentOrders, series.Current[4].AgentRevenue, series.Current[4].NewCustomers, series.Current[4].ReturningCustomers));
-        Assert.Equal((2, 29.90m, 1, 1), (series.Current[5].AgentOrders, series.Current[5].AgentRevenue, series.Current[5].NewCustomers, series.Current[5].ReturningCustomers));
+        Assert.Equal((0, Eur(0m), 1, 1), (series.Current[4].AgentOrders, series.Current[4].AgentRevenue, series.Current[4].NewCustomers, series.Current[4].ReturningCustomers));
+        Assert.Equal((2, Eur(29.90m), 1, 1), (series.Current[5].AgentOrders, series.Current[5].AgentRevenue, series.Current[5].NewCustomers, series.Current[5].ReturningCustomers));
     }
 }

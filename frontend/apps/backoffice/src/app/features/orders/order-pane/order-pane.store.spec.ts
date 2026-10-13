@@ -17,8 +17,7 @@ const order = (orderId: string, status: string): OrderSummary =>
     status,
     recipientName: 'Ana',
     city: 'Madrid',
-    total: 50,
-    currency: 'EUR',
+    total: { amount: 5000, currency: 'EUR' },
     createdAt: '2026-09-29T10:00:00Z',
   }) as unknown as OrderSummary;
 

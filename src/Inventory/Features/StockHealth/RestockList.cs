@@ -103,7 +103,17 @@ public sealed class RestockListHandler(IStockRepository stock, ISalesPace pace, 
     }
 }
 
-public sealed record RestockProblem(string Title, string Detail, IReadOnlyList<string> Warehouses);
+/// <summary>What the refusal hands over: the warehouses the shop does have, to choose among.</summary>
+public sealed record RestockProblem(IReadOnlyList<string> Warehouses);
+
+public static class RestockRefusals
+{
+    public static readonly Refusal UnknownWarehouse = new(
+        "UnknownWarehouse", 400, "La tienda no tiene ese almacén.", "The shop has no such warehouse.")
+    {
+        Carries = typeof(RestockProblem),
+    };
+}
 
 public sealed class RestockListEndpoint : ICarterModule
 {
@@ -111,18 +121,21 @@ public sealed class RestockListEndpoint : ICarterModule
     {
         // GET /api/dashboard/restock?warehouse=MAD&limit=50
         app.MapGet("/api/dashboard/restock",
-                async Task<Results<Ok<RestockList>, BadRequest<RestockProblem>>> (string? warehouse, int? limit,
+                async Task<Results<Ok<RestockList>, ProblemHttpResult>> (string? warehouse, int? limit,
                     IQueryDispatcher dispatcher, CancellationToken ct) =>
                 {
                     var list = await dispatcher.SendAsync(new GetRestockListQuery(warehouse, limit ?? ReadLimits.MaxRows), ct);
                     return list.UnknownWarehouse
-                        ? TypedResults.BadRequest(new RestockProblem(
-                            "The shop has no such warehouse.",
-                            $"'{warehouse}' is not one of the shop's warehouses: {string.Join(", ", list.Warehouses)}.",
-                            list.Warehouses))
+                        ? TypedResults.Problem(
+                            statusCode: RestockRefusals.UnknownWarehouse.Status,
+                            extensions: RestockRefusals.UnknownWarehouse.Said(
+                                es: $"«{warehouse}» no es uno de los suyos: {string.Join(", ", list.Warehouses)}.",
+                                en: $"'{warehouse}' is not one of its own: {string.Join(", ", list.Warehouses)}.",
+                                carrying: new RestockProblem(list.Warehouses)))
                         : TypedResults.Ok(list);
                 })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(RestockRefusals.UnknownWarehouse))
             .WithTags("Dashboard")
             .WithName("GetRestockList");
     }

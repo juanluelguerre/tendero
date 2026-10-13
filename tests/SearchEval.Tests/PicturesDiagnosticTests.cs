@@ -113,7 +113,7 @@ public sealed class PicturesDiagnosticTests
             [
                 .. held.Where(productIds.Contains).Reverse().Select(id => new SearchHit(
                     id, $"CODE-{id}", $"Product {id}", $"product-{id}", null, null, $"{id}-variant", $"{id}-SKU",
-                    9.90m, 9.90m, 9.90m, "EUR", null, InStock: true, Score: 0)),
+                    new Money(9.90m, "EUR"), new Money(9.90m, "EUR"), new Money(9.90m, "EUR"), null, InStock: true, Score: 0)),
             ]);
     }
 }

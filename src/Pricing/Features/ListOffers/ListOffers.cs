@@ -44,12 +44,23 @@ public sealed record OfferView(
     string Kind,
 
     /// <summary>
-    /// The headline figure: `20` for a percentage, `10.00` for an amount off,
-    /// `3` for buy-three-get-one, null for free shipping. A number rather than a
-    /// sentence, because the sentence is the interface's job and it has to exist
-    /// in two languages.
+    /// The headline figure, **each kind under its own name** — figures rather
+    /// than a sentence, because the sentence is the interface's job and it has
+    /// to exist in two languages. It was one number, `amount`, that was a
+    /// percentage, an amount of money or a count according to `kind`: a reader
+    /// had to know which before it could read it, and the money among them
+    /// travelled without its currency (phase 13b).
+    ///
+    /// `percent-off-line`: the percentage, `20` for 20 %.
     /// </summary>
-    decimal? Amount,
+    decimal? Percent,
+
+    /// <summary>`amount-off-order`: what comes off the order.</summary>
+    Money? AmountOff,
+
+    /// <summary>`buy-x-get-y`: how many are bought, and how many of them are free.</summary>
+    int? Buy,
+    int? Free,
 
     /// <summary>When it stops, when it does. A shopper can act on a deadline;
     /// they cannot act on a start date that has already passed.</summary>
@@ -134,16 +145,10 @@ public sealed class ListOffersHandler(IPromotionReader promotions, TimeProvider 
         promotion.Code,
         promotion.Name.In(culture),
         promotion.Effect.Kind,
-        Headline(promotion.Effect),
+        promotion.Effect is PercentOffLine(var percent) ? percent : null,
+        promotion.Effect is AmountOffOrder(var off) ? off : null,
+        promotion.Effect is BuyXGetY(var buy, _) ? buy : null,
+        promotion.Effect is BuyXGetY(_, var free) ? free : null,
         promotion.ValidTo);
 
-    /// <summary>The figure, without the sentence around it. The sentence has to
-    /// exist in es and en, so it belongs to the interface.</summary>
-    private static decimal? Headline(PromotionEffect effect) => effect switch
-    {
-        PercentOffLine(var percent) => percent,
-        AmountOffOrder(var amount) => amount.Amount,
-        BuyXGetY(var buy, _) => buy,
-        _ => null,
-    };
 }

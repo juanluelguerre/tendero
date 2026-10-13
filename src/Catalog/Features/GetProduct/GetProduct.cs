@@ -49,8 +49,7 @@ public sealed record VariantOptionView(string Code, string Label);
 public sealed record VariantView(
     string VariantId,
     string Sku,
-    decimal PriceAmount,
-    string PriceCurrency,
+    Money Price,
     IReadOnlyDictionary<string, string> AxisValues,
     string Label,
     string? ImageId,
@@ -81,9 +80,8 @@ public sealed record ProductDetail(
     IReadOnlyList<ProductAttributeView> Attributes,
     IReadOnlyList<VariantAxisView> Axes,
     IReadOnlyList<VariantView> Variants,
-    decimal PriceFrom,
-    decimal PriceTo,
-    string PriceCurrency,
+    Money PriceFrom,
+    Money PriceTo,
     IReadOnlyList<AlternateSlug> Alternates,
     IReadOnlyList<string> MissingCultures,
     ProductStatus Status,
@@ -233,9 +231,8 @@ public sealed class GetProductHandler(
                 Axis(axis, attributes.ByCode(axis), product, query.Culture))],
             [.. product.Variants.Select(variant =>
                 View(variant, product, attributes, available, query.Culture))],
-            from.Amount,
-            to.Amount,
-            from.Currency,
+            from,
+            to,
             // Every culture the product has a slug in, itself included: a page
             // that lists its own canonical URL beside its alternates is what
             // hreflang actually requires, and leaving itself out is the mistake
@@ -320,8 +317,7 @@ public sealed class GetProductHandler(
         return new VariantView(
             variant.Id.Value.ToString(),
             variant.Sku,
-            variant.Price.Amount,
-            variant.Price.Currency,
+            variant.Price,
             variant.AxisValues,
             // "Azul marino / 38", not "NAVY_BLUE / 38". The domain's LabelFor
             // joins the CODES, because that is what gets frozen onto an order

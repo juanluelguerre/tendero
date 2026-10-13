@@ -66,7 +66,12 @@ describe('the define variants store', () => {
   it("shows the server's reason, and nothing when the session ended", () => {
     draft();
     store.generate('p1');
-    http.expectOne(Variants).flush('The product already has variants.', { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(Variants)
+      .flush(
+        { code: 'Refused', status: 409, title: 'The product already has variants.' },
+        { status: 409, statusText: 'Conflict' },
+      );
     const refused = store.failed();
     store.generate('p1');
     http.expectOne(Variants).flush('', { status: 401, statusText: 'Unauthorized' });

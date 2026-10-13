@@ -64,6 +64,50 @@ public sealed class UcpNegotiationTests
         Assert.Equal((200, "capabilities_incompatible"), (incompatible!.Status, ((UcpErrorResponse)incompatible.Body).Messages.Single().Code));
     }
 
+    /// <summary>
+    /// *Businesses MUST validate the platform's protocol version on every
+    /// request … Otherwise: Business MUST return a version_unsupported error*
+    /// (the specification, *Request-Time Validation*; 422 over REST). The shop
+    /// declares one version and no older ones, so a platform at any other is
+    /// told which the shop implements — before capabilities are compared at
+    /// all, because across versions a capability of the same name is not the
+    /// same shape.
+    /// </summary>
+    [Theory]
+    [InlineData("2026-04-08")]
+    [InlineData("2027-01-01")]
+    public async Task A_platform_at_another_protocol_version_is_told_the_version_is_not_supported(string theirs)
+    {
+        var everything = Platform([.. UcpCapabilities.Declared.Select(c => (c.Id, c.Version))]) with { Version = theirs };
+
+        var (negotiated, refusal) = await UcpCheckoutOperations.NegotiateAsync("https://agent.example/p", new Fixed(everything, null), TestContext.Current.CancellationToken);
+
+        Assert.Null(negotiated);
+        var error = Assert.IsType<UcpProtocolError>(refusal!.Body);
+        Assert.Equal((422, "version_unsupported"), (refusal.Status, error.Code));
+        Assert.Contains(theirs, error.Content, StringComparison.Ordinal);
+        Assert.Contains(UcpSpecification.Version, error.Content, StringComparison.Ordinal);
+    }
+
+    /// <summary>The version a profile declares is read; one that declares none is not a UCP profile (`ucp.json`: version is required).</summary>
+    [Fact]
+    public async Task A_profiles_protocol_version_is_read_and_a_profile_without_one_is_malformed()
+    {
+        HttpPlatformProfiles Over(string body) =>
+            new(new HttpClient(new Recording(HttpStatusCode.OK, body)), Options.Create(new UcpOptions { TrustedPlatformHosts = ["agent.example"] }), new TestClock());
+
+        var (older, _) = await Over("""{"ucp":{"version":"2026-04-08","capabilities":{}}}""")
+            .GetAsync($"https://agent.example/{Guid.NewGuid()}.json", TestContext.Current.CancellationToken);
+        var (none, problem) = await Over("""{"ucp":{"capabilities":{}}}""")
+            .GetAsync($"https://agent.example/{Guid.NewGuid()}.json", TestContext.Current.CancellationToken);
+        var (notText, notTextProblem) = await Over("""{"ucp":{"version":20260825,"capabilities":{}}}""")
+            .GetAsync($"https://agent.example/{Guid.NewGuid()}.json", TestContext.Current.CancellationToken);
+
+        Assert.Equal("2026-04-08", older!.Version);
+        Assert.Equal((null, ProfileProblem.Malformed), (none, problem));
+        Assert.Equal((null, ProfileProblem.Malformed), (notText, notTextProblem));
+    }
+
     [Fact]
     public async Task A_checkout_response_carries_only_the_checkout_family()
     {
@@ -118,9 +162,9 @@ public sealed class UcpNegotiationTests
     [Fact]
     public async Task A_profile_s_keys_are_read_and_a_key_without_a_kid_is_skipped()
     {
-        var body = """{"ucp":{"capabilities":{}},"keys":[{"kid":"k1","kty":"EC","crv":"P-256","x":"AA","y":"AA","alg":"ES256"},{"kty":"EC"},"not a key"]}""";
+        var body = """{"ucp":{"version":"2026-08-25","capabilities":{}},"keys":[{"kid":"k1","kty":"EC","crv":"P-256","x":"AA","y":"AA","alg":"ES256"},{"kty":"EC"},"not a key"]}""";
         var profiles = new HttpPlatformProfiles(new HttpClient(new Recording(HttpStatusCode.OK, body)), Options.Create(new UcpOptions { TrustedPlatformHosts = ["agent.example"] }), new TestClock());
-        var none = new HttpPlatformProfiles(new HttpClient(new Recording(HttpStatusCode.OK, """{"ucp":{"capabilities":{}},"keys":{"k1":{}}}""")), Options.Create(new UcpOptions { TrustedPlatformHosts = ["agent.example"] }), new TestClock());
+        var none = new HttpPlatformProfiles(new HttpClient(new Recording(HttpStatusCode.OK, """{"ucp":{"version":"2026-08-25","capabilities":{}},"keys":{"k1":{}}}""")), Options.Create(new UcpOptions { TrustedPlatformHosts = ["agent.example"] }), new TestClock());
 
         var (profile, _) = await profiles.GetAsync($"https://agent.example/{Guid.NewGuid()}.json", TestContext.Current.CancellationToken);
         var (withoutKeys, _) = await none.GetAsync($"https://agent.example/{Guid.NewGuid()}.json", TestContext.Current.CancellationToken);
@@ -132,7 +176,7 @@ public sealed class UcpNegotiationTests
     [Theory]
     [InlineData(HttpStatusCode.NotFound, "{}", ProfileProblem.Unreachable)]
     [InlineData(HttpStatusCode.OK, "not json", ProfileProblem.Malformed)]
-    [InlineData(HttpStatusCode.OK, """{"ucp":{"capabilities":[]}}""", ProfileProblem.Malformed)]
+    [InlineData(HttpStatusCode.OK, """{"ucp":{"version":"2026-08-25","capabilities":[]}}""", ProfileProblem.Malformed)]
     public async Task A_profile_that_cannot_be_used_says_why(HttpStatusCode status, string body, ProfileProblem expected)
     {
         var profiles = new HttpPlatformProfiles(new HttpClient(new Recording(status, body)), Options.Create(new UcpOptions { TrustedPlatformHosts = ["agent.example"] }), new TestClock());

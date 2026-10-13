@@ -274,12 +274,18 @@ public sealed class CountStockValidator : AbstractValidator<CountStockCommand>
     }
 }
 
+public static class StockRefusals
+{
+    public static readonly Refusal UnknownWarehouse = new(
+        "UnknownWarehouse", 404, "La tienda no tiene ese almacén.", "The shop has no such warehouse.");
+}
+
 public sealed class CountStockEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPut("/api/inventory/stock/{sku}/{warehouse}",
-            async Task<Results<Ok<CountStockResponse>, NotFound<string>>> (
+            async Task<Results<Ok<CountStockResponse>, ProblemHttpResult>> (
                    string sku, string warehouse, CountStockRequest request,
                    ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -287,11 +293,12 @@ public sealed class CountStockEndpoint : ICarterModule
                     new CountStockCommand(sku, warehouse, request.OnHand), ct);
 
                 return result.Outcome == CountStockOutcome.UnknownWarehouse
-                    ? TypedResults.NotFound($"There is no warehouse '{warehouse}'.")
+                    ? TypedResults.Problem(statusCode: StockRefusals.UnknownWarehouse.Status, extensions: StockRefusals.UnknownWarehouse.Said(path: "$.warehouse"))
                     : TypedResults.Ok(new CountStockResponse(
                         sku, Warehouse.Normalise(warehouse), result.OnHand, result.Available));
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(StockRefusals.UnknownWarehouse))
             .WithTags("Inventory")
             .WithName("CountStock");
     }

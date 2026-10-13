@@ -4,6 +4,7 @@ using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using NodaTime;
 using Xunit;
+using static ElGuerre.Tendero.Ordering.Tests.Amounts;
 
 namespace ElGuerre.Tendero.Ordering.Tests;
 
@@ -40,7 +41,7 @@ public sealed class CampaignBaselineTests
         var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3).AddHours(6), orders, firstOrderAt: LongAgo);
 
         var saturday = uplift.Days[2];
-        Assert.Equal((330m, 260m, 70m), (saturday.Sold, saturday.Baseline, saturday.Sold - saturday.Baseline));
+        Assert.Equal((Eur(330m), Eur(260m), Eur(70m)), (saturday.Sold, saturday.Baseline, saturday.Sold - saturday.Baseline));
         Assert.True(uplift.HasBaseline);
     }
 
@@ -55,7 +56,7 @@ public sealed class CampaignBaselineTests
 
         var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo);
 
-        Assert.Equal((400m, 150m, 250m), (uplift.Sold, uplift.Baseline, uplift.Uplift));
+        Assert.Equal((Eur(400m), Eur(150m), Eur(250m)), (uplift.Sold, uplift.Baseline, uplift.Uplift));
     }
 
     /// <summary>A day is its own midnight up to the next one: an order at midnight opens the day, it does not close the one before.</summary>
@@ -66,7 +67,7 @@ public sealed class CampaignBaselineTests
 
         var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo);
 
-        Assert.Equal([10m, 20m], uplift.Days.Take(2).Select(day => day.Sold));
+        Assert.Equal([Eur(10m), Eur(20m)], uplift.Days.Take(2).Select(day => day.Sold));
     }
 
     [Fact]
@@ -94,7 +95,7 @@ public sealed class CampaignBaselineTests
     {
         var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), [Sold(Noon(10, 2), 100m)], firstOrderAt: Noon(9, 15));
 
-        Assert.Equal((false, null, null, 100m), (uplift.HasBaseline, uplift.Baseline, uplift.Uplift, uplift.Sold));
+        Assert.Equal((false, null, null, Eur(100m)), (uplift.HasBaseline, uplift.Baseline, uplift.Uplift, uplift.Sold));
         Assert.All(uplift.Days, day => Assert.Null(day.Baseline));
     }
 
@@ -108,7 +109,7 @@ public sealed class CampaignBaselineTests
         // The totals are over the days that have ended, Thursday and Friday: Saturday
         // is under way (its baseline would be 280 over its four Saturdays), and the
         // days to come add nothing.
-        Assert.Equal(0m, uplift.Baseline);
+        Assert.Equal(Eur(0m), uplift.Baseline);
     }
 
     /// <summary>
@@ -126,7 +127,7 @@ public sealed class CampaignBaselineTests
         Assert.Equal([false, false, true, false, false, false, false], uplift.Days.Select(day => day.Partial));
         // The zone the days were counted in travels with them, as the sales series' does (ADR 0046).
         Assert.Equal("Europe/Madrid", uplift.TimeZone);
-        Assert.Equal((100m, 0m), (uplift.Sold, uplift.Baseline));
+        Assert.Equal((Eur(100m), Eur(0m)), (uplift.Sold, uplift.Baseline));
     }
 
     /// <summary>Sunday 25 October 2026 lasts 25 hours in Madrid: still one Sunday, matched to the four before.</summary>
@@ -140,8 +141,8 @@ public sealed class CampaignBaselineTests
 
         var uplift = CampaignBaseline.Of(Madrid, opens, closes, now: closes.AddDays(1), orders, firstOrderAt: LongAgo);
 
-        var sunday = uplift.Days.Single(day => day.Sold > 0);
-        Assert.Equal((new LocalDate(2026, 10, 25), 40m), (Instant.FromDateTimeOffset(sunday.Start).InZone(Madrid).Date, sunday.Baseline));
+        var sunday = uplift.Days.Single(day => day.Sold.Amount > 0);
+        Assert.Equal((new LocalDate(2026, 10, 25), Eur(40m)), (Instant.FromDateTimeOffset(sunday.Start).InZone(Madrid).Date, sunday.Baseline));
     }
 
     [Fact]
@@ -151,7 +152,7 @@ public sealed class CampaignBaselineTests
 
         var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo, category: "COOKWARE");
 
-        Assert.Equal(50m, uplift.Sold);
+        Assert.Equal(Eur(50m), uplift.Sold);
     }
 
     /// <summary>
@@ -166,6 +167,6 @@ public sealed class CampaignBaselineTests
 
         var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo, category: "HOME");
 
-        Assert.Equal(50m, uplift.Sold);
+        Assert.Equal(Eur(50m), uplift.Sold);
     }
 }

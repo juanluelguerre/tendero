@@ -110,9 +110,20 @@ describe('the API parameters', () => {
       brand: ['Vertex'],
       within: ['BAGS'],
       f: ['COLOR:BLACK'],
-      minPrice: '30',
+      // The address says 30 as a person types it; the API is asked in the
+      // unit it answers prices in.
+      minPrice: '3000',
       onOffer: 'true',
       inStock: 'true',
+    });
+  });
+
+  it('asks for a price in minor units, whole, whatever a person typed', () => {
+    const typed = { ...NoFilters, minPrice: 27.5, maxPrice: 59.9 };
+
+    expect(searchParams({ query: '', category: 'HOME' }, typed, 'es', 1, 24)).toMatchObject({
+      minPrice: '2750',
+      maxPrice: '5990',
     });
   });
 

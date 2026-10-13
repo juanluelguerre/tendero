@@ -42,7 +42,7 @@ public sealed class FindProductsTool(IQueryDispatcher queries) : ReadTool<FindPr
 
         var found = new FoundProducts(page.Total,
         [
-            .. page.Items.Select(item => new FoundProduct(item.ProductId, item.Code, item.Name, item.Status.ToString(), item.MissingCultures, item.PriceAmount, item.PriceCurrency)),
+            .. page.Items.Select(item => new FoundProduct(item.ProductId, item.Code, item.Name, item.Status.ToString(), item.MissingCultures, item.Price.Amount, item.Price.Currency)),
         ]);
         return (found, found.Products.Count, page.Total);
     }

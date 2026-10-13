@@ -27,7 +27,7 @@ public static class UcpCheckoutRestBinding
 
         group.MapPost("/", (UcpCheckoutRequest request, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
                 WithNegotiation(http, ct, (call, culture) =>
-                    checkout.CreateAsync(request, culture(request.Context?.Language), call, ct)))
+                    checkout.CreateAsync(request, Key(http), culture(request.Context?.Language), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("create_checkout"));
 
         group.MapGet("/{id:guid}", (Guid id, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
@@ -37,21 +37,24 @@ public static class UcpCheckoutRestBinding
 
         group.MapPut("/{id:guid}", (Guid id, UcpCheckoutRequest request, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
                 WithNegotiation(http, ct, (call, culture) =>
-                    checkout.UpdateAsync(id, request, culture(request.Context?.Language), call, ct)))
+                    checkout.UpdateAsync(id, request, Key(http), culture(request.Context?.Language), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("update_checkout"));
 
         group.MapPost("/{id:guid}/complete", (Guid id, UcpCompleteRequest request, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
                 WithNegotiation(http, ct, (call, culture) =>
-                    checkout.CompleteAsync(id, request, http.Request.Headers["Idempotency-Key"].FirstOrDefault(), culture(null), call, ct)))
+                    checkout.CompleteAsync(id, request, Key(http), culture(null), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("complete_checkout"));
 
         group.MapPost("/{id:guid}/cancel", (Guid id, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
                 WithNegotiation(http, ct, (call, culture) =>
-                    checkout.CancelAsync(id, culture(null), call, ct)))
+                    checkout.CancelAsync(id, Key(http), culture(null), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("cancel_checkout"));
 
         return group;
     }
+
+    /// <summary>The caller's `Idempotency-Key`, on every operation that changes something: when one is sent, it is honoured.</summary>
+    private static string? Key(HttpContext http) => http.Request.Headers[Idempotency.Header].FirstOrDefault();
 
     /// <summary>
     /// Every operation negotiates first: the `UCP-Agent` profile, fetched from a

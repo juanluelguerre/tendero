@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.Search.Contracts;
@@ -102,7 +103,7 @@ public sealed class SearchProductsEndpoint : ICarterModule
             async Task<Ok<SearchResultPage>> (
                    string? q, string? culture, int? page, int? pageSize, string? category, WireEnum<ProductSort>? sort,
                    string[]? brand, string[]? within, string[]? f,
-                   decimal? minPrice, decimal? maxPrice, bool? onOffer, bool? newArrivals, bool? inStock, string? campaign,
+                   [Description(SearchPrices.InMinorUnits)] long? minPrice, [Description(SearchPrices.InMinorUnits)] long? maxPrice, bool? onOffer, bool? newArrivals, bool? inStock, string? campaign,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 var filters = new SearchFilters
@@ -110,8 +111,10 @@ public sealed class SearchProductsEndpoint : ICarterModule
                     Brands = brand ?? [],
                     Within = within ?? [],
                     Facets = f ?? [],
-                    MinPrice = minPrice,
-                    MaxPrice = maxPrice,
+                    // Asked in the unit every price is answered in (ADR 0059):
+                    // a facet's end can be sent straight back.
+                    MinPrice = SearchPrices.FromMinorUnits(minPrice),
+                    MaxPrice = SearchPrices.FromMinorUnits(maxPrice),
                     OnOffer = onOffer ?? false,
                     NewArrivals = newArrivals ?? false,
                     InStock = inStock ?? false,

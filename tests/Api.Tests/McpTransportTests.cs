@@ -154,6 +154,90 @@ public sealed class McpTransportTests
     }
 
     /// <summary>
+    /// **What a tool says of itself, which a host reads before it lets a model
+    /// call it.** Left unsaid, the specification's defaults speak: not read-only,
+    /// and destructive — so eleven tools that only read a public catalogue were
+    /// announced as tools that may destroy something, and a careful host asks a
+    /// person before each search. Found on 2026-10-13 by an audit against the
+    /// specification; no test had read the annotations because none existed.
+    ///
+    /// The checkout's four that change something say so, and say which cannot be
+    /// taken back: completing charges, cancelling ends the session.
+    /// </summary>
+    [Fact]
+    public async Task Every_tool_says_whether_it_only_reads_and_whether_it_can_be_taken_back()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var tools = await ListToolsAs(client, "2026-07-28");
+
+        var said = tools.GetProperty("result").GetProperty("tools").EnumerateArray().ToDictionary(
+            tool => tool.GetProperty("name").GetString()!,
+            tool => tool.TryGetProperty("annotations", out var annotations)
+                ? (ReadOnly: Hint(annotations, "readOnlyHint"), Destructive: Hint(annotations, "destructiveHint"),
+                    Idempotent: Hint(annotations, "idempotentHint"), OpenWorld: Hint(annotations, "openWorldHint"))
+                : (null, null, null, null));
+
+        string[] reads =
+        [
+            "compare_products", "get_checkout", "get_product", "get_product_detail", "get_product_specs", "get_return_policy",
+            "list_campaigns", "list_categories", "list_offers", "lookup_catalog", "search_catalog", "search_products",
+        ];
+        Assert.All(reads, name => Assert.Equal((true, false, true, false), (said[name].ReadOnly, said[name].Destructive, said[name].Idempotent, said[name].OpenWorld)));
+
+        // Opening and updating a session change it and can be changed again; the
+        // same update twice is the same session.
+        Assert.Equal((false, false, false, false), (said["create_checkout"].ReadOnly, said["create_checkout"].Destructive, said["create_checkout"].Idempotent, said["create_checkout"].OpenWorld));
+        Assert.Equal((false, false, true, false), (said["update_checkout"].ReadOnly, said["update_checkout"].Destructive, said["update_checkout"].Idempotent, said["update_checkout"].OpenWorld));
+        // Completing places an order and takes the money; cancelling ends the
+        // session. Neither is undone — and both are safe to repeat: the first by
+        // its idempotency key, the second because a cancelled session stays so.
+        Assert.Equal((false, true, true, false), (said["complete_checkout"].ReadOnly, said["complete_checkout"].Destructive, said["complete_checkout"].Idempotent, said["complete_checkout"].OpenWorld));
+        Assert.Equal((false, true, true, false), (said["cancel_checkout"].ReadOnly, said["cancel_checkout"].Destructive, said["cancel_checkout"].Idempotent, said["cancel_checkout"].OpenWorld));
+
+        Assert.Equal(16, said.Count);
+
+        static bool? Hint(JsonElement annotations, string name) =>
+            annotations.TryGetProperty(name, out var hint) && hint.ValueKind is JsonValueKind.True or JsonValueKind.False ? hint.GetBoolean() : null;
+    }
+
+    /// <summary>
+    /// **Every tool's answer has a declared shape**, the shop's own eight
+    /// included: `structuredContent` a client can use without parsing prose,
+    /// under an `outputSchema` it can validate against — and the same JSON as
+    /// text, which the specification asks for because there are clients that
+    /// hand a model only `content`.
+    /// </summary>
+    [Fact]
+    public async Task Every_tool_declares_the_shape_of_its_answer_and_answers_in_it_twice()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var tools = await ListToolsAs(client, "2026-07-28");
+        var without = tools.GetProperty("result").GetProperty("tools").EnumerateArray()
+            .Where(tool => !tool.TryGetProperty("outputSchema", out _))
+            .Select(tool => tool.GetProperty("name").GetString())
+            .ToArray();
+        Assert.Empty(without);
+
+        var answer = (await Call(client, new
+        {
+            jsonrpc = "2.0",
+            id = 7,
+            method = "tools/call",
+            @params = new { name = "get_return_policy", arguments = new { } },
+        })).GetProperty("result");
+
+        var structured = answer.GetProperty("structuredContent");
+        using var text = JsonDocument.Parse(answer.GetProperty("content")[0].GetProperty("text").GetString()!);
+        Assert.Equal(JsonValueKind.Object, structured.ValueKind);
+        Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(
+            System.Text.Json.Nodes.JsonNode.Parse(structured.GetRawText()), System.Text.Json.Nodes.JsonNode.Parse(text.RootElement.GetRawText())));
+    }
+
+    /// <summary>
     /// The specification wants a tool's `outputSchema` to be an object schema,
     /// and a client validates `tools/list` against it: Claude Code refused the
     /// whole list — "expected object, received boolean" — because the five
@@ -271,6 +355,47 @@ public sealed class McpTransportTests
             "at least 2 characters",
             result.GetProperty("content")[0].GetProperty("text").GetString(),
             StringComparison.Ordinal);
+
+        // And it is the problem a REST refusal is, and nothing around it: a
+        // code to branch on, and what is wrong with each argument under its name.
+        using var problem = JsonDocument.Parse(result.GetProperty("content")[0].GetProperty("text").GetString()!);
+        Assert.Equal("Invalid", problem.RootElement.GetProperty("code").GetString());
+        Assert.True(problem.RootElement.GetProperty("errors").EnumerateObject().Any());
+    }
+
+    /// <summary>
+    /// **An argument misnamed or left out is told which.** Found in a live pass
+    /// on 2026-10-13: `get_product_detail` called with `sku` where it takes
+    /// `code` answered *An error occurred invoking 'get_product_detail'.* — the
+    /// SDK's sentence for a tool that broke, which tells an agent nothing it
+    /// can correct. It is the request that is wrong, so it is the same problem
+    /// a request that does not validate gets: `Invalid`, and what is missing.
+    /// </summary>
+    [Theory]
+    [InlineData("get_product_detail", "code")]
+    [InlineData("get_product", "id")]
+    public async Task A_call_that_leaves_out_an_argument_is_told_which(string tool, string missing)
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var answer = await Call(client, new
+        {
+            jsonrpc = "2.0",
+            id = 9,
+            method = "tools/call",
+            @params = new { name = tool, arguments = new { sku = "B11COO0301-DEFAULT" } }
+        });
+
+        var result = answer.GetProperty("result");
+        var text = result.GetProperty("content")[0].GetProperty("text").GetString()!;
+
+        Assert.True(result.GetProperty("isError").GetBoolean());
+        Assert.DoesNotContain("An error occurred invoking", text, StringComparison.Ordinal);
+
+        using var problem = JsonDocument.Parse(text);
+        Assert.Equal("Invalid", problem.RootElement.GetProperty("code").GetString());
+        Assert.Contains(missing, problem.RootElement.GetProperty("detail").GetString(), StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -304,6 +429,73 @@ public sealed class McpTransportTests
         using var payload = JsonDocument.Parse(content!);
 
         Assert.Equal(expected, payload.RootElement.GetProperty("culture").GetString());
+    }
+
+    /// <summary>
+    /// The 2026-07-28 revision, asked as that revision asks: no handshake, the
+    /// version in every request and mirrored in its headers. *Servers MUST
+    /// implement `server/discover`*, and *MUST include caching hints* on it and
+    /// on a tool list. The SDK answers both — verified against a running server
+    /// on 2026-10-13, and held here so an upgrade that stopped is seen. The tool
+    /// list's hints are ours: the same list for whoever asks, so `public`, and
+    /// fresh for as long as the server says.
+    /// </summary>
+    [Fact]
+    public async Task It_answers_discover_and_says_how_long_its_tool_list_keeps()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var discovered = (await Modern(client, "server/discover")).GetProperty("result");
+        Assert.Contains("2026-07-28", discovered.GetProperty("supportedVersions").EnumerateArray().Select(version => version.GetString()));
+        Assert.True(discovered.GetProperty("ttlMs").GetInt64() >= 0);
+        Assert.Contains(discovered.GetProperty("cacheScope").GetString(), new[] { "public", "private" });
+
+        var tools = (await Modern(client, "tools/list")).GetProperty("result");
+        Assert.Equal((long)Mcp.TenderoMcpServer.ToolListFreshFor.TotalMilliseconds, tools.GetProperty("ttlMs").GetInt64());
+        Assert.Equal("public", tools.GetProperty("cacheScope").GetString());
+    }
+
+    /// <summary>A version this server does not speak is refused with the ones it does (`-32022`).</summary>
+    [Fact]
+    public async Task It_refuses_a_version_it_does_not_speak_and_names_the_ones_it_does()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var error = (await Modern(client, "tools/list", version: "1900-01-01", expected: HttpStatusCode.BadRequest)).GetProperty("error");
+
+        Assert.Equal(-32022, error.GetProperty("code").GetInt32());
+        Assert.Contains("2026-07-28", error.GetProperty("data").GetProperty("supported").EnumerateArray().Select(version => version.GetString()));
+    }
+
+    private static async Task<JsonElement> Modern(HttpClient client, string method, string version = "2026-07-28", HttpStatusCode expected = HttpStatusCode.OK)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/mcp")
+        {
+            Content = JsonContent.Create(new
+            {
+                jsonrpc = "2.0",
+                id = 1,
+                method,
+                @params = new
+                {
+                    _meta = new Dictionary<string, object>
+                    {
+                        ["io.modelcontextprotocol/protocolVersion"] = version,
+                        ["io.modelcontextprotocol/clientInfo"] = new { name = "tendero-tests", version = "1.0.0" },
+                        ["io.modelcontextprotocol/clientCapabilities"] = new { },
+                    },
+                },
+            }),
+        };
+        request.Headers.Add("MCP-Protocol-Version", version);
+        request.Headers.Add("Mcp-Method", method);
+
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        Assert.Equal(expected, response.StatusCode);
+
+        return JsonDocument.Parse(JsonRpcPayload(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))).RootElement.Clone();
     }
 
     private static async Task<JsonElement> Call(HttpClient client, object request)

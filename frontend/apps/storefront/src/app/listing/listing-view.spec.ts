@@ -60,7 +60,15 @@ describe('the sections of the column', () => {
     const facets = [
       facet('category', 'Category', [option('BAGS', 3)]),
       facet('brand', 'Brand', [option('Vertex', 2)]),
-      facet('price', 'Price', [], { price: { min: 10, max: 90, chosenMin: null, chosenMax: null, bands: [] } }),
+      facet('price', 'Price', [], {
+        price: {
+          min: { amount: 1000, currency: 'EUR' },
+          max: { amount: 9000, currency: 'EUR' },
+          chosenMin: null,
+          chosenMax: null,
+          bands: [],
+        },
+      }),
       facet('offer', 'Offer', [option('true', 1)]),
       facet('stock', 'InStock', [option('true', 1)]),
       facet('COLOR', 'Axis', [option('COLOR:BLACK', 2, { swatch: '#201D1B' })]),

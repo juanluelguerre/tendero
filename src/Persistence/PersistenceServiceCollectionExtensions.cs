@@ -91,6 +91,9 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IAuditWriter>(services => services.GetRequiredService<EfAuditWriter>());
         services.AddScoped<IAuditReader>(services => services.GetRequiredService<EfAuditWriter>());
         services.AddScoped<IAgentDenialHistory>(services => services.GetRequiredService<EfAuditWriter>());
+        // A retry must not happen twice (phase 13b): the keys callers send, on
+        // a context of their own so a claim is seen before a request commits.
+        services.AddScoped<IIdempotencyStore, EfIdempotencyStore>();
         services.AddScoped<EfAIInvocationWriter>();
         services.AddScoped<IAIInvocationWriter>(services => services.GetRequiredService<EfAIInvocationWriter>());
         services.AddScoped<IAIInvocationReader>(services => services.GetRequiredService<EfAIInvocationWriter>());

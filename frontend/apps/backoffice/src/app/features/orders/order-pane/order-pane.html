@@ -33,17 +33,13 @@
                     <span class="muted">· {{ line.variantLabel }}</span>
                   }
                 </span>
-                <span class="numeric">{{
-                  line.unitPrice * line.quantity | price: found.order.currency : culture.active()
-                }}</span>
+                <span class="numeric">{{ line.total | price: culture.active() }}</span>
               </li>
             }
           </ul>
           <p class="flex justify-between border-t border-hairline pt-2">
             <span class="muted">{{ t('orders.paneTotal') }}</span>
-            <span class="numeric font-semibold">{{
-              found.order.total | price: found.order.currency : culture.active()
-            }}</span>
+            <span class="numeric font-semibold">{{ found.order.total | price: culture.active() }}</span>
           </p>
         } @else if (pane.detail.isLoading()) {
           <div class="skeleton min-h-skeleton-sm rounded-md bg-raised" aria-hidden="true"></div>

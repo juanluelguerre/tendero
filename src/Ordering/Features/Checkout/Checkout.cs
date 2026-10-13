@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Text.Json;
 using Carter;
 using ElGuerre.Tendero.Ordering.Contracts;
 using ElGuerre.Tendero.Ordering.Domain;
@@ -10,6 +11,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 
@@ -27,10 +29,10 @@ public sealed record AddressRequest(
     string CountryCode,
     string? Phone);
 
-public sealed record ShippingOptionView(string Code, string Label, decimal Amount, int? EstimatedDays);
+public sealed record ShippingOptionView(string Code, string Label, Money Amount, int? EstimatedDays);
 
 public sealed record ShippingOptionsResponse(
-    string Currency, IReadOnlyList<ShippingOptionView> Options);
+    IReadOnlyList<ShippingOptionView> Options);
 
 // ---------- Shipping options ----------
 
@@ -225,7 +227,6 @@ public sealed record PlaceOrderRequest(
     string ShippingOptionCode,
     string QuoteHash,
     string Instrument,
-    string IdempotencyKey,
     AddressRequest? BillingAddress = null,
     IReadOnlyList<string>? Coupons = null);
 
@@ -234,7 +235,64 @@ public sealed record PlaceOrderRequest(
 /// so the screen can say what changed rather than just refusing.
 /// </summary>
 public sealed record PriceChangedResponse(
-    string QuoteHash, decimal Total, decimal Shipping, decimal TaxTotal, decimal DiscountTotal);
+    string QuoteHash, Money Total, Money Shipping, Money TaxTotal, Money DiscountTotal);
+
+/// <summary>
+/// What the checkout refuses, by code. `PriceChanged` is the one that hands
+/// something over: the new fingerprint and the new totals, so the screen can
+/// say what changed rather than just refuse.
+/// </summary>
+public static class CheckoutRefusals
+{
+    public static readonly Refusal InvalidAddress = new(
+        "InvalidAddress", 400, "La dirección no está completa o no es válida.", "The address is incomplete or not valid.");
+
+    public static readonly Refusal NothingToShip = new(
+        "NothingToShip", 400, "No hay nada en el carrito.", "There is nothing in the cart.");
+
+    public static readonly Refusal Unserved = new(
+        "Unserved", 400, "La tienda todavía no envía a ese país.", "This shop does not deliver to that country yet.");
+
+    public static readonly Refusal UnknownShippingOption = new(
+        "UnknownShippingOption", 400,
+        "Esa opción de envío no es una de las de esta dirección.", "That is not one of the delivery options for this address.");
+
+    public static readonly Refusal NoLongerOnSale = new(
+        "NoLongerOnSale", 404, "Hay artículos del carrito que ya no se venden.", "Some of the cart is no longer on sale.");
+
+    public static readonly Refusal PriceChanged = new(
+        "PriceChanged", 409, "El precio ha cambiado mientras estabas aquí.", "The price changed while you were here.")
+    {
+        Carries = typeof(PriceChangedResponse),
+    };
+
+    /// <summary>402: the request was fine and the card said no.</summary>
+    public static readonly Refusal PaymentDeclined = new(
+        "PaymentDeclined", 402, "El pago no se ha aceptado.", "The payment was declined.");
+
+    /// <summary>503, and retryable: the same key places the same order.</summary>
+    public static readonly Refusal PaymentUnavailable = new(
+        "PaymentUnavailable", 503,
+        "No se ha podido contactar con el pago. Inténtalo de nuevo: no se cobra dos veces.",
+        "The payment could not be reached. Try again: nothing is charged twice.");
+
+    public static readonly Refusal NotMandated = new(
+        "NotMandated", 409, "Ese pedido necesita un mandato que no lleva.", "That order needs a mandate it does not carry.");
+
+    public static readonly Refusal AgentRefused = new(
+        "AgentRefused", 403, "La tienda no admite este pedido de un agente.", "The shop does not take this order from an agent.");
+
+    /// <summary>409: nothing charged, and which articles there is not enough of.</summary>
+    public static readonly Refusal InsufficientStock = new(
+        "InsufficientStock", 409,
+        "No queda suficiente de algo que llevas en la cesta.", "There is not enough left of something in your basket.")
+    {
+        Carries = typeof(InsufficientStockResponse),
+    };
+}
+
+/// <summary>What comes back when the shelf is short: each article with what was asked and what can be bought now.</summary>
+public sealed record InsufficientStockResponse(IReadOnlyList<StockShortage> Shortages);
 
 public sealed class CheckoutEndpoints : ICarterModule
 {
@@ -248,14 +306,14 @@ public sealed class CheckoutEndpoints : ICarterModule
             .WithTags("Checkout");
 
         checkout.MapPost("/shipping-options",
-            async Task<Results<Ok<ShippingOptionsResponse>, BadRequest<string>>> (
+            async Task<Results<Ok<ShippingOptionsResponse>, ProblemHttpResult>> (
                    AddressRequest request, string? culture,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 var resolved = CultureNegotiation.Resolve(culture, http.Request.Headers.AcceptLanguage);
 
                 if (!TryRead(request, out var destination, out var problem))
-                    return TypedResults.BadRequest(problem);
+                    return TypedResults.Problem(statusCode: CheckoutRefusals.InvalidAddress.Status, extensions: CheckoutRefusals.InvalidAddress.Said(reason: problem));
 
                 var result = await dispatcher.SendAsync(
                     new GetShippingOptionsQuery(Token(http), destination, resolved), ct);
@@ -265,96 +323,164 @@ public sealed class CheckoutEndpoints : ICarterModule
 
                 return result.Outcome switch
                 {
-                    ShippingOutcome.NothingToShip => TypedResults.BadRequest("There is nothing in the cart."),
-                    ShippingOutcome.Unserved => TypedResults.BadRequest(
-                        $"This shop does not deliver to {destination.CountryCode} yet."),
+                    ShippingOutcome.NothingToShip => TypedResults.Problem(statusCode: CheckoutRefusals.NothingToShip.Status, extensions: CheckoutRefusals.NothingToShip.Said()),
+                    ShippingOutcome.Unserved => TypedResults.Problem(
+                        statusCode: CheckoutRefusals.Unserved.Status,
+                        extensions: CheckoutRefusals.Unserved.Said(
+                            es: $"Todavía no se envía a {destination.CountryCode}.",
+                            en: $"Nothing is delivered to {destination.CountryCode} yet.",
+                            path: "$.countryCode")),
                     _ => TypedResults.Ok(new ShippingOptionsResponse(
-                        result.Currency,
                         [
                             .. result.Options.Select(option => new ShippingOptionView(
                                 option.Code, option.Label.In(resolved),
-                                option.Amount.Amount, option.EstimatedDays))
+                                option.Amount, option.EstimatedDays))
                         ]))
                 };
             })
             // POST and not GET, because it takes an address in the body. An
             // address in a query string would be personal data in every log and
             // every cache key.
+            .WithMetadata(new Refuses(CheckoutRefusals.InvalidAddress, CheckoutRefusals.NothingToShip, CheckoutRefusals.Unserved))
             .WithName("GetShippingOptions");
 
         checkout.MapPost("/",
-            async Task<Results<Ok<OrderView>, BadRequest<string>, Conflict<PriceChangedResponse>,
-                       NotFound<string>, ProblemHttpResult>> (
+            async Task<Results<Created<OrderView>, ProblemHttpResult>> (
                    PlaceOrderRequest request, string? culture,
-                   HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
+                   [FromHeader(Name = Idempotency.Header)] string? idempotencyKey,
+                   HttpContext http, ICommandDispatcher dispatcher, IIdempotencyStore keys, CancellationToken ct) =>
             {
                 var resolved = CultureNegotiation.Resolve(culture, http.Request.Headers.AcceptLanguage);
 
+                // The key is the request's, in the header every API that has one
+                // reads it from (phase 13b). Required: a retry must not buy twice,
+                // and a checkout with no key cannot be told from its own retry.
+                if (string.IsNullOrWhiteSpace(idempotencyKey) || idempotencyKey.Length > Idempotency.MaximumKeyLength)
+                    return TypedResults.Problem(
+                        statusCode: CommonRefusals.IdempotencyKeyRequired.Status,
+                        extensions: CommonRefusals.IdempotencyKeyRequired.Said(
+                            es: $"De {Idempotency.MaximumKeyLength} caracteres como mucho.",
+                            en: $"Of {Idempotency.MaximumKeyLength} characters at most."));
+
                 if (!TryRead(request.ShippingAddress, out var shipTo, out var problem))
-                    return TypedResults.BadRequest(problem);
+                    return TypedResults.Problem(statusCode: CheckoutRefusals.InvalidAddress.Status, extensions: CheckoutRefusals.InvalidAddress.Said(path: "$.shippingAddress", reason: problem));
 
                 Address? billTo = null;
                 if (request.BillingAddress is not null && !TryRead(request.BillingAddress, out billTo, out problem))
-                    return TypedResults.BadRequest(problem);
+                    return TypedResults.Problem(statusCode: CheckoutRefusals.InvalidAddress.Status, extensions: CheckoutRefusals.InvalidAddress.Said(path: "$.billingAddress", reason: problem));
 
-                var result = await dispatcher.SendAsync(
-                    new PlaceOrderCommand(
-                        Token(http),
-                        shipTo,
-                        billTo,
-                        request.ShippingOptionCode,
-                        request.QuoteHash,
-                        request.Instrument,
-                        request.IdempotencyKey,
-                        request.Coupons ?? [],
-                        resolved),
-                    ct);
+                // One key, one request: the cart's key with another basket's body
+                // is a conflict and never an order. The order's own unique key is
+                // still what makes a retry the same order (below, AlreadyPlaced);
+                // this is what tells a retry from a key used twice.
+                var scope = $"cart:{Token(http)}";
+                switch (await keys.ClaimAsync(scope, idempotencyKey, Idempotency.Fingerprint("place_order", JsonSerializer.Serialize(request)), ct))
+                {
+                    case IdempotencyClaim.Mismatched:
+                        return TypedResults.Problem(statusCode: CommonRefusals.IdempotencyKeyReused.Status, extensions: CommonRefusals.IdempotencyKeyReused.Said());
+                    case IdempotencyClaim.InFlight:
+                        return TypedResults.Problem(statusCode: CommonRefusals.IdempotencyInProgress.Status, extensions: CommonRefusals.IdempotencyInProgress.Said());
+                }
+
+                PlaceOrderResult result;
+                try
+                {
+                    result = await dispatcher.SendAsync(
+                        new PlaceOrderCommand(
+                            Token(http),
+                            shipTo,
+                            billTo,
+                            request.ShippingOptionCode,
+                            request.QuoteHash,
+                            request.Instrument,
+                            idempotencyKey,
+                            request.Coupons ?? [],
+                            resolved),
+                        ct);
+                }
+                catch
+                {
+                    // Not the request's token: a cancelled request still gives its key back.
+                    await keys.ReleaseAsync(scope, idempotencyKey, CancellationToken.None);
+                    throw;
+                }
+
+                // What is kept is what placed an order. A refusal changed nothing,
+                // so the key is free: a declined card is retried with the key it had.
+                if (result is { Outcome: PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced, Order: { } placed })
+                    await keys.CompleteAsync(scope, idempotencyKey, StatusCodes.Status201Created, placed.Id.ToString(), ct);
+                else
+                    await keys.ReleaseAsync(scope, idempotencyKey, ct);
 
                 http.Response.Headers.ContentLanguage = resolved;
 
                 return result.Outcome switch
                 {
-                    PlaceOrderOutcome.NothingToShip => TypedResults.BadRequest("There is nothing in the cart."),
+                    PlaceOrderOutcome.NothingToShip => TypedResults.Problem(statusCode: CheckoutRefusals.NothingToShip.Status, extensions: CheckoutRefusals.NothingToShip.Said()),
 
-                    PlaceOrderOutcome.UnknownShippingOption => TypedResults.BadRequest(
-                        $"'{result.Detail}' is not one of the delivery options for this address."),
+                    PlaceOrderOutcome.UnknownShippingOption => TypedResults.Problem(
+                        statusCode: CheckoutRefusals.UnknownShippingOption.Status,
+                        extensions: CheckoutRefusals.UnknownShippingOption.Said(
+                            es: $"«{result.Detail}» no se ofrece para esta dirección.",
+                            en: $"'{result.Detail}' is not offered for this address.",
+                            path: "$.shippingOptionCode")),
 
-                    PlaceOrderOutcome.UnknownSkus => TypedResults.NotFound(
-                        $"These are no longer on sale: {result.Detail}."),
+                    PlaceOrderOutcome.UnknownSkus => TypedResults.Problem(
+                        statusCode: CheckoutRefusals.NoLongerOnSale.Status,
+                        extensions: CheckoutRefusals.NoLongerOnSale.Said(
+                            es: $"Ya no se venden: {result.Detail}.", en: $"No longer on sale: {result.Detail}.")),
 
                     // 409 and the NEW quote. The shopper is not wrong and the
                     // shop is not wrong; the price moved between the two, and
                     // the only honest answer is to show the difference.
-                    PlaceOrderOutcome.PriceChanged => TypedResults.Conflict(new PriceChangedResponse(
-                        result.Pricing!.InputHash,
-                        result.Pricing.Totals.Total.Amount,
-                        result.Pricing.Totals.Shipping.Amount,
-                        result.Pricing.Totals.TaxTotal.Amount,
-                        result.Pricing.Totals.DiscountTotal.Amount)),
+                    PlaceOrderOutcome.PriceChanged => TypedResults.Problem(
+                        statusCode: CheckoutRefusals.PriceChanged.Status,
+                        extensions: CheckoutRefusals.PriceChanged.Said(
+                            path: "$.quoteHash",
+                            carrying: new PriceChangedResponse(
+                                result.Pricing!.InputHash,
+                                result.Pricing.Totals.Total,
+                                result.Pricing.Totals.Shipping,
+                                result.Pricing.Totals.TaxTotal,
+                                result.Pricing.Totals.DiscountTotal))),
 
                     // 402: the request was fine and the card said no. A 400
                     // would tell the client to fix its request, which is exactly
                     // the wrong advice.
-                    PlaceOrderOutcome.PaymentDeclined => TypedResults.Problem(
-                        detail: result.Detail, statusCode: StatusCodes.Status402PaymentRequired),
+                    // The provider's own words are the reason: they go where the
+                    // shopkeeper reads them, and the shopper is told in the shop's.
+                    PlaceOrderOutcome.PaymentDeclined => TypedResults.Problem(statusCode: CheckoutRefusals.PaymentDeclined.Status, extensions: CheckoutRefusals.PaymentDeclined.Said(path: "$.instrument", reason: result.Detail)),
 
                     // 503 and retryable: same idempotency key, same order.
-                    PlaceOrderOutcome.PaymentUnavailable => TypedResults.Problem(
-                        detail: result.Detail, statusCode: StatusCodes.Status503ServiceUnavailable),
+                    PlaceOrderOutcome.PaymentUnavailable => TypedResults.Problem(statusCode: CheckoutRefusals.PaymentUnavailable.Status, extensions: CheckoutRefusals.PaymentUnavailable.Said(reason: result.Detail)),
 
                     // Only an agent's checkout carries a mandate (P11-5); here it
                     // cannot happen, and if it ever did it is a refusal, not an order.
-                    PlaceOrderOutcome.NotMandated => TypedResults.Problem(
-                        detail: result.Detail, statusCode: StatusCodes.Status409Conflict),
+                    PlaceOrderOutcome.NotMandated => TypedResults.Problem(statusCode: CheckoutRefusals.NotMandated.Status, extensions: CheckoutRefusals.NotMandated.Said(reason: result.Detail)),
 
                     // An agent's token on the storefront's checkout is held to the
                     // shop's rules for agents too (P11-6).
-                    PlaceOrderOutcome.AgentRefused => TypedResults.Problem(
-                        detail: result.Detail, statusCode: StatusCodes.Status403Forbidden),
+                    PlaceOrderOutcome.AgentRefused => TypedResults.Problem(statusCode: CheckoutRefusals.AgentRefused.Status, extensions: CheckoutRefusals.AgentRefused.Said(reason: result.Detail)),
 
-                    _ => TypedResults.Ok(OrderView.From(result.Order!))
+                    // 409, and what there is: the cart is fine and the shelf is
+                    // short, so the answer names each article with what was asked
+                    // and what can be had — a screen offers to buy that many.
+                    PlaceOrderOutcome.InsufficientStock => TypedResults.Problem(
+                        statusCode: CheckoutRefusals.InsufficientStock.Status,
+                        extensions: CheckoutRefusals.InsufficientStock.Said(
+                            carrying: new InsufficientStockResponse(result.Shortages!))),
+
+                    // 201, and where the order is: it has an address of its own
+                    // from now on, and a retry with the same key is told the same.
+                    _ => TypedResults.Created($"/api/orders/{result.Order!.Id}", OrderView.From(result.Order!))
                 };
             })
+            .WithMetadata(new Refuses(
+                CommonRefusals.IdempotencyKeyRequired, CommonRefusals.IdempotencyKeyReused, CommonRefusals.IdempotencyInProgress,
+                CheckoutRefusals.InvalidAddress, CheckoutRefusals.NothingToShip, CheckoutRefusals.UnknownShippingOption,
+                CheckoutRefusals.NoLongerOnSale, CheckoutRefusals.PriceChanged, CheckoutRefusals.PaymentDeclined,
+                CheckoutRefusals.PaymentUnavailable, CheckoutRefusals.NotMandated, CheckoutRefusals.AgentRefused,
+                CheckoutRefusals.InsufficientStock))
             .WithName("PlaceOrder");
     }
 

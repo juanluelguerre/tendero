@@ -18,7 +18,7 @@ namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 /// and today is <paramref name="Partial"/>: half a day against a whole day's
 /// baseline, drawn apart and counted in no total until it ends.
 /// </summary>
-public sealed record UpliftDay(DateTimeOffset Start, decimal Sold, decimal? Baseline, bool Future, bool Partial);
+public sealed record UpliftDay(DateTimeOffset Start, Money Sold, Money? Baseline, bool Future, bool Partial);
 
 /// <summary>
 /// What a campaign added over what the shop would have sold anyway (R-9, D-7):
@@ -32,12 +32,12 @@ public sealed record UpliftDay(DateTimeOffset Start, decimal Sold, decimal? Base
 /// </summary>
 /// <param name="TimeZone">The zone the days were counted in — the shop's (ADR 0046) — so no reader assumes one.</param>
 public sealed record CampaignUplift(
-    string Currency,
     string TimeZone,
     bool HasBaseline,
-    decimal Sold,
-    decimal? Baseline,
-    decimal? Uplift,
+    Money Sold,
+    Money? Baseline,
+    /// <summary>What was sold less the baseline: the one amount here that can be negative — a campaign that sold less than an ordinary week.</summary>
+    Money? Uplift,
     IReadOnlyList<UpliftDay> Days);
 
 /// <summary>Dates in, figures out: the backoffice reads the window from Pricing and asks with it, so Ordering never reads Pricing.</summary>
@@ -58,6 +58,7 @@ public static class CampaignBaseline
     {
         var sales = orders.Where(SalesRanking.IsSale).ToList();
         var opening = LocalDateOf(zone, from);
+        var currency = DashboardCurrency.Of(sales);
         var hasBaseline = firstOrderAt is { } first && first <= zone.AtStartOfDay(opening.PlusWeeks(-Weeks)).ToDateTimeOffset();
 
         decimal SoldOn(LocalDate day)
@@ -78,7 +79,7 @@ public static class CampaignBaseline
             var last = opening.PlusDays(-1);
             while (last.DayOfWeek != day.DayOfWeek) last = last.PlusDays(-1);
             var weeks = Enumerable.Range(0, Weeks).Select(week => SoldOn(last.PlusWeeks(-week))).ToArray();
-            return Math.Round(weeks.Average(), Money.Decimals, MidpointRounding.AwayFromZero);
+            return MinorUnits.Round(weeks.Average(), currency);
         }
 
         var days = new List<UpliftDay>();
@@ -87,20 +88,21 @@ public static class CampaignBaseline
             var start = zone.AtStartOfDay(day).ToDateTimeOffset();
             var future = start > now;
             var partial = !future && zone.AtStartOfDay(day.PlusDays(1)).ToDateTimeOffset() > now;
-            days.Add(new UpliftDay(start, future ? 0m : SoldOn(day), BaselineOf(day), future, partial));
+            days.Add(new UpliftDay(
+                start, new Money(future ? 0m : SoldOn(day), currency),
+                BaselineOf(day) is { } usual ? new Money(usual, currency) : null, future, partial));
         }
 
         var happened = days.Where(day => !day.Future && !day.Partial).ToList();
-        var sold = happened.Sum(day => day.Sold);
-        decimal? baseline = hasBaseline ? happened.Sum(day => day.Baseline ?? 0m) : null;
+        var sold = happened.Sum(day => day.Sold.Amount);
+        decimal? baseline = hasBaseline ? happened.Sum(day => day.Baseline?.Amount ?? 0m) : null;
 
         return new CampaignUplift(
-            DashboardCurrency.Of(sales),
             zone.Id,
             hasBaseline,
-            sold,
-            baseline,
-            baseline is { } expected ? sold - expected : null,
+            new Money(sold, currency),
+            baseline is { } usually ? new Money(usually, currency) : null,
+            baseline is { } expected ? new Money(sold - expected, currency) : null,
             days);
     }
 
@@ -125,6 +127,14 @@ public sealed class CampaignUpliftHandler(IShopHistory history, TimeProvider clo
     }
 }
 
+public static class UpliftRefusals
+{
+    public static readonly Refusal WindowNotValid = new(
+        "WindowNotValid", 400,
+        "La ventana de una campaña abre antes de cerrar, y dura 120 días como mucho.",
+        "A campaign's window opens before it closes, and lasts at most 120 days.");
+}
+
 public sealed class CampaignUpliftEndpoint : ICarterModule
 {
     /// <summary>A campaign's window, at most a season: a longer one is a mistake in the question.</summary>
@@ -133,16 +143,17 @@ public sealed class CampaignUpliftEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapGet("/api/dashboard/uplift",
-            async Task<Results<Ok<CampaignUplift>, BadRequest<string>>> (
+            async Task<Results<Ok<CampaignUplift>, ProblemHttpResult>> (
                 DateTimeOffset from, DateTimeOffset to, string? category, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 if (to <= from || to - from > LongestWindow)
-                    return TypedResults.BadRequest("A campaign's window opens before it closes, and lasts at most 120 days.");
+                    return TypedResults.Problem(statusCode: UpliftRefusals.WindowNotValid.Status, extensions: UpliftRefusals.WindowNotValid.Said());
 
                 return TypedResults.Ok(await dispatcher.SendAsync(new GetCampaignUpliftQuery(from, to, category), ct));
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Dashboard")
+            .WithMetadata(new Refuses(UpliftRefusals.WindowNotValid))
             .WithName("GetCampaignUplift");
     }
 }

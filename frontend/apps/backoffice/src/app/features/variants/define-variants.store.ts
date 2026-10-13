@@ -3,6 +3,7 @@ import { form } from '@angular/forms/signals';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CatalogService } from '../../data-access/catalog.service';
+import { refusalOf } from '../../worklist/refusal';
 
 interface AxisDraft {
   readonly code: string;
@@ -68,12 +69,12 @@ export const DefineVariantsStore = signalStore(
             patchState(store, { busy: false });
             return;
           }
-          // The server's 409 carries the domain's reason; showing it is more useful
-          // than a "something went wrong" that forces you to open the console.
-          const conflict = error as { error?: unknown };
+          // The server's 409 carries the shop's sentence and the domain's reason;
+          // showing both is more useful than a "something went wrong" that forces
+          // you to open the console.
           patchState(store, {
             busy: false,
-            failed: typeof conflict.error === 'string' ? conflict.error : 'Could not define the variants.',
+            failed: refusalOf(error) || 'Could not define the variants.',
           });
         },
       });

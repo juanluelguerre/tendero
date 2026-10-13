@@ -1,8 +1,14 @@
 <section *transloco="let t" class="pt-6 pb-8">
   @if (store.order(); as order) {
     <header class="mb-5 flex flex-wrap items-center gap-3">
+      <!-- *Placed* is said of an order the shop has confirmed. One whose
+           payment is authorised and whose stock nobody has held yet is
+           received: the saga may still cancel it (two shoppers, the last
+           unit), and a page that had said *done* would have said it of that. -->
       @if (store.justPlaced()) {
-        <p class="basis-full font-semibold text-positive">{{ t('order.placed') }}</p>
+        <p class="basis-full font-semibold text-positive">
+          {{ t(order.status === 'Confirmed' ? 'order.placed' : 'order.confirming') }}
+        </p>
       }
       <h1 class="text-2xl">{{ t('order.reference', { id: shortId(order.orderId) }) }}</h1>
       <lib-status-pill [tone]="orderTone(order.status)" size="md">
@@ -50,7 +56,7 @@
                 </span>
                 <span class="numeric text-muted">×{{ line.quantity }}</span>
                 <span class="min-w-col-md text-end numeric font-semibold">{{
-                  line.unitPrice * line.quantity | price: store.order()?.currency ?? 'EUR' : culture.active()
+                  line.total | price: culture.active()
                 }}</span>
               </li>
             }
@@ -148,7 +154,7 @@
                   </span>
                   @if (request.refundAmount) {
                     <span class="numeric font-semibold text-positive">{{
-                      request.refundAmount | price: store.order()?.currency ?? 'EUR' : culture.active()
+                      request.refundAmount | price: culture.active()
                     }}</span>
                   }
                   @if (request.resolution) {
@@ -163,7 +169,6 @@
 
       <storefront-summary>
         <storefront-totals
-          [currency]="order.currency"
           [subtotal]="order.subtotal"
           [discountTotal]="order.discountTotal"
           [shipping]="order.shipping"

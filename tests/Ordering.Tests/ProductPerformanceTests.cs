@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Ordering.Features.Dashboard;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
+using static ElGuerre.Tendero.Ordering.Tests.Amounts;
 
 namespace ElGuerre.Tendero.Ordering.Tests;
 
@@ -36,8 +37,8 @@ public sealed class ProductPerformanceTests
         var best = ProductPerformanceFigures.Of(DashboardPeriod.Week, PerformanceRanking.Best, null, 10, Orders);
 
         Assert.Equal(["Mug", "Kettle", "Scarf"], best.Rows.Select(row => row.Name));
-        Assert.Equal((5, 50m), (best.Rows[0].Units, best.Rows[0].Revenue));
-        Assert.Equal((3, "EUR"), (best.Total, best.Currency));
+        Assert.Equal((5, Eur(50m)), (best.Rows[0].Units, best.Rows[0].Revenue));
+        Assert.Equal(3, best.Total);
     }
 
     [Fact]
@@ -76,7 +77,7 @@ public sealed class ProductPerformanceTests
     {
         var none = ProductPerformanceFigures.Of(DashboardPeriod.Day, PerformanceRanking.Best, null, 10, []);
 
-        Assert.Equal((0, 0, DashboardCurrency.Default), (none.Total, none.Rows.Count, none.Currency));
+        Assert.Equal((0, 0), (none.Total, none.Rows.Count));
     }
 
     [Fact]

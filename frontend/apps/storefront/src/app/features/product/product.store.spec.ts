@@ -19,8 +19,7 @@ const variant = (
   ({
     variantId: sku,
     sku,
-    priceAmount: 29.9,
-    priceCurrency: 'EUR',
+    price: { amount: 2990, currency: 'EUR' },
     axisValues,
     label: sku,
     imageId: imageIds[0] ?? 'cover',
@@ -48,9 +47,8 @@ const aShirt = (): ProductDetail =>
       variant('NAVY-38', { COLOR: 'NAVY_BLUE', SIZE: '38' }, true),
       variant('BLACK-38', { COLOR: 'BLACK', SIZE: '38' }, true, ['black', 'black-back', 'cover', 'detail']),
     ],
-    priceFrom: 29.9,
-    priceTo: 29.9,
-    priceCurrency: 'EUR',
+    priceFrom: { amount: 2990, currency: 'EUR' },
+    priceTo: { amount: 2990, currency: 'EUR' },
     alternates: [],
   }) as unknown as ProductDetail;
 

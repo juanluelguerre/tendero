@@ -108,7 +108,7 @@
                 <span class="mt-hair block numeric text-3xs text-muted">{{ item.code }}</span>
               </td>
               <td>{{ item.brand ?? '—' }}</td>
-              <td class="right numeric">{{ item.priceAmount | price: item.priceCurrency : culture.active() }}</td>
+              <td class="right numeric">{{ item.price | price: culture.active() }}</td>
               <td><backoffice-product-status-tags [product]="item" /></td>
               <!-- As narrow as its link, so the column of links is one straight edge. -->
               <td class="right w-px whitespace-nowrap">
@@ -132,9 +132,7 @@
           <button type="button" class="worklist-card__open" (click)="store.open(item)">
             <span class="worklist-card__line">
               <span class="block font-semibold text-body">{{ item.name }}</span>
-              <span class="worklist-card__end numeric">{{
-                item.priceAmount | price: item.priceCurrency : culture.active()
-              }}</span>
+              <span class="worklist-card__end numeric">{{ item.price | price: culture.active() }}</span>
             </span>
             <span class="worklist-card__line">
               <backoffice-product-status-tags [product]="item" />

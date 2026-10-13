@@ -1,4 +1,5 @@
 import type { SalesSeries } from '@tendero/shared-api';
+import { majorUnits } from '@tendero/shared-util';
 import type { BarChartData } from '../../../../charts/chart-contract';
 
 /**
@@ -14,12 +15,17 @@ export function toBarChart(
   return {
     categories: bucketLabels(series, culture),
     series: [
-      { key: 'current', label: labels.current, role: 'data', values: series.current.map((point) => point.revenue) },
+      {
+        key: 'current',
+        label: labels.current,
+        role: 'data',
+        values: series.current.map((point) => majorUnits(point.revenue)),
+      },
       {
         key: 'previous',
         label: labels.previous,
         role: 'previous',
-        values: series.previous.map((point) => point.revenue),
+        values: series.previous.map((point) => majorUnits(point.revenue)),
       },
     ],
   };

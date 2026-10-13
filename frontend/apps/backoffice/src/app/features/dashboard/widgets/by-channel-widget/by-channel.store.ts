@@ -7,9 +7,15 @@ import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
 import { shareOf } from '../figures';
+import { ShopCurrency } from '@tendero/shared-util';
 
 function through(mix: SalesMix | undefined, channel: 'Web' | 'Mcp' | 'Ucp') {
-  return mix?.byChannel.find((row) => row.channel === channel) ?? { orders: 0, revenue: 0 };
+  return (
+    mix?.byChannel.find((row) => row.channel === channel) ?? {
+      orders: 0,
+      revenue: { amount: 0, currency: ShopCurrency },
+    }
+  );
 }
 
 /**
@@ -33,7 +39,8 @@ export const ByChannelStore = signalStore(
     const web = computed(() => through(store.mix.value(), 'Web'));
     const agents = computed(() => {
       const [mcp, ucp] = [through(store.mix.value(), 'Mcp'), through(store.mix.value(), 'Ucp')];
-      return { orders: mcp.orders + ucp.orders, revenue: mcp.revenue + ucp.revenue };
+      // Minor units of one currency, added: MCP's and UCP's orders are both agents'.
+      return { orders: mcp.orders + ucp.orders, revenue: mcp.revenue.amount + ucp.revenue.amount };
     });
     return {
       /** Null when nothing was sold through a known channel: there is no whole to share. */
@@ -54,7 +61,7 @@ export const ByChannelStore = signalStore(
       })),
       unrecorded: computed(() => store.mix.value()?.unrecorded.orders ?? 0),
       agentShare: computed(() => shareOf(agents().orders, web().orders + agents().orders)),
-      revenueShare: computed(() => shareOf(agents().revenue, web().revenue + agents().revenue)),
+      revenueShare: computed(() => shareOf(agents().revenue, web().revenue.amount + agents().revenue)),
     };
   }),
 );

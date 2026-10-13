@@ -35,9 +35,11 @@ public sealed class BuildKitTests
         return new CategoryTree([home, kitchen, cookware, knives]);
     }
 
+    private static Money Euros(decimal amount) => new(amount, "EUR");
+
     private static SearchHit Hit(string code, decimal price, string currency = "EUR") =>
         new($"id-{code}", code, $"Name of {code}", code.ToLowerInvariant(), "Kuisina", "COOKWARE", $"v-{code}", $"SKU-{code}",
-            price, price, price, currency, null, InStock: true, Score: 1);
+            new Money(price, currency), new Money(price, currency), new Money(price, currency), null, InStock: true, Score: 1);
 
     /// <summary>The shop's search, answering each slot by its words and remembering what it was asked.</summary>
     private sealed class Shop(Func<ProductSearchQuery, SearchHit[]> answers) : ISearchStrategy
@@ -83,7 +85,7 @@ public sealed class BuildKitTests
     {
         var shop = new Shop(answers ?? TheStory);
         var handler = new BuildKitHandler(new Templates(kit ?? Kitchen), new Tree(Categories()), shop, solver ?? new BranchAndBoundKitSolver());
-        var result = await handler.HandleAsync(new BuildKitQuery(template, budget, culture, requirements ?? []), TestContext.Current.CancellationToken);
+        var result = await handler.HandleAsync(new BuildKitQuery(template, Euros(budget), culture, requirements ?? []), TestContext.Current.CancellationToken);
         return (result, shop);
     }
 
@@ -133,8 +135,8 @@ public sealed class BuildKitTests
         var kit = result.Kit!;
 
         Assert.Equal(BuildKitOutcome.Built, result.Outcome);
-        Assert.Equal(("KITCHEN_STARTER", "Kit de cocina", 120m, 113.90m, 6.10m, "EUR"),
-            (kit.Template, kit.Name, kit.Budget, kit.Total, kit.Left, kit.Currency));
+        Assert.Equal(("KITCHEN_STARTER", "Kit de cocina", Euros(120m), Euros(113.90m), Euros(6.10m)),
+            (kit.Template, kit.Name, kit.Budget, kit.Total, kit.Left));
         Assert.Equal((KitBinding.Budget, true, true), (kit.Binding, kit.Complete, kit.Exact));
 
         Assert.Equal(
@@ -142,10 +144,10 @@ public sealed class BuildKitTests
             kit.Slots.Select(slot => (slot.Code, slot.Name, slot.Required, slot.Product?.Code)));
 
         // A hit as the search gave it: its SKU is what a cart is filled with.
-        Assert.Equal(("SKU-PAN-IRON", 49.90m), (kit.Slots[0].Product!.MatchedSku, kit.Slots[0].Product!.PriceAmount));
+        Assert.Equal(("SKU-PAN-IRON", 49.90m), (kit.Slots[0].Product!.MatchedSku, kit.Slots[0].Product!.Price.Amount));
 
-        Assert.Equal(("KNIVES-3", 48.90m), (kit.Slots[1].Better!.Product.Code, kit.Slots[1].Better!.Short));
-        Assert.Equal((KitGapReason.OverBudget, "BOARD", 18.80m),
+        Assert.Equal(("KNIVES-3", Euros(48.90m)), (kit.Slots[1].Better!.Product.Code, kit.Slots[1].Better!.Short));
+        Assert.Equal((KitGapReason.OverBudget, "BOARD", (Money?)Euros(18.80m)),
             (kit.Slots[2].Gap!.Reason, kit.Slots[2].Gap!.Cheapest!.Code, kit.Slots[2].Gap!.Short));
     }
 
@@ -255,7 +257,32 @@ public sealed class BuildKitTests
 
     // ---------- the explanation: written by code from the trace ----------
 
-    private static (string? Slot, string Text)[] Said(KitView kit) => [.. kit.Explanation.Select(sentence => (sentence.Slot, sentence.Text))];
+    private static (string? Slot, string Text)[] Said(KitView kit) => [.. kit.Explanation.Select(sentence => (sentence.About, sentence.Text))];
+
+    /// <summary>
+    /// **Each sentence says what kind of thing it says** (phase 13b, the wire's
+    /// spec): a code from a closed set, and the slot it is about. A front end
+    /// composes its own sentence from the code and the kit's fields, formatted
+    /// for its reader; an agent with no front end reads the text. The code is
+    /// what ties the two: they cannot be about different things. The same in
+    /// either language — it is not a sentence.
+    /// </summary>
+    [Theory]
+    [InlineData("es")]
+    [InlineData("en")]
+    public async Task Each_sentence_of_the_explanation_carries_its_code_and_what_it_is_about(string culture)
+    {
+        var (story, _) = await Build(120m, culture);
+        var (missing, _) = await Build(500m, culture, answers: query => query.Text is "cuchillo" or "knife" ? [] : TheStory(query));
+        var (unused, _) = await Build(120m, culture, requirements: ["COLOR:BLACK"]);
+
+        Assert.Equal(
+            [(KitSaid.Summary, null), (KitSaid.Chosen, "pan"), (KitSaid.ChosenBelowBetter, "knife"), (KitSaid.OverBudget, "board")],
+            story.Kit!.Explanation.Select(said => (said.Code, said.About)));
+        Assert.Contains((KitSaid.NothingFits, "knife"), missing.Kit!.Explanation.Select(said => (said.Code, said.About)));
+        Assert.Equal((KitSaid.Incomplete, null), missing.Kit.Explanation.Select(said => (said.Code, said.About)).Last());
+        Assert.Contains((KitSaid.RequirementUnused, "COLOR:BLACK"), unused.Kit!.Explanation.Select(said => (said.Code, said.About)));
+    }
 
     /// <summary>The solver, stopped after so many nodes: what a search that ran out of its budget gives.</summary>
     private sealed class StoppedAt(int nodes) : IKitSolver
@@ -341,7 +368,7 @@ public sealed class BuildKitTests
     {
         var (result, _) = await Build(120m, culture, requirements: ["INDUCTION:true", "COLOR:BLACK"]);
 
-        Assert.Contains((null, unused), Said(result.Kit!));
+        Assert.Contains(("COLOR:BLACK", unused), Said(result.Kit!));
         Assert.DoesNotContain(Said(result.Kit!), sentence => sentence.Text.Contains("INDUCTION", StringComparison.Ordinal));
     }
 
@@ -375,15 +402,15 @@ public sealed class BuildKitTests
         {
             var kit = (await Build(budget, culture)).Result.Kit!;
 
-            HashSet<decimal> carried = [kit.Budget, kit.Total, kit.Left];
+            HashSet<decimal> carried = [kit.Budget.Amount, kit.Total.Amount, kit.Left.Amount];
             foreach (var slot in kit.Slots)
             {
                 if (slot.Product is { } product)
-                    carried.Add(product.PriceAmount);
+                    carried.Add(product.Price.Amount);
                 if (slot.Gap?.Cheapest is { } cheapest)
-                    carried.Add(cheapest.PriceAmount);
+                    carried.Add(cheapest.Price.Amount);
                 if (slot is { Better: { } better, Product: { } held })
-                    carried.Add(better.Product.PriceAmount - held.PriceAmount);
+                    carried.Add(better.Product.Price.Amount - held.Price.Amount);
             }
 
             var named = kit.Explanation
@@ -433,7 +460,14 @@ public sealed class BuildKitTests
     [InlineData(100_000.01)]
     public void A_budget_of_nothing_or_beyond_the_ceiling_is_refused(decimal budget)
     {
-        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", budget, "es", [])).ShouldHaveValidationErrorFor(x => x.Budget);
+        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", Euros(budget), "es", [])).ShouldHaveValidationErrorFor("budget");
+    }
+
+    /// <summary>The shop sells in one currency, and a budget in another is not converted for anybody: it is refused.</summary>
+    [Fact]
+    public void A_budget_in_another_currency_than_the_shops_is_refused()
+    {
+        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", new Money(120m, "USD"), "es", [])).ShouldHaveValidationErrorFor("budget");
     }
 
     [Theory]
@@ -442,7 +476,7 @@ public sealed class BuildKitTests
     [InlineData("KIT/../X")]
     public void A_template_that_is_not_a_code_is_refused(string template)
     {
-        Validator.TestValidate(new BuildKitQuery(template, 120m, "es", [])).ShouldHaveValidationErrorFor(x => x.Template);
+        Validator.TestValidate(new BuildKitQuery(template, Euros(120m), "es", [])).ShouldHaveValidationErrorFor(x => x.Template);
     }
 
     [Theory]
@@ -451,7 +485,7 @@ public sealed class BuildKitTests
     [InlineData("INDUCTION:")]
     public void A_requirement_that_is_not_a_facet_is_refused(string requirement)
     {
-        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", 120m, "es", [requirement])).ShouldHaveValidationErrorFor("requirements[0]");
+        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", Euros(120m), "es", [requirement])).ShouldHaveValidationErrorFor("requirements[0]");
     }
 
     [Fact]
@@ -459,8 +493,8 @@ public sealed class BuildKitTests
     {
         var many = Enumerable.Range(0, BuildKitValidator.MaxRequirements + 1).Select(index => $"A{index}:true").ToArray();
 
-        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", 120m, "es", many)).ShouldHaveValidationErrorFor("requirements");
-        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", 120m, "fr", [])).ShouldHaveValidationErrorFor(x => x.Culture);
-        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", 120m, "en", ["INDUCTION:true"])).ShouldNotHaveAnyValidationErrors();
+        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", Euros(120m), "es", many)).ShouldHaveValidationErrorFor("requirements");
+        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", Euros(120m), "fr", [])).ShouldHaveValidationErrorFor(x => x.Culture);
+        Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", Euros(120m), "en", ["INDUCTION:true"])).ShouldNotHaveAnyValidationErrors();
     }
 }

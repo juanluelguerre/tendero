@@ -40,6 +40,19 @@
                 <p class="mt-hair text-sm text-muted">{{ line.variantLabel }}</p>
               }
               <p class="mt-hair numeric text-xs text-muted">{{ line.sku }}</p>
+              <!-- The shelf, said before the till has to: a note and not a
+                   block — the number moves, and paying is what refuses. -->
+              @let note = stockNote(line);
+              @if (note) {
+                <p
+                  class="mt-1 text-xs"
+                  [class.text-warning]="note.short"
+                  [class.text-muted]="!note.short"
+                  role="status"
+                >
+                  {{ t(note.key, note.params) }}
+                </p>
+              }
             </div>
 
             <!-- The stepper: this is the control people press most on a phone. -->
@@ -62,7 +75,7 @@
                 type="button"
                 class="size-control bg-surface text-lg leading-none text-body enabled:hover:bg-raised disabled:opacity-40"
                 [attr.aria-label]="t('cart.increase')"
-                [disabled]="store.busy()"
+                [disabled]="store.busy() || !canAddOneMore(line)"
                 (click)="change(line, 1)"
               >
                 +
@@ -72,7 +85,7 @@
             <!-- What the line comes to, from the quote: a dash until the quote has it. -->
             @let net = netBySku().get(line.sku);
             <p class="min-w-col-md text-end numeric font-semibold max-xs:col-2 max-xs:text-start">
-              {{ net === undefined ? '—' : (net | price: store.quote()?.currency ?? 'EUR' : culture.active()) }}
+              {{ net === undefined ? '—' : (net | price: culture.active()) }}
             </p>
 
             <button
@@ -91,7 +104,6 @@
       <storefront-summary>
         @if (store.quote(); as quote) {
           <storefront-totals
-            [currency]="quote.currency"
             [subtotal]="quote.subtotal"
             [discountTotal]="quote.discountTotal"
             shippingState="at-checkout"
@@ -113,14 +125,15 @@
                     discount.label
                   }}</span>
                   @if (discount.outcome === 'Applied') {
-                    <span class="numeric text-positive"
-                      >−{{ discount.amount | price: store.quote()?.currency ?? 'EUR' : culture.active() }}</span
-                    >
+                    <span class="numeric text-positive">−{{ discount.amount | price: culture.active() }}</span>
                   } @else {
                     <span class="text-xs text-muted">{{ t('cart.suppressed') }}</span>
                   }
-                  @if (discount.reason) {
-                    <p class="col-span-full text-xs text-muted">{{ discount.reason }}</p>
+                  <!-- The page's own sentence, from the code and what it asked
+                       for: money the reader's way, a category by its name. -->
+                  @let why = reason(discount, t);
+                  @if (why) {
+                    <p class="col-span-full text-xs text-muted">{{ why }}</p>
                   }
                 </li>
               }

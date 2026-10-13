@@ -12,7 +12,9 @@ describe('the formatting pipes', () => {
   it('write a price as the language writes money', () => {
     const price = new PricePipe();
 
-    expect([price.transform(1234.5, 'EUR', 'es'), price.transform(1234.5, 'EUR', 'en')]).toEqual([
+    const money = { amount: 123450, currency: 'EUR' };
+
+    expect([price.transform(money, 'es'), price.transform(money, 'en')]).toEqual([
       new Intl.NumberFormat('es', { style: 'currency', currency: 'EUR' }).format(1234.5),
       new Intl.NumberFormat('en', { style: 'currency', currency: 'EUR' }).format(1234.5),
     ]);

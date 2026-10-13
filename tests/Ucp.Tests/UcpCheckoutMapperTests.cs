@@ -187,7 +187,7 @@ public sealed class UcpCheckoutMapperTests
     [Fact]
     public async Task Completion_takes_one_instrument_from_the_offered_handler_with_a_token_and_nothing_else()
     {
-        var operations = new UcpCheckoutOperations(null!, null!, null!, null!);
+        var operations = new UcpCheckoutOperations(null!, null!, null!, null!, null!, null!);
         var call = new UcpCheckoutCall(new UcpNegotiated(All, new PlatformProfile(new Dictionary<string, IReadOnlySet<string>>())), UcpCheckoutConformanceTests.Links);
         var ct = TestContext.Current.CancellationToken;
         UcpCompleteRequest With(string? handler, string? token) => new()

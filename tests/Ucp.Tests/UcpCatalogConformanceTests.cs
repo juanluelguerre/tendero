@@ -2,6 +2,7 @@ using System.Text.Json;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests.Ucp;
 using ElGuerre.Tendero.Ucp.Catalog;
 using Xunit;
@@ -51,13 +52,12 @@ public sealed class UcpCatalogConformanceTests
         Variants:
         [
             new VariantView(
-                "0199a1f0-0000-7000-8000-000000000002", $"{code}-BLACK", 39.00m, "EUR",
+                "0199a1f0-0000-7000-8000-000000000002", $"{code}-BLACK", new Money(39.00m, "EUR"),
                 new Dictionary<string, string> { ["COLOR"] = "BLACK" },
                 "negro", "abc123", false, true, 4, ["abc123"])
         ],
-        PriceFrom: 39.00m,
-        PriceTo: 39.00m,
-        PriceCurrency: "EUR",
+        PriceFrom: new Money(39.00m, "EUR"),
+        PriceTo: new Money(39.00m, "EUR"),
         Alternates: [],
         MissingCultures: [],
         Status: ProductStatus.Active,

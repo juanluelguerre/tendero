@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.Search.Strategies;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -15,7 +16,7 @@ internal static class Strategies
 {
     public static SearchHit Hit(string productId, bool inStock = true) =>
         new(productId, $"CODE-{productId}", $"Product {productId}", $"product-{productId}", "Kuisina", "KITCHEN",
-            $"{productId}-variant", $"{productId}-SKU", 29.90m, 29.90m, 34.90m, "EUR", null, inStock, Score: 1.5);
+            $"{productId}-variant", $"{productId}-SKU", new Money(29.90m, "EUR"), new Money(29.90m, "EUR"), new Money(34.90m, "EUR"), null, inStock, Score: 1.5);
 
     public static HybridSearchStrategy Hybrid(
         ILexicalProductSearch lexical,

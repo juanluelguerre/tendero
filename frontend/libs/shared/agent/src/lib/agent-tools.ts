@@ -1,4 +1,4 @@
-import { inject, Injectable, InjectionToken } from '@angular/core';
+import { DestroyRef, inject, Injectable, InjectionToken } from '@angular/core';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { supportsModelContext, type ModelContext, type ToolDescriptor, type ToolResponse } from './model-context';
 
@@ -40,7 +40,18 @@ export class AgentTools {
   private readonly context = inject(MODEL_CONTEXT, { optional: true });
   private readonly telemetry = inject(Telemetry);
 
+  /**
+   * What the tools are registered under. The draft has no way to take a tool
+   * back but aborting the signal it was registered with, so the app going away
+   * aborts this one — and a reload in development finds no names taken.
+   */
+  private readonly offered = new AbortController();
+
   private registered = false;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.offered.abort());
+  }
 
   /**
    * Whether the browser can host an agent. Public so a page can say so — but
@@ -57,8 +68,13 @@ export class AgentTools {
    * registration rather than a page-by-page one that races on navigation.
    *
    * Idempotent, because Angular constructs the shell once per app but a hot
-   * reload does not respect that, and a double registration is a browser
-   * offering the agent two identical tool sets.
+   * reload does not respect that, and a second registration of a name is one
+   * the browser rejects.
+   *
+   * **One call a tool** (the draft of 9 October 2026), each answering with a
+   * promise the browser may reject. A rejection is handled and not reported:
+   * the tools that registered stay, and a shopper's console does not carry an
+   * error for a surface they never asked for.
    */
   register(tools: readonly ToolDescriptor[]): void {
     if (this.registered) return;
@@ -66,8 +82,9 @@ export class AgentTools {
     const context = this.resolve();
     if (!context) return;
 
-    context.provideContext({ tools: tools.map((tool) => this.observed(tool)) });
     this.registered = true;
+    for (const tool of tools)
+      void context.registerTool(this.observed(tool), { signal: this.offered.signal }).catch(() => undefined);
   }
 
   /**
@@ -83,9 +100,9 @@ export class AgentTools {
 
     return {
       ...tool,
-      async execute(input) {
+      async execute(input, options) {
         try {
-          const response = await tool.execute(input);
+          const response = await tool.execute(input, options);
           report(response.isError ? 'refused' : 'answered');
           return response;
         } catch (error) {
@@ -99,7 +116,7 @@ export class AgentTools {
   private resolve(): ModelContext | null {
     if (this.context) return this.context;
 
-    return supportsModelContext() ? (navigator.modelContext ?? null) : null;
+    return supportsModelContext() ? (document.modelContext ?? null) : null;
   }
 }
 

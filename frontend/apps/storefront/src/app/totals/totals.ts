@@ -1,4 +1,5 @@
 import { PricePipe } from '@tendero/shared-ui';
+import type { Money } from '@tendero/shared-api';
 import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -18,6 +19,9 @@ export type ShippingState = 'at-checkout' | 'to-choose' | 'charged';
  * show it: subtotal, discounts when there are any, delivery, total, and the tax
  * the total includes.
  *
+ * Every figure is money as the API sent it — minor units and its currency — so
+ * there is no currency to hand over beside them (phase 13b).
+ *
  * It formats and never computes: every figure is the server's (a quote's or an
  * order's), because a client that added them up would disagree with the server
  * the first time a promotion touched a line (ADR 0016). What sits around it — a
@@ -30,15 +34,14 @@ export type ShippingState = 'at-checkout' | 'to-choose' | 'charged';
   host: { class: 'block' },
 })
 export class Totals {
-  readonly currency = input.required<string>();
-  readonly subtotal = input.required<number>();
-  readonly discountTotal = input(0);
-  readonly shipping = input(0);
+  readonly subtotal = input.required<Money>();
+  readonly discountTotal = input<Money | null>(null);
+  readonly shipping = input<Money | null>(null);
   readonly shippingState = input<ShippingState>('charged');
   /** The rate's own name once an order has one ("Envío estándar"); "Delivery" otherwise. */
   readonly shippingLabel = input<string | null>(null);
-  readonly total = input.required<number>();
-  readonly taxTotal = input(0);
+  readonly total = input.required<Money>();
+  readonly taxTotal = input<Money | null>(null);
 
   protected readonly culture = inject(CultureStore);
 }

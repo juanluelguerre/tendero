@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
+using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests.Ucp;
 using ElGuerre.Tendero.Ucp.Catalog;
 using Xunit;
@@ -33,8 +34,7 @@ public sealed class UcpCatalogMapperTests
             new VariantView(
                 VariantId: "0199a1f0-0000-7000-8000-000000000002",
                 Sku: "B13BAG0710-BLACK",
-                PriceAmount: 39.00m,
-                PriceCurrency: "EUR",
+                Price: new Money(39.00m, "EUR"),
                 AxisValues: new Dictionary<string, string> { ["COLOR"] = "BLACK" },
                 Label: "negro",
                 ImageId: "abc123",
@@ -45,8 +45,7 @@ public sealed class UcpCatalogMapperTests
             new VariantView(
                 VariantId: "0199a1f0-0000-7000-8000-000000000003",
                 Sku: "B13BAG0710-GREY",
-                PriceAmount: 41.50m,
-                PriceCurrency: "EUR",
+                Price: new Money(41.50m, "EUR"),
                 AxisValues: new Dictionary<string, string> { ["COLOR"] = "GREY" },
                 Label: "gris",
                 ImageId: null,
@@ -55,9 +54,8 @@ public sealed class UcpCatalogMapperTests
                 Remaining: 0,
                 ImageIds: [])
         ],
-        PriceFrom: 39.00m,
-        PriceTo: 41.50m,
-        PriceCurrency: "EUR",
+        PriceFrom: new Money(39.00m, "EUR"),
+        PriceTo: new Money(41.50m, "EUR"),
         Alternates: [],
         MissingCultures: [],
         Status: ProductStatus.Active,
@@ -70,12 +68,15 @@ public sealed class UcpCatalogMapperTests
     /// cents and never notice until the money moved.
     /// </summary>
     [Theory]
-    [InlineData("39.00", 3900L)]
-    [InlineData("41.50", 4150L)]
-    [InlineData("0.99", 99L)]
-    [InlineData("1249.95", 124995L)]
-    public void Money_is_in_minor_units(string amount, long expected) =>
-        Assert.Equal(expected, UcpCatalogMapper.Money(decimal.Parse(amount, System.Globalization.CultureInfo.InvariantCulture), "EUR").Amount);
+    [InlineData("39.00", "EUR", 3900L)]
+    [InlineData("41.50", "EUR", 4150L)]
+    [InlineData("0.99", "EUR", 99L)]
+    [InlineData("1249.95", "EUR", 124995L)]
+    // The currency's own minor unit, not a hundredth: the yen has none.
+    [InlineData("3900", "JPY", 3900L)]
+    [InlineData("1.250", "KWD", 1250L)]
+    public void Money_is_in_minor_units(string amount, string currency, long expected) =>
+        Assert.Equal(expected, UcpCatalogMapper.Money(new Money(decimal.Parse(amount, System.Globalization.CultureInfo.InvariantCulture), currency)).Amount);
 
     [Fact]
     public void The_price_range_spans_the_variants()

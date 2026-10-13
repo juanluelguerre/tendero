@@ -70,9 +70,9 @@ internal static class KitRequirements
 // ---------- building one ----------
 
 /// <param name="Template">The kit's code, as the shop wrote it.</param>
-/// <param name="Budget">What it may cost at most, in the shop's shown prices.</param>
+/// <param name="Budget">What it may cost at most, in the shop's shown prices and in the shop's currency.</param>
 /// <param name="Requirements">Facets every fitting product must have (<c>INDUCTION:true</c>). Each applies to the slots whose category declares its attribute, and to no other.</param>
-public sealed record BuildKitQuery(string Template, decimal Budget, string Culture, IReadOnlyList<string> Requirements)
+public sealed record BuildKitQuery(string Template, Money Budget, string Culture, IReadOnlyList<string> Requirements)
     : IQuery<BuildKitResult>;
 
 public enum BuildKitOutcome
@@ -95,7 +95,7 @@ public sealed record BuildKitResult(BuildKitOutcome Outcome, KitView? Kit);
 /// <param name="Exact">False when the search stopped at its ceiling: the kit is then the best found, not the best there is.</param>
 /// <param name="UnusedRequirements">Requirements no slot of this kit could be held to, said rather than ignored in silence.</param>
 public sealed record KitView(
-    string Template, string Name, decimal Budget, decimal Total, decimal Left, string Currency,
+    string Template, string Name, Money Budget, Money Total, Money Left,
     KitBinding Binding, bool Complete, bool Exact,
     IReadOnlyList<KitSlotView> Slots, IReadOnlyList<string> UnusedRequirements)
 {
@@ -103,12 +103,41 @@ public sealed record KitView(
     /// Why the kit is what it is, **written by code from the fields above and
     /// nothing else**, a sentence a fact, in the culture asked. The feature's
     /// path with no model in it, and the only text a model may later reword.
+    ///
+    /// Each is a <see cref="Message{TCode}"/>: its code says what kind of thing
+    /// is said and what it is about, so a page composes its own sentence from
+    /// the kit's fields and an agent reads this one.
     /// </summary>
-    public required IReadOnlyList<KitSentence> Explanation { get; init; }
+    public required IReadOnlyList<Message<KitSaid>> Explanation { get; init; }
 }
 
-/// <param name="Slot">The slot the sentence is about, or null when it is about the kit as a whole.</param>
-public sealed record KitSentence(string? Slot, string Text);
+/// <summary>What a kit's explanation says, as the closed set a reader branches on (ADR 0043).</summary>
+public enum KitSaid
+{
+    /// <summary>The kit against its budget: about the kit.</summary>
+    Summary,
+
+    /// <summary>What a slot holds, and nothing ranked above it was left out.</summary>
+    Chosen,
+
+    /// <summary>What a slot holds, when a better ranked product did not fit: by how much, and what was left.</summary>
+    ChosenBelowBetter,
+
+    /// <summary>A slot left empty for money: its cheapest candidate cost more than was left.</summary>
+    OverBudget,
+
+    /// <summary>A slot left empty because nothing in stock fits it.</summary>
+    NothingFits,
+
+    /// <summary>A requirement no slot of the kit could be held to: about the requirement, as it was sent.</summary>
+    RequirementUnused,
+
+    /// <summary>The search stopped at its limit: the best kit found, not necessarily the best there is.</summary>
+    SearchStopped,
+
+    /// <summary>The kit lacks something it needs.</summary>
+    Incomplete,
+}
 
 /// <param name="Requirements">The requirements this slot's candidates were held to.</param>
 /// <param name="Product">What it holds, as the shop's own search shows it; null when empty.</param>
@@ -118,10 +147,10 @@ public sealed record KitSlotView(
 
 /// <param name="Cheapest">Over budget: the cheapest product that could have gone there.</param>
 /// <param name="Short">Over budget: how much more it costs than what was left.</param>
-public sealed record KitGapView(KitGapReason Reason, SearchHit? Cheapest, decimal? Short);
+public sealed record KitGapView(KitGapReason Reason, SearchHit? Cheapest, Money? Short);
 
 /// <param name="Short">How much was missing to swap it in, with everything else as it is.</param>
-public sealed record KitUpgradeView(SearchHit Product, decimal Short);
+public sealed record KitUpgradeView(SearchHit Product, Money Short);
 
 public sealed partial class BuildKitValidator : AbstractValidator<BuildKitQuery>
 {
@@ -134,7 +163,10 @@ public sealed partial class BuildKitValidator : AbstractValidator<BuildKitQuery>
     {
         RuleFor(x => x.Template).NotEmpty().Matches("^[A-Za-z0-9_]{1,60}$")
             .WithMessage("A kit is its code: letters, digits and underscores (KITCHEN_STARTER).");
-        RuleFor(x => x.Budget).GreaterThan(0).LessThanOrEqualTo(MaxBudget);
+        RuleFor(x => x.Budget.Amount).GreaterThan(0).LessThanOrEqualTo(MaxBudget).OverridePropertyName("budget");
+        RuleFor(x => x.Budget.Currency).Equal(BuildKitHandler.Currency)
+            .WithMessage($"The shop sells in {BuildKitHandler.Currency}: a budget is in it.")
+            .OverridePropertyName("budget");
         RuleFor(x => x.Culture).Must(c => c is "es" or "en").WithMessage("Supported cultures: es, en.");
 
         RuleFor(x => x.Requirements.Count).LessThanOrEqualTo(MaxRequirements).OverridePropertyName("requirements");
@@ -165,7 +197,7 @@ public sealed class BuildKitHandler(
     public const int CandidatesPerSlot = 20;
 
     /// <summary>The shop's one currency (laboratory scale): a budget is in it, and so is every candidate.</summary>
-    public const string Currency = "EUR";
+    public const string Currency = ShopOptions.DefaultCurrency;
 
     /// <summary>What the best ranked candidate is worth; the last of a full page is worth a twentieth of it.</summary>
     private const int RelevanceOfTheFirst = 1000;
@@ -208,7 +240,7 @@ public sealed class BuildKitHandler(
                     Filters: new SearchFilters { InStock = true, Facets = applied[slot.Code] }),
                 cancellationToken);
 
-            var found = page.Hits.Where(hit => hit.PriceCurrency == Currency).ToList();
+            var found = page.Hits.Where(hit => hit.Price.Currency == Currency).ToList();
             foreach (var hit in found)
                 hits[hit.Code] = hit;
 
@@ -217,12 +249,12 @@ public sealed class BuildKitHandler(
             slots.Add(new KitSlot(slot.Code, slot.Required,
             [
                 .. found.Select((hit, rank) => new KitCandidate(
-                    hit.Code, new Money(hit.PriceAmount, Currency), RelevanceOfTheFirst * (found.Count - rank) / found.Count)),
+                    hit.Code, hit.Price, RelevanceOfTheFirst * (found.Count - rank) / found.Count)),
             ]));
         }
 
         // Solve: pure. Whatever a model may do before or after this line, it does not do this.
-        var solution = solver.Solve(new KitProblem(new Money(query.Budget, Currency), slots));
+        var solution = solver.Solve(new KitProblem(query.Budget, slots));
 
         activity?.SetTag("kit.slots", solution.Slots.Count);
         activity?.SetTag("kit.filled", solution.Slots.Count(slot => slot.Chosen is not null));
@@ -230,7 +262,7 @@ public sealed class BuildKitHandler(
         activity?.SetTag("kit.nodes", solution.Nodes);
 
         var kit = new KitView(
-            template.Code, template.Name.In(query.Culture), query.Budget, solution.Total.Amount, solution.Left.Amount, Currency,
+            template.Code, template.Name.In(query.Culture), query.Budget, solution.Total, solution.Left,
             solution.Binding,
             Complete: solution.Slots.All(slot => !slot.Required || slot.Chosen is not null),
             Exact: !solution.CeilingReached,
@@ -239,9 +271,9 @@ public sealed class BuildKitHandler(
                     solved.Slot, written.Name.In(query.Culture), solved.Required, applied[solved.Slot],
                     solved.Chosen is { } chosen ? hits[chosen.Code] : null,
                     solved.Gap is { } gap
-                        ? new KitGapView(gap.Reason, gap.Cheapest is { } cheapest ? hits[cheapest.Code] : null, gap.Short?.Amount)
+                        ? new KitGapView(gap.Reason, gap.Cheapest is { } cheapest ? hits[cheapest.Code] : null, gap.Short)
                         : null,
-                    solved.Better is { } better ? new KitUpgradeView(hits[better.Candidate.Code], better.Short.Amount) : null)),
+                    solved.Better is { } better ? new KitUpgradeView(hits[better.Candidate.Code], better.Short) : null)),
             ],
             [.. query.Requirements.Where(requirement => applied.Values.All(of => !of.Contains(requirement)))])
         {
@@ -268,41 +300,50 @@ internal sealed class KitWords(string culture)
 {
     private bool English => culture == "en";
 
-    public IReadOnlyList<KitSentence> Of(KitView kit)
+    public IReadOnlyList<Message<KitSaid>> Of(KitView kit)
     {
-        List<KitSentence> says =
+        List<Message<KitSaid>> says =
         [
-            new(null, English
-                ? $"{kit.Name}: {Amount(kit.Total, kit)} of {Amount(kit.Budget, kit)}."
-                : $"{kit.Name}: {Amount(kit.Total, kit)} de {Amount(kit.Budget, kit)}."),
+            new(KitSaid.Summary, null, English
+                ? $"{kit.Name}: {Amount(kit.Total)} of {Amount(kit.Budget)}."
+                : $"{kit.Name}: {Amount(kit.Total)} de {Amount(kit.Budget)}."),
         ];
 
         foreach (var slot in kit.Slots)
-            says.Add(new KitSentence(slot.Code, Of(slot, kit)));
+            says.Add(new Message<KitSaid>(Said(slot), slot.Code, Of(slot, kit)));
 
         foreach (var unused in kit.UnusedRequirements)
         {
-            says.Add(new KitSentence(null, English
+            says.Add(new Message<KitSaid>(KitSaid.RequirementUnused, unused, English
                 ? $"{unused} could not be required: no slot of this kit declares it."
                 : $"No se ha podido exigir {unused}: ningún hueco de este kit lo declara."));
         }
 
         if (!kit.Exact)
         {
-            says.Add(new KitSentence(null, English
+            says.Add(new Message<KitSaid>(KitSaid.SearchStopped, null, English
                 ? "This is the best kit found, not necessarily the best there is: the search stopped at its limit."
                 : "Es el mejor kit encontrado, no necesariamente el mejor: la búsqueda se detuvo en su límite."));
         }
 
         if (!kit.Complete)
         {
-            says.Add(new KitSentence(null, English
+            says.Add(new Message<KitSaid>(KitSaid.Incomplete, null, English
                 ? "The kit is not complete: something it needs is missing."
                 : "El kit no está completo: le falta algo que necesita."));
         }
 
         return says;
     }
+
+    /// <summary>Which of the four things a slot's sentence says: the same decision the sentence below is written from.</summary>
+    private static KitSaid Said(KitSlotView slot) => slot switch
+    {
+        { Product: not null, Better: not null } => KitSaid.ChosenBelowBetter,
+        { Product: not null } => KitSaid.Chosen,
+        { Gap.Cheapest: not null } => KitSaid.OverBudget,
+        _ => KitSaid.NothingFits,
+    };
 
     private string Of(KitSlotView slot, KitView kit)
     {
@@ -312,18 +353,18 @@ internal sealed class KitWords(string culture)
         switch (slot)
         {
             case { Product: { } product, Better: { } better }:
-                var more = Amount(better.Product.PriceAmount - product.PriceAmount, kit);
+                var more = Amount(Price(better.Product) - Price(product));
                 return English
-                    ? $"{slot.Name}: {product.Name}, {Amount(product.PriceAmount, kit)}. {better.Product.Name} ranks higher and did not fit: it costs {more} more and {Amount(kit.Left, kit)} was left."
-                    : $"{slot.Name}: {product.Name}, {Amount(product.PriceAmount, kit)}. {better.Product.Name} está mejor valorado y no cabía: cuesta {more} más y quedaban {Amount(kit.Left, kit)}.";
+                    ? $"{slot.Name}: {product.Name}, {Amount(Price(product))}. {better.Product.Name} ranks higher and did not fit: it costs {more} more and {Amount(kit.Left)} was left."
+                    : $"{slot.Name}: {product.Name}, {Amount(Price(product))}. {better.Product.Name} está mejor valorado y no cabía: cuesta {more} más y quedaban {Amount(kit.Left)}.";
 
             case { Product: { } product }:
-                return $"{slot.Name}: {product.Name}, {Amount(product.PriceAmount, kit)}.";
+                return $"{slot.Name}: {product.Name}, {Amount(Price(product))}.";
 
             case { Gap.Cheapest: { } cheapest }:
                 return English
-                    ? $"No {inside}: the cheapest costs {Amount(cheapest.PriceAmount, kit)} and {Amount(kit.Left, kit)} was left."
-                    : $"Sin {inside}: lo más barato cuesta {Amount(cheapest.PriceAmount, kit)} y quedaban {Amount(kit.Left, kit)}.";
+                    ? $"No {inside}: the cheapest costs {Amount(Price(cheapest))} and {Amount(kit.Left)} was left."
+                    : $"Sin {inside}: lo más barato cuesta {Amount(Price(cheapest))} y quedaban {Amount(kit.Left)}.";
 
             default:
                 return English ? $"No {inside}: nothing in stock fits." : $"Sin {inside}: no hay nada en stock que encaje.";
@@ -331,12 +372,14 @@ internal sealed class KitWords(string culture)
     }
 
     /// <summary>As an order's total and the shipping terms are written for the same reader: two decimals and the currency's code.</summary>
-    private static string Amount(decimal amount, KitView kit) =>
-        string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{amount:0.00} {kit.Currency}");
+    private static string Amount(Money money) =>
+        string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{money.Amount:0.00} {money.Currency}");
+
+    private static Money Price(SearchHit hit) => hit.Price;
 }
 
 /// <summary>What a kit is asked with: its code is in the address.</summary>
-public sealed record BuildKitRequest(decimal Budget, IReadOnlyList<string>? Requirements = null);
+public sealed record BuildKitRequest(Money Budget, IReadOnlyList<string>? Requirements = null);
 
 public sealed class KitsEndpoint : ICarterModule
 {

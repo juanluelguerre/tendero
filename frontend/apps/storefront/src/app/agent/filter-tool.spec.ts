@@ -18,7 +18,13 @@ const facets: SearchFacet[] = [
     kind: 'Price',
     label: 'Precio',
     options: [],
-    price: { min: 30, max: 160, chosenMin: null, chosenMax: null, bands: [] },
+    price: {
+      min: { amount: 3000, currency: 'EUR' },
+      max: { amount: 16000, currency: 'EUR' },
+      chosenMin: null,
+      chosenMax: null,
+      bands: [],
+    },
   },
   {
     code: 'offer',
@@ -53,7 +59,7 @@ describe('what list_filters tells an agent', () => {
     expect(text).toContain('13 product(s)');
     expect(text).toContain('- brand (Marca): Caminante [7], Vertex [6] (chosen)');
     expect(text).toContain('COLOR:BLACK "negro" [4]');
-    expect(text).toContain('- price (Precio): from 30 to 160; send minPrice and/or maxPrice');
+    expect(text).toContain('- price (Precio): from 30 to 160 EUR; send minPrice and/or maxPrice');
   });
 
   it('says so when there is nothing to narrow by', () => {

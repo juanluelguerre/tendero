@@ -186,7 +186,7 @@ public sealed class OpenApiDocumentTests
     /// Searching for a marker rather than a string of <c>..</c> keeps the test
     /// correct if the project moves or the bin's TFM changes.
     /// </summary>
-    private static string CommittedDocumentPath()
+    internal static string CommittedDocumentPath()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
 

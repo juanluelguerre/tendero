@@ -132,6 +132,8 @@ builder.Services.AddAIInvocationLog();
 builder.Services.AddRateLimiter(limiter =>
 {
     limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    // And when to come back, which a client can wait for and a bare 429 does not say.
+    limiter.OnRejected = Problems.OnRateLimited;
     limiter.AddPolicy(StewardTurnEndpoints.TurnsPerPerson, http => RateLimitPartition.GetFixedWindowLimiter(
         http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject ?? "anonymous",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
@@ -158,6 +160,13 @@ builder.Services.AddRateLimiter(limiter =>
         ClientOf(http),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 
+    // And a hundred and twenty tool calls a minute over MCP (phase 13b): the
+    // specification says a server MUST limit them, and until an audit read it
+    // this one did not. An agent's whole conversation and more; a loop, no.
+    limiter.AddPolicy(TenderoMcpServer.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 120, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
     static string ClientOf(HttpContext http) =>
         http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject is { Length: > 0 } subject
             ? "person:" + subject
@@ -181,15 +190,28 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddSchemaTransformer<NumbersAreNumbersTransformer>();
     options.AddSchemaTransformer<EnumsAreTheirNamesTransformer>();
+    options.AddSchemaTransformer<MoneyIsMinorUnitsTransformer>();
     options.AddOperationTransformer<ClosedSetsInTheQueryTransformer>();
+
+    // What a REST contract says of itself (phase 13b): which version it is,
+    // how a caller identifies itself, who may call each operation, and the
+    // refusals that follow. Read from the endpoints' own metadata.
+    options.AddDocumentTransformer<ContractIsVersionedTransformer>();
+    options.AddOperationTransformer<OperationSaysWhoMayCallItTransformer>();
 });
 
 // A closed set travels as its C# name and nothing else (ADR 0043): one converter
 // for the whole API, so a slice passes the enum and never spells it, and the
 // document declares every set, so the frontends' types are unions the compiler
 // holds. Integers are refused, so a position in an enum is never the contract.
+//
+// And money travels as a whole number of minor units with its currency (phase
+// 13b): one converter, so a slice hands over a Money and never spells it.
 builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.Converters.Add(WireJson.Enums()));
+{
+    options.SerializerOptions.Converters.Add(WireJson.Enums());
+    options.SerializerOptions.Converters.Add(WireJson.Money());
+});
 
 // The read-only MCP server, in this process and in its own assembly. Same
 // process so the tools reuse the container that is already built; separate
@@ -203,11 +225,24 @@ builder.Services.AddTenderoUcp(builder.Configuration);
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<BadRequestExceptionHandler>();
 builder.Services.AddExceptionHandler<SearchUnavailableExceptionHandler>();
-builder.Services.AddProblemDetails();
+// Every refusal the pipeline itself answers — nobody signed in, somebody who
+// may not, nothing at that address, a limit passed — is a problem with a code
+// and the shop's sentence (RFC 9457; phase 13b), as a slice's refusals are.
+builder.Services.AddProblemDetails(problems => problems.CustomizeProblemDetails = Problems.Customize);
 
 var app = builder.Build();
 
+// The contract's version on every answer, a refusal included: set first, so
+// nothing that answers early answers without it.
+app.Use((http, next) =>
+{
+    http.Response.Headers[ContractVersion.Header] = ContractVersion.Current;
+    return next(http);
+});
+
 app.UseExceptionHandler();
+// A status with no body becomes the problem that status is (Problems.Customize).
+app.UseStatusCodePages();
 app.UseSyntheticTrafficLabels();
 app.UseCors();
 app.UseAuthentication();

@@ -22,7 +22,7 @@
         </div>
         <div class="fact">
           <dt>{{ t('refunded') }}</dt>
-          <dd class="fact__value numeric">{{ ops.refunded | price: ops.currency : culture.active() }}</dd>
+          <dd class="fact__value numeric">{{ ops.refunded | price: culture.active() }}</dd>
         </div>
       </dl>
       @if (store.chart(); as data) {

@@ -21,6 +21,7 @@
        asserting the wall clock. -->
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+    <Compile Include="../IdempotencyStoreContract.cs" Link="IdempotencyStoreContract.cs" />
   </ItemGroup>
 
 </Project>

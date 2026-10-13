@@ -342,9 +342,8 @@ public sealed class GetProductTests
         var result = await HandlerOver(shirt).HandleAsync(
             new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
-        Assert.Equal(29.90m, result!.PriceFrom);
-        Assert.Equal(34.90m, result.PriceTo);
-        Assert.Equal("EUR", result.PriceCurrency);
+        Assert.Equal(new Money(29.90m, "EUR"), result!.PriceFrom);
+        Assert.Equal(new Money(34.90m, "EUR"), result.PriceTo);
     }
 
     // ---------- fixtures ----------

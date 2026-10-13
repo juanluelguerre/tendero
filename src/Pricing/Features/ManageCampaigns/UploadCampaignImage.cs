@@ -27,6 +27,18 @@ public sealed record CampaignImageUploaded(string ImageId);
 /// <i>reduce motion</i> (the spec) — and no SVG, which is a document that can
 /// carry script, served from the shop's own origin.
 /// </summary>
+public static class CampaignImageRefusals
+{
+    public static readonly Refusal Empty = new(
+        "EmptyFile", 400, "El fichero está vacío.", "The file is empty.");
+
+    public static readonly Refusal TooLarge = new(
+        "FileTooLarge", 400, "La imagen pesa más de lo que se admite.", "The picture is larger than is taken.");
+
+    public static readonly Refusal NotAnImage = new(
+        "NotAnImage", 400, "La imagen de una campaña es WebP, AVIF, PNG o JPEG.", "A campaign image is WebP, AVIF, PNG or JPEG.");
+}
+
 public sealed class UploadCampaignImageEndpoint : ICarterModule
 {
     /// <summary>A wide campaign picture in WebP is a few hundred kilobytes; two megabytes is room, not a target.</summary>
@@ -37,16 +49,19 @@ public sealed class UploadCampaignImageEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("/api/pricing/campaign-images",
-                async Task<Results<Ok<CampaignImageUploaded>, BadRequest<string>>> (
+                async Task<Results<Created<CampaignImageUploaded>, ProblemHttpResult>> (
                     IFormFile file, IImageStore store, CancellationToken ct) =>
                 {
                     using var activity = Telemetry.StartActivity("pricing.upload_campaign_image");
                     activity?.SetTag("pricing.image_bytes", file.Length);
 
                     if (file.Length == 0)
-                        return TypedResults.BadRequest("The file is empty.");
+                        return TypedResults.Problem(statusCode: CampaignImageRefusals.Empty.Status, extensions: CampaignImageRefusals.Empty.Said());
                     if (file.Length > MaxBytes)
-                        return TypedResults.BadRequest($"A campaign image is at most {MaxBytes / (1024 * 1024)} MB.");
+                        return TypedResults.Problem(
+                            statusCode: CampaignImageRefusals.TooLarge.Status,
+                            extensions: CampaignImageRefusals.TooLarge.Said(
+                                es: $"Como mucho {MaxBytes / (1024 * 1024)} MB.", en: $"At most {MaxBytes / (1024 * 1024)} MB."));
 
                     using var buffer = new MemoryStream(capacity: (int)file.Length);
                     await using (var upload = file.OpenReadStream())
@@ -54,19 +69,21 @@ public sealed class UploadCampaignImageEndpoint : ICarterModule
 
                     var contentType = ImageSignature.ContentTypeOf(buffer.GetBuffer().AsSpan(0, (int)buffer.Length));
                     if (contentType is null)
-                        return TypedResults.BadRequest("A campaign image is WebP, AVIF, PNG or JPEG.");
+                        return TypedResults.Problem(statusCode: CampaignImageRefusals.NotAnImage.Status, extensions: CampaignImageRefusals.NotAnImage.Said());
 
                     activity?.SetTag("pricing.image_type", contentType);
 
                     buffer.Position = 0;
                     var id = await store.SaveAsync(buffer, contentType, ct);
-                    return TypedResults.Ok(new CampaignImageUploaded(id.Value));
+                    // 201 and where it is served from: the address the shop's pictures all have.
+                    return TypedResults.Created($"/api/images/{id.Value}", new CampaignImageUploaded(id.Value));
                 })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             // A bearer token, not a cookie: nothing here for a cross-site form to
             // ride on, which is what antiforgery protects against.
             .DisableAntiforgery()
             .WithTags("Pricing")
+            .WithMetadata(new Refuses(CampaignImageRefusals.Empty, CampaignImageRefusals.TooLarge, CampaignImageRefusals.NotAnImage))
             .WithName("UploadCampaignImage");
     }
 }

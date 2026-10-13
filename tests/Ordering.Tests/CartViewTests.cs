@@ -32,7 +32,7 @@ public sealed class CartViewTests
         var cart = Cart.Start(Clock, startedIn, "EUR");
         cart.Add(Clock, Pan());
 
-        var view = await new GetCartHandler(new Carts(cart)).HandleAsync(new GetCartQuery(cart.Token, asked), Ct);
+        var view = await new GetCartHandler(new Carts(cart), new Shelf()).HandleAsync(new GetCartQuery(cart.Token, asked), Ct);
 
         var line = Assert.Single(view.Lines);
         Assert.Equal((name, label), (line.ProductName, line.VariantLabel));
@@ -50,9 +50,38 @@ public sealed class CartViewTests
         cart.Add(Clock, new CartLine(
             ProductId.New(), VariantId.New(), "ONLY-ES", LocalizedText.From("es", "Solo en castellano"), null, null, 1));
 
-        var view = await new GetCartHandler(new Carts(cart)).HandleAsync(new GetCartQuery(cart.Token, "en"), Ct);
+        var view = await new GetCartHandler(new Carts(cart), new Shelf()).HandleAsync(new GetCartQuery(cart.Token, "en"), Ct);
 
         Assert.Equal("Solo en castellano", Assert.Single(view.Lines).ProductName);
+    }
+
+    /// <summary>
+    /// **A line says how many of it can be bought now**, so the basket can say
+    /// *only one left* before the till has to. Found in a browser on 2026-10-13:
+    /// two of a pan the product page said there was one of went all the way to
+    /// *Thanks* and were cancelled afterwards. An article the shelf does not
+    /// know is one there is none of.
+    /// </summary>
+    [Fact]
+    public async Task A_line_says_how_many_of_it_can_be_bought_now()
+    {
+        var cart = Cart.Start(Clock, "es", "EUR");
+        cart.Add(Clock, Pan());
+        cart.Add(Clock, new CartLine(
+            ProductId.New(), VariantId.New(), "NOT-ON-A-SHELF", LocalizedText.From("es", "Sin estante"), null, null, 1));
+
+        var view = await new GetCartHandler(new Carts(cart), new Shelf(("B11COO0301-DEFAULT", 1)))
+            .HandleAsync(new GetCartQuery(cart.Token, "es"), Ct);
+
+        Assert.Equal([1, 0], view.Lines.Select(line => line.Available));
+    }
+
+    private sealed class Shelf(params (string Sku, int Units)[] stock) : ElGuerre.Tendero.Inventory.Ports.IAvailabilityReader
+    {
+        public Task<IReadOnlyDictionary<string, int>> AvailableAsync(
+            IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyDictionary<string, int>>(
+                stock.Where(item => skus.Contains(item.Sku)).ToDictionary(item => item.Sku, item => item.Units));
     }
 
     private static CartLine Pan() => new(

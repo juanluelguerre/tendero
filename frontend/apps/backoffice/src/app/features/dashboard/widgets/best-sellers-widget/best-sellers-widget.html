@@ -15,9 +15,7 @@
             <li class="ranking__row">
               <span class="ranking__name" [title]="seller.sku">{{ seller.name }}</span>
               <span class="muted numeric">{{ t('unitCount', { count: seller.units }) }}</span>
-              <span class="numeric">{{
-                seller.revenue | price: store.sales.value()?.currency ?? 'EUR' : culture.active()
-              }}</span>
+              <span class="numeric">{{ seller.revenue | price: culture.active() }}</span>
             </li>
           }
         </ol>

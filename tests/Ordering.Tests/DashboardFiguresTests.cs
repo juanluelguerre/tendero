@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Ordering.Features.Dashboard;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
+using static ElGuerre.Tendero.Ordering.Tests.Amounts;
 
 namespace ElGuerre.Tendero.Ordering.Tests;
 
@@ -29,11 +30,11 @@ public sealed class DashboardFiguresTests
 
         var sales = DashboardFigures.Sales(DashboardPeriod.Week, current, previous);
 
-        Assert.Equal((DashboardPeriod.Week, "EUR"), (sales.Period, sales.Currency));
-        Assert.Equal(new SalesFigures(74.90m, 2, 6, 37.45m, 3m), sales.Current);
-        Assert.Equal(new SalesFigures(14.95m, 1, 1, 14.95m, 1m), sales.Previous);
+        Assert.Equal((DashboardPeriod.Week, "EUR"), (sales.Period, sales.Current.Revenue.Currency));
+        Assert.Equal(new SalesFigures(Eur(74.90m), 2, 6, Eur(37.45m), 3m), sales.Current);
+        Assert.Equal(new SalesFigures(Eur(14.95m), 1, 1, Eur(14.95m), 1m), sales.Previous);
         Assert.Equal(["C", "A", "B"], sales.BestSellers.Select(seller => seller.Sku));
-        Assert.Equal(new BestSeller("C", "C", 3, 15m), sales.BestSellers[0]);
+        Assert.Equal(new BestSeller("C", "C", 3, Eur(15m)), sales.BestSellers[0]);
     }
 
     [Fact]
@@ -43,9 +44,9 @@ public sealed class DashboardFiguresTests
         var window = DashboardWindow.Ending(Clock.GetUtcNow(), DashboardPeriod.Day);
         var operations = DashboardFigures.Operations(DashboardPeriod.Day, window, [], [], []);
 
-        Assert.Equal(new SalesFigures(0m, 0, 0, 0m, 0m), sales.Current);
+        Assert.Equal(new SalesFigures(Eur(0m), 0, 0, Eur(0m), 0m), sales.Current);
         Assert.Empty(sales.BestSellers);
-        Assert.Equal((0m, 0m, "EUR"), (operations.CancellationRate, operations.ReturnRate, operations.Currency));
+        Assert.Equal((0m, 0m, Eur(0m)), (operations.CancellationRate, operations.ReturnRate, operations.Refunded));
     }
 
     /// <summary>
@@ -65,9 +66,9 @@ public sealed class DashboardFiguresTests
             [Sold(Dollars("B", 10m, 1)), Sold(Dollars("B", 10m, 2)), Sold(Dollars("C", 20m, 3)), Sold(Dollars("A", 20m, 3)), Sold(Dollars("D", 1m, 3))],
             []);
 
-        Assert.Equal("USD", sales.Currency);
+        Assert.Equal("USD", sales.Current.Revenue.Currency);
         Assert.Equal(["A", "C", "B", "D"], sales.BestSellers.Select(seller => seller.Sku));
-        Assert.Equal(new BestSeller("B", "B", 3, 30m), sales.BestSellers[2]);
+        Assert.Equal(new BestSeller("B", "B", 3, new Money(30m, "USD")), sales.BestSellers[2]);
     }
 
     [Fact]
@@ -119,7 +120,7 @@ public sealed class DashboardFiguresTests
         // Equal counts are ordered by name: ChangedMind before Damaged.
         Assert.Equal([new ReasonCount(ReturnReason.WrongSize, 3), new ReasonCount(ReturnReason.ChangedMind, 1), new ReasonCount(ReturnReason.Damaged, 1)], ops.OpenReturnsByReason);
         // Refunds inside the window only; returns opened in it against orders placed in it.
-        Assert.Equal((30m, 0.5714m), (ops.Refunded, ops.ReturnRate));
+        Assert.Equal((Eur(30m), 0.5714m), (ops.Refunded, ops.ReturnRate));
     }
 
     [Fact]
@@ -179,10 +180,10 @@ public sealed class DashboardFiguresTests
 
         // Each default order is 79.95 + 4.95 = 84.90; the small ones 5 + 4.95. Three of
         // five agent orders carry a mandate, so "with" and "without" cannot be confused.
-        Assert.Equal((6, 359.50m, 5, 274.60m, 3, 1), (agents.Orders, agents.Revenue, agents.AgentOrders, agents.AgentRevenue, agents.Mandated, agents.Rehearsals));
+        Assert.Equal((6, Eur(359.50m), 5, Eur(274.60m), 3, 1), (agents.Orders, agents.Revenue, agents.AgentOrders, agents.AgentRevenue, agents.Mandated, agents.Rehearsals));
         // Equal money is ordered by name.
         Assert.Equal(
-            [new AgentSalesRow("claude-desktop", 3, 254.70m, 2), new AgentSalesRow("a-small-agent", 1, 9.95m, 1), new AgentSalesRow("b-small-agent", 1, 9.95m, 0)],
+            [new AgentSalesRow("claude-desktop", 3, Eur(254.70m), 2), new AgentSalesRow("a-small-agent", 1, Eur(9.95m), 1), new AgentSalesRow("b-small-agent", 1, Eur(9.95m), 0)],
             agents.ByAgent);
     }
 

@@ -5,6 +5,9 @@ import type { BarChartData } from '../../../../charts/chart-contract';
 import { English, setUpWidgets } from '../widget-testing';
 import { CampaignsWidget } from './campaigns-widget';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const CALENDAR = [
   {
     code: 'SPRING',
@@ -22,16 +25,15 @@ const CALENDAR = [
 
 /** A shop in Auckland: its 1 October starts at 11:00 UTC on the 30th, which is still the 30th in Madrid. */
 const UPLIFT = {
-  currency: 'EUR',
   timeZone: 'Pacific/Auckland',
   hasBaseline: true,
-  sold: 100,
-  baseline: 80,
-  uplift: 20,
+  sold: eur(100),
+  baseline: eur(80),
+  uplift: eur(20),
   days: [
-    { start: '2026-09-30T11:00:00+00:00', sold: 100, baseline: 80, future: false, partial: false },
-    { start: '2026-10-01T11:00:00+00:00', sold: 10, baseline: 90, future: false, partial: true },
-    { start: '2026-10-02T11:00:00+00:00', sold: 0, baseline: 85, future: true, partial: false },
+    { start: '2026-09-30T11:00:00+00:00', sold: eur(100), baseline: eur(80), future: false, partial: false },
+    { start: '2026-10-01T11:00:00+00:00', sold: eur(10), baseline: eur(90), future: false, partial: true },
+    { start: '2026-10-02T11:00:00+00:00', sold: eur(0), baseline: eur(85), future: true, partial: false },
   ],
 };
 

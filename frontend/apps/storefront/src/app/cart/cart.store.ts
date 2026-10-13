@@ -2,8 +2,9 @@ import type { HttpResponse } from '@angular/common/http';
 import { computed, inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import type { CartView, PriceQuote, ShippingOptionsResponse } from '@tendero/shared-api';
+import type { CartView, Money, PriceQuote, ShippingOptionsResponse } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
+import { refusalSentence } from '@tendero/shared-util';
 import { catchError, concatMap, defer, finalize, firstValueFrom, type Observable, of, pipe, tap } from 'rxjs';
 import { CartService, CartTokenHeader } from '../data-access/cart.service';
 
@@ -31,11 +32,12 @@ interface CartState {
   /** The token this browser holds, read from storage once and kept in step with it. */
   readonly token: string | null;
   /**
-   * The shipping the quote was answered with. It starts at zero and becomes the
-   * chosen option's amount at checkout, because `FreeShipping` is a promotion
-   * effect and cannot be evaluated without it.
+   * The shipping the quote was answered with. None at first, and the chosen
+   * option's amount at checkout, because `FreeShipping` is a promotion effect
+   * and cannot be evaluated without it. Money as the option carries it: the
+   * quote takes it back as it was sent, currency and all.
    */
-  readonly _shipping: number;
+  readonly _shipping: Money | null;
 }
 
 /**
@@ -59,7 +61,7 @@ export const CartStore = signalStore(
     busy: false,
     failed: null,
     token: readToken(),
-    _shipping: 0,
+    _shipping: null,
   })),
   withProps(() => ({
     _cart: inject(CartService),
@@ -176,7 +178,7 @@ export const CartStore = signalStore(
        * changes, because the total the shopper agrees to includes delivery. In the
        * queue too: a quote must not overtake the change it prices.
        */
-      async quoteWithShipping(amount: number): Promise<PriceQuote | null> {
+      async quoteWithShipping(amount: Money): Promise<PriceQuote | null> {
         await enqueue(() => {
           patchState(store, { _shipping: amount });
           return quoted();
@@ -194,7 +196,7 @@ export const CartStore = signalStore(
         } catch {
           // See `readToken`.
         }
-        patchState(store, { cart: null, quote: null, token: null, _shipping: 0 });
+        patchState(store, { cart: null, quote: null, token: null, _shipping: null });
       },
     };
   }),
@@ -210,7 +212,7 @@ function readToken(): string | null {
   }
 }
 
+/** The shop's own sentence for the refusal, in the reader's language; the screen's own when there is none. */
 function describe(error: unknown): string {
-  const body = (error as { error?: unknown })?.error;
-  return typeof body === 'string' && body.length > 0 ? body : 'cart.failed';
+  return refusalSentence((error as { error?: unknown })?.error) || 'cart.failed';
 }

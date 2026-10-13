@@ -145,9 +145,7 @@
                       </span>
                     }
                   </span>
-                  <span class="numeric font-semibold">{{
-                    option.amount | price: store.currency() : culture.active()
-                  }}</span>
+                  <span class="numeric font-semibold">{{ option.amount | price: culture.active() }}</span>
                 </label>
               }
             </div>
@@ -186,7 +184,6 @@
       <storefront-summary>
         @if (cart.quote(); as quote) {
           <storefront-totals
-            [currency]="quote.currency"
             [subtotal]="quote.subtotal"
             [discountTotal]="quote.discountTotal"
             [shipping]="quote.shipping"
@@ -204,7 +201,7 @@
             {{
               store.paying()
                 ? t('checkout.paying')
-                : t('checkout.pay', { total: (quote.total | price: store.currency() : culture.active()) })
+                : t('checkout.pay', { total: (quote.total | price: culture.active()) })
             }}
           </button>
         } @else {

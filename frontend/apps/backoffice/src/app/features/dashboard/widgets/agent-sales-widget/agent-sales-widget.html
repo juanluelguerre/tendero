@@ -19,9 +19,9 @@
         </div>
         <div class="fact">
           <dt>{{ t('shareOfRevenue') }}</dt>
-          <dd class="fact__value numeric">{{ share(agentSales.agentRevenue, agentSales.revenue) }}</dd>
+          <dd class="fact__value numeric">{{ share(agentSales.agentRevenue.amount, agentSales.revenue.amount) }}</dd>
           <dd class="muted fact__note">
-            {{ agentSales.agentRevenue | price: agentSales.currency : culture.active() }}
+            {{ agentSales.agentRevenue | price: culture.active() }}
           </dd>
         </div>
         <div class="fact">
@@ -44,7 +44,7 @@
             <li class="ranking__row">
               <span class="ranking__name numeric">{{ row.agentId }}</span>
               <span class="muted">{{ t('ordersCount', { count: row.orders }) }}</span>
-              <span class="numeric">{{ row.revenue | price: agentSales.currency : culture.active() }}</span>
+              <span class="numeric">{{ row.revenue | price: culture.active() }}</span>
             </li>
           }
         </ol>

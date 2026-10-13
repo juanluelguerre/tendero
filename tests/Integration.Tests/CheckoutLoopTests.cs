@@ -225,6 +225,52 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// **More than there is, is refused before anything is charged.** The stock
+    /// saga holds stock after the order exists, and that is right for a race —
+    /// two shoppers and the last unit. It was also the only thing between a
+    /// shopper and an order the shop already knew it could not fill: two of a
+    /// pan there was one of were authorised, placed, thanked for, and cancelled
+    /// by the next drain (found in a browser, 2026-10-13). What is known at the
+    /// till is said at the till: no authorisation, no order, the basket as it
+    /// was, and which article is short by how many.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task More_than_there_is_is_refused_before_anything_is_charged()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+
+        await using var shop = await Shop.OpenAsync(postgres, nameof(
+            More_than_there_is_is_refused_before_anything_is_charged));
+
+        await shop.StockAsync(Sku, 1, ct);
+
+        var cart = await shop.AddToCartAsync(null, Sku, 2, ct);
+        // The basket already says so.
+        Assert.Equal(1, Assert.Single(cart.Lines).Available);
+
+        var options = await shop.ShippingOptionsAsync(cart.Token, ct);
+        var quote = await shop.QuoteAsync(cart.Token, options.Options[0].Amount, ct);
+
+        var refused = await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, quote.InputHash, ct);
+
+        Assert.Equal(PlaceOrderOutcome.InsufficientStock, refused.Outcome);
+        Assert.Equal(new StockShortage(Sku, 2, 1), Assert.Single(refused.Shortages!));
+
+        await using var context = shop.Factory.Create();
+        Assert.Empty(await context.Orders.ToListAsync(ct));
+        Assert.Equal(2, (await shop.FindCartAsync(cart.Token, ct))!.ItemCount);
+
+        // And once the basket asks for what there is, the same till takes it.
+        await shop.SendAsync(new SetCartLineCommand(cart.Token, Sku, 1, "es"), ct);
+        var again = await shop.QuoteAsync(cart.Token, options.Options[0].Amount, ct);
+        var placed = await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, again.InputHash, ct, key: "checkout-2");
+
+        Assert.Equal(PlaceOrderOutcome.Placed, placed.Outcome);
+    }
+
+    /// <summary>
     /// The mismatch path, and the reason a quote carries a fingerprint at all.
     /// The shopper is not wrong and the shop is not wrong; the cart moved
     /// between the two, and the only honest answer is to show the difference.

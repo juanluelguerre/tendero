@@ -543,7 +543,7 @@ Answers:
 | `surface` | string | `web`, `mcp`, `ucp` | The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`. |
 | `order.mode` | string | `live`, `test` | Test when the credential that placed it is a test one (ADR 0038): the Shop pulse leaves it out, and a rehearsal is read on its own. |
 | `agent.trust` | string | `none`, `untrusted`, `known`, `verified` | How far the shop trusts the agent behind the attempt (P11-2): none for a person, untrusted for an agent nobody registered. |
-| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable`, `not_mandated`, `agent_refused` | PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve. |
+| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable`, `not_mandated`, `agent_refused`, `insufficient_stock` | PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve. insufficient_stock (phase 13b): the cart asked for more than the shelf had, refused at the till before any money — a share that grows says the basket's own note is not being read, or stock is being shown that is not there. |
 | `discounted` | boolean | — | Whether any promotion applied to the order. |
 
 ### `tendero.agents.denials`
@@ -630,6 +630,7 @@ Answers:
 | `surface` | string | `mcp`, `ucp` | The binding the call came through. |
 | `tool` | string | — | The tool or operation name; a closed set of the ones served. |
 | `outcome` | string | `answered`, `refused`, `failed` | Refused is the shop saying no; failed is the tool breaking. |
+| `refusal` | string | — | The refusal's code when the shop said no with one (Invalid, ProductNotFound, TooFewToCompare): a closed set, the codes the tools declare. Absent when the call was answered or broke. A code that dominates is a tool whose description or contract is wrong for an agent. |
 
 ### `tendero.knowledge.claims.proposed`
 

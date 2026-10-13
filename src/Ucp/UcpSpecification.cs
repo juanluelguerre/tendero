@@ -34,11 +34,28 @@ public static class UcpSpecification
     public const string BaseUrl = $"https://ucp.dev/{Version}/specification";
 
     /// <summary>
-    /// Where the protocol's own JSON Schemas live. Unversioned in the URL,
-    /// which is the specification's choice and not ours: the schema documents
-    /// carry the version inside them.
+    /// Where the protocol's own JSON Schemas are **published**: under the
+    /// version, as the specification's examples write them
+    /// (<c>https://ucp.dev/2026-08-25/schemas/shopping/checkout.json</c>).
+    ///
+    /// It said <c>https://ucp.dev/schemas</c> until 2026-10-13. That is the
+    /// <c>$id</c> the schemas carry in the protocol's source tree — which is what
+    /// the vendored copies are, and what every conformance test here reads —
+    /// and it is not an address: it answers 404. A capability *MUST declare a
+    /// schema* and a platform *MUST fetch* it, so the shop was pointing every
+    /// platform at nothing, and no test could see it, because none asked.
     /// </summary>
-    public const string SchemaBaseUrl = "https://ucp.dev/schemas";
+    public const string SchemaBaseUrl = $"https://ucp.dev/{Version}/schemas";
+
+    /// <summary>
+    /// How long a platform may keep what the shop publishes for it — the
+    /// profile and the shop's own schemas. *Published artifacts MUST include a
+    /// Cache-Control header with public and max-age of at least 60 seconds*
+    /// (the specification, *Hosting*). Five minutes: the profile carries the
+    /// shop's signing keys, and a key rotated is a key a platform should learn
+    /// of soon.
+    /// </summary>
+    public const string PublishedCaching = "public, max-age=300";
 
     /// <summary>
     /// The path the specification fixes. It is not configurable and must not

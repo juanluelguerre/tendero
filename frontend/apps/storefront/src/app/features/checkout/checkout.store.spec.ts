@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import type { PriceQuote, ShippingOptionView } from '@tendero/shared-api';
+import type { Money, PriceQuote, ShippingOptionView } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ import { OrderService } from '../../data-access/order.service';
 import { CheckoutStore } from './checkout.store';
 
 const option = (code: string, amount: number): ShippingOptionView =>
-  ({ code, amount }) as unknown as ShippingOptionView;
+  ({ code, amount: { amount, currency: 'EUR' } }) as unknown as ShippingOptionView;
 
 /** Address, delivery, payment (ADR 0047): the checkout's own state, over the shop's one cart. */
 describe('the checkout store', () => {
@@ -19,7 +19,7 @@ describe('the checkout store', () => {
   let options: () => Promise<{ options: ShippingOptionView[] }>;
   let placing: () => Promise<{ orderId: string }>;
   let quoted: number[];
-  let placed: { idempotencyKey: string }[];
+  let placed: string[];
   let went: unknown[];
   let cleared: number;
 
@@ -47,15 +47,17 @@ describe('the checkout store', () => {
             load: async () => undefined,
             isEmpty: () => false,
             token: () => 'T-1',
-            quote: () => ({ inputHash: 'H', currency: 'EUR' }) as unknown as PriceQuote,
+            quote: () => ({ inputHash: 'H' }) as unknown as PriceQuote,
             shippingOptions: () => options(),
-            quoteWithShipping: async (amount: number) => void quoted.push(amount),
+            quoteWithShipping: async (shipping: Money) => void quoted.push(shipping.amount),
             clear: () => void cleared++,
           },
         },
         {
           provide: OrderService,
-          useValue: { place: async (request: { idempotencyKey: string }) => (placed.push(request), placing()) },
+          useValue: {
+            place: async (_request: unknown, idempotencyKey: string) => (placed.push(idempotencyKey), placing()),
+          },
         },
       ],
     });
@@ -100,11 +102,7 @@ describe('the checkout store', () => {
     placing = async () => ({ orderId: 'O-1' });
     await store.pay();
 
-    expect([placed[0].idempotencyKey === placed[1].idempotencyKey, cleared, went]).toEqual([
-      true,
-      1,
-      [['/', 'es', 'orders', 'O-1']],
-    ]);
+    expect([placed[0] === placed[1], cleared, went]).toEqual([true, 1, [['/', 'es', 'orders', 'O-1']]]);
   });
 
   /** The price moved between the quote and the till: the page re-quotes, so the next press agrees to what is on screen. */

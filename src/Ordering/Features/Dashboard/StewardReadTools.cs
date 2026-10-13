@@ -38,16 +38,16 @@ public sealed class SalesSummaryTool(IQueryDispatcher queries) : ReadTool<Period
 
         var data = new SalesNow(
             arguments.Period.ToString(),
-            summary.Currency,
+            summary.Current.Revenue.Currency,
             Of(summary.Current),
             Of(summary.Previous),
-            [.. mix.ByCategory.Select(row => new CategoryRevenue(row.CategoryCode ?? "uncategorised", row.Units, row.Revenue))],
-            [.. summary.BestSellers.Select(seller => new TopSeller(seller.Sku, seller.Name, seller.Units, seller.Revenue))]);
+            [.. mix.ByCategory.Select(row => new CategoryRevenue(row.CategoryCode ?? "uncategorised", row.Units, row.Revenue.Amount))],
+            [.. summary.BestSellers.Select(seller => new TopSeller(seller.Sku, seller.Name, seller.Units, seller.Revenue.Amount))]);
         return (data, data.ByCategory.Count + data.BestSellers.Count, null);
     }
 
     private static Figures Of(SalesFigures figures) =>
-        new(figures.Revenue, figures.Orders, figures.Units, figures.AverageOrderValue);
+        new(figures.Revenue.Amount, figures.Orders, figures.Units, figures.AverageOrderValue.Amount);
 
     protected override IReadOnlyList<ResultTable> Tables(SalesNow data) =>
     [
@@ -96,8 +96,8 @@ public sealed class ProductPerformanceTool(IQueryDispatcher queries) : ReadTool<
         var ranked = await queries.SendAsync(
             new GetProductPerformanceQuery(arguments.Period, arguments.Ranking, arguments.Category, arguments.Limit), cancellationToken);
 
-        var data = new ProductsRanked(ranked.Period.ToString(), ranked.Ranking.ToString(), ranked.Category, ranked.Currency, ranked.Total,
-            [.. ranked.Rows.Select(row => new RankedSales(row.ProductId, row.Name, row.Units, row.Revenue))]);
+        var data = new ProductsRanked(ranked.Period.ToString(), ranked.Ranking.ToString(), ranked.Category, ranked.Rows.Select(row => row.Revenue.Currency).FirstOrDefault() ?? DashboardCurrency.Default, ranked.Total,
+            [.. ranked.Rows.Select(row => new RankedSales(row.ProductId, row.Name, row.Units, row.Revenue.Amount))]);
         return (data, data.Products.Count, ranked.Total);
     }
 

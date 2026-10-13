@@ -275,7 +275,7 @@ public sealed class VisualSearchEndpointTests
         public Task<IReadOnlyList<ProductProfile>> ByIdsAsync(IReadOnlyCollection<string> productIds, string culture, CancellationToken ct = default) =>
             Task.FromResult<IReadOnlyList<ProductProfile>>([.. productIds.Select(id => new ProductProfile(
                 new SearchHit(id, $"CODE-{id}", $"Product {id}", $"product-{id}", "Kuisina", "KITCHEN", $"{id}-variant", $"{id}-SKU",
-                    29.90m, 29.90m, 34.90m, "EUR", null, InStock: true, Score: 0), null, []))]);
+                    new Money(29.90m, "EUR"), new Money(29.90m, "EUR"), new Money(34.90m, "EUR"), null, InStock: true, Score: 0), null, []))]);
 
         public Task<IReadOnlyList<ProductProfile>> ByCodesAsync(IReadOnlyCollection<string> codes, string culture, CancellationToken ct = default) =>
             throw new NotSupportedException();

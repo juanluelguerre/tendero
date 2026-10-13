@@ -8,21 +8,25 @@ import { type ShippingState, Totals } from './totals';
 @Component({
   imports: [Totals],
   template: `<storefront-totals
-    currency="EUR"
-    [subtotal]="100"
-    [discountTotal]="discount()"
-    [shipping]="4.95"
+    [subtotal]="eur(10000)"
+    [discountTotal]="eur(discount())"
+    [shipping]="eur(495)"
     [shippingState]="state()"
     [shippingLabel]="label()"
-    [total]="99.95"
-    [taxTotal]="tax()"
+    [total]="eur(9995)"
+    [taxTotal]="eur(tax())"
   />`,
 })
 class Host {
   readonly discount = signal(0);
   readonly state = signal<ShippingState>('charged');
   readonly label = signal<string | null>(null);
-  readonly tax = signal(17.35);
+  readonly tax = signal(1735);
+
+  /** Money as the API sends it: minor units and its currency. */
+  protected eur(amount: number) {
+    return { amount, currency: 'EUR' };
+  }
 }
 
 const words = {
@@ -77,7 +81,7 @@ describe('the totals', () => {
 
   it('shows the discounts only when there are some, as money off', () => {
     const fixture = render();
-    fixture.componentInstance.discount.set(5);
+    fixture.componentInstance.discount.set(500);
     fixture.detectChanges();
     expect(rows(fixture)[1][0]).toBe('Discounts');
     expect(rows(fixture)[1][1]).toMatch(/^−.*5\.00/);

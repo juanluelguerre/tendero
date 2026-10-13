@@ -68,7 +68,7 @@ public sealed class KitsEndpointTests
 
         private static SearchHit Hit(string code, string name, decimal price) =>
             new($"id-{code}", code, name, code.ToLowerInvariant(), "Kuisina", "COOKWARE", $"v-{code}", $"SKU-{code}",
-                price, price, price, "EUR", null, InStock: true, Score: 1);
+                new Money(price, "EUR"), new Money(price, "EUR"), new Money(price, "EUR"), null, InStock: true, Score: 1);
     }
 
     private static (HttpClient Client, IDisposable Owner) Compose()
@@ -108,33 +108,40 @@ public sealed class KitsEndpointTests
         var (client, owner) = Compose();
         using var _ = owner;
 
-        var response = await client.PostAsJsonAsync("/api/kits/KITCHEN_STARTER/build", new { budget = 60, requirements = new[] { "INDUCTION:true" } }, Ct);
+        var response = await client.PostAsJsonAsync("/api/kits/KITCHEN_STARTER/build", new { budget = new { amount = 6000, currency = "EUR" }, requirements = new[] { "INDUCTION:true" } }, Ct);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("es", response.Content.Headers.ContentLanguage.Single());
         var kit = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
 
-        Assert.Equal(("Kit de cocina", 60m, 49.90m, 10.10m, "EUR"),
-            (kit.GetProperty("name").GetString(), kit.GetProperty("budget").GetDecimal(), kit.GetProperty("total").GetDecimal(),
-                kit.GetProperty("left").GetDecimal(), kit.GetProperty("currency").GetString()));
+        // Money as every surface says it: a whole number of minor units and its currency, each amount with its own.
+        static (long, string?) Money(JsonElement money) => (money.GetProperty("amount").GetInt64(), money.GetProperty("currency").GetString());
+        Assert.Equal("Kit de cocina", kit.GetProperty("name").GetString());
+        Assert.Equal([(6000L, "EUR"), (4990L, "EUR"), (1010L, "EUR")],
+            new[] { "budget", "total", "left" }.Select(member => Money(kit.GetProperty(member))));
+        Assert.DoesNotContain(kit.EnumerateObject(), member => member.NameEquals("currency"));
         Assert.Equal(("Budget", true, true),
             (kit.GetProperty("binding").GetString(), kit.GetProperty("complete").GetBoolean(), kit.GetProperty("exact").GetBoolean()));
 
-        // Why, a sentence a fact, each beside the slot it is about — null for the kit as a whole.
+        // Why, a sentence a fact: each with the code that says what kind of thing
+        // it says — the name, never a number — and the slot it is about, null for
+        // the kit as a whole. A page composes its own sentence from the code; an
+        // agent reads this one.
         Assert.Equal(
         [
-            (null, "Kit de cocina: 49.90 EUR de 60.00 EUR."),
-            ("pan", "Sartén: Sartén de hierro, 49.90 EUR."),
-            ("board", "Sin tabla de cortar: lo más barato cuesta 24.90 EUR y quedaban 10.10 EUR."),
-        ], kit.GetProperty("explanation").EnumerateArray().Select(sentence => (sentence.GetProperty("slot").GetString(), sentence.GetProperty("text").GetString()!)));
+            ("Summary", null, "Kit de cocina: 49.90 EUR de 60.00 EUR."),
+            ("Chosen", "pan", "Sartén: Sartén de hierro, 49.90 EUR."),
+            ("OverBudget", "board", "Sin tabla de cortar: lo más barato cuesta 24.90 EUR y quedaban 10.10 EUR."),
+        ], kit.GetProperty("explanation").EnumerateArray().Select(said =>
+            (said.GetProperty("code").GetString()!, said.GetProperty("about").GetString(), said.GetProperty("text").GetString()!)));
 
         var (pan, board) = (kit.GetProperty("slots")[0], kit.GetProperty("slots")[1]);
         Assert.Equal(("PAN", "SKU-PAN"), (pan.GetProperty("product").GetProperty("code").GetString(), pan.GetProperty("product").GetProperty("matchedSku").GetString()));
         Assert.Equal("INDUCTION:true", pan.GetProperty("requirements")[0].GetString());
         Assert.Equal(JsonValueKind.Null, board.GetProperty("product").ValueKind);
-        Assert.Equal(("OverBudget", "BOARD", 14.80m),
+        Assert.Equal(("OverBudget", "BOARD", (1480L, "EUR")),
             (board.GetProperty("gap").GetProperty("reason").GetString(), board.GetProperty("gap").GetProperty("cheapest").GetProperty("code").GetString(),
-                board.GetProperty("gap").GetProperty("short").GetDecimal()));
+                Money(board.GetProperty("gap").GetProperty("short"))));
     }
 
     /// <summary>No template, no kit: the shop does not make one up from an address.</summary>
@@ -144,14 +151,18 @@ public sealed class KitsEndpointTests
         var (client, owner) = Compose();
         using var _ = owner;
 
-        var response = await client.PostAsJsonAsync("/api/kits/PICNIC/build", new { budget = 60 }, Ct);
+        var response = await client.PostAsJsonAsync("/api/kits/PICNIC/build", new { budget = new { amount = 6000, currency = "EUR" } }, Ct);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Theory]
-    [InlineData("""{ "budget": 0 }""")]
-    [InlineData("""{ "budget": 60, "requirements": ["induction"] }""")]
+    [InlineData("""{ "budget": { "amount": 0, "currency": "EUR" } }""")]
+    [InlineData("""{ "budget": { "amount": 6000, "currency": "USD" } }""")]
+    [InlineData("""{ "budget": { "amount": 6000, "currency": "EUR" }, "requirements": ["induction"] }""")]
+    // The shape this phase left behind: a number with a fraction, and no currency.
+    [InlineData("""{ "budget": 60 }""")]
+    [InlineData("""{ "budget": { "amount": 60.5, "currency": "EUR" } }""")]
     public async Task A_request_that_is_not_one_is_refused_at_the_door(string body)
     {
         var (client, owner) = Compose();

@@ -11,19 +11,21 @@ import { DashboardRefresh } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { ByCategoryStore } from './by-category.store';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const MIX: SalesMix = {
   period: 'Week',
-  currency: 'EUR',
   byChannel: [],
-  unrecorded: { channel: null, orders: 0, revenue: 0 },
+  unrecorded: { channel: null, orders: 0, revenue: eur(0) },
   byCategory: [
-    { categoryCode: 'COOKWARE', units: 4, revenue: 400 },
-    { categoryCode: 'MUGS', units: 9, revenue: 90 },
-    { categoryCode: 'LAMPS', units: 1, revenue: 60 },
-    { categoryCode: 'BAGS', units: 1, revenue: 50 },
-    { categoryCode: 'TEXTILES', units: 1, revenue: 40 },
-    { categoryCode: 'RUGS', units: 1, revenue: 30 },
-    { categoryCode: null, units: 2, revenue: 25 },
+    { categoryCode: 'COOKWARE', units: 4, revenue: eur(400) },
+    { categoryCode: 'MUGS', units: 9, revenue: eur(90) },
+    { categoryCode: 'LAMPS', units: 1, revenue: eur(60) },
+    { categoryCode: 'BAGS', units: 1, revenue: eur(50) },
+    { categoryCode: 'TEXTILES', units: 1, revenue: eur(40) },
+    { categoryCode: 'RUGS', units: 1, revenue: eur(30) },
+    { categoryCode: null, units: 2, revenue: eur(25) },
   ],
 };
 
@@ -61,7 +63,7 @@ describe('the by-category store', () => {
       });
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect(store.rows().map((row) => [row.label, row.revenue])).toEqual([
+    expect(store.rows().map((row) => [row.label, row.revenue.amount / 100])).toEqual([
       ['Cookware', 400],
       ['MUGS', 90],
       ['LAMPS', 60],

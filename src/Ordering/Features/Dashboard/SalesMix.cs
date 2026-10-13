@@ -6,14 +6,14 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 
 /// <summary>What came through one channel in the period: its paid orders and their revenue.</summary>
-public sealed record ChannelSales(OrderChannel? Channel, int Orders, decimal Revenue);
+public sealed record ChannelSales(OrderChannel? Channel, int Orders, Money Revenue);
 
 /// <summary>
 /// What sold in one category in the period: units and the lines' revenue — the
 /// price times the quantity, before shipping and the order's discounts, which
 /// belong to the order and not to any one category.
 /// </summary>
-public sealed record CategorySales(string? CategoryCode, int Units, decimal Revenue);
+public sealed record CategorySales(string? CategoryCode, int Units, Money Revenue);
 
 /// <summary>
 /// Where the period's sales came from and what they were (R-9, D-7). The channel
@@ -26,7 +26,6 @@ public sealed record CategorySales(string? CategoryCode, int Units, decimal Reve
 /// <param name="ByCategory">The most revenue first; the row with no category last.</param>
 public sealed record SalesMix(
     DashboardPeriod Period,
-    string Currency,
     IReadOnlyList<ChannelSales> ByChannel,
     ChannelSales Unrecorded,
     IReadOnlyList<CategorySales> ByCategory);
@@ -41,24 +40,24 @@ public static class SalesMixFigures
     public static SalesMix Of(DashboardPeriod period, IReadOnlyList<Order> placed)
     {
         var sales = placed.Where(SalesRanking.IsSale).ToList();
+        var currency = DashboardCurrency.Of(sales);
 
         ChannelSales Through(OrderChannel? channel)
         {
             var these = sales.Where(order => order.Channel == channel).ToList();
-            return new ChannelSales(channel, these.Count, these.Sum(order => order.Total.Amount));
+            return new ChannelSales(channel, these.Count, new Money(these.Sum(order => order.Total.Amount), currency));
         }
 
         return new SalesMix(
             period,
-            DashboardCurrency.Of(sales),
             [.. Channels.Select(channel => Through(channel))],
             Through(null),
             [
                 .. sales.SelectMany(order => order.Lines)
                     .GroupBy(line => line.CategoryCode)
-                    .Select(group => new CategorySales(group.Key, group.Sum(line => line.Quantity), group.Sum(line => line.Total.Amount)))
+                    .Select(group => new CategorySales(group.Key, group.Sum(line => line.Quantity), new Money(group.Sum(line => line.Total.Amount), currency)))
                     .OrderBy(row => row.CategoryCode is null)
-                    .ThenByDescending(row => row.Revenue)
+                    .ThenByDescending(row => row.Revenue.Amount)
                     .ThenBy(row => row.CategoryCode, StringComparer.Ordinal)
             ]);
     }

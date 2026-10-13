@@ -36,8 +36,7 @@ public sealed record ProductForReview(
     string? Brand,
     /// <summary>The category's name in the requested culture, or its code when the tree does not know it.</summary>
     string? Category,
-    decimal PriceAmount,
-    string PriceCurrency,
+    Money Price,
     IReadOnlyList<string> ImageIds,
     IReadOnlyList<ProductAttributeView> Attributes,
     IReadOnlyList<string> MissingCultures,
@@ -130,8 +129,7 @@ public sealed class ReviewProductHandler(
             product.Description is { } description ? AsStored(description) : new Dictionary<string, string>(),
             product.Brand,
             product.Category is { } category ? tree.ByCode(category)?.Name.In(query.Culture) ?? category : null,
-            product.Price.Amount,
-            product.Price.Currency,
+            product.Price,
             [.. product.Images.OrderBy(image => image.SortOrder).Select(image => image.Id.Value)],
             // Every value, a defined one by its label and an undefined one by its
             // code: a review hides nothing the product carries.

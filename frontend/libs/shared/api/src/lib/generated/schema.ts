@@ -1615,15 +1615,12 @@ export interface components {
         };
         AgentSales: {
             period: components["schemas"]["DashboardPeriod"];
-            currency: string;
             /** Format: int32 */
             orders: number;
-            /** Format: double */
-            revenue: number;
+            revenue: components["schemas"]["Money"];
             /** Format: int32 */
             agentOrders: number;
-            /** Format: double */
-            agentRevenue: number;
+            agentRevenue: components["schemas"]["Money"];
             /** Format: int32 */
             mandated: number;
             /** Format: int32 */
@@ -1634,8 +1631,7 @@ export interface components {
             agentId: string;
             /** Format: int32 */
             orders: number;
-            /** Format: double */
-            revenue: number;
+            revenue: components["schemas"]["Money"];
             /** Format: int32 */
             mandated: number;
         };
@@ -1675,13 +1671,14 @@ export interface components {
         AppliedDiscountResponse: {
             promotionCode: string;
             label: string;
-            /** Format: double */
-            amount: number;
+            amount: components["schemas"]["Money"];
             effect: string;
             combination: components["schemas"]["CombinationPolicy"];
             outcome: components["schemas"]["DiscountOutcome"];
-            reasonCode: null | string;
+            reasonCode: null | components["schemas"]["RuleReasonCode"];
             reason: null | string;
+            requires: null | components["schemas"]["DiscountRequirement"];
+            winner: null | string;
         };
         ApproveClaimsRequest: {
             ids: null | string[];
@@ -1748,8 +1745,7 @@ export interface components {
             name: string;
             /** Format: int32 */
             units: number;
-            /** Format: double */
-            revenue: number;
+            revenue: components["schemas"]["Money"];
         };
         BilingualText: {
             es: string;
@@ -1761,8 +1757,7 @@ export interface components {
             searches: components["schemas"]["PastSearch"][];
         };
         BuildKitRequest: {
-            /** Format: double */
-            budget: number;
+            budget: components["schemas"]["Money"];
             requirements?: null | string[];
         };
         /** @enum {unknown} */
@@ -1811,15 +1806,11 @@ export interface components {
         /** @enum {unknown} */
         CampaignStatus: "Draft" | "Scheduled" | "Ended";
         CampaignUplift: {
-            currency: string;
             timeZone: string;
             hasBaseline: boolean;
-            /** Format: double */
-            sold: number;
-            /** Format: double */
-            baseline: null | number;
-            /** Format: double */
-            uplift: null | number;
+            sold: components["schemas"]["Money"];
+            baseline: null | components["schemas"]["Money"];
+            uplift: null | components["schemas"]["Money"];
             days: components["schemas"]["UpliftDay"][];
         };
         CampaignView: {
@@ -1849,6 +1840,8 @@ export interface components {
             imageId: null | string;
             /** Format: int32 */
             quantity: number;
+            /** Format: int32 */
+            available: number;
         };
         CartView: {
             cartId: string;
@@ -1879,8 +1872,7 @@ export interface components {
             categoryCode: null | string;
             /** Format: int32 */
             units: number;
-            /** Format: double */
-            revenue: number;
+            revenue: components["schemas"]["Money"];
         };
         CategoryStep: {
             code: string;
@@ -1903,8 +1895,7 @@ export interface components {
             channel: null | components["schemas"]["OrderChannel"];
             /** Format: int32 */
             orders: number;
-            /** Format: double */
-            revenue: number;
+            revenue: components["schemas"]["Money"];
         };
         CheckoutFunnel: {
             period: components["schemas"]["DashboardPeriod"];
@@ -2029,6 +2020,16 @@ export interface components {
         };
         /** @enum {unknown} */
         DiscountOutcome: "Applied" | "Suppressed";
+        DiscountRequirement: {
+            minimumSubtotal: null | components["schemas"]["Money"];
+            /** Format: int32 */
+            minimumQuantity: null | number;
+            categoryCode: null | string;
+            sku: null | string;
+            shortBy: null | components["schemas"]["Money"];
+            /** Format: int32 */
+            unitsShort: null | number;
+        };
         /** @enum {unknown} */
         FacetKind: "Category" | "Brand" | "Price" | "Offer" | "New" | "InStock" | "Axis" | "Attribute" | "Flag";
         FacetOption: {
@@ -2091,17 +2092,14 @@ export interface components {
         KitGapView: {
             reason: components["schemas"]["KitGapReason"];
             cheapest: null | components["schemas"]["SearchHit"];
-            /** Format: double */
-            short: null | number;
+            short: null | components["schemas"]["Money"];
         };
         KitRequirementOption: {
             facet: string;
             label: string;
         };
-        KitSentence: {
-            slot: null | string;
-            text: string;
-        };
+        /** @enum {unknown} */
+        KitSaid: "Summary" | "Chosen" | "ChosenBelowBetter" | "OverBudget" | "NothingFits" | "RequirementUnused" | "SearchStopped" | "Incomplete";
         KitSlotView: {
             code: string;
             name: string;
@@ -2124,25 +2122,20 @@ export interface components {
         };
         KitUpgradeView: {
             product: components["schemas"]["SearchHit"];
-            /** Format: double */
-            short: number;
+            short: components["schemas"]["Money"];
         };
         KitView: {
             template: string;
             name: string;
-            /** Format: double */
-            budget: number;
-            /** Format: double */
-            total: number;
-            /** Format: double */
-            left: number;
-            currency: string;
+            budget: components["schemas"]["Money"];
+            total: components["schemas"]["Money"];
+            left: components["schemas"]["Money"];
             binding: components["schemas"]["KitBinding"];
             complete: boolean;
             exact: boolean;
             slots: components["schemas"]["KitSlotView"][];
             unusedRequirements: string[];
-            explanation: components["schemas"]["KitSentence"][];
+            explanation: components["schemas"]["MessageOfKitSaid"][];
         };
         LinkIdentityRequest: {
             displayName: null | string;
@@ -2245,9 +2238,20 @@ export interface components {
             views: null | components["schemas"]["ViewedProduct"][];
             searches: null | components["schemas"]["PastSearch"][];
         };
+        MessageOfKitSaid: {
+            code: components["schemas"]["KitSaid"];
+            about: null | string;
+            text: string;
+        };
         MissingAttributeView: {
             code: string;
             label: string;
+        };
+        /** @description Money: a whole number of the currency's minor unit (ISO 4217) and the currency. 113.90 EUR is 11390. */
+        Money: {
+            /** Format: int64 */
+            amount: number;
+            currency: string;
         };
         MoveOrderRequest: {
             move: components["schemas"]["OrderMove"];
@@ -2267,13 +2271,17 @@ export interface components {
             name: string;
             kind: string;
             /** Format: double */
-            amount: null | number;
+            percent: null | number;
+            amountOff: null | components["schemas"]["Money"];
+            /** Format: int32 */
+            buy: null | number;
+            /** Format: int32 */
+            free: null | number;
             /** Format: date-time */
             until: null | string;
         };
         OperationsSummary: {
             period: components["schemas"]["DashboardPeriod"];
-            currency: string;
             /** Format: int32 */
             toShip: number;
             /** Format: int32 */
@@ -2292,8 +2300,7 @@ export interface components {
             /** Format: int32 */
             openReturns: number;
             openReturnsByReason: components["schemas"]["ReasonCount"][];
-            /** Format: double */
-            refunded: number;
+            refunded: components["schemas"]["Money"];
             /** Format: double */
             returnRate: number;
             /** Format: int32 */
@@ -2325,8 +2332,7 @@ export interface components {
         OrderDiscountView: {
             promotionCode: string;
             label: string;
-            /** Format: double */
-            amount: number;
+            amount: components["schemas"]["Money"];
         };
         OrderLinePreview: {
             sku: string;
@@ -2337,17 +2343,15 @@ export interface components {
             sku: string;
             productName: string;
             variantLabel: null | string;
-            /** Format: double */
-            unitPrice: number;
+            unitPrice: components["schemas"]["Money"];
             /** Format: int32 */
             quantity: number;
+            total: components["schemas"]["Money"];
         };
         OrderMandateSummary: {
             kind: string;
             issuer: string;
-            /** Format: double */
-            approvedTotal: number;
-            currency: string;
+            approvedTotal: components["schemas"]["Money"];
             /** Format: date-time */
             expiresAt: null | string;
         };
@@ -2367,9 +2371,7 @@ export interface components {
             status: components["schemas"]["OrderStatus"];
             mode: components["schemas"]["OrderMode"];
             mandate: null | components["schemas"]["OrderMandateSummary"];
-            currency: string;
-            /** Format: double */
-            total: number;
+            total: components["schemas"]["Money"];
             /** Format: int32 */
             lineCount: number;
             recipientName: string;
@@ -2386,17 +2388,14 @@ export interface components {
             taxClass: string;
             /** Format: double */
             rate: number;
-            /** Format: double */
-            base: number;
-            /** Format: double */
-            amount: number;
+            base: components["schemas"]["Money"];
+            amount: components["schemas"]["Money"];
         };
         OrderView: {
             orderId: string;
             status: components["schemas"]["OrderStatus"];
             mode: components["schemas"]["OrderMode"];
             culture: string;
-            currency: string;
             /** Format: date-time */
             createdAt: string;
             shippingAddress: string;
@@ -2404,16 +2403,11 @@ export interface components {
             lines: components["schemas"]["OrderLineView"][];
             discounts: components["schemas"]["OrderDiscountView"][];
             taxes: components["schemas"]["OrderTaxView"][];
-            /** Format: double */
-            subtotal: number;
-            /** Format: double */
-            discountTotal: number;
-            /** Format: double */
-            shipping: number;
-            /** Format: double */
-            taxTotal: number;
-            /** Format: double */
-            total: number;
+            subtotal: components["schemas"]["Money"];
+            discountTotal: components["schemas"]["Money"];
+            shipping: components["schemas"]["Money"];
+            taxTotal: components["schemas"]["Money"];
+            total: components["schemas"]["Money"];
             stopCode?: null | string;
             stopDetail?: null | string;
         };
@@ -2424,10 +2418,6 @@ export interface components {
         };
         /** @enum {unknown} */
         PerformanceRanking: "Best" | "Worst";
-        PictureDoubtConflict: {
-            title: string;
-            detail: string;
-        };
         /** @enum {unknown} */
         PictureDoubtDecision: "PictureIsFine" | "ReplaceThePicture" | "BelongsToAnotherVariant";
         PictureDoubtView: {
@@ -2467,40 +2457,42 @@ export interface components {
             shippingOptionCode: string;
             quoteHash: string;
             instrument: string;
-            idempotencyKey: string;
             billingAddress?: null | components["schemas"]["AddressRequest"];
             coupons?: null | string[];
         };
         PriceBand: {
-            /** Format: double */
-            from: null | number;
-            /** Format: double */
-            to: null | number;
+            from: null | components["schemas"]["Money"];
+            to: null | components["schemas"]["Money"];
             /** Format: int64 */
             count: number;
             chosen: boolean;
         };
-        PriceChangedResponse: {
-            quoteHash: string;
-            /** Format: double */
-            total: number;
-            /** Format: double */
-            shipping: number;
-            /** Format: double */
-            taxTotal: number;
-            /** Format: double */
-            discountTotal: number;
-        };
         PriceFacetRange: {
-            /** Format: double */
-            min: number;
-            /** Format: double */
-            max: number;
-            /** Format: double */
-            chosenMin: null | number;
-            /** Format: double */
-            chosenMax: null | number;
+            min: components["schemas"]["Money"];
+            max: components["schemas"]["Money"];
+            chosenMin: null | components["schemas"]["Money"];
+            chosenMax: null | components["schemas"]["Money"];
             bands: components["schemas"]["PriceBand"][];
+        };
+        /** @description A refusal (RFC 9457): a code to branch on, and the shop's sentence in the language asked. */
+        Problem: {
+            /**
+             * Format: uri
+             * @description Names the kind of problem.
+             */
+            type: string;
+            /** @description The shop's sentence, in the language of Content-Language. */
+            title: string;
+            /** Format: int32 */
+            status: number;
+            /** @description What this refusal is about, when there is more to say. */
+            detail?: null | string;
+            /** @description What a client branches on. The sentences may be reworded; this may not. */
+            code: string;
+            /** @description The part of the request the refusal is about, as a JSONPath, when it is about one. */
+            path?: string;
+            /** @description The domain's own sentence, in English: for a log, not for a screen. */
+            reason?: string;
         };
         ProductAttributeView: {
             code: string;
@@ -2527,11 +2519,8 @@ export interface components {
             attributes: components["schemas"]["ProductAttributeView"][];
             axes: components["schemas"]["VariantAxisView"][];
             variants: components["schemas"]["VariantView"][];
-            /** Format: double */
-            priceFrom: number;
-            /** Format: double */
-            priceTo: number;
-            priceCurrency: string;
+            priceFrom: components["schemas"]["Money"];
+            priceTo: components["schemas"]["Money"];
             alternates: components["schemas"]["AlternateSlug"][];
             missingCultures: string[];
             status: components["schemas"]["ProductStatus"];
@@ -2550,9 +2539,7 @@ export interface components {
             };
             brand: null | string;
             category: null | string;
-            /** Format: double */
-            priceAmount: number;
-            priceCurrency: string;
+            price: components["schemas"]["Money"];
             imageIds: string[];
             attributes: components["schemas"]["ProductAttributeView"][];
             missingCultures: string[];
@@ -2572,7 +2559,6 @@ export interface components {
             period: components["schemas"]["DashboardPeriod"];
             ranking: components["schemas"]["PerformanceRanking"];
             category: null | string;
-            currency: string;
             /** Format: int32 */
             total: number;
             rows: components["schemas"]["ProductSales"][];
@@ -2582,8 +2568,7 @@ export interface components {
             name: string;
             /** Format: int32 */
             units: number;
-            /** Format: double */
-            revenue: number;
+            revenue: components["schemas"]["Money"];
         };
         /** @enum {unknown} */
         ProductStatus: "Draft" | "Active" | "Archived";
@@ -2599,9 +2584,7 @@ export interface components {
             slug: string;
             brand: null | string;
             category: null | string;
-            /** Format: double */
-            priceAmount: number;
-            priceCurrency: string;
+            price: components["schemas"]["Money"];
             imageId: null | string;
             status: components["schemas"]["ProductStatus"];
             missingCultures: string[];
@@ -2706,10 +2689,6 @@ export interface components {
         };
         /** @enum {unknown} */
         PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
-        PublishProductConflict: {
-            title: string;
-            detail: string;
-        };
         PublishProductResponse: {
             productId: string;
             outcome: components["schemas"]["PublishOutcome"];
@@ -2728,8 +2707,12 @@ export interface components {
         };
         QuoteCartRequest: {
             lines: components["schemas"]["QuoteLineRequest"][];
-            /** Format: double */
-            shipping?: null | number;
+            /** @description Money: a whole number of the currency's minor unit (ISO 4217) and the currency. 113.90 EUR is 11390. */
+            shipping?: {
+                /** Format: int64 */
+                amount: number;
+                currency: string;
+            };
             coupons?: null | string[];
         };
         QuoteForReview: {
@@ -2754,34 +2737,25 @@ export interface components {
             issuedAt: string;
             /** Format: date-time */
             expiresAt: string;
-            currency: string;
             segment: string;
             lines: components["schemas"]["QuotedLineResponse"][];
             discounts: components["schemas"]["AppliedDiscountResponse"][];
             taxes: components["schemas"]["TaxLineResponse"][];
-            /** Format: double */
-            subtotal: number;
-            /** Format: double */
-            discountTotal: number;
-            /** Format: double */
-            shipping: number;
-            /** Format: double */
-            taxTotal: number;
-            /** Format: double */
-            total: number;
+            subtotal: components["schemas"]["Money"];
+            discountTotal: components["schemas"]["Money"];
+            shipping: components["schemas"]["Money"];
+            taxTotal: components["schemas"]["Money"];
+            total: components["schemas"]["Money"];
         };
         QuotedLineResponse: {
             variantId: string;
             sku: string;
             /** Format: int32 */
             quantity: number;
-            /** Format: double */
-            unitPrice: number;
+            unitPrice: components["schemas"]["Money"];
             priceSource: string;
-            /** Format: double */
-            discount: number;
-            /** Format: double */
-            net: number;
+            discount: components["schemas"]["Money"];
+            net: components["schemas"]["Money"];
         };
         RankedProduct: {
             /** Format: int32 */
@@ -2887,11 +2861,6 @@ export interface components {
             total: number;
             rows: components["schemas"]["RestockRow"][];
         };
-        RestockProblem: {
-            title: string;
-            detail: string;
-            warehouses: string[];
-        };
         RestockRow: {
             sku: string;
             /** Format: int32 */
@@ -2947,8 +2916,7 @@ export interface components {
             orderId: string;
             status: components["schemas"]["ReturnStatus"];
             resolution: null | string;
-            /** Format: double */
-            refundAmount: null | number;
+            refundAmount: null | components["schemas"]["Money"];
             /** Format: date-time */
             createdAt: string;
             lines: components["schemas"]["ReturnLineView"][];
@@ -2970,10 +2938,6 @@ export interface components {
             /** Format: int32 */
             skuTotal: number;
             bySku: components["schemas"]["SkuReturns"][];
-        };
-        ReviewClaimConflict: {
-            title: string;
-            detail: string;
         };
         ReviewClaimResponse: {
             claimId: string;
@@ -2999,21 +2963,20 @@ export interface components {
             code: string;
             label: string;
         };
+        /** @enum {unknown} */
+        RuleReasonCode: "NotCombinableWith" | "SupersededByExclusive" | "ConditionNotMet" | "NothingToDiscount" | null;
         SalesFigures: {
-            /** Format: double */
-            revenue: number;
+            revenue: components["schemas"]["Money"];
             /** Format: int32 */
             orders: number;
             /** Format: int32 */
             units: number;
-            /** Format: double */
-            averageOrderValue: number;
+            averageOrderValue: components["schemas"]["Money"];
             /** Format: double */
             unitsPerOrder: number;
         };
         SalesMix: {
             period: components["schemas"]["DashboardPeriod"];
-            currency: string;
             byChannel: components["schemas"]["ChannelSales"][];
             unrecorded: components["schemas"]["ChannelSales"];
             byCategory: components["schemas"]["CategorySales"][];
@@ -3021,16 +2984,14 @@ export interface components {
         SalesPoint: {
             /** Format: date-time */
             start: string;
-            /** Format: double */
-            revenue: number;
+            revenue: components["schemas"]["Money"];
             /** Format: int32 */
             orders: number;
             /** Format: int32 */
             units: number;
             /** Format: int32 */
             agentOrders: number;
-            /** Format: double */
-            agentRevenue: number;
+            agentRevenue: components["schemas"]["Money"];
             /** Format: int32 */
             newCustomers: number;
             /** Format: int32 */
@@ -3038,7 +2999,6 @@ export interface components {
         };
         SalesSeries: {
             period: components["schemas"]["DashboardPeriod"];
-            currency: string;
             timeZone: string;
             step: components["schemas"]["SeriesStep"];
             current: components["schemas"]["SalesPoint"][];
@@ -3046,7 +3006,6 @@ export interface components {
         };
         SalesSummary: {
             period: components["schemas"]["DashboardPeriod"];
-            currency: string;
             current: components["schemas"]["SalesFigures"];
             previous: components["schemas"]["SalesFigures"];
             bestSellers: components["schemas"]["BestSeller"][];
@@ -3083,13 +3042,9 @@ export interface components {
             category: null | string;
             matchedVariantId: string;
             matchedSku: string;
-            /** Format: double */
-            priceAmount: number;
-            /** Format: double */
-            priceFrom: number;
-            /** Format: double */
-            priceTo: number;
-            priceCurrency: string;
+            price: components["schemas"]["Money"];
+            priceFrom: components["schemas"]["Money"];
+            priceTo: components["schemas"]["Money"];
             imageId: null | string;
             inStock: boolean;
             /** Format: double */
@@ -3121,10 +3076,6 @@ export interface components {
             /** Format: int32 */
             quantity: number;
         };
-        SetImageAltTextConflict: {
-            title: string;
-            detail: string;
-        };
         SetImageAltTextRequest: {
             es: string;
             en: string;
@@ -3133,10 +3084,6 @@ export interface components {
             productId: string;
             imageId: string;
             outcome: components["schemas"]["ImageAltOutcome"];
-        };
-        SetImageShowsConflict: {
-            title: string;
-            detail: string;
         };
         SetImageShowsRequest: {
             shows: {
@@ -3147,10 +3094,6 @@ export interface components {
             productId: string;
             imageId: string;
             outcome: components["schemas"]["ImageShowsOutcome"];
-        };
-        SetProductTranslationConflict: {
-            title: string;
-            detail: string;
         };
         SetProductTranslationRequest: {
             name: string;
@@ -3163,13 +3106,11 @@ export interface components {
         ShippingOptionView: {
             code: string;
             label: string;
-            /** Format: double */
-            amount: number;
+            amount: components["schemas"]["Money"];
             /** Format: int32 */
             estimatedDays: null | number;
         };
         ShippingOptionsResponse: {
-            currency: string;
             options: components["schemas"]["ShippingOptionView"][];
         };
         SimilarProduct: {
@@ -3335,10 +3276,8 @@ export interface components {
             taxClass: string;
             /** Format: double */
             rate: number;
-            /** Format: double */
-            base: number;
-            /** Format: double */
-            amount: number;
+            base: components["schemas"]["Money"];
+            amount: components["schemas"]["Money"];
         };
         TelemetryConfiguration: {
             adapter: string;
@@ -3419,10 +3358,8 @@ export interface components {
         UpliftDay: {
             /** Format: date-time */
             start: string;
-            /** Format: double */
-            sold: number;
-            /** Format: double */
-            baseline: null | number;
+            sold: components["schemas"]["Money"];
+            baseline: null | components["schemas"]["Money"];
             future: boolean;
             partial: boolean;
         };
@@ -3442,9 +3379,7 @@ export interface components {
         VariantView: {
             variantId: string;
             sku: string;
-            /** Format: double */
-            priceAmount: number;
-            priceCurrency: string;
+            price: components["schemas"]["Money"];
             axisValues: {
                 [key: string]: string;
             };
@@ -3485,10 +3420,6 @@ export interface components {
         };
         /** @enum {unknown} */
         WithdrawOutcome: "Withdrawn" | "AlreadyDraft" | "Archived" | "NotFound";
-        WithdrawProductConflict: {
-            title: string;
-            detail: string;
-        };
         WithdrawProductResponse: {
             productId: string;
             outcome: components["schemas"]["WithdrawOutcome"];
@@ -3525,6 +3456,30 @@ export interface operations {
                     "application/json": components["schemas"]["ListAuditEntriesResult"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     LinkIdentity: {
@@ -3549,6 +3504,30 @@ export interface operations {
                     "application/json": components["schemas"]["LinkedIdentity"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetAgentDenials: {
@@ -3569,6 +3548,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentDenialsSummary"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -3637,6 +3640,20 @@ export interface operations {
                     "application/json": components["schemas"]["TinoAnswer"];
                 };
             };
+            /** @description Too many requests in a row: wait a moment. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before asking again. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetTinoAvailability: {
@@ -3683,6 +3700,44 @@ export interface operations {
                     "application/json": components["schemas"]["StewardAnswer"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests in a row: wait a moment. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before asking again. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     ListProposals: {
@@ -3709,6 +3764,30 @@ export interface operations {
                     "application/json": components["schemas"]["ProposalsPage"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     ApproveProposals: {
@@ -3731,6 +3810,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProposalDecisionsResponse"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -3759,6 +3862,30 @@ export interface operations {
                     "application/json": components["schemas"]["ProposalDecisionView"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     RejectProposals: {
@@ -3781,6 +3908,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProposalDecisionsResponse"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -3809,6 +3960,30 @@ export interface operations {
                     "application/json": components["schemas"]["ProposeAltTextResult"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     WithdrawProduct: {
@@ -3831,20 +4006,52 @@ export interface operations {
                     "application/json": components["schemas"]["WithdrawProductResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The product is archived. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WithdrawProductConflict"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ProductArchived";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -3874,20 +4081,52 @@ export interface operations {
                     "application/json": components["schemas"]["SetProductTranslationResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The product is archived. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SetProductTranslationConflict"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ProductArchived";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -3917,20 +4156,52 @@ export interface operations {
                     "application/json": components["schemas"]["SetImageShowsResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The product is archived. · No variant of the product is that. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SetImageShowsConflict"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotSold" | "ProductArchived";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -3960,20 +4231,52 @@ export interface operations {
                     "application/json": components["schemas"]["SetImageAltTextResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The product is archived. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SetImageAltTextConflict"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ProductArchived";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4000,12 +4303,41 @@ export interface operations {
                     "application/json": components["schemas"]["ProductForReview"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -4029,20 +4361,52 @@ export interface operations {
                     "application/json": components["schemas"]["PublishProductResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The product is archived. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublishProductConflict"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ProductArchived";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4070,6 +4434,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListProductsResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4114,6 +4502,30 @@ export interface operations {
                     "application/json": components["schemas"]["ListAttributeDefinitionsResult"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     ImportProducts: {
@@ -4136,6 +4548,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportProductsResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4162,12 +4598,17 @@ export interface operations {
                     "application/json": components["schemas"]["ProductDetail"];
                 };
             };
-            /** @description Not Found */
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -4182,12 +4623,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not Found */
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -4211,6 +4657,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DescribeSkusResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4239,20 +4709,52 @@ export interface operations {
                     "application/json": components["schemas"]["DefineVariantsResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The product does not take those variants. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "VariantsRejected";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4279,6 +4781,30 @@ export interface operations {
                     "application/json": components["schemas"]["CatalogueGaps"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetRestockList: {
@@ -4302,13 +4828,42 @@ export interface operations {
                     "application/json": components["schemas"]["RestockList"];
                 };
             };
-            /** @description Bad Request */
+            /** @description The shop has no such warehouse. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RestockProblem"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownWarehouse";
+                    } & (components["schemas"]["Problem"] & {
+                        warehouses: string[];
+                    });
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4331,6 +4886,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StockHealth"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4360,6 +4939,30 @@ export interface operations {
                     "application/json": components["schemas"]["ListStockResult"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     CountStock: {
@@ -4387,13 +4990,40 @@ export interface operations {
                     "application/json": components["schemas"]["CountStockResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description The shop has no such warehouse. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownWarehouse";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4418,6 +5048,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClaimApprovalsResponse"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4446,6 +5100,30 @@ export interface operations {
                     "application/json": components["schemas"]["ClaimsForReviewPage"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     ApproveClaim: {
@@ -4468,20 +5146,52 @@ export interface operations {
                     "application/json": components["schemas"]["ReviewClaimResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The claim is not waiting for review. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReviewClaimConflict"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ClaimNotWaiting";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4506,20 +5216,52 @@ export interface operations {
                     "application/json": components["schemas"]["ReviewClaimResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The claim is not waiting for review. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReviewClaimConflict"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ClaimNotWaiting";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4546,6 +5288,30 @@ export interface operations {
                     "application/json": components["schemas"]["ReadPicturesResult"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetProductSpecs: {
@@ -4569,12 +5335,17 @@ export interface operations {
                     "application/json": components["schemas"]["SpecSheet"];
                 };
             };
-            /** @description Not Found */
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -4598,6 +5369,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PictureDoubtsPage"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4626,20 +5421,52 @@ export interface operations {
                     "application/json": components["schemas"]["DecidePictureDoubtResponse"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description The doubt is not waiting for a decision. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PictureDoubtConflict"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "DoubtNotWaiting";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4670,31 +5497,40 @@ export interface operations {
                     "application/json": components["schemas"]["ReturnView"];
                 };
             };
-            /** @description Bad Request */
+            /** @description That return cannot be opened as asked. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ReturnRefused";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description There is no order with that id. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownOrder";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict */
+            /** @description The time to return this order has passed. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ReturnWindowClosed";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4739,12 +5575,17 @@ export interface operations {
                     "application/json": string;
                 };
             };
-            /** @description Unauthorized */
+            /** @description This needs somebody signed in. */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -4768,20 +5609,52 @@ export interface operations {
                     "application/json": components["schemas"]["CartView"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description That basket belongs to another account. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "CartBelongsToSomebodyElse";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4802,6 +5675,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyOrdersResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4828,13 +5725,16 @@ export interface operations {
                     "application/json": components["schemas"]["OrderDetail"];
                 };
             };
-            /** @description Not Found */
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4861,13 +5761,40 @@ export interface operations {
                     "application/json": components["schemas"]["CampaignUplift"];
                 };
             };
-            /** @description Bad Request */
+            /** @description A campaign's window opens before it closes, and lasts at most 120 days. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "WindowNotValid";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4892,12 +5819,17 @@ export interface operations {
                     "application/json": components["schemas"]["CheckoutHandOff"];
                 };
             };
-            /** @description Not Found */
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -4925,13 +5857,16 @@ export interface operations {
                     "application/json": components["schemas"]["QuoteResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Some of these are not on sale here. · A cart carries one currency. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "MixedCurrencies" | "UnknownSkus";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4951,22 +5886,51 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    /** @description The address of what was created. */
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignImageUploaded"];
                 };
             };
-            /** @description Bad Request */
+            /** @description The file is empty. · The picture is larger than is taken. · A campaign image is WebP, AVIF, PNG or JPEG. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "EmptyFile" | "FileTooLarge" | "NotAnImage";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -4987,6 +5951,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListPromotionsResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5053,6 +6041,30 @@ export interface operations {
                     "application/json": components["schemas"]["SearchStatus"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     SuggestSimilarProducts: {
@@ -5091,7 +6103,9 @@ export interface operations {
                 brand?: string[];
                 within?: string[];
                 f?: string[];
+                /** @description A price, inclusive, as a whole number of the currency's minor units — the unit prices are answered in: 2990 is 29.90 EUR. */
                 minPrice?: number;
+                /** @description A price, inclusive, as a whole number of the currency's minor units — the unit prices are answered in: 2990 is 29.90 EUR. */
                 maxPrice?: number;
                 onOffer?: boolean;
                 newArrivals?: boolean;
@@ -5137,6 +6151,20 @@ export interface operations {
                     "application/json": components["schemas"]["VisualSearchResult"];
                 };
             };
+            /** @description Too many requests in a row: wait a moment. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before asking again. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     SearchByImage: {
@@ -5166,13 +6194,30 @@ export interface operations {
                     "application/json": components["schemas"]["VisualSearchResult"];
                 };
             };
-            /** @description Bad Request */
+            /** @description The request is not valid. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Invalid";
+                    } & (components["schemas"]["Problem"] & components["schemas"]["HttpValidationProblemDetails"]);
+                };
+            };
+            /** @description Too many requests in a row: wait a moment. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before asking again. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5218,6 +6263,30 @@ export interface operations {
                     "application/json": components["schemas"]["ReindexProductsResult"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetProductCards: {
@@ -5260,6 +6329,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchEvaluation"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5312,12 +6405,31 @@ export interface operations {
                     "application/json": components["schemas"]["KitView"];
                 };
             };
-            /** @description Not Found */
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests in a row: wait a moment. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before asking again. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -5339,6 +6451,30 @@ export interface operations {
                     "application/json": components["schemas"]["BrowsingHistoryView"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     ClearBrowsingHistory: {
@@ -5357,6 +6493,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5383,6 +6543,30 @@ export interface operations {
                     "application/json": components["schemas"]["BrowsingHistoryView"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     RecordSearch: {
@@ -5405,6 +6589,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5431,6 +6639,30 @@ export interface operations {
                     "application/json": components["schemas"]["BrowsingHistoryView"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     ForgetBrowsingEntry: {
@@ -5452,6 +6684,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5478,6 +6734,30 @@ export interface operations {
                     "application/json": components["schemas"]["BrowsingHistoryView"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     ListAgents: {
@@ -5496,6 +6776,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentView"][];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5522,22 +6826,40 @@ export interface operations {
                     "application/json": components["schemas"]["AgentChangeResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description This needs somebody signed in. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict */
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description That agent is already registered. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AlreadyRegistered";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5566,21 +6888,41 @@ export interface operations {
                     "application/json": components["schemas"]["AgentChangeResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description This needs somebody signed in. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -5608,21 +6950,41 @@ export interface operations {
                     "application/json": components["schemas"]["AgentChangeResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description This needs somebody signed in. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -5646,21 +7008,41 @@ export interface operations {
                     "application/json": components["schemas"]["AgentChangeResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description This needs somebody signed in. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -5728,6 +7110,30 @@ export interface operations {
                     "application/json": components["schemas"]["ReturnView"][];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     DecideReturn: {
@@ -5754,31 +7160,64 @@ export interface operations {
                     "application/json": components["schemas"]["ReturnView"];
                 };
             };
-            /** @description Bad Request */
+            /** @description The refund could not be made. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "RefundFailed";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is no return with that id. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownReturn";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict */
+            /** @description The return does not take that step from where it is. · There is nothing left to refund for this return. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "IllegalTransition" | "NothingToRefund";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5829,22 +7268,28 @@ export interface operations {
                     "application/json": components["schemas"]["CartView"];
                 };
             };
-            /** @description Bad Request */
+            /** @description A cart carries one currency. · The cart does not take that change. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "CartRefused" | "MixedCurrencies";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description That item is not on sale. · That item is not in the cart. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownLine" | "UnknownSku";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5875,22 +7320,28 @@ export interface operations {
                     "application/json": components["schemas"]["CartView"];
                 };
             };
-            /** @description Bad Request */
+            /** @description A cart carries one currency. · The cart does not take that change. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "CartRefused" | "MixedCurrencies";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description That item is not on sale. · That item is not in the cart. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownLine" | "UnknownSku";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5917,22 +7368,28 @@ export interface operations {
                     "application/json": components["schemas"]["CartView"];
                 };
             };
-            /** @description Bad Request */
+            /** @description A cart carries one currency. · The cart does not take that change. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "CartRefused" | "MixedCurrencies";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description That item is not on sale. · That item is not in the cart. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownLine" | "UnknownSku";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5958,6 +7415,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListOrdersResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5986,31 +7467,52 @@ export interface operations {
                     "application/json": components["schemas"]["OrderSummary"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description This needs somebody signed in. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is no order with that id. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownOrder";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict */
+            /** @description The order does not take that step from where it is. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "IllegalTransition";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6035,6 +7537,30 @@ export interface operations {
                     "application/json": components["schemas"]["SalesSummary"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetSalesSeries: {
@@ -6055,6 +7581,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SalesSeries"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6079,6 +7629,30 @@ export interface operations {
                     "application/json": components["schemas"]["OperationsSummary"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetCheckoutFunnel: {
@@ -6099,6 +7673,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CheckoutFunnel"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6123,6 +7721,30 @@ export interface operations {
                     "application/json": components["schemas"]["AgentSales"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetSalesMix: {
@@ -6143,6 +7765,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SalesMix"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6170,6 +7816,30 @@ export interface operations {
                     "application/json": components["schemas"]["ProductPerformance"];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     GetReturnsSummary: {
@@ -6191,6 +7861,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReturnsSummary"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6219,13 +7913,16 @@ export interface operations {
                     "application/json": components["schemas"]["ShippingOptionsResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description The address is incomplete or not valid. · There is nothing in the cart. · This shop does not deliver to that country yet. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "InvalidAddress" | "NothingToShip" | "Unserved";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6235,7 +7932,9 @@ export interface operations {
             query?: {
                 culture?: string;
             };
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -6245,40 +7944,130 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    /** @description The address of what was created. */
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["OrderView"];
                 };
             };
-            /** @description Bad Request */
+            /** @description An Idempotency-Key header is needed: a retry must not do this twice. · The address is incomplete or not valid. · There is nothing in the cart. · That is not one of the delivery options for this address. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "IdempotencyKeyRequired" | "InvalidAddress" | "NothingToShip" | "UnknownShippingOption";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description The payment was declined. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "PaymentDeclined";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description The shop does not take this order from an agent. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AgentRefused";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Some of the cart is no longer on sale. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoLongerOnSale";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict */
+            /** @description This idempotency key was used for another request: a new request needs a new key. · The request this idempotency key names is still running: ask again for its answer. · The price changed while you were here. · That order needs a mandate it does not carry. · There is not enough left of something in your basket. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PriceChangedResponse"];
+                    "application/problem+json": ({
+                        /** @enum {string} */
+                        code?: "IdempotencyInProgress" | "IdempotencyKeyReused" | "InsufficientStock" | "NotMandated" | "PriceChanged";
+                    } & components["schemas"]["Problem"]) | {
+                        /** @enum {string} */
+                        code: "IdempotencyInProgress" | "IdempotencyKeyReused" | "NotMandated";
+                    } | ({
+                        /** @enum {string} */
+                        code: "PriceChanged";
+                    } & {
+                        quoteHash: string;
+                        /** @description Money: a whole number of the currency's minor unit (ISO 4217) and the currency. 113.90 EUR is 11390. */
+                        total: {
+                            /** Format: int64 */
+                            amount: number;
+                            currency: string;
+                        };
+                        /** @description Money: a whole number of the currency's minor unit (ISO 4217) and the currency. 113.90 EUR is 11390. */
+                        shipping: {
+                            /** Format: int64 */
+                            amount: number;
+                            currency: string;
+                        };
+                        /** @description Money: a whole number of the currency's minor unit (ISO 4217) and the currency. 113.90 EUR is 11390. */
+                        taxTotal: {
+                            /** Format: int64 */
+                            amount: number;
+                            currency: string;
+                        };
+                        /** @description Money: a whole number of the currency's minor unit (ISO 4217) and the currency. 113.90 EUR is 11390. */
+                        discountTotal: {
+                            /** Format: int64 */
+                            amount: number;
+                            currency: string;
+                        };
+                    }) | ({
+                        /** @enum {string} */
+                        code: "InsufficientStock";
+                    } & {
+                        shortages: {
+                            sku: string;
+                            /** Format: int32 */
+                            requested: number;
+                            /** Format: int32 */
+                            available: number;
+                        }[];
+                    });
+                };
+            };
+            /** @description The payment could not be reached. Try again: nothing is charged twice. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "PaymentUnavailable";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6301,6 +8090,30 @@ export interface operations {
                     "application/json": components["schemas"]["ManagedCampaignView"][];
                 };
             };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     CreateCampaign: {
@@ -6316,38 +8129,75 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
+                    /** @description The address of what was created. */
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignChangeResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description That is not a campaign code: upper snake case, a letter first (TENDERO_DAYS). · The campaign names a promotion that does not exist. · The campaign names a picture that is not stored. · The campaign's window is not valid, or has passed. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "InvalidCampaignCode" | "UnknownImage" | "UnknownPromotion" | "WindowClosed";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description There is already a campaign with that code. · The campaign can no longer be edited in the state it is in. · The campaign does not take that step from where it is. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AlreadyExists" | "NotAllowed" | "NotEditable";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6372,12 +8222,41 @@ export interface operations {
                     "application/json": components["schemas"]["ManagedCampaignView"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -6405,29 +8284,64 @@ export interface operations {
                     "application/json": components["schemas"]["CampaignChangeResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description That is not a campaign code: upper snake case, a letter first (TENDERO_DAYS). · The campaign names a promotion that does not exist. · The campaign names a picture that is not stored. · The campaign's window is not valid, or has passed. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "InvalidCampaignCode" | "UnknownImage" | "UnknownPromotion" | "WindowClosed";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description There is already a campaign with that code. · The campaign can no longer be edited in the state it is in. · The campaign does not take that step from where it is. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AlreadyExists" | "NotAllowed" | "NotEditable";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6452,29 +8366,64 @@ export interface operations {
                     "application/json": components["schemas"]["CampaignChangeResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description That is not a campaign code: upper snake case, a letter first (TENDERO_DAYS). · The campaign names a promotion that does not exist. · The campaign names a picture that is not stored. · The campaign's window is not valid, or has passed. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "InvalidCampaignCode" | "UnknownImage" | "UnknownPromotion" | "WindowClosed";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description There is already a campaign with that code. · The campaign can no longer be edited in the state it is in. · The campaign does not take that step from where it is. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AlreadyExists" | "NotAllowed" | "NotEditable";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6499,29 +8448,64 @@ export interface operations {
                     "application/json": components["schemas"]["CampaignChangeResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description That is not a campaign code: upper snake case, a letter first (TENDERO_DAYS). · The campaign names a promotion that does not exist. · The campaign names a picture that is not stored. · The campaign's window is not valid, or has passed. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "InvalidCampaignCode" | "UnknownImage" | "UnknownPromotion" | "WindowClosed";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description There is already a campaign with that code. · The campaign can no longer be edited in the state it is in. · The campaign does not take that step from where it is. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AlreadyExists" | "NotAllowed" | "NotEditable";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -6546,29 +8530,64 @@ export interface operations {
                     "application/json": components["schemas"]["CampaignChangeResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description That is not a campaign code: upper snake case, a letter first (TENDERO_DAYS). · The campaign names a promotion that does not exist. · The campaign names a picture that is not stored. · The campaign's window is not valid, or has passed. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "InvalidCampaignCode" | "UnknownImage" | "UnknownPromotion" | "WindowClosed";
+                    } & components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found */
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
             };
-            /** @description Conflict */
+            /** @description There is already a campaign with that code. · The campaign can no longer be edited in the state it is in. · The campaign does not take that step from where it is. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AlreadyExists" | "NotAllowed" | "NotEditable";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };

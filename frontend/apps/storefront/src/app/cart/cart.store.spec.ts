@@ -36,7 +36,9 @@ describe('the cart store', () => {
     http.expectOne('http://api/api/cart/lines?culture=es').flush(answer, { headers: { 'X-Cart-Token': token } });
     await new Promise((settled) => setTimeout(settled));
     if (answer.lines.length)
-      http.expectOne('http://api/api/pricing/quote?culture=es').flush({ currency: 'EUR', lines: [] });
+      http
+        .expectOne('http://api/api/pricing/quote?culture=es')
+        .flush({ total: { amount: 0, currency: 'EUR' }, lines: [] });
     await adding;
   }
 
@@ -44,12 +46,12 @@ describe('the cart store', () => {
     const store = TestBed.inject(CartStore);
     await added(store, cart([{ sku: 'SKU-1', quantity: 2 }]));
 
-    expect([store.token(), localStorage.getItem('tendero.cart'), store.itemCount(), store.quote()?.currency]).toEqual([
-      'T-1',
-      'T-1',
-      2,
-      'EUR',
-    ]);
+    expect([
+      store.token(),
+      localStorage.getItem('tendero.cart'),
+      store.itemCount(),
+      store.quote()?.total.currency,
+    ]).toEqual(['T-1', 'T-1', 2, 'EUR']);
   });
 
   /** The quote endpoint refuses a basket with no lines, and asking anyway would paint an error over it. */
@@ -65,7 +67,7 @@ describe('the cart store', () => {
     const adding = store.add('SKU-1');
     http
       .expectOne('http://api/api/cart/lines?culture=es')
-      .flush('Out of stock', { status: 409, statusText: 'Conflict' });
+      .flush({ code: 'Refused', status: 409, title: 'Out of stock' }, { status: 409, statusText: 'Conflict' });
     await adding;
 
     expect([store.failed(), store.busy()]).toEqual(['Out of stock', false]);
@@ -98,7 +100,9 @@ describe('the cart store', () => {
     const inFlight = http.match('http://api/api/cart/lines?culture=es');
     inFlight[0]?.flush(cart([{ sku: 'SKU-1', quantity: 1 }]), { headers: { 'X-Cart-Token': 'T-1' } });
     await new Promise((settled) => setTimeout(settled));
-    http.expectOne('http://api/api/pricing/quote?culture=es').flush({ currency: 'EUR', lines: [] });
+    http
+      .expectOne('http://api/api/pricing/quote?culture=es')
+      .flush({ total: { amount: 0, currency: 'EUR' }, lines: [] });
     await first;
     const next = http.match('http://api/api/cart/lines?culture=es');
     next[0]?.flush(
@@ -109,7 +113,9 @@ describe('the cart store', () => {
       { headers: { 'X-Cart-Token': 'T-1' } },
     );
     await new Promise((settled) => setTimeout(settled));
-    http.expectOne('http://api/api/pricing/quote?culture=es').flush({ currency: 'EUR', lines: [] });
+    http
+      .expectOne('http://api/api/pricing/quote?culture=es')
+      .flush({ total: { amount: 0, currency: 'EUR' }, lines: [] });
     await second;
 
     expect([inFlight.length, next.length, next[0]?.request.body.sku, store.itemCount()]).toEqual([1, 1, 'SKU-2', 2]);

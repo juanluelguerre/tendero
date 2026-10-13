@@ -4,9 +4,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ReturnsWidget } from './returns-widget';
 import { openWidget, setUpWidgets } from '../widget-testing';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const OPS = {
   period: 'Week',
-  currency: 'EUR',
   toShip: 0,
   lateToShip: 0,
   inProgress: 0,
@@ -20,7 +22,7 @@ const OPS = {
     { reason: 'Damaged', count: 3 },
     { reason: 'WrongSize', count: 1 },
   ],
-  refunded: 80,
+  refunded: eur(80),
   returnRate: 0.05,
 };
 

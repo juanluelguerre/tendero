@@ -27,7 +27,9 @@ internal sealed class BadRequestExceptionHandler(IProblemDetailsService problems
         {
             HttpContext = httpContext,
             Exception = exception,
-            ProblemDetails = { Status = badRequest.StatusCode, Title = "The request is not valid.", Detail = badRequest.Message },
+            // The title and the code are the status's refusal (Problems.Customize);
+            // what the framework could not bind is the detail.
+            ProblemDetails = { Status = badRequest.StatusCode, Detail = badRequest.Message },
         });
     }
 }

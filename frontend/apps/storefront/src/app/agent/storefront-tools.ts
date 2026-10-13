@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { refuse, say, type ToolDescriptor } from '@tendero/shared-agent';
 import { CultureStore } from '@tendero/shared-i18n';
+import type { Money } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
 import { CampaignService } from '../data-access/campaign.service';
 import { CartStore } from '../cart/cart.store';
@@ -71,6 +72,7 @@ export class StorefrontTools {
         },
         required: ['query'],
       },
+      annotations: { readOnlyHint: true },
       execute: async (input) => {
         const query = String(input['query'] ?? '').trim();
 
@@ -84,9 +86,9 @@ export class StorefrontTools {
 
         const lines = page.hits.slice(0, StorefrontTools.MaximumResults).map((hit) => {
           const price =
-            hit.priceFrom < hit.priceTo
-              ? `${this.money(hit.priceFrom, hit.priceCurrency)}–${this.money(hit.priceTo, hit.priceCurrency)}`
-              : this.money(hit.priceFrom, hit.priceCurrency);
+            hit.priceFrom.amount < hit.priceTo.amount
+              ? `${this.price(hit.priceFrom)}–${this.price(hit.priceTo)}`
+              : this.price(hit.priceFrom);
 
           // The CODE, because that is what identifies a product (ADR 0026) and
           // what get_product takes. Handing an agent a slug would hand it
@@ -114,6 +116,7 @@ export class StorefrontTools {
         'option and how many products it would leave. Call it before apply_filter. ' +
         'Only works on a search or category page.',
       inputSchema: { type: 'object', properties: {} },
+      annotations: { readOnlyHint: true },
       execute: async () => {
         const listing = this.listing.current();
         const result = listing?.result();
@@ -152,6 +155,8 @@ export class StorefrontTools {
         },
         required: ['facet'],
       },
+      // Not read-only: it moves the page the shopper is looking at.
+      annotations: { readOnlyHint: false },
       execute: async (input) => {
         const listing = this.listing.current();
         const place = listing?.place();
@@ -200,6 +205,7 @@ export class StorefrontTools {
         },
         required: ['code'],
       },
+      annotations: { readOnlyHint: true },
       execute: async (input) => {
         const code = String(input['code'] ?? '').trim();
         if (!code) return refuse('A product code is required.');
@@ -217,8 +223,7 @@ export class StorefrontTools {
                 : 'sold out';
 
               return (
-                `  ${variant.sku} — ${variant.label || product.name} — ` +
-                `${this.money(variant.priceAmount, variant.priceCurrency)} — ${stock}`
+                `  ${variant.sku} — ${variant.label || product.name} — ` + `${this.price(variant.price)} — ${stock}`
               );
             });
 
@@ -260,6 +265,9 @@ export class StorefrontTools {
         },
         required: ['sku'],
       },
+      // It changes the basket, and says so. Not *consequential* in the draft's
+      // sense — a line is taken out with a click, and no tool here pays.
+      annotations: { readOnlyHint: false },
       execute: async (input) => {
         const sku = String(input['sku'] ?? '').trim();
         if (!sku) return refuse('A SKU is required.');
@@ -291,6 +299,7 @@ export class StorefrontTools {
         'discounts — INCLUDING the ones that did not apply and why, which is ' +
         'something the shop says out loud.',
       inputSchema: { type: 'object', properties: {} },
+      annotations: { readOnlyHint: true },
       execute: async () => {
         await this.cart.load();
 
@@ -305,8 +314,8 @@ export class StorefrontTools {
         // that can explain why a promotion did NOT apply is more useful than one
         // that can only read the number.
         const discounts = (quote?.discounts ?? []).map((discount) =>
-          discount.amount > 0
-            ? `  ${discount.label}: −${this.money(discount.amount, quote?.currency ?? 'EUR')}`
+          discount.amount.amount > 0
+            ? `  ${discount.label}: −${this.price(discount.amount)}`
             : `  ${discount.label}: not applied — ${discount.reason}`,
         );
 
@@ -314,7 +323,7 @@ export class StorefrontTools {
           [
             `Cart (${cart.itemCount} item(s)):\n${lines.join('\n')}`,
             discounts.length > 0 ? `Discounts:\n${discounts.join('\n')}` : '',
-            quote ? `Total: ${this.money(quote.total, quote.currency)}` : '',
+            quote ? `Total: ${this.price(quote.total)}` : '',
           ]
             .filter(Boolean)
             .join('\n\n'),
@@ -337,6 +346,7 @@ export class StorefrontTools {
         'holds (with any coupon code) and a link to its products. Use it when the shopper ' +
         'asks whether there are deals or events.',
       inputSchema: { type: 'object', properties: {} },
+      annotations: { readOnlyHint: true },
       execute: async () => {
         const culture = this.culture.active();
         const list = await firstValueFrom(this.campaigns.list(culture));
@@ -345,8 +355,9 @@ export class StorefrontTools {
     };
   }
 
-  private money(amount: number, currency: string): string {
-    return formatPrice(amount, currency, this.culture.active());
+  /** Money as the API carries it, in the page's language. */
+  private price(money: Money): string {
+    return formatPrice(money, this.culture.active());
   }
 
   /**

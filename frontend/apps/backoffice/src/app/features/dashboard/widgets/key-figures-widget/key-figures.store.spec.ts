@@ -55,9 +55,7 @@ describe('the key figures store', () => {
   /** Review focus 2, at the widget's own level: one source failing takes away its figure and nothing else. */
   it('keeps what answered when one source fails', async () => {
     const store = open('Week');
-    http
-      .expectOne(`${Api}/sales?period=Week`)
-      .flush({ period: 'Week', currency: 'EUR', current: {}, previous: {}, bestSellers: [] });
+    http.expectOne(`${Api}/sales?period=Week`).flush({ period: 'Week', current: {}, previous: {}, bestSellers: [] });
     http.expectOne(`${Api}/sales/series?period=Week`).flush({ current: [], previous: [] });
     http.expectOne(`${Api}/funnel?period=Week`).flush('down', { status: 503, statusText: 'Unavailable' });
     http.expectOne(`${Api}/operations?period=Week`).flush({ returnRate: 0.05 });

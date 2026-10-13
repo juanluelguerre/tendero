@@ -26,9 +26,27 @@ public static class AgentToolCalls
         "tendero.agent.tool_calls", unit: "{call}",
         description: "Calls from external agents to the MCP tools and the UCP catalogue operations.");
 
-    public static void Record(string surface, string tool, string outcome) =>
+    /// <param name="refusal">
+    /// The refusal's code, when the shop said no with one (phase 13b): what
+    /// agents get refused for, which a code that dominates answers — a tool
+    /// whose description or contract is wrong for an agent. A closed set, the
+    /// codes the tools declare; absent when the call was answered or broke.
+    /// </param>
+    public static void Record(string surface, string tool, string outcome, string? refusal = null)
+    {
+        if (refusal is null)
+        {
+            Calls.Add(1,
+                new KeyValuePair<string, object?>(Actor.SurfaceTag, surface),
+                new KeyValuePair<string, object?>("tool", tool),
+                new KeyValuePair<string, object?>("outcome", outcome));
+            return;
+        }
+
         Calls.Add(1,
             new KeyValuePair<string, object?>(Actor.SurfaceTag, surface),
             new KeyValuePair<string, object?>("tool", tool),
-            new KeyValuePair<string, object?>("outcome", outcome));
+            new KeyValuePair<string, object?>("outcome", outcome),
+            new KeyValuePair<string, object?>("refusal", refusal));
+    }
 }

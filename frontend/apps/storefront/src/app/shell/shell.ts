@@ -18,6 +18,7 @@ import { AgentTools } from '@tendero/shared-agent';
 import { CultureStore } from '@tendero/shared-i18n';
 import { followsMedia, Icon, ThemeStore } from '@tendero/shared-ui';
 import { filter, map } from 'rxjs';
+import { answerAgent, SearchFormTool } from '../agent/search-form-tool';
 import { StorefrontTools } from '../agent/storefront-tools';
 import { CartStore } from '../cart/cart.store';
 import { departmentOf } from '../taxonomy/taxonomy-menu';
@@ -201,9 +202,22 @@ export class Shell {
     if (header && event.target instanceof Node && !header.contains(event.target)) this.openDepartment.set(null);
   }
 
-  protected find(text: string): void {
+  /**
+   * The search form sent. A person's Enter searches; an agent's — the form is
+   * also a tool, declared in the markup (`SearchFormTool`) — searches and is
+   * told what the shopper is now looking at.
+   */
+  protected sendSearch(event: SubmitEvent, text: string): void {
+    event.preventDefault();
+    if (!answerAgent(event, text, (query) => this.find(query))) void this.find(text);
+  }
+
+  /** WebMCP's declarative proposal, on the header's form only: the phone's row is the same form twice. */
+  protected readonly searchTool = SearchFormTool;
+
+  protected find(text: string): Promise<boolean> {
     const q = text.trim();
-    void this.router.navigate(['/', this.culture()], { queryParams: q ? { q } : {} });
+    return this.router.navigate(['/', this.culture()], { queryParams: q ? { q } : {} });
   }
 
   /** Links have to carry the language segment, so they are built from it. */

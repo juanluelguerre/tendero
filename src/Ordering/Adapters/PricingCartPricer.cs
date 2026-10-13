@@ -37,7 +37,7 @@ internal sealed class PricingCartPricer(IQueryDispatcher dispatcher) : ICartPric
             new QuoteCartQuery(
                 culture,
                 [.. lines.Select(line => new QuoteLineInput(line.Sku, line.Quantity))],
-                shipping.Amount,
+                shipping,
                 coupons),
             cancellationToken);
 

@@ -60,7 +60,9 @@ describe('the returns store', () => {
     store.decide(request('r1', 'Requested'), 'Approve', 'row');
     http.expectOne(`${Returns}/r1/decide`).flush(request('r1', 'Approved'));
     store.decide(request('r2', 'Approved'), 'Refund', 'pane');
-    http.expectOne(`${Returns}/r2/decide`).flush('Not received yet.', { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(`${Returns}/r2/decide`)
+      .flush({ code: 'Refused', status: 409, title: 'Not received yet.' }, { status: 409, statusText: 'Conflict' });
 
     expect([store.shown().map((row) => row.status), store.refusal()]).toEqual([
       ['Approved', 'Approved', 'Requested'],

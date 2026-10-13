@@ -11,20 +11,22 @@ import { DashboardRefresh } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { CustomersStore } from './customers.store';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const point = (start: string, newCustomers: number, returningCustomers: number) => ({
   start,
-  revenue: 0,
+  revenue: eur(0),
   orders: 0,
   units: 0,
   agentOrders: 0,
-  agentRevenue: 0,
+  agentRevenue: eur(0),
   newCustomers,
   returningCustomers,
 });
 
 const SERIES: SalesSeries = {
   period: 'Week',
-  currency: 'EUR',
   timeZone: 'Europe/Madrid',
   step: 'Day',
   current: [point('2026-10-12T00:00:00+02:00', 3, 1), point('2026-10-13T00:00:00+02:00', 0, 2)],

@@ -101,6 +101,10 @@ public sealed class UcpKnowledgeExtensionTests
         Assert.False(await UcpKnowledgeExtension.NegotiatedAsync("https://agent.example/p", new Fixed(silent), ct));
         Assert.False(await UcpKnowledgeExtension.NegotiatedAsync("https://evil.example/p", new Fixed(null), ct));
         Assert.False(await UcpKnowledgeExtension.NegotiatedAsync(null, new Fixed(speaks), ct));
+
+        // And one that speaks it at another protocol version does not: across versions
+        // an extension of the same name is not the same shape.
+        Assert.False(await UcpKnowledgeExtension.NegotiatedAsync("https://agent.example/p", new Fixed(speaks with { Version = "2026-04-08" }), ct));
     }
 
     private static UcpProduct Product(string code) => new()
