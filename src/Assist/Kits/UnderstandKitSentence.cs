@@ -29,7 +29,8 @@ public sealed record UnderstandKitSentenceQuery(string Sentence, string Culture)
 /// <param name="Understood">Whether a kit was named. When not, the page shows the form as it was: this is never a refusal.</param>
 public sealed record KitSentenceUnderstood(string? Template, Money? Budget, IReadOnlyList<string> Requirements, bool Understood)
 {
-    public static readonly KitSentenceUnderstood Not = new(null, null, [], false);
+    /// <summary>Nothing understood. A property for the reason <c>KitSentenceReading.PriceCues</c> is one.</summary>
+    public static KitSentenceUnderstood Not => new(null, null, [], false);
 }
 
 public sealed class UnderstandKitSentenceValidator : AbstractValidator<UnderstandKitSentenceQuery>

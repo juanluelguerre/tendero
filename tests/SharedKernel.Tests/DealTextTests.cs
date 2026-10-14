@@ -38,6 +38,34 @@ public sealed class DealTextTests
         Assert.Equal(said, DealText.OfAProductInIt(new DealTerms(DealKind.PercentOffLine, Percent: 10, ReachesSome: true), culture));
     }
 
+    // ---------- phase 13c's close: what Stryker found nothing in this suite held ----------
+
+    [Theory]
+    [InlineData("en", "take 3 and pay for 2")]
+    [InlineData("es", "llévate 3 y paga 2")]
+    public void A_three_for_two_in_each_language(string culture, string said) =>
+        Assert.Equal(said, DealText.OfThePromotion(new DealTerms(DealKind.BuyXGetY, Buy: 2, Free: 1, ReachesSome: true), culture));
+
+    [Theory]
+    [InlineData("en", "€5.00 off the order when it has an item in the promotion and comes to at least €40.00")]
+    [InlineData("es", "5,00 € menos en el pedido si lleva algún artículo de la promoción y suma al menos 40,00 €")]
+    public void An_order_discount_on_a_category_said_of_the_promotion(string culture, string said) =>
+        Assert.Equal(said, DealText.OfThePromotion(KitchenFive, culture));
+
+    [Theory]
+    [InlineData("en", "€5.00 off the order when it has an item in the promotion")]
+    [InlineData("es", "5,00 € menos en el pedido si lleva algún artículo de la promoción")]
+    public void An_order_discount_on_a_category_with_no_minimum(string culture, string said) =>
+        Assert.Equal(said, DealText.OfThePromotion(KitchenFive with { MinimumSubtotal = null }, culture));
+
+    [Fact]
+    public void A_percentage_with_a_minimum_order_says_it_and_a_percent_keeps_only_the_decimals_it_has()
+    {
+        var tenFromThirty = new DealTerms(DealKind.PercentOffLine, Percent: 10, MinimumSubtotal: new Money(30, "EUR"));
+        Assert.Equal("un 10 % menos en su precio, si el pedido suma al menos 30,00 €", DealText.OfAProductInIt(tenFromThirty, "es"));
+        Assert.Equal("12.5% off its price", DealText.OfAProductInIt(new DealTerms(DealKind.PercentOffLine, Percent: 12.50m), "en"));
+    }
+
     [Fact]
     public void A_deal_says_its_own_units_and_a_half_percent_keeps_its_decimal()
     {

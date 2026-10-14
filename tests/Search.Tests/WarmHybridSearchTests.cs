@@ -45,6 +45,8 @@ public sealed class WarmHybridSearchTests
         await RunAsync(layer, search);
 
         Assert.Empty(search.Asked);
+        // Asked once: a shop without the layer is not one that will have it in five seconds.
+        Assert.Equal(1, layer.Checks);
     }
 
     /// <summary>A layer that never answers is given up on: warming is a courtesy, not a condition.</summary>

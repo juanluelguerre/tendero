@@ -208,6 +208,10 @@ public sealed class KitSolverTests
     }
 
     [Fact]
+    public void No_problem_at_all_is_refused() =>
+        Assert.Throws<ArgumentNullException>(() => Solver.Solve(null!));
+
+    [Fact]
     public void A_ceiling_of_no_nodes_is_refused()
     {
         Assert.Throws<ArgumentException>(() => Solver.Solve(Kit(100m) with { NodeCeiling = 0 }));

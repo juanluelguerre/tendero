@@ -70,7 +70,7 @@ public sealed class UnderstandKitSentenceTests
     }
 
     /// <summary>The storefront's model is Tino's: one local model on the shopper's side.</summary>
-    private static Shop Compose(string? model = "scripted", bool enabled = true)
+    private static Shop Compose(string? model = "scripted", bool enabled = true, bool withKits = true)
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
@@ -88,7 +88,8 @@ public sealed class UnderstandKitSentenceTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddTenderoCqrs(typeof(UnderstandKitSentenceQuery).Assembly);
-        services.AddSingleton<IReadTool>(kits);
+        if (withKits)
+            services.AddSingleton<IReadTool>(kits);
         services.AddAssist(configuration);
         services.AddModelProfiles(configuration);
         return new Shop(services.BuildServiceProvider(), kits);
@@ -163,8 +164,22 @@ public sealed class UnderstandKitSentenceTests
         var understood = await shop.Understand("Quiero un kit de cocina para inducción por menos de 200 euros");
 
         Assert.Equal(KitSentenceUnderstood.Not, understood, Same);
+        Assert.False(understood.Understood);
+        Assert.Null(understood.Template);
         if (!enabled)
             Assert.Equal(0, shop.Kits.Reads);
+    }
+
+    /// <summary>A host with no kits to read — no Search in it — understands nothing, and does not fail.</summary>
+    [Fact]
+    public async Task With_no_kits_to_read_nothing_is_understood_and_nothing_fails()
+    {
+        await using var shop = Compose(withKits: false);
+
+        var understood = await shop.Understand("Quiero un kit de cocina por menos de 200 euros");
+
+        Assert.False(understood.Understood);
+        Assert.Null(understood.Template);
     }
 
     [Theory]

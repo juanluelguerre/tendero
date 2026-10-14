@@ -184,6 +184,59 @@ public sealed class SearchProductsToolTests
         Assert.StartsWith("Sartén entra en «5 € en menaje»", fact.Text);
     }
 
+    // ---------- phase 13c's close: what Stryker found nothing held ----------
+
+    /// <summary>Something on offer that matches is the answer: the search is not asked again.</summary>
+    [Fact]
+    public async Task On_offer_and_matching_is_answered_as_found_and_asked_once()
+    {
+        var shop = new Counting(new SearchResultPage([Hit("SHIRT", "Camiseta")], 1, 1, 12, 1, new SearchAnswer(SearchMatch.Exact)));
+
+        var answer = await new SearchProductsTool(shop).ReadAsync(Arguments("""{"text":"camiseta","onOffer":true}"""), Ct);
+
+        Assert.Equal(1, shop.Asked);
+        Assert.Equal(["SHIRT"], ((ProductsForShopper)answer.Data).Products.Select(product => product.Code));
+        // On offer and found, with nothing to say of nothing.
+        Assert.DoesNotContain(answer.Facts!, fact => fact.Subject == Fact.TheShop);
+    }
+
+    /// <summary>Asked again without the filter, a search that matches nothing either has no promotion to show: none on offer stands.</summary>
+    [Fact]
+    public async Task Nothing_matching_either_way_says_none_on_offer_in_the_language_asked()
+    {
+        var terms = new DealTerms(DealKind.AmountOffOrder, AmountOff: new Money(5, "EUR"), ReachesSome: true);
+        var shop = new ByFilter(
+            onOffer: new SearchResultPage([Hit("GLOVES", "Gloves")], 7, 1, 12, 1, new SearchAnswer(SearchMatch.Related)),
+            plain: new SearchResultPage([Hit("PAN", "Pan") with { Deals = [new ProductDeal("K5", "5 €", terms)] }], 9, 1, 12, 1, new SearchAnswer(SearchMatch.Related)));
+
+        var answer = await new SearchProductsTool(shop).ReadAsync(Arguments("""{"text":"kitchenware","onOffer":true,"culture":"en"}"""), Ct);
+
+        Assert.Empty(((ProductsForShopper)answer.Data).Products);
+        Assert.Equal("Nothing on offer now matches “kitchenware”.", Assert.Single(answer.Facts!).Text);
+    }
+
+    /// <summary>On offer, matching, and nothing found at all is not "nothing like it": no sentence about the shop.</summary>
+    [Fact]
+    public async Task On_offer_and_matching_but_empty_says_nothing_of_the_shop()
+    {
+        var answer = await new SearchProductsTool(new Shop(new SearchResultPage([], 0, 1, 12, 1, new SearchAnswer(SearchMatch.Exact))))
+            .ReadAsync(Arguments("""{"text":"menaje","onOffer":true}"""), Ct);
+
+        Assert.Empty(answer.Facts!);
+    }
+
+    /// <summary>The search, the same page every time, counting the asks.</summary>
+    private sealed class Counting(SearchResultPage page) : IQueryDispatcher
+    {
+        public int Asked { get; private set; }
+
+        public Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)
+        {
+            Asked++;
+            return Task.FromResult((TResult)(object)page);
+        }
+    }
+
     /// <summary>The search, answering by whether "on offer" was asked.</summary>
     private sealed class ByFilter(SearchResultPage onOffer, SearchResultPage plain) : IQueryDispatcher
     {

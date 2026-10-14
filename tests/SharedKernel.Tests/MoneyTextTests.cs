@@ -20,6 +20,8 @@ public sealed class MoneyTextTests
     [InlineData(1250, "EUR", "es", "1250,00 €")] // Spanish groups from five digits (RAE)
     [InlineData(12500, "EUR", "es", "12.500,00 €")]
     [InlineData(-3.2, "EUR", "es", "-3,20 €")]
+    [InlineData(0, "EUR", "es", "0,00 €")] // no sign on nothing (phase 13c's close)
+    [InlineData(123456, "EUR", "es", "123.456,00 €")] // a whole part of a multiple of three digits, no leading point
     public void An_amount_is_written_as_its_language_writes_it(decimal amount, string currency, string culture, string written) =>
         Assert.Equal(written, MoneyText.In(new Money(amount, currency), culture));
 

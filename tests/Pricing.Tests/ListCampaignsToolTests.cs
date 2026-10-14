@@ -119,6 +119,25 @@ public sealed class ListCampaignsToolTests
             answer.Facts!.Select(fact => fact.Text));
     }
 
+    /// <summary>In English as in Spanish: one about to start says the day it starts; one holding nothing says only its days.</summary>
+    [Fact]
+    public async Task One_about_to_start_or_holding_nothing_is_said_in_english_too()
+    {
+        var empty = Autumn with { Name = "Quiet week", Holds = [] };
+
+        var answer = await Tool(new Shop(BlackFriday, empty)).ReadAsync(Arguments("""{"culture":"en"}"""), Ct);
+
+        Assert.Equal(
+            [
+                "“Black Friday” starts on 27 November 2026: “Envío gratis”, free shipping when the order comes to at least €50.00; “20 % en todo”.",
+                "“Quiet week” is running until 30 November 2026.",
+            ],
+            answer.Facts!.Select(fact => fact.Text));
+        Assert.Equal(
+            ["The shop has no campaign running or about to start."],
+            (await Tool(new Shop()).ReadAsync(Arguments("""{"culture":"en"}"""), Ct)).Facts!.Select(fact => fact.Text));
+    }
+
     /// <summary>Nothing running is an answer too: Tino can say so, rather than that it does not know.</summary>
     [Fact]
     public async Task A_shop_running_nothing_says_so()

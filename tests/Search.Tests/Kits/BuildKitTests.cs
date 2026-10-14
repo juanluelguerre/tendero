@@ -532,4 +532,13 @@ public sealed class BuildKitTests
         Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", Euros(120m), "fr", [])).ShouldHaveValidationErrorFor(x => x.Culture);
         Validator.TestValidate(new BuildKitQuery("KITCHEN_STARTER", Euros(120m), "en", ["INDUCTION:true"])).ShouldNotHaveAnyValidationErrors();
     }
+
+    /// <summary>A run of equal scores anywhere in the list is ordered by code, and only that run (phase 13c's close).</summary>
+    [Fact]
+    public void Ties_in_the_middle_of_the_list_are_ordered_by_code_and_nothing_else_moves()
+    {
+        var ordered = BuildKitHandler.TiesByCode([Hit("C", 1m, score: 3), Hit("B", 1m, score: 2), Hit("A", 1m, score: 2), Hit("D", 1m, score: 1)]);
+
+        Assert.Equal(["C", "A", "B", "D"], ordered.Select(hit => hit.Code));
+    }
 }

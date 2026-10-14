@@ -16,8 +16,12 @@ public static partial class KitSentenceReading
     /// The words that make the number after them a price: "menos de 200", "under
     /// 200". Without one, and without a currency beside it, a number is not a
     /// budget: "para 4 personas" is four people.
+    ///
+    /// A property and not a static field: a static initialiser runs once, so a
+    /// mutation tool cannot switch a cue off and on, and these words' tests went
+    /// unseen (phase 13c's close). A few strings a sentence costs nothing.
     /// </summary>
-    private static readonly string[] PriceCues =
+    private static string[] PriceCues =>
     [
         "menos de", "hasta", "maximo", "como maximo", "presupuesto", "presupuesto de", "por debajo de",
         "under", "below", "up to", "less than", "max", "maximum", "budget", "budget of",

@@ -68,4 +68,30 @@ public sealed class ProductDealsTests
         Assert.Equal(["PAN-3X2", "KITCHEN5"], deals.Select(deal => deal.Code));
         Assert.Empty(ProductDeals.Reaching([thisPan], Now, "PAN-2", KitchenPath));
     }
+
+    /// <summary>Two of the same priority go by code, so a card shows the same first deal on every page.</summary>
+    [Fact]
+    public void Equal_priorities_go_by_code()
+    {
+        var b = Promotion("K-B", new PercentOffLine(5), priority: 30, condition: new PromotionCondition(CategoryCode: "KITCHEN"));
+        var a = Promotion("K-A", new PercentOffLine(5), priority: 30, condition: new PromotionCondition(CategoryCode: "KITCHEN"));
+
+        Assert.Equal(["K-A", "K-B"], ProductDeals.Reaching([b, a], Now, Pan, KitchenPath).Select(deal => deal.Code));
+    }
+
+    /// <summary>
+    /// The terms as data: a deal says its own units (3 for 2 needs 3, and saying
+    /// "from 3 units" beside it would say it twice), a percentage keeps its minimum.
+    /// </summary>
+    [Fact]
+    public void A_deals_terms_keep_a_minimum_of_units_only_where_the_kind_does_not_say_it()
+    {
+        var threeForTwo = Promotion("SHIRT3X2", new BuyXGetY(2, 1), condition: new PromotionCondition(CategoryCode: "SHIRT", MinimumQuantity: 3));
+        var twoOrMore = Promotion("TWO10", new PercentOffLine(10), condition: new PromotionCondition(CategoryCode: "SHIRT", MinimumQuantity: 2));
+
+        Assert.Equal(
+            new SharedKernel.DealTerms(SharedKernel.DealKind.BuyXGetY, Buy: 2, Free: 1, ReachesSome: true),
+            threeForTwo.Terms);
+        Assert.Equal(2, twoOrMore.Terms.MinimumQuantity);
+    }
 }
