@@ -142,9 +142,9 @@ public sealed class McpTransportTests
             // this shop's own, including `get_product_detail`, which used to be
             // `get_product` and gave the name up to the protocol.
             [
-                "cancel_checkout", "compare_products", "complete_checkout", "create_checkout",
+                "build_kit", "cancel_checkout", "compare_products", "complete_checkout", "create_checkout",
                 "get_checkout", "get_product", "get_product_detail", "get_product_specs",
-                "get_return_policy", "list_campaigns", "list_categories", "list_offers", "lookup_catalog",
+                "get_return_policy", "list_campaigns", "list_categories", "list_kits", "list_offers", "lookup_catalog",
                 "search_catalog", "search_products", "update_checkout"
             ],
             tools.GetProperty("result").GetProperty("tools").EnumerateArray()
@@ -181,8 +181,8 @@ public sealed class McpTransportTests
 
         string[] reads =
         [
-            "compare_products", "get_checkout", "get_product", "get_product_detail", "get_product_specs", "get_return_policy",
-            "list_campaigns", "list_categories", "list_offers", "lookup_catalog", "search_catalog", "search_products",
+            "build_kit", "compare_products", "get_checkout", "get_product", "get_product_detail", "get_product_specs", "get_return_policy",
+            "list_campaigns", "list_categories", "list_kits", "list_offers", "lookup_catalog", "search_catalog", "search_products",
         ];
         Assert.All(reads, name => Assert.Equal((true, false, true, false), (said[name].ReadOnly, said[name].Destructive, said[name].Idempotent, said[name].OpenWorld)));
 
@@ -196,7 +196,7 @@ public sealed class McpTransportTests
         Assert.Equal((false, true, true, false), (said["complete_checkout"].ReadOnly, said["complete_checkout"].Destructive, said["complete_checkout"].Idempotent, said["complete_checkout"].OpenWorld));
         Assert.Equal((false, true, true, false), (said["cancel_checkout"].ReadOnly, said["cancel_checkout"].Destructive, said["cancel_checkout"].Idempotent, said["cancel_checkout"].OpenWorld));
 
-        Assert.Equal(16, said.Count);
+        Assert.Equal(18, said.Count);
 
         static bool? Hint(JsonElement annotations, string name) =>
             annotations.TryGetProperty(name, out var hint) && hint.ValueKind is JsonValueKind.True or JsonValueKind.False ? hint.GetBoolean() : null;

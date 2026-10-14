@@ -1,5 +1,5 @@
 import { PricePipe } from '@tendero/shared-ui';
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
@@ -10,6 +10,7 @@ import { CompareStore } from '../compare/compare.store';
 import type { ProductVia } from '../features/product/arrived-from';
 import { ProductImage } from '../product-image/product-image';
 import { ShopLinks } from '../shop-links';
+import { dealWords } from './deal-words';
 
 /** Why a card is in its row, in one line under the price: *Porque viste…*, *Sube esta semana* (R-8). */
 export interface CardReason {
@@ -72,6 +73,12 @@ export class ProductCard {
   protected readonly links = inject(ShopLinks);
   protected readonly compare = inject(CompareStore);
   protected readonly adding = signal(false);
+
+  /** The first promotion it is in, as the card says it under the price (phase 13c); none when it is in none. */
+  protected readonly deal = computed(() => {
+    const first = this.hit().deals?.[0];
+    return first ? dealWords(first, this.culture.active()) : null;
+  });
 
   protected linkState(): { via: ProductVia } | undefined {
     const via = this.via();

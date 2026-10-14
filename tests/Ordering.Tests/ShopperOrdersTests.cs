@@ -290,7 +290,8 @@ public sealed class ShopperOrdersTests
                 "Se entregó el 1 de enero de 2026.",
                 "Incluye 1 × Botines de piel (42).",
                 "Incluye 2 × Calcetines de lana.",
-                FormattableString.Invariant($"Total: {order.Totals.Total.Amount:0.00} EUR."),
+                // As Spanish writes money (MoneyText): a decimal comma, the symbol after.
+                $"Total: {order.Totals.Total.Amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture).Replace('.', ',')} €.",
                 "Se puede devolver 1 × Botines de piel (42) hasta el 15 de enero de 2026.",
                 "Se puede devolver 2 × Calcetines de lana hasta el 15 de enero de 2026.",
             ],
@@ -386,7 +387,8 @@ public sealed class ShopperOrdersTests
                 "It was delivered on 1 January 2026.",
                 "It holds 1 × Botines de piel (42).",
                 "It holds 2 × Calcetines de lana.",
-                FormattableString.Invariant($"Total: {older.Totals.Total.Amount:0.00} EUR."),
+                // As English writes money (MoneyText): the symbol first.
+                FormattableString.Invariant($"Total: €{older.Totals.Total.Amount:0.00}."),
                 "1 × Botines de piel (42) can be returned until 15 January 2026.",
                 "2 × Calcetines de lana can be returned until 15 January 2026.",
             ],

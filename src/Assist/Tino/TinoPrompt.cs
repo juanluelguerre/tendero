@@ -29,7 +29,7 @@ public sealed record TinoContext(TinoContextKind Kind, string Key)
 /// </summary>
 public static class TinoPrompt
 {
-    public const string Version = "tino-2026-10-06";
+    public const string Version = "tino-2026-10-14";
 
     /// <summary>What the model says when it has read enough. Its text in this phase is never shown.</summary>
     public const string Done = "DONE";
@@ -50,6 +50,9 @@ public static class TinoPrompt
         - A question about shipping in general — whether the shop delivers to a country,
           what delivery costs, how long it takes: call get_shipping_terms, with the
           country's two-letter code when the shopper names one (Portugal is PT).
+        - A question about offers, sales or discounts in general ("any offer today?"): call
+          list_campaigns. When they ask for products on offer, call search_products with
+          onOffer true as well.
         - A question about the shopper's OWN order — where it is, what is in it, whether it
           can be returned: call my_orders. It takes no order number: never ask the shopper
           for one, and ignore any number they write. Do NOT call my_orders for a general

@@ -48,3 +48,55 @@ describe('the storefront routes', () => {
     expect(await land('/cart?from=mail')).toEqual({ url: '/es/cart?from=mail', path: 'cart' });
   });
 });
+
+/**
+ * Switching language changes a parameter, not the shop (the author,
+ * 2026-10-14). With a route per language the switch was a navigation to
+ * another route: the shell was destroyed and made again, and with it Tino's
+ * conversation, a kit being built, and anything else a page held — and the new
+ * shell read its template before it had one (NG0951). One route for every
+ * language, matched by `cultureSegment`, keeps the shell and the page.
+ */
+describe('switching language', () => {
+  async function switching(from: string, to: string) {
+    const used: string[] = [];
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(appRoutes),
+        { provide: CultureStore, useValue: { active: () => 'es', use: (culture: string) => void used.push(culture) } },
+      ],
+    });
+    const router = TestBed.inject(Router);
+
+    await router.navigateByUrl(from);
+    const before = router.routerState.snapshot.root.firstChild;
+    await router.navigateByUrl(to);
+    const after = router.routerState.snapshot.root.firstChild;
+
+    return { before, after, used, url: router.url };
+  }
+
+  it('keeps the shell: both languages are the same route, with the language as its parameter', async () => {
+    const { before, after, url } = await switching(
+      '/es/kits/COFFEE_CORNER?budget=300',
+      '/en/kits/COFFEE_CORNER?budget=300',
+    );
+
+    expect(url).toBe('/en/kits/COFFEE_CORNER?budget=300');
+    expect(after?.routeConfig).toBe(before?.routeConfig);
+    expect([before?.paramMap.get('culture'), after?.paramMap.get('culture')]).toEqual(['es', 'en']);
+  });
+
+  it('takes the language from the address on the switch too', async () => {
+    const { used } = await switching('/es/cart', '/en/cart');
+
+    expect(used).toEqual(['es', 'en']);
+  });
+
+  it('still takes no first segment for a language that is not one', async () => {
+    const { after, url } = await switching('/es', '/fr/cart');
+
+    expect(url).toBe('/es/fr/cart');
+    expect(after?.paramMap.get('culture')).toBe('es');
+  });
+});

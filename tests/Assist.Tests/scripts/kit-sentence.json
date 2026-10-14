@@ -1,0 +1,7 @@
+[
+  { "when": "cocina para inducción", "say": "Kit de cocina" },
+  { "when": "algo para hacer café", "say": "\"Rincón del café\"." },
+  { "when": "algo bonito", "say": "none of these" },
+  { "when": "para el jardín", "say": "Kit de jardín" },
+  { "when": "kitchen for induction", "say": "Kitchen starter kit" }
+]

@@ -1,5 +1,9 @@
 [
   {
+    "when": "put a kit together",
+    "say": "Kitchen starter kit"
+  },
+  {
     "when": "inducción",
     "calls": [{ "tool": "search_products", "arguments": { "text": "sartén", "culture": "es" } }],
     "then": [

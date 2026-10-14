@@ -94,8 +94,8 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `tools/TrafficSim` | `TrafficSim.Tests` | 87.66 % | 87.10 % | 2026-09-26 · `Model/`, `Scheduling/`, `Queries/` |
 | `src/Knowledge` | `Knowledge.Tests` | 77.34 % | 67.91 % | 2026-10-09 · phase 13a's close, with the picture reading in it |
 | `src/Accounts` | `Accounts.Tests` | 80.08 % | 58.31 % | 2026-09-29 · R-7/R-8 close, first run 75.52 % |
-| `src/Pricing` | `Pricing.Tests` | 83.23 % | 64.03 % | 2026-10-13 · phase 13b's close, one run; 83.06 % since 2026-09-29 |
-| `src/Assist` | `Assist.Tests` | 86.31 % | 79.42 % | 2026-10-09 · phase 13a's close, with the alt-text job in it; first run 85.30 %, under phase 12b's 86.26 % |
+| `src/Pricing` | `Pricing.Tests` | 86.25 % | 66.67 % | 2026-10-14 · phase 13c's close, one run; 83.23 % since 2026-10-13 |
+| `src/Assist` | `Assist.Tests` | 87.13 % | 79.92 % | 2026-10-14 · phase 13c's close, third run (83.63 %, then 85.33 % with the kit reader's tests, then its static fields made properties); 86.31 % since 2026-10-09 |
 | `src/AI` | `AI.Tests` | 75.00 % | 58.54 % | 2026-10-09 · phase 13a's close; first run 71.88 %, under phase 12's 72.02 % |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
@@ -1047,6 +1047,115 @@ against the mutant made by hand and restored:
   endpoint. `src/Mcp` has no configuration (above). Its phase code
   (`McpAuthorization`, a misnamed argument answered as `Invalid`) is proven by
   the hand mutations in the phase's commit.
+
+**Phase 13c's close (2026-10-14)**: the kit solver and its page, a sentence that
+fills the kit's form, the kits over MCP, Tino reading the shop's offers, and the
+promotions a product is in. `Pricing` and `Assist` were run whole. `Search` was
+run whole too, but stopped at its two-hour ceiling without a report, so it was
+run again scoped to the phase's files. `SharedKernel` and `Ordering` were scoped
+from the start. Each ran alone, with no stack and no test containers, after
+`pim-api`'s load tests had finished. Reports are in
+`docs/blog/reports/2026-10-14-phase-13c-kit-solver/stryker/`.
+
+| project | mutated with | run 1 | last run | survivors |
+|---|---|---:|---:|---:|
+| `src/Pricing` | `Pricing.Tests` | **86.25 %** (baseline 83.23 %) | — | 73 |
+| `src/Assist` | `Assist.Tests` | 83.63 % (baseline 86.31 %) | **87.13 %** (run 3; run 2 85.33 %) | 145 → 130 → 114 |
+| `src/Search`, whole | `Search.Tests`, `SearchEval.Tests` | stopped at 120 min | — | — |
+| `src/Search`, scoped (`Kits/`, `BuildKit`, `ListKitsTool`, `SearchProductsTool`, `DealBook`, `RunningOffers`, `ProductProfiles`, the warming worker, the full match) | `Search.Tests`, `SearchEval.Tests` | 89.61 % | — | 35 |
+| `src/SharedKernel`, scoped (`MoneyText`, `DayText`, `DealText`, `ReadTools`) | its three suites | 93.43 % | — | 9 |
+| `src/Ordering`, scoped (`ShippingTerms`, `ShopperOrders`) | `Ordering.Tests` only | 96.99 % | — | 5 |
+
+**Assist fell under its baseline at first, and two of the reasons were runner
+artefacts.** Run 1 gave 83.63 % against 86.31 %. The sentence reader the phase
+wrote (`KitSentenceReading`, K-6) had 32 survivors: every price cue, the accents
+but `ó`, a euro written before the number, thousands with a point, and its
+guards. Tests closed them, and run 2 gave 85.33 %. Still under the baseline: the
+fifteen price cues and `KitSentenceUnderstood.Not` were `static readonly`
+fields. A static initialiser runs once, so Stryker cannot switch a mutant in it
+on and off, although a hand mutation of each went red against the new tests.
+They became properties (`=>`), which changes no behaviour, and run 3 gave
+**87.13 %**, the new baseline.
+
+**The whole Search run did not finish in two hours.** At phase 13a's close it
+took one. This time Stryker created 3,034 mutants and tested 1,462, with 693
+tests' coverage to capture. The scoped run over the phase's files took sixteen
+minutes. Search's baseline (83.38 %, phase 13a) stands until a whole run
+measures it again.
+
+**A new SDK broke the first SharedKernel run.** `11.0.100-rc.2` was installed at
+18:39 the same day, and `global.json` (`11.0.0`, `latestFeature`,
+`allowPrerelease`) picked it. With it, `Api.Tests` does not build in Debug:
+*the following scoped css bundles do not have matching endpoints:
+_framework/Microsoft.NET.Sdk.BlazorWeb.DotNetWatch…*. The SDK's static web
+assets now add `dotnet watch`'s browser tools to a web project's dependants
+when `EnableHotReloadInRuntimeConfigDevFile` is on, and Debug turns it on. The
+runs were made with `EnableHotReloadInRuntimeConfigDevFile=false` in the
+environment. CI installs the latest .NET 11 preview too, so it will meet the
+same error (open, for the author).
+
+**What Stryker found, and what closed it.** Each gap below has a test, seen red
+against the mutant made by hand and restored (27 hand mutations):
+
+- **Pricing.** Two promotions of one priority were never ordered by code
+  (`ThenBy` read as descending survived), so a card's first deal could change
+  from page to page. A 3 for 2's terms could say its units twice, and a
+  percentage could lose its minimum; both conditionals in `Promotion.Terms`
+  survived. `list_campaigns` was never asked in English with nothing running,
+  nor about a campaign about to start, nor about one holding no promotion.
+- **Assist.** The kit sentence's reader is above. A host with no `list_kits` to
+  read was never composed, so `FirstOrDefault` read as `First` (an exception)
+  survived. And the "not understood" answer was compared only with itself.
+- **SharedKernel.** `DealText` in English (a 3 for 2, an order discount with and
+  without a minimum), a percentage with a minimum order, and a percent of
+  `12.50`, which must read 12.5. `MoneyText` gave "-0,00 €" for nothing once `<`
+  read `<=`, and put a separator before a six-digit whole part once `>` read `>=`.
+- **Search.** A run of equal scores in the middle of the list (`Take(end -
+  start)` as `end + start` duplicated it); "on offer" and matching was asked
+  again (`&&` as `||`); a second search that matched nothing still showed its
+  promotions; on offer, matching and empty spoke of the shop; *nothing on
+  offer* was never said in English. And the solver was never handed nothing,
+  and a shop without the vector layer was asked only once by nothing that
+  counted.
+
+**Left, and what each is.**
+
+- **`Pricing`** (73). Nothing the phase wrote is left. The rest is older:
+  `Canonical` (23) only feeds a fingerprint, and `PricingSeedFiles` is read once
+  at start. `CampaignSeedFile.SeedAsync`, extracted in this phase for the
+  assistant suite's laboratory, has no unit test (10 without coverage). The
+  laboratory and the stack's start run it; **written down**.
+- **`Assist`** (114). In the kit's reader, the decimals'
+  conditionals (3) are **equivalent**: a number never starts with its
+  separator, and `"200."` parses as 200. In the handler, `?? []` after reading
+  `list_kits` is **unreachable**: the tool always answers its list
+  (`ListKitsToolTests`). `&&` read as `||` in the model's `catch` is **written
+  down**: a failure that is not the model's would be swallowed and answered as
+  "not understood", and no test throws one. The rest predate the phase (Tino's
+  meters and their names, its prompt's fallback).
+- **`Search`, scoped** (35, 8 closed above). **Equivalent**: an empty branch
+  passed as `""` or as null reaches the same promotions; `<=` in the ties' loop
+  adds an empty run; a product's group is never empty (`First`); the solver's
+  walking order (required slots first, cheaper candidates first) changes how
+  fast it finds the best kit, never which, and its properties say *the same kit
+  in any order*; `Task.Yield` only schedules. **Noise**: the solver's and the
+  kit seed's refusal messages (9); the tests ask whether it refuses. **Runner
+  artefact**: the kit seed's cultures, a static initialiser (2), and the seed
+  path's default, which every test and host sets (2). **Held twice**: two slots
+  of one code are refused by the slots' dictionary too, so removing the first
+  refusal still throws. **Written down**: a slot whose category the tree does
+  not know (`?? []` in `BuildKit`); the solver's `return` once its node ceiling
+  stopped it, which only the depth-0 test reaches; and the warming worker's
+  wait between checks (4), which its tests run with no wait at all. Older:
+  `CampaignNowAsync`'s guard (R-8).
+- **`SharedKernel`, scoped** (9, 7 closed). `MoneyText`'s `point <= 0` (2) is
+  **equivalent**: a number formatted `F` never starts with its point.
+- **`Ordering`, scoped** (5). The phase changed only how these write money. The
+  five survivors are older sentences and a list's `Clear`.
+- **Not run**: `src/Mcp` and `src/Workers` have no configuration; their phase
+  code (`list_kits`, `build_kit`, the campaigns' seed worker) is proven by the
+  hand mutations in the K-7 commit. `src/Api` changed only in registrations, and
+  `src/AppHost` in one argument.
 
 ## Property-based (CsCheck)
 

@@ -96,8 +96,8 @@ describe('what a campaign holds', () => {
     const labels = holdLabels(
       campaign({
         holds: [
-          { name: 'Black Friday', couponCode: 'BF2026' },
-          { name: 'Envío gratis desde 50 €', couponCode: null },
+          { code: 'BLACKFRIDAY', name: 'Black Friday', couponCode: 'BF2026' },
+          { code: 'SHIP0', name: 'Envío gratis desde 50 €', couponCode: null },
         ],
       }),
       (name, code) => `${name} con el código ${code}`,

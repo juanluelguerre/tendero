@@ -2,7 +2,16 @@ import { computed, inject, linkedSignal } from '@angular/core';
 import { applyEach, form, max, min, required } from '@angular/forms/signals';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import { patchState, signalStore, withComputed, withHooks, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalMethod,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { OrderView, ReturnableLineView, ReturnReason, ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -126,6 +135,18 @@ export const OrderStore = signalStore(
 
     return {
       _load: load,
+      /**
+       * The order read again when the language changes (2026-10-14): one route
+       * for every language keeps this page, which used to read it again by
+       * being made again. Not on the first value: `onInit` reads it.
+       */
+      _onLanguage: (() => {
+        let previous: string | undefined;
+        return signalMethod<string>((culture) => {
+          if (previous !== undefined && previous !== culture) void load();
+          previous = culture;
+        });
+      })(),
       async requestReturn(): Promise<void> {
         const order = store.order();
         if (!order || !store.returnForm().valid()) return;
@@ -179,6 +200,7 @@ export const OrderStore = signalStore(
       // people screenshot instead — and the returns against the order only
       // exist server side.
       void store._load();
+      store._onLanguage(store._culture.active);
     },
   }),
 );

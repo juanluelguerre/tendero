@@ -22,6 +22,8 @@
   <ItemGroup>
     <PackageReference Include="Carter" />
     <PackageReference Include="FluentValidation" />
+    <!-- A campaign's last day, counted in the shop's zone for Tino's list_campaigns (ADR 0046). Already Ordering's. -->
+    <PackageReference Include="NodaTime" />
   </ItemGroup>
 
   <ItemGroup>

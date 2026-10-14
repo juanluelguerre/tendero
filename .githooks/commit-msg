@@ -1,0 +1,11 @@
+#!/bin/sh
+# Refuses a commit message that carries an attribution trailer (CLAUDE.md,
+# "Git Workflow"). It holds any commit, by any tool or by hand; Claude Code's
+# own hook (.claude/hooks/guard-shell.mjs) catches it earlier, before git runs.
+#
+# Turned on once per clone: git config core.hooksPath .githooks
+if grep -Eiq '^[[:space:]]*(Co-Authored-By|Claude-Session):|Generated with \[?Claude Code' "$1"; then
+  echo "commit-msg: the message carries an attribution trailer (Co-Authored-By, Claude-Session or" >&2
+  echo "\"Generated with\"). This repository's history is public and has none: remove it and commit again." >&2
+  exit 1
+fi

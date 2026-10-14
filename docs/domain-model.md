@@ -359,6 +359,7 @@ classDiagram
         +DateTimeOffset? ValidFrom
         +DateTimeOffset? ValidTo
         +bool IsForEveryone
+        +DealTerms Terms
     }
     class PromotionCondition {
         <<record>>

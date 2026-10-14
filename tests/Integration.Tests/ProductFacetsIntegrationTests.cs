@@ -300,7 +300,7 @@ public sealed class ProductFacetsIntegrationTests(ElasticsearchFixture elasticse
         Assert.Equal(ElGuerre.Tendero.Search.Features.SuggestSimilar.SimilarityRanking.Rule, row.RankedBy);
     }
 
-    private ElasticsearchProductProfiles Profiles() => new(elasticsearch.Client);
+    private ElasticsearchProductProfiles Profiles() => new(elasticsearch.Client, new FixedOffers(OfferScope.Nothing));
 
     private async Task<double> MedianMsAsync(ProductSearchQuery query)
     {

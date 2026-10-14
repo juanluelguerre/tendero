@@ -6,8 +6,13 @@ namespace ElGuerre.Tendero.SearchEval.Assistant;
 public sealed record AssistantCases(IReadOnlyList<AssistantCase> Cases);
 
 /// <param name="As">Who asks: <c>anonymous</c>, or one of the laboratory's account holders.</param>
+/// <param name="Before">The conversation before the question, as the storefront sends it: what was asked and what was answered.</param>
 public sealed record AssistantCase(
-    string Id, string Culture, string Question, Expectation Expect, string As = "anonymous", CaseContext? Context = null);
+    string Id, string Culture, string Question, Expectation Expect, string As = "anonymous", CaseContext? Context = null,
+    IReadOnlyList<CaseMessage>? Before = null);
+
+/// <param name="Role"><c>user</c> or <c>assistant</c>.</param>
+public sealed record CaseMessage(string Role, string Text);
 
 /// <summary>What the shopper is looking at: a product by its English name, or one of the laboratory's orders by its name.</summary>
 public sealed record CaseContext(string? Product = null, string? Order = null);

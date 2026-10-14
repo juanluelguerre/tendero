@@ -237,13 +237,14 @@ public sealed class PromotionEngineTests
 
         var suppressed = Suppressed(outcome, "BIG");
         Assert.Equal(RuleReasons.ConditionNotMetCode, suppressed.Reason!.Code);
-        Assert.Contains("50.00 EUR", suppressed.Reason.Explanation.In("en"));
+        Assert.Contains("€50.00", suppressed.Reason.Explanation.In("en"));
+        Assert.Contains("50,00 €", suppressed.Reason.Explanation.In("es"));
     }
 
     /// <summary>
     /// **What was missing is data, not only a sentence** (ADR 0059). The
-    /// sentence says *a minimum of 50.00 EUR*, which is right for an agent and
-    /// wrong on a page: a page formats money its reader's way and names a
+    /// sentence says *a minimum of €50.00*, in its reader's language, and a
+    /// page still cannot use it: a page formats money its own way and names a
     /// category by its name, and can do neither from prose. So the reason
     /// carries the condition it asked and how far the cart is from it — the
     /// difference worked out here, because a front end adds no money.

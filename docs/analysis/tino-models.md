@@ -428,3 +428,140 @@ Same prompt, same reads; a laboratory built from the larger seed
   description in every read call; it does not show above the variation —
   the largest call was 3,195, 3,208 and 2,897 tokens, and 3,029 in run 15.
 - The rest is what the earlier runs showed.
+
+## Money in the reader's language (phase 13c, 2026-10-14)
+
+The facts Tino cites wrote money one way for both languages: *4.95 EUR*, *Total:
+113.85 EUR.* They now write it as each language does (`MoneyText`): *4,95 €* in
+Spanish, *€4.95* in English, and the same in an order's total and in a
+promotion's condition. Nine of the thirty cases read those facts, so the suite
+was run once, against the stack's own model and scorer (throwaway Postgres and
+Elasticsearch, removed after):
+
+| Run | Passed | p50 | p95 | Shown | Dropped | Failed |
+|---|---|---|---|---|---|---|
+| 22 | 28 of 30 | 3.3 s | 6.9 s | 38 | 4 | the two language cases |
+
+As good as the best before it (run 19). All nine money cases passed, and the
+support scorer took the new sentences as it took the old: nothing dropped among
+them. The two that failed are the two that have failed in every run since 19.
+
+## What the shop runs: `list_campaigns` (phase 13c, 2026-10-14)
+
+Asked *¿alguna oferta para hoy?* while «Otoño en Tendero» was running, Tino
+answered *No tenemos ese dato*: none of its reads said what the shop runs. It
+gained `list_campaigns` (`docs/specs/tino.md`), and the suite two cases,
+`offers-today-es` and `offers-today-en`, which must read it and cite the
+campaign's name. Run against the stack's model and scorer, throwaway Postgres
+and Elasticsearch removed after:
+
+| Run | Passed | p50 | p95 | Shown | Dropped | Failed |
+|---|---|---|---|---|---|---|
+| 23 | 29 of 32 | 4.2 s | 10.3 s | 41 | 7 | the two language cases, `dishwasher-sin-dato-es` |
+
+- **Both offers cases passed**, each citing the campaign, its last day and what
+  its promotions take off (*La campaña Otoño en Tendero ofrece 10% en ropa y 3x2
+  en camisetas hasta el 30 de noviembre de 2026*).
+- **The slowest call and the largest are the offers case itself**: 10.3 s and
+  3,755 tokens, five calls with the campaigns' sentences in them. Without it the
+  largest call was 3,289 tokens against 3,195 in run 22 — about a hundred for
+  one more tool's description in every read call.
+- `dishwasher-sin-dato-es` failed as it has come and gone since the first runs:
+  on the pan's page it answered with other products that are dishwasher safe.
+- The two cases name the autumn campaign, which ends on 30 November 2026. After
+  that, the seed needs a campaign that is open or the cases a new name.
+
+### Products on offer, said to be (the same night)
+
+In the storefront, the author followed the offers answer with *muéstrame menaje
+con esos 5€ de descuento*, and Tino did not answer. The log said why: *nothing
+Tino's model wrote was said by the fact it cited*. `search_products` hands an
+answer no facts, so every card's reason cited a product nothing had been said
+of, and grounding dropped them all. Two things were wrong, and only the first
+is fixed:
+
+- **A product found with `onOffer` is now said to be on offer** (*… está en
+  oferta ahora*, `FactSource.Campaign`): the filter is what makes it true. The
+  suite gained three cases. One asks for clothes on offer in each language, and
+  one asks the same after the offers answer, through a new `before` that gives
+  a case the conversation the storefront sends.
+- **"5 € en menaje" is not an offer on any product.** `KITCHEN5` takes 5 € off
+  the *order* when it has a piece of kitchenware and the whole order comes to
+  40 € or more. The shop's own rule
+  (`OfferReach`) keeps an order discount out of "on offer", so no kitchenware is
+  on offer. `list_campaigns` said the promotion's name and not its condition,
+  so Tino could not explain *esos 5 €*. **Now it says both**: *«5 € en menaje»,
+  5,00 € menos en el pedido si lleva algún artículo de la promoción y suma al
+  menos 40,00 €* (the Tino spec). The suite gained `offers-what-a-promotion-needs-es`,
+  and the author's turn as it happened, `offers-the-5-euros-after-the-campaign-es`.
+  Both expect a sentence about the shop that cites the 40,00 €.
+
+| Run | Passed | Failed |
+|---|---|---|
+| 24 | 28 of 34 | the two language cases, `not-about-the-shop-es` (read `my_orders`), and the two first cases, which asked for kitchenware on offer: there is none, so they were wrong cases and were rewritten |
+| 25 | 18 of 35, interrupted | the stack's model stopped at the twenty-first case, and every case after it failed to connect. Before that, all three offers cases passed, each citing *en oferta ahora* or *on offer now*; `pan-induction-en`, `dishwasher-sin-dato-es` and the two shipping cases (read `my_orders`) failed as they come and go |
+
+| 26 | 31 of 37 | the two language cases, `dishwasher-sin-dato-es`, `order-of-an-account-by-nobody-es` (asked back), and both new cases about the 5 € (one dropped whole, one asked back) |
+| 27 | 30 of 37 | after the terms were reworded, `offers-what-a-promotion-needs-es` passes; still failing are the author's turn (asked back), the language cases, `dishwasher-sin-dato-es`, `backpack-laptop-en`, `shipping-cost-en` (read `my_orders`), and `offers-products-after-the-campaign-es` (dropped whole) |
+
+Asked directly, the live stack answered *¿qué necesito para los 5 € de
+descuento en menaje?* three times out of three, citing the campaign. The first
+wording said *si lleva alguno de sus artículos*, and the model read "sus" as the
+order's (*debes llevar al menos uno de los artículos de tu pedido*), so it now
+names the promotion. **The author's own turn still fails, and the cause is the
+search, not Tino.** Tino searches "menaje" on offer, and the shop answers with a
+sweatshirt, a jacket and gloves, all on offer and none kitchenware, labelled
+`Exact`. Two cards then said *estos guantes técnicos táctiles están en oferta
+ahora*: true, and not what was asked. `ElasticsearchFullMatch.AnyAsync` counts the
+products that carry every word **without the shopper's filters**, so plenty of
+kitchenware says "menaje" and the page calls itself exact. The storefront shows
+the same thing for "menaje" with *En oferta* switched on.
+
+**Fixed the same night, in two parts.** The full-match count now applies the
+shopper's filters, the same ones the cards pass, so "menaje" on offer is
+`Related`. `search_products` tells the model `onlyNearest`, and under the
+on-offer filter it shows no nearest at all: it says *No hay nada en oferta
+ahora que coincida con «menaje»* as a fact of the shop. Run 28 was 33 of 37,
+the best yet; run 29 was 32 of 37. The author's turn still failed. It was run
+alone five times with the model's text kept, and it fails two ways:
+
+- Three times out of five, Tino searched kitchenware without the filter and
+  wanted to show a baking dish *because it is in the 5 € promotion*. No fact
+  says that of any product, so the reason was dropped. **The missing piece is
+  which promotions reach a product**: Pricing computes it at the till and says
+  it nowhere else. It is the same gap the author saw in the storefront the same
+  evening, where 33 kitchenware cards show nothing of the 5 €.
+- Twice it asked back *¿Qué artículo de menaje estás buscando para aplicar el
+  descuento de 5 €?*, and the question was refused because it carries a digit.
+  A question back may not state a figure (`TinoReply.IsAQuestion`), and that
+  rule stays.
+
+### The promotions a product is in (the same night)
+
+Pricing now says which promotions reach each product, by the till's own rule
+(`ProductDeals`, `docs/specs/product-deals.md`). Every card the search draws
+carries them, and `search_products` turns each into a fact: *… entra en «5 € en
+menaje»: 5,00 € menos en el pedido si suma al menos 40,00 €*. The author's turn
+now expects kitchenware cards that cite it.
+
+| Run | Passed | Failed |
+|---|---|---|
+| 30 | 32 of 37 | the two language cases, `dishwasher-sin-dato-es`, `not-about-the-shop-es` (read `my_orders`), and `offers-products-after-the-campaign-es`, which cited the promotion's fact instead of *en oferta ahora*. Both are true, so that case no longer asks for one of them. **The author's turn passed**: three kitchenware cards, each with the 5 € and its 40,00 € |
+| 31 | 31 of 37 | the two language cases, `dishwasher-sin-dato-es`, `pan-induction-en` and `opening-hours-unknown-es` (both come and go), and the author's turn (asked back with a figure) |
+
+Run alone five times, the author's turn passes **3 of 5** (0 of 5 before). Each
+time it shows a wok, a milk pan and a baking dish *entra en la promoción de 5 €
+en menaje*. The other two times it asked back with a figure in the question,
+which is refused, and the panel fell back to the search. That search is now one
+that does not mix in clothing.
+
+**Live, after the stack was restarted**, Tino searched kitchenware *on offer*
+and answered only *No hay nada en oferta ahora que coincida con «menaje»*. That
+was true and no help. When nothing like the words is on offer,
+`search_products` now asks again without the filter and answers with what is in
+a promotion, each with its terms. The author's turn alone: **5 of 5**, three
+pans each *entra en la campaña de 5 € en menaje*.
+
+| Run | Passed | Failed |
+|---|---|---|
+| 32 | 32 of 37 | the two language cases, `shipping-cost-en` (read `my_orders`), and both `pan-induction` cases. Alone those passed 6 of 8, as they come and go (runs 16 and 18). Every offers case passed. The largest call was 5,224 tokens, `offers-today-es` reading the campaigns and the products on offer |

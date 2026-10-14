@@ -200,6 +200,18 @@ describe('the tino panel', () => {
     expect(all.getAttribute('href')).toBe('/es?q=una%20sart%C3%A9n%20para%20inducci%C3%B3n');
   });
 
+  /** Nothing matched the words, so the search's cards are only the nearest: said as such, never as "results". */
+  it('says the cards are only the nearest when nothing matched the words', async () => {
+    const element = await asked(unavailable('Model'), {
+      search: { hits: [hit('PAN-1'), hit('PAN-2', 'Sartén de acero')], total: 35, answer: { match: 'Related' } },
+    });
+
+    expect(element.textContent).toContain('tino.fallback.related');
+    expect(element.textContent).not.toContain('tino.fallback.results');
+    const all = [...element.querySelectorAll('a')].find((a) => a.textContent!.includes('tino.seeAll'))!;
+    expect(all.textContent).toContain('tino.seeAllRelated');
+  });
+
   it('says so too when the search found nothing, and when there were too many questions', async () => {
     expect((await asked(unavailable('Model'))).textContent).toContain('tino.fallback.nothing');
   });

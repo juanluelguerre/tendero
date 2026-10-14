@@ -33,6 +33,8 @@ public static class HybridSearchServiceCollectionExtensions
         services.AddOptions<Kits.Seed.KitSeedOptions>().Bind(configuration.GetSection(Kits.Seed.KitSeedOptions.SectionName));
         services.TryAddSingleton<Kits.IKitTemplateReader, Kits.Seed.SeedFileKitTemplates>();
         services.TryAddSingleton<Kits.IKitSolver, Kits.BranchAndBoundKitSolver>();
+        // The kits as a sentence about one is read against them (K-6), for a page and no agent.
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<SharedKernel.IReadTool, Features.BuildKit.ListKitsTool>());
 
         return services.AddSearchStrategies();
     }

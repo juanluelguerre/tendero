@@ -80,7 +80,12 @@ export class Shell {
   private readonly taxonomy = inject(TaxonomyStore);
 
   private readonly drawer = viewChild.required<ElementRef<HTMLDialogElement>>('drawer');
-  private readonly page = viewChild.required<ElementRef<HTMLElement>>('page');
+  /**
+   * Not `required`: the docking effect below can run before the view is made —
+   * a shell made while Tino's panel is already open read it then and threw
+   * NG0951 (seen on 2026-10-14, when switching language still made a new shell).
+   */
+  private readonly page = viewChild<ElementRef<HTMLElement>>('page');
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
 
   protected readonly culture = this.cultureStore.active;
@@ -155,7 +160,10 @@ export class Shell {
       if (now === docked) return;
       docked = now;
       const view = this.document.defaultView;
-      const page = this.page().nativeElement;
+      // Before the view exists there is no scroll to carry across: the page
+      // starts at its top either way.
+      const page = this.page()?.nativeElement;
+      if (!page) return;
       const at = now ? (view?.scrollY ?? 0) : page.scrollTop;
       afterNextRender(
         () => {

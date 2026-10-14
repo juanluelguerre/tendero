@@ -381,6 +381,55 @@ export interface TrackedEvents {
     /** Its place in the answer, from 1. */
     readonly position: number;
   };
+
+  /**
+   * A shopper asked the shop to build a kit and got an answer (phase 13c, K-5): once per kit built, complete or not. Only with analytics consent.
+   *
+   * Kits: Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?
+   * Decides: A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant.
+   */
+  readonly kit_built: {
+    /** The kit's code, as the shop's file names it (KITCHEN_STARTER). A closed set: the templates the shop wrote. */
+    readonly template: string;
+    /** The budget asked for, as a band in the shop's currency. Never the figure typed. */
+    readonly budget: 'under_50' | '50_100' | '100_200' | '200_500' | '500_plus';
+    /** How many slots got a product. */
+    readonly filled: number;
+    /** How many slots were left empty, required or not. */
+    readonly empty: number;
+    /** What held the kit back: nothing, the budget, or the shop having nothing for a slot. */
+    readonly binding: 'none' | 'budget' | 'candidates';
+    /** Whether the request came from the form or from a sentence a model read into it (K-6). */
+    readonly source: 'form' | 'sentence';
+  };
+
+  /**
+   * A shopper put a built kit in the cart (phase 13c, K-5): once per kit added, with every line it could add. Only with analytics consent.
+   *
+   * Kits: Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?
+   * Decides: A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant.
+   */
+  readonly kit_added_to_cart: {
+    /** The kit's code, as in kit_built. */
+    readonly template: string;
+    /** How many products were added: one a filled slot. */
+    readonly lines: number;
+  };
+
+  /**
+   * A shopper wrote what kit they want and the shop read it (phase 13c, K-6): once per sentence sent, understood or not. Never the sentence itself. Only with analytics consent.
+   *
+   * Kits: Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?
+   * Decides: A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant.
+   */
+  readonly kit_sentence_read: {
+    /** Whether the sentence named one of the shop's kits. Not understood, the shopper is left with the list. */
+    readonly understood: boolean;
+    /** The kit it named, as in kit_built; none when it named none. */
+    readonly template: string;
+    /** Whether the sentence said a budget, read by code. */
+    readonly budget: boolean;
+  };
 }
 
 /**
@@ -417,4 +466,7 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   image_alt_proposal_decided: 'staff',
   search_by_image_submitted: 'behavioural',
   search_by_image_result_followed: 'behavioural',
+  kit_built: 'behavioural',
+  kit_added_to_cart: 'behavioural',
+  kit_sentence_read: 'behavioural',
 };

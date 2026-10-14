@@ -129,9 +129,9 @@ public sealed class KitsEndpointTests
         // agent reads this one.
         Assert.Equal(
         [
-            ("Summary", null, "Kit de cocina: 49.90 EUR de 60.00 EUR."),
-            ("Chosen", "pan", "Sartén: Sartén de hierro, 49.90 EUR."),
-            ("OverBudget", "board", "Sin tabla de cortar: lo más barato cuesta 24.90 EUR y quedaban 10.10 EUR."),
+            ("Summary", null, "Kit de cocina: 49,90 € de 60,00 €."),
+            ("Chosen", "pan", "Sartén: Sartén de hierro, 49,90 €."),
+            ("OverBudget", "board", "Sin tabla de cortar: lo más barato cuesta 24,90 € y quedaban 10,10 €."),
         ], kit.GetProperty("explanation").EnumerateArray().Select(said =>
             (said.GetProperty("code").GetString()!, said.GetProperty("about").GetString(), said.GetProperty("text").GetString()!)));
 

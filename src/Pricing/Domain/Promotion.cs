@@ -153,6 +153,27 @@ public sealed record Promotion(
     /// </summary>
     public bool IsForEveryone => CouponCode is null && Segment is null;
 
+    /// <summary>
+    /// What it takes off and what it needs, as data (phase 13c): what a campaign's
+    /// sentence and a product's deal are said from (<see cref="DealText"/>), and what a
+    /// card composes its own from.
+    /// </summary>
+    public DealTerms Terms => Effect switch
+    {
+        PercentOffLine percent => Needing(new DealTerms(DealKind.PercentOffLine, Percent: percent.Percent)),
+        AmountOffOrder amount => Needing(new DealTerms(DealKind.AmountOffOrder, AmountOff: amount.Amount)),
+        BuyXGetY deal => Needing(new DealTerms(DealKind.BuyXGetY, Buy: deal.Buy, Free: deal.Free)),
+        _ => Needing(new DealTerms(DealKind.FreeShipping)),
+    };
+
+    private DealTerms Needing(DealTerms terms) => terms with
+    {
+        MinimumSubtotal = Condition.MinimumSubtotal,
+        // A deal says its own number of units (3 for 2 needs 3).
+        MinimumQuantity = Effect is BuyXGetY ? null : Condition.MinimumQuantity,
+        ReachesSome = Condition.CategoryCode is not null || Condition.Sku is not null,
+    };
+
     /// <summary>With no segment it serves anyone.</summary>
     public bool Serves(string segment) =>
         Segment is null || string.Equals(Segment, segment, StringComparison.OrdinalIgnoreCase);

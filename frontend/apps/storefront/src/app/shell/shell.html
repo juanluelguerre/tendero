@@ -181,6 +181,15 @@
             {{ t('nav.newArrivals') }}
           </a>
         </li>
+        <!-- The shop's kits (phase 13c): a third place to look, beside the two shelves. -->
+        <li class="flex items-center gap-1">
+          <a
+            class="inline-flex min-h-tap items-center border-b-2 border-transparent font-semibold text-accent no-underline hover:underline"
+            [routerLink]="links.kits()"
+          >
+            {{ t('nav.kits') }}
+          </a>
+        </li>
       </ul>
     </nav>
 

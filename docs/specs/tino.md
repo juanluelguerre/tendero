@@ -207,10 +207,70 @@ MCP server already dispatches — no logic in `Assist`, no second store of text:
 | `get_return_policy()` | Ordering | `ReturnPolicyQuery` |
 | `get_shipping_terms(country?)` | Ordering | `ShippingTermsQuery` — added 2026-10-09, below |
 | `my_orders()` · `my_order(order)` | Ordering | **new** queries, scoped to the principal |
+| `list_campaigns()` | Pricing | `ListCampaignsQuery` — added 2026-10-14, below |
 
-`compare_products`, `list_offers` and `list_campaigns` exist over MCP and are
-left out of v1: each tool is 200–300 tokens of every call, and the suite will say
-whether a question needs them.
+`compare_products` and `list_offers` exist over MCP and are left out of v1: each
+tool is 200–300 tokens of every call, and the suite will say whether a question
+needs them.
+
+**The suite said offers needed one (2026-10-14).** *¿Alguna oferta para hoy?*
+was answered *no tenemos ese dato* while «Otoño en Tendero» was running and the
+home's card said so: none of Tino's reads said what the shop runs.
+`list_campaigns` reads the same query the home's card is drawn from and says
+each campaign running or about to start as a sentence — its name, its last day
+counted in the shop's zone (ADR 0046, `DayText`), and the promotions it holds,
+with the code to type when one needs it — cited as `FactSource.Campaign`
+(*Ofertas de la tienda* / *The shop's offers*). What a promotion takes off a
+particular basket stays the quote's to say. The suite gained `offers-today-es`
+and `offers-today-en`, and run 23 passed both: **29/32**, the misses the two
+mixed-language cases and the known flaky `dishwasher-sin-dato-es`; the largest
+call outside the offers case grew from 3,195 tokens to 3,289, the tool's
+description in every read call (`docs/analysis/tino-models.md`).
+The two cases name the autumn campaign, which ends on 30 November 2026: after
+that the seed needs a campaign that is open, or the cases a new name.
+
+**A product found on offer is said to be (2026-10-14).** `search_products`
+hands an answer no facts — what is true of a product is the other reads' — with
+one exception. Asked with `onOffer`, the filter is what makes each product true,
+so each is said to be *en oferta ahora* / *on offer now* (`FactSource.Campaign`).
+Without it, a card for a product on offer could only cite nothing, and grounding
+dropped the whole answer. What "on offer" means is Pricing's rule
+(`OfferReach`): a promotion on the line, so an amount off the order — "5 € en
+menaje" — puts no product on offer.
+
+**And each promotion says its terms (the same day).** The campaign's sentence
+named its promotions and not what they need, so *muéstrame menaje con esos 5 €*
+had nothing true to be answered with. Each one now carries its code
+(`CampaignHold.Code`, on the wire), and `list_campaigns` reads the promotion
+and says what it takes off and what it needs, as the till reads it:
+
+*«Otoño en Tendero» está en marcha hasta el 30 de noviembre de 2026: «10 % en
+ropa», un 10 % menos en cada artículo de la promoción; «3x2 en camisetas»,
+llévate 3 y paga 2; «5 € en menaje», 5,00 € menos en el pedido si lleva algún
+artículo de la promoción y suma al menos 40,00 €.*
+
+The first wording said *alguno de sus artículos*, and the model read "sus" as
+the order's: *debes llevar al menos uno de los artículos de tu pedido*. The
+promotion is named instead.
+
+The minimum is the whole order's (`CombiningPromotionEngine.IsMetBy`), so
+neither the 5 € nor the sentence ask for 40 € *of kitchenware*.
+
+**When nothing is like what was asked** (the same day), `search_products` says
+so: `onlyNearest`, the search's `Related`. Under the on-offer filter it shows
+no nearest at all and says *No hay nada en oferta ahora que coincida con
+«menaje»* as a fact of the shop, because the nearest on offer were a
+sweatshirt and gloves. The search's full-match count now applies the shopper's
+filters, which is what makes that `Related` true (ADR 0032's layer A, the same
+count the storefront's notice reads).
+
+**And a product says the promotions it is in** (the same night,
+`docs/specs/product-deals.md`). Each product `search_products` finds carries one
+fact per promotion that reaches it, by the till's rule: *Bandeja de horno entra
+en «5 € en menaje»: 5,00 € menos en el pedido si suma al menos 40,00 €.* Asked
+*muéstrame menaje con esos 5 €* after the offers answer, Tino now shows
+kitchenware with that reason three times out of five, where it had shown nothing
+in five.
 
 **The suite said shipping needed one (2026-10-09).** *¿Hacéis envíos a
 Portugal?* was answered *no tenemos ese dato* — after reading the shopper's

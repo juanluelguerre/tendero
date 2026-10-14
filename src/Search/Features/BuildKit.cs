@@ -240,7 +240,7 @@ public sealed class BuildKitHandler(
                     Filters: new SearchFilters { InStock = true, Facets = applied[slot.Code] }),
                 cancellationToken);
 
-            var found = page.Hits.Where(hit => hit.Price.Currency == Currency).ToList();
+            var found = TiesByCode([.. page.Hits.Where(hit => hit.Price.Currency == Currency)]);
             foreach (var hit in found)
                 hits[hit.Code] = hit;
 
@@ -282,6 +282,29 @@ public sealed class BuildKitHandler(
         };
 
         return new BuildKitResult(BuildKitOutcome.Built, kit with { Explanation = new KitWords(query.Culture).Of(kit) });
+    }
+
+    /// <summary>
+    /// The search's order, with every run of equal scores put in code order. A
+    /// tie was broken by whatever order the index returned, which lexical and
+    /// hybrid search do not share: the same ask chose the Aroma Compacta once and
+    /// the 6-cup stovetop after (both 9.063 lexically). Only runs of equal
+    /// scores move, so a reranker's order, which need not follow the scores,
+    /// stays its own.
+    /// </summary>
+    internal static List<SearchHit> TiesByCode(IReadOnlyList<SearchHit> hits)
+    {
+        List<SearchHit> ordered = [];
+        for (var start = 0; start < hits.Count;)
+        {
+            var end = start + 1;
+            while (end < hits.Count && hits[end].Score.Equals(hits[start].Score))
+                end++;
+            ordered.AddRange(hits.Skip(start).Take(end - start).OrderBy(hit => hit.Code, StringComparer.Ordinal));
+            start = end;
+        }
+
+        return ordered;
     }
 }
 
@@ -371,9 +394,12 @@ internal sealed class KitWords(string culture)
         }
     }
 
-    /// <summary>As an order's total and the shipping terms are written for the same reader: two decimals and the currency's code.</summary>
-    private static string Amount(Money money) =>
-        string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{money.Amount:0.00} {money.Currency}");
+    /// <summary>
+    /// As the reader's language writes money (<see cref="MoneyText"/>): "113,90 €"
+    /// to a Spanish reader and "€113.90" to an English one. It was "113.90 EUR" for
+    /// both, which a Spanish page does not write (the author, 2026-10-14).
+    /// </summary>
+    private string Amount(Money money) => MoneyText.In(money, culture);
 
     private static Money Price(SearchHit hit) => hit.Price;
 }

@@ -105,7 +105,9 @@ internal sealed class AssistantSuite : IEvaluationSuite
         {
             await using var scope = provider.CreateAsyncScope();
             answer = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(
-                new TinoTurnCommand([new TurnMessage("user", item.Question)], context, $"assistant-{item.Id}-{Guid.CreateVersion7()}", item.Culture),
+                new TinoTurnCommand(
+                    [.. (item.Before ?? []).Select(said => new TurnMessage(said.Role, said.Text)), new TurnMessage("user", item.Question)],
+                    context, $"assistant-{item.Id}-{Guid.CreateVersion7()}", item.Culture),
                 cancellationToken);
             if (answer.Status != TinoStatus.Answered)
                 error = string.Join(" | ", logs.Lines.Prepend(answer.Cause?.ToString() ?? "Unavailable"));

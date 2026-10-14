@@ -1,6 +1,15 @@
 import type { HttpResponse } from '@angular/common/http';
 import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalMethod,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import type { CartView, Money, PriceQuote, ShippingOptionsResponse } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -198,7 +207,25 @@ export const CartStore = signalStore(
         }
         patchState(store, { cart: null, quote: null, token: null, _shipping: null });
       },
+
+      /**
+       * The basket read again when the language changes (2026-10-14): one route
+       * for every language keeps the shell, which used to read it again by
+       * being made again. Not on the first value: the shell reads it at start.
+       */
+      _onLanguage: (() => {
+        let previous: string | undefined;
+        return signalMethod<string>((culture) => {
+          if (previous !== undefined && previous !== culture) void load();
+          previous = culture;
+        });
+      })(),
     };
+  }),
+  withHooks({
+    onInit(store) {
+      store._onLanguage(store._culture.active);
+    },
   }),
 );
 

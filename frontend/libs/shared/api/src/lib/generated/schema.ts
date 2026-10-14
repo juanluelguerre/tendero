@@ -132,6 +132,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/kits/understand": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnderstandKitSentence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kits/understand/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetKitSentenceAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/steward/proposals": {
         parameters: {
             query?: never;
@@ -1783,6 +1815,7 @@ export interface components {
             image?: null | components["schemas"]["CampaignImageRequest"];
         };
         CampaignHold: {
+            code: string;
             name: string;
             couponCode: null | string;
         };
@@ -1987,6 +2020,33 @@ export interface components {
         };
         /** @enum {unknown} */
         DashboardPeriod: "Day" | "Week" | "Month";
+        /** @enum {unknown} */
+        DealKind: "PercentOffLine" | "AmountOffOrder" | "BuyXGetY" | "FreeShipping";
+        DealTerms: {
+            kind: components["schemas"]["DealKind"];
+            /** Format: double */
+            percent?: null | number;
+            /** @description Money: a whole number of the currency's minor unit (ISO 4217) and the currency. 113.90 EUR is 11390. */
+            amountOff?: {
+                /** Format: int64 */
+                amount: number;
+                currency: string;
+            };
+            /** Format: int32 */
+            buy?: null | number;
+            /** Format: int32 */
+            free?: null | number;
+            /** @description Money: a whole number of the currency's minor unit (ISO 4217) and the currency. 113.90 EUR is 11390. */
+            minimumSubtotal?: {
+                /** Format: int64 */
+                amount: number;
+                currency: string;
+            };
+            /** Format: int32 */
+            minimumQuantity?: null | number;
+            /** @default false */
+            reachesSome: boolean;
+        };
         DecidePictureDoubtRequest: {
             decision: components["schemas"]["PictureDoubtDecision"];
         };
@@ -2043,7 +2103,7 @@ export interface components {
         /** @enum {unknown} */
         FactKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option" | null;
         /** @enum {unknown} */
-        FactSource: "Claim" | "DataSheet" | "Description" | "Policy" | "Order" | "Notice";
+        FactSource: "Claim" | "DataSheet" | "Description" | "Policy" | "Order" | "Campaign" | "Notice";
         GapRow: {
             productId: string;
             code: string;
@@ -2100,6 +2160,15 @@ export interface components {
         };
         /** @enum {unknown} */
         KitSaid: "Summary" | "Chosen" | "ChosenBelowBetter" | "OverBudget" | "NothingFits" | "RequirementUnused" | "SearchStopped" | "Incomplete";
+        KitSentenceAvailability: {
+            available: boolean;
+        };
+        KitSentenceUnderstood: {
+            template: null | string;
+            budget: null | components["schemas"]["Money"];
+            requirements: string[];
+            understood: boolean;
+        };
         KitSlotView: {
             code: string;
             name: string;
@@ -2506,6 +2575,11 @@ export interface components {
         };
         ProductCardsResult: {
             items: components["schemas"]["SearchHit"][];
+        };
+        ProductDeal: {
+            code: string;
+            name: string;
+            terms: components["schemas"]["DealTerms"];
         };
         ProductDetail: {
             productId: string;
@@ -3049,6 +3123,7 @@ export interface components {
             inStock: boolean;
             /** Format: double */
             score: number;
+            deals?: components["schemas"]["ProductDeal"][];
         };
         /** @enum {unknown} */
         SearchMatch: "Exact" | "Related";
@@ -3354,6 +3429,9 @@ export interface components {
         TurnMessage: {
             role: string;
             text: string;
+        };
+        UnderstandKitSentenceRequest: {
+            sentence: string;
         };
         UpliftDay: {
             /** Format: date-time */
@@ -3736,6 +3814,78 @@ export interface operations {
                         /** @enum {string} */
                         code?: "TooManyRequests";
                     } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    UnderstandKitSentence: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnderstandKitSentenceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KitSentenceUnderstood"];
+                };
+            };
+            /** @description The request is not valid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Invalid";
+                    } & (components["schemas"]["Problem"] & components["schemas"]["HttpValidationProblemDetails"]);
+                };
+            };
+            /** @description Too many requests in a row: wait a moment. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before asking again. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    GetKitSentenceAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KitSentenceAvailability"];
                 };
             };
         };

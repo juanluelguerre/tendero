@@ -49,32 +49,15 @@ public sealed class SeedCampaignsAtStartupWorker(
         }
 
         await using var scope = scopes.CreateAsyncScope();
-        var campaigns = scope.ServiceProvider.GetRequiredService<ICampaignRepository>();
-
-        if (await campaigns.AnyAsync(cancellationToken))
-            return;
-
-        var now = clock.GetUtcNow();
-        var seeded = 0;
-
-        foreach (var seed in await CampaignSeedFile.LoadAsync(path, cancellationToken))
-        {
-            if (!Campaign.IsOpenWindow(seed.Details.StartsAt, seed.Details.EndsAt, now))
-            {
-                logger.LogInformation("Seed campaign {Code} closed at {EndsAt}; skipped", seed.Code, seed.Details.EndsAt);
-                continue;
-            }
-
-            var campaign = Campaign.Create(clock, seed.Code, seed.Details);
-            if (seed.Status == CampaignStatus.Scheduled)
-                campaign.Schedule(clock);
-
-            campaigns.Add(campaign);
-            seeded++;
-        }
-
-        await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Seeded {Count} campaigns from {Path}", seeded, path);
+        var seeded = await CampaignSeedFile.SeedAsync(
+            path,
+            scope.ServiceProvider.GetRequiredService<ICampaignRepository>(),
+            scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            clock,
+            skipped: seed => logger.LogInformation("Seed campaign {Code} closed at {EndsAt}; skipped", seed.Code, seed.Details.EndsAt),
+            cancellationToken);
+        if (seeded > 0)
+            logger.LogInformation("Seeded {Count} campaigns from {Path}", seeded, path);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

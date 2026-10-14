@@ -17,6 +17,9 @@ type Schemas = components['schemas'];
 
 export type SearchHit = Schemas['SearchHit'];
 
+/** A promotion a product is in, as data: a card composes its own words from `terms` (phase 13c). */
+export type ProductDeal = Schemas['ProductDeal'];
+
 /**
  * The orders `GET /api/search?sort=` keeps, as the contract declares them
  * (ADR 0043: a closed set a client SENDS is declared too). A query parameter's
@@ -66,3 +69,15 @@ export type SearchStatus = Schemas['SearchStatus'];
 export type StageStatus = Schemas['StageStatus'];
 export type SearchStage = Schemas['SearchStage'];
 export type StageState = Schemas['StageState'];
+
+/**
+ * A kit (phase 13c): a template the shop wrote, and what the solver made of
+ * it for a budget — one product a slot, an empty slot with its reason, and
+ * the solver's own sentences for a reader with no page.
+ */
+export type KitTemplate = Schemas['KitTemplateView'];
+export type KitView = Schemas['KitView'];
+export type KitSlotView = Schemas['KitSlotView'];
+export type BuildKitRequest = Schemas['BuildKitRequest'];
+export type KitSentenceUnderstood = Schemas['KitSentenceUnderstood'];
+export type KitSentenceAvailability = Schemas['KitSentenceAvailability'];

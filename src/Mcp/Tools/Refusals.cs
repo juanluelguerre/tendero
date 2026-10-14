@@ -141,6 +141,9 @@ internal static class ToolRefusals
     public static readonly Refusal ProductNotFound = new(
         "ProductNotFound", 404, "Ese producto no existe en la tienda.", "The shop has no such product.");
 
+    public static readonly Refusal KitNotFound = new(
+        "KitNotFound", 404, "La tienda no ofrece ese kit.", "The shop offers no such kit.");
+
     public static readonly Refusal TooFewToCompare = new(
         "TooFewToCompare", 400,
         "Para comparar hacen falta al menos dos productos; para uno, get_product_specs.",

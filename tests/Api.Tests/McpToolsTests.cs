@@ -4,6 +4,7 @@ using ElGuerre.Tendero.Mcp.Tools;
 using ElGuerre.Tendero.Pricing.Features.ListCampaigns;
 using ElGuerre.Tendero.Pricing.Features.ListOffers;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Features.BuildKit;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Http;
@@ -248,6 +249,66 @@ public sealed class McpToolsTests
 
         Assert.Equal(new ListCampaignsQuery("en"), Assert.IsType<ListCampaignsQuery>(dispatcher.Query));
         Assert.Equal("en", answer.Culture);
+    }
+
+    /// <summary>
+    /// <c>list_kits</c> (phase 13c, K-7) is the endpoint's own query: an agent
+    /// learns which kits there are and what each can be asked to work with, in
+    /// the language it asked.
+    /// </summary>
+    [Fact]
+    public async Task Kits_are_the_endpoints_query_answered_in_the_callers_language()
+    {
+        var dispatcher = new RecordingDispatcher();
+
+        var answer = await TenderoTools.ListKitsAsync(
+            dispatcher, Asking("en-GB"), culture: null, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ListKitsQuery("en"), Assert.IsType<ListKitsQuery>(dispatcher.Query));
+        Assert.Equal("en", answer.Culture);
+    }
+
+    /// <summary>Answers every kit asked for as one the shop does not have.</summary>
+    private sealed class NoSuchKit : IQueryDispatcher
+    {
+        public BuildKitQuery? Asked { get; private set; }
+
+        public Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)
+        {
+            Asked = (BuildKitQuery)(object)query;
+            return Task.FromResult((TResult)(object)new BuildKitResult(BuildKitOutcome.UnknownTemplate, null));
+        }
+    }
+
+    /// <summary>
+    /// <c>build_kit</c> is the page's query (phase 13c, K-7): the budget in the
+    /// currency's minor units, as the wire answers prices and as
+    /// <c>search_products</c> takes them, and the requirements as given.
+    /// </summary>
+    [Fact]
+    public async Task A_kit_is_asked_with_its_budget_in_minor_units_and_its_requirements_as_given()
+    {
+        var dispatcher = new NoSuchKit();
+
+        await Assert.ThrowsAnyAsync<Exception>(() => TenderoTools.BuildKitAsync(
+            dispatcher, NoHeader, "KITCHEN_STARTER", 5990, ["INDUCTION:true"], "en", TestContext.Current.CancellationToken));
+
+        var asked = dispatcher.Asked!;
+        Assert.Equal(("KITCHEN_STARTER", new Money(59.90m, "EUR"), "en"), (asked.Template, asked.Budget, asked.Culture));
+        Assert.Equal(["INDUCTION:true"], asked.Requirements);
+    }
+
+    /// <summary>A kit the shop does not have is refused naming it, in the language asked: no model makes one up.</summary>
+    [Theory]
+    [InlineData("es", "La tienda no tiene ningún kit «GARDEN»; list_kits dice cuáles hay.")]
+    [InlineData("en", "The shop has no kit 'GARDEN'; list_kits says which there are.")]
+    public async Task A_kit_the_shop_does_not_have_is_refused_by_name(string culture, string detail)
+    {
+        var refusal = await Assert.ThrowsAnyAsync<Exception>(() => TenderoTools.BuildKitAsync(
+            new NoSuchKit(), NoHeader, "GARDEN", 10000, null, culture, TestContext.Current.CancellationToken));
+
+        Assert.Contains("KitNotFound", refusal.Message, StringComparison.Ordinal);
+        Assert.Contains(detail, refusal.Message, StringComparison.Ordinal);
     }
 
     private static async Task<string> CultureOf(

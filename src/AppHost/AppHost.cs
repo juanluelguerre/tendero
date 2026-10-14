@@ -88,7 +88,13 @@ static string Cpus(int measured) =>
 // Postgres peaked at 49 MB serving the catalogue and the claims layer at once.
 var postgres = builder.AddPostgres("postgres", port: postgresPort)
     .WithDataVolume("tendero-postgres-data") // the imported catalogue survives a restart
-    .WithContainerRuntimeArgs("--memory=512m", "--memory-swap=512m", Cpus(2));
+    .WithContainerRuntimeArgs("--memory=512m", "--memory-swap=512m", Cpus(2))
+    // What a query costs, kept by the server itself: the statistics the
+    // Postgres MCP server reads for its top queries and its workload analysis
+    // (README, "Profiling the database"). The library ships in the image and
+    // has to be loaded when the server starts; the extension itself is created
+    // once in the database, by hand, as the README says.
+    .WithArgs("-c", "shared_preload_libraries=pg_stat_statements");
 
 // Aspire's own helper — no new package, it ships with Aspire.Hosting.PostgreSQL,
 // which the AppHost already references. It wires the connection for you, so

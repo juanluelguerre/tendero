@@ -6,6 +6,7 @@ using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Api;
 using ElGuerre.Tendero.Assist;
 using ElGuerre.Tendero.Assist.Features.DecideProposals;
+using ElGuerre.Tendero.Assist.Kits;
 using ElGuerre.Tendero.Assist.Steward;
 using ElGuerre.Tendero.Assist.Tino;
 using ElGuerre.Tendero.Catalog;
@@ -76,6 +77,11 @@ builder.Services.AddHybridSearch(builder.Configuration);
 // API alone: the worker never reads a text and would hold that tower for nothing.
 // Without the model it does nothing.
 builder.Services.AddHostedService<WarmVisualSearchAtStartupWorker>();
+// And the words' search, once the vector layer answers (phase 13c): a cold
+// embedding or reranker degrades the first search to lexical, and the first kit
+// a fresh stack built chose differently from every kit after it. Without the
+// vector layer it does nothing. Its TimeProvider is AddAI's.
+builder.Services.AddHostedService<WarmHybridSearchAtStartupWorker>();
 
 // Each stage's health through its own port, and the memory of when it last
 // changed, for the dashboard's search status (R-9, D-7). Private checks: the
@@ -157,6 +163,12 @@ builder.Services.AddRateLimiter(limiter =>
     // solver's run, for anyone who asks. More than a person at a form needs,
     // and a bound on what a loop can ask of the search.
     limiter.AddPolicy(KitsEndpoint.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // And as many sentences that fill a kit's form (K-6): each is one call to
+    // the storefront's model, so a client gets the kits' own bound.
+    limiter.AddPolicy(KitSentenceEndpoints.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
         ClientOf(http),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 

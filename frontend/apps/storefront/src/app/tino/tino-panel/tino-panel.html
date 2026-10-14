@@ -80,7 +80,7 @@
                 <p class="m-0 mt-1 text-sm">
                   {{
                     exchange.cards.length > 0
-                      ? t('tino.fallback.results')
+                      ? t(exchange.nearest ? 'tino.fallback.related' : 'tino.fallback.results')
                       : t('tino.fallback.' + (exchange.cause === 'too_many' ? 'tooMany' : 'nothing'))
                   }}
                 </p>
@@ -180,7 +180,7 @@
               [routerLink]="links.home()"
               [queryParams]="{ q: more.text }"
               (click)="followed('search_opened')"
-              >{{ t('tino.seeAll', { count: more.total }) }}</a
+              >{{ t(more.nearest ? 'tino.seeAllRelated' : 'tino.seeAll', { count: more.total }) }}</a
             >
           }
         }

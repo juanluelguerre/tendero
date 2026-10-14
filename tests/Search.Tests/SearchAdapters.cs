@@ -26,6 +26,9 @@ internal static class Adapters
         new(client, new Definitions(definitions ?? AttributeDefinitions.Empty), new Categories(categories ?? CategoryTree.Empty),
             new Offers(offers ?? OfferScope.Nothing, campaign), Clock);
 
+    public static ElasticsearchFullMatch FullMatch(ElasticsearchClient client, OfferScope? offers = null) =>
+        new(client, new Offers(offers ?? OfferScope.Nothing), Clock);
+
     public static ElasticsearchHitReader HitReader(ElasticsearchClient client, OfferScope? offers = null) =>
         new(client, new Offers(offers ?? OfferScope.Nothing), Clock);
 

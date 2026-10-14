@@ -28,6 +28,13 @@ internal interface IRunningOffers
     /// exists, is scheduled and its window is open.
     /// </summary>
     Task<OfferScope> CampaignNowAsync(string campaign, CancellationToken ct = default);
+
+    /// <summary>
+    /// The promotions running now, ready to say which a card is in (phase 13c), with
+    /// their names in <paramref name="culture"/>. None by default: a reader composed
+    /// without Pricing draws its cards with no deals.
+    /// </summary>
+    Task<DealBook> DealsNowAsync(string culture, CancellationToken ct = default) => Task.FromResult(DealBook.None);
 }
 
 internal static class RunningOffersExtensions
@@ -71,6 +78,20 @@ internal sealed class PricingRunningOffers(
             return OfferScope.Nothing;
 
         return Scope(found.ReachAt(await promotions.AllAsync(ct), clock.GetUtcNow()));
+    }
+
+    public async Task<DealBook> DealsNowAsync(string culture, CancellationToken ct = default)
+    {
+        if (promotions is null)
+            return DealBook.None;
+
+        var running = await promotions.AllAsync(ct);
+        var at = clock.GetUtcNow();
+        return new DealBook((sku, branch) =>
+        [
+            .. ProductDeals.Reaching(running, at, sku, branch)
+                .Select(promotion => new ProductDeal(promotion.Code, promotion.Name.In(culture), promotion.Terms)),
+        ]);
     }
 
     private static OfferScope Scope(OfferReach reach) => new(reach.Everything, reach.CategoryCodes, reach.Skus);

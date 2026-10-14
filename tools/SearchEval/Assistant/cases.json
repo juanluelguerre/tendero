@@ -152,6 +152,104 @@
       }
     },
     {
+      "id": "offers-today-es",
+      "culture": "es",
+      "question": "¿alguna oferta para hoy?",
+      "expect": {
+        "kinds": ["Shop"],
+        "tools": ["list_campaigns"],
+        "noTools": ["my_orders"],
+        "cites": [{ "contains": "Otoño en Tendero" }],
+        "language": "es"
+      }
+    },
+    {
+      "id": "offers-today-en",
+      "culture": "en",
+      "question": "any deals on today?",
+      "expect": {
+        "kinds": ["Shop"],
+        "tools": ["list_campaigns"],
+        "noTools": ["my_orders"],
+        "cites": [{ "contains": "Autumn at Tendero" }],
+        "language": "en"
+      }
+    },
+    {
+      "id": "offers-what-a-promotion-needs-es",
+      "culture": "es",
+      "question": "¿qué necesito para los 5 € de descuento en menaje?",
+      "expect": {
+        "kinds": ["Shop"],
+        "tools": ["list_campaigns"],
+        "noTools": ["my_orders"],
+        "cites": [{ "contains": "40,00 €" }],
+        "language": "es"
+      }
+    },
+    {
+      "id": "offers-the-5-euros-after-the-campaign-es",
+      "culture": "es",
+      "before": [
+        { "role": "user", "text": "hey, que ofertas tenemos para hoy?" },
+        {
+          "role": "assistant",
+          "text": "La campaña Otoño en Tendero ofrece 10% en ropa y 3x2 en camisetas hasta el 30 de noviembre de 2026. También hay 5 € en menaje disponibles en la misma campaña."
+        }
+      ],
+      "question": "muestrame menaje con esos 5€ de descuento",
+      "expect": {
+        "kinds": ["Products"],
+        "tools": ["search_products"],
+        "noTools": ["my_orders"],
+        "cites": [{ "contains": "entra en «5 € en menaje»" }],
+        "notSays": ["guantes", "sudadera", "chaqueta", "camiseta"],
+        "language": "es"
+      }
+    },
+    {
+      "id": "offers-products-es",
+      "culture": "es",
+      "question": "enséñame ropa que esté en oferta",
+      "expect": {
+        "kinds": ["Products"],
+        "tools": ["search_products"],
+        "noTools": ["my_orders"],
+        "cites": [{ "contains": "en oferta ahora" }],
+        "language": "es"
+      }
+    },
+    {
+      "id": "offers-products-after-the-campaign-es",
+      "culture": "es",
+      "before": [
+        { "role": "user", "text": "hey, que ofertas tenemos para hoy?" },
+        {
+          "role": "assistant",
+          "text": "La campaña Otoño en Tendero ofrece 10% en ropa y 3x2 en camisetas hasta el 30 de noviembre de 2026."
+        }
+      ],
+      "question": "muéstrame la ropa con ese 10%",
+      "expect": {
+        "kinds": ["Products"],
+        "tools": ["search_products"],
+        "noTools": ["my_orders"],
+        "language": "es"
+      }
+    },
+    {
+      "id": "offers-products-en",
+      "culture": "en",
+      "question": "show me clothes that are on offer",
+      "expect": {
+        "kinds": ["Products"],
+        "tools": ["search_products"],
+        "noTools": ["my_orders"],
+        "cites": [{ "contains": "on offer now" }],
+        "language": "en"
+      }
+    },
+    {
       "id": "opening-hours-unknown-es",
       "culture": "es",
       "question": "¿qué horario tenéis?",
