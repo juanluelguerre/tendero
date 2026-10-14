@@ -223,10 +223,23 @@ public sealed class UcpCheckoutConformanceTests
         Assert.Null(UcpCheckoutMapper.Details(half).Destination);
     }
 
+    /// <summary>
+    /// The currency's own minor unit, not a hundredth: UCP's `amount.json` is
+    /// *ISO 4217 minor units*, and the yen has none and the dinar three. A
+    /// fixed ×100 was right for every amount this shop has ever sent and
+    /// wrong by a hundred for the first yen.
+    /// </summary>
     [Theory]
-    [InlineData(39.00, 3900)]
-    [InlineData(0.005, 1)]
-    [InlineData(148.85, 14885)]
-    public void Money_goes_out_in_minor_units(decimal amount, long minor) =>
-        Assert.Equal(minor, UcpCheckoutMapper.Minor(amount));
+    [InlineData("39.00", "EUR", 3900)]
+    [InlineData("0.005", "EUR", 1)]
+    [InlineData("148.85", "EUR", 14885)]
+    [InlineData("3900", "JPY", 3900)]
+    [InlineData("1.2345", "KWD", 1235)]
+    public void Money_goes_out_in_the_currencys_minor_units_and_comes_back(string amount, string currency, long minor)
+    {
+        var sent = decimal.Parse(amount, System.Globalization.CultureInfo.InvariantCulture);
+
+        Assert.Equal(minor, UcpCheckoutMapper.Minor(sent, currency));
+        Assert.Equal(MinorUnits.Round(sent, currency), UcpCheckoutMapper.Major(minor, currency));
+    }
 }

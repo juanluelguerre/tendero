@@ -88,7 +88,9 @@ describe('the campaigns store', () => {
   it("keeps the server's refusal with the campaign it was about", async () => {
     const store = await at('/?status=all');
     store.end(campaign('ON', 'Scheduled', 'Running'));
-    http.expectOne(`${Calendar}/ON/end`).flush('Already ended.', { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(`${Calendar}/ON/end`)
+      .flush({ code: 'Refused', status: 409, title: 'Already ended.' }, { status: 409, statusText: 'Conflict' });
 
     expect([store.refusal(), store.work()]).toEqual([{ code: 'ON', message: 'Already ended.' }, null]);
   });

@@ -54,7 +54,7 @@ public sealed class SearchRequestsMetricTests
         public Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default) =>
             Task.FromResult(new SearchResultPage(
                 [.. Enumerable.Range(0, hits).Select(i => new SearchHit(
-                    $"p{i}", "0123456789", "name", "slug", null, null, $"v{i}", $"sku{i}", 1, 1, 1, "EUR", null, true, 1))],
+                    $"p{i}", "0123456789", "name", "slug", null, null, $"v{i}", $"sku{i}", new Money(1, "EUR"), new Money(1, "EUR"), new Money(1, "EUR"), null, true, 1))],
                 hits, query.Page, query.PageSize, 1));
     }
 

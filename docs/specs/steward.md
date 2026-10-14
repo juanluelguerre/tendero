@@ -354,6 +354,28 @@ carries the question's text.
   that answers from a script. It runs in CI the whole pipeline — agent, tools,
   proposals, approval, audit — and the browser spec: panel → card → review →
   approve → the audit row naming the proposal.
+
+  **Why `Tendero__StewardScript` exists, and what a person sees with it.** The
+  real Steward is a 4B model in a 6 GB container, on a GPU when there is one;
+  a CI runner holds neither, and a turn takes over twenty seconds where it
+  does run. Without something to answer, everything *around* the model — the
+  panel, the tool calls, the proposal card, the review, the approval, the
+  audit row — would be tested nowhere but on the author's machine. So the
+  AppHost, given `Tendero__StewardScript=<file>`, starts the API with a
+  `Scripted` profile in the model's place: same port, same agent, same tools,
+  and answers read from `frontend/apps/backoffice-e2e/steward.script.json`.
+  What it proves is the wiring, on any machine, in seconds and the same every
+  time; what it does not prove is that a model chooses the right tool — that
+  is the `copilot` suite's, on the real model.
+
+  A stack started that way **is not Steward to talk to**. It answers only the
+  questions its script has a step for, and anything else gets *I was not
+  scripted for that.* — in English whatever the screen's language, because it
+  is the fixture speaking and not the shop (`ScriptedChatClient.NotScripted`).
+  The panel's footer says which one is answering: `scripted`, at a cost of
+  zero. To talk to the real one, start with `Tendero__Steward=true` (or the
+  `https-steward` profile). `Tendero__TinoScript` is the same thing for Tino
+  and the storefront's spec.
 - **Unit**: the registry, both validators, `ActionProposal`'s table, staleness,
   the approval loop with one row failing, the tools' 50-row cap and total, the
   turn's caps, cost arithmetic.

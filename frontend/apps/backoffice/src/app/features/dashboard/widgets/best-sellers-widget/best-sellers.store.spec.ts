@@ -10,14 +10,16 @@ import { DashboardRefresh } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { BestSellersStore } from './best-sellers.store';
 
-const figures: SalesFigures = { revenue: 0, orders: 0, units: 0, averageOrderValue: 0, unitsPerOrder: 0 };
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
+const figures: SalesFigures = { revenue: eur(0), orders: 0, units: 0, averageOrderValue: eur(0), unitsPerOrder: 0 };
 
 const summary = (period: DashboardPeriod, skus: string[]): SalesSummary => ({
   period,
-  currency: 'EUR',
   current: figures,
   previous: figures,
-  bestSellers: skus.map((sku, index) => ({ sku, name: sku, units: 10 - index, revenue: 100 - index })),
+  bestSellers: skus.map((sku, index) => ({ sku, name: sku, units: 10 - index, revenue: eur(100 - index) })),
 });
 
 /** Best sellers (R-9, D-7): the period's sales summary, in the order Ordering ranked it, for the period the dashboard is on. */

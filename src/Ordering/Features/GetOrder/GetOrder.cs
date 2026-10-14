@@ -57,7 +57,7 @@ public sealed class GetOrderEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapGet("/api/orders/{orderId:guid}",
-            async Task<Results<Ok<OrderDetail>, NotFound<string>>> (
+            async Task<Results<Ok<OrderDetail>, NotFound>> (
                    Guid orderId, string? culture,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -69,7 +69,7 @@ public sealed class GetOrderEndpoint : ICarterModule
                 http.Response.Headers.Vary = "Accept-Language";
 
                 return detail is null
-                    ? TypedResults.NotFound($"There is no order {orderId}.")
+                    ? TypedResults.NotFound()
                     : TypedResults.Ok(detail);
             })
             // Anonymous at the door, and not for everybody inside it. For a

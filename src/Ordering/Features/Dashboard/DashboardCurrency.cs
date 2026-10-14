@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 
@@ -8,7 +9,7 @@ namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 /// </summary>
 public static class DashboardCurrency
 {
-    public const string Default = "EUR";
+    public const string Default = ShopOptions.DefaultCurrency;
 
     public static string Of(IEnumerable<Order> orders) =>
         orders.Select(order => order.Currency).FirstOrDefault() ?? Default;

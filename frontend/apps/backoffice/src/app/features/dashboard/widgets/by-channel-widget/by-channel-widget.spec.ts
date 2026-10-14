@@ -5,16 +5,18 @@ import { ByChannelWidget } from './by-channel-widget';
 import { DashboardRefresh } from '../../sources/dashboard-refresh';
 import { openWidget, openWidgetFixture, setUpWidgets } from '../widget-testing';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 /** The period's sales by the channel each order recorded (R-9, D-7): the storefront, MCP and UCP, and those before channels. */
 const MIX = (web: number, mcp: number, ucp: number, unrecorded = 0) => ({
   period: 'Week',
-  currency: 'EUR',
   byChannel: [
-    { channel: 'Web', orders: web, revenue: web * 50 },
-    { channel: 'Mcp', orders: mcp, revenue: mcp * 50 },
-    { channel: 'Ucp', orders: ucp, revenue: ucp * 50 },
+    { channel: 'Web', orders: web, revenue: eur(web * 50) },
+    { channel: 'Mcp', orders: mcp, revenue: eur(mcp * 50) },
+    { channel: 'Ucp', orders: ucp, revenue: eur(ucp * 50) },
   ],
-  unrecorded: { channel: null, orders: unrecorded, revenue: unrecorded * 50 },
+  unrecorded: { channel: null, orders: unrecorded, revenue: eur(unrecorded * 50) },
   byCategory: [],
 });
 

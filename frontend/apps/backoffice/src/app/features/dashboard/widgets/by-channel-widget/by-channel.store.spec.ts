@@ -11,15 +11,17 @@ import { DashboardRefresh } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { ByChannelStore } from './by-channel.store';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const MIX: SalesMix = {
   period: 'Week',
-  currency: 'EUR',
   byChannel: [
-    { channel: 'Web', orders: 6, revenue: 300 },
-    { channel: 'Mcp', orders: 3, revenue: 150 },
-    { channel: 'Ucp', orders: 1, revenue: 50 },
+    { channel: 'Web', orders: 6, revenue: eur(300) },
+    { channel: 'Mcp', orders: 3, revenue: eur(150) },
+    { channel: 'Ucp', orders: 1, revenue: eur(50) },
   ],
-  unrecorded: { channel: null, orders: 2, revenue: 80 },
+  unrecorded: { channel: null, orders: 2, revenue: eur(80) },
   byCategory: [],
 };
 

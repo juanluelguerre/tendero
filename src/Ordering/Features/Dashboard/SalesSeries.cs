@@ -15,11 +15,11 @@ public enum SeriesStep { Hour, Day }
 /// <param name="NewCustomers">Buyers seen for the first time in the bucket; <paramref name="ReturningCustomers"/> those who had bought before.</param>
 public sealed record SalesPoint(
     DateTimeOffset Start,
-    decimal Revenue,
+    Money Revenue,
     int Orders,
     int Units,
     int AgentOrders,
-    decimal AgentRevenue,
+    Money AgentRevenue,
     int NewCustomers,
     int ReturningCustomers);
 
@@ -33,7 +33,6 @@ public sealed record SalesPoint(
 /// <param name="Previous">The same number of buckets, immediately before.</param>
 public sealed record SalesSeries(
     DashboardPeriod Period,
-    string Currency,
     string TimeZone,
     SeriesStep Step,
     IReadOnlyList<SalesPoint> Current,
@@ -107,14 +106,14 @@ public static class SalesSeriesFigures
 
         // Oldest first, across both periods: a buyer's first day is the earliest.
         var seen = new HashSet<CustomerId>(orderedBefore ?? new HashSet<CustomerId>());
-        var previous = Points(plan.Previous, plan.Current[0], sales, seen);
-        var current = Points(plan.Current, plan.End, sales, seen);
+        var previous = Points(plan.Previous, plan.Current[0], sales, seen, currency);
+        var current = Points(plan.Current, plan.End, sales, seen, currency);
 
-        return new SalesSeries(period, currency, timeZone, plan.Step, current, previous);
+        return new SalesSeries(period, timeZone, plan.Step, current, previous);
     }
 
     private static SalesPoint[] Points(
-        IReadOnlyList<DateTimeOffset> starts, DateTimeOffset end, IReadOnlyList<Order> sales, HashSet<CustomerId> seen) =>
+        IReadOnlyList<DateTimeOffset> starts, DateTimeOffset end, IReadOnlyList<Order> sales, HashSet<CustomerId> seen, string currency) =>
     [
         .. starts.Select((start, index) =>
         {
@@ -127,11 +126,11 @@ public static class SalesSeriesFigures
 
             return new SalesPoint(
                 start,
-                inside.Sum(order => order.Total.Amount),
+                new Money(inside.Sum(order => order.Total.Amount), currency),
                 inside.Length,
                 inside.Sum(order => order.Lines.Sum(line => line.Quantity)),
                 agents.Length,
-                agents.Sum(order => order.Total.Amount),
+                new Money(agents.Sum(order => order.Total.Amount), currency),
                 buyers.Length - returning,
                 returning);
         }),

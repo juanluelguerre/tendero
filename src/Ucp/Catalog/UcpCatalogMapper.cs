@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Ucp.Catalog;
 
@@ -23,17 +24,16 @@ public static class UcpCatalogMapper
     /// <summary>
     /// Money in ISO 4217 minor units.
     ///
-    /// Two decimal places, which is right for the euro this shop sells in and
-    /// wrong for the yen (zero) and the dinar (three). It is not a table because
-    /// the shop is single-currency and enforces it — a second currency is
-    /// already a backlog row, and it brings this with it. Written as a named
-    /// method rather than inline so the day that happens there is one place to
-    /// change and one place to look.
+    /// The currency's own minor unit, from the table the shop's own wire reads
+    /// (<see cref="MinorUnits"/>): two places for the euro this shop sells in,
+    /// none for the yen, three for the dinar. It was a fixed hundred here, with
+    /// a comment saying a second currency would bring the table with it; phase
+    /// 13b brought the table for the shop's own contract, and this reads it.
     /// </summary>
-    public static UcpPrice Money(decimal amount, string currency) => new()
+    public static UcpPrice Money(SharedKernel.Money money) => new()
     {
-        Amount = (long)decimal.Round(amount * 100m, 0, MidpointRounding.ToEven),
-        Currency = currency
+        Amount = MinorUnits.From(money.Amount, money.Currency),
+        Currency = money.Currency
     };
 
     public static UcpProduct From(ProductDetail product, string baseUrl) => new()
@@ -59,8 +59,8 @@ public static class UcpCatalogMapper
             ],
         PriceRange = new UcpPriceRange
         {
-            Min = Money(product.PriceFrom, product.PriceCurrency),
-            Max = Money(product.PriceTo, product.PriceCurrency)
+            Min = Money(product.PriceFrom),
+            Max = Money(product.PriceTo)
         },
         Media = Media(product.Images, baseUrl),
         Options = product.Axes.Count == 0
@@ -91,7 +91,7 @@ public static class UcpCatalogMapper
         // per-variant copy, and inventing some here to fill a required field
         // would be the binding making things up.
         Description = new UcpDescription { Text = product.Description ?? string.Empty },
-        Price = Money(variant.PriceAmount, variant.PriceCurrency),
+        Price = Money(variant.Price),
 
         // Per variant, which is only possible because the variant is the indexed
         // unit (ADR 0015). A product-level flag would say "some size is

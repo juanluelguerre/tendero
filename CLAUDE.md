@@ -80,7 +80,7 @@ Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana st
 Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (6 GB, on the GPU when there is one; ADR 0053; or profile https-steward; profile https-all turns on vectors, knowledge, Steward and Tino)
 Tendero__Tino=true dotnet run --project src/AppHost           # + Tino, the storefront's assistant, on the same local model and the support scorer — only on a GPU; without one it stays off and says so; or profile https-tino
 Tendero__Vision=true dotnet run --project src/AppHost         # + the local model's eyes: its vision projector, converted once (8.8 GB of download), so the same model reads pictures — only on a GPU (ADR 0031; docs/specs/images.md)
-Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json dotnet run --project src/AppHost  # Steward from a script (CI's browser spec)
+Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json dotnet run --project src/AppHost  # Steward from a script (CI's browser spec): no model fits a runner, so the wiring is tested with scripted answers — anything else gets "I was not scripted for that" (docs/specs/steward.md, Evaluation and tests)
 Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json dotnet run --project src/AppHost      # Tino from a script, on any machine (CI's browser spec; TINO_SCRIPTED=1 to run it locally)
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
@@ -174,7 +174,7 @@ node tools/api-map.mjs --schema CartView
    gracefully; never make BM25 depend on the model server or Qdrant being up.
    Generalised: **every AI feature has a non-AI path, and the degradation is tested** — not
    asserted in a comment. In the browser this means feature-detecting
-   `navigator.modelContext`; without it the shop is unchanged.
+   `document.modelContext`; without it the shop is unchanged.
 9. **AI layering**: Microsoft.Extensions.AI for pipelines, Microsoft Agent
    Framework only for real agents (the backoffice copilot, phase 12, and the
    storefront shopping assistant, phase 12b), no Agent
@@ -217,6 +217,23 @@ node tools/api-map.mjs --schema CartView
 - C# 14, file-scoped namespaces, primary constructors, collection expressions.
 - Strongly-typed ids (`ProductId`, `OrderId`) — never raw Guids in signatures.
 - A closed set is an enum everywhere it crosses the wire (ADR 0043): in a body
+- **Money on the wire is a `Money`** (ADR 0059): a view carries `Money`, never a
+  `decimal` with a `currency` beside it, and `WireJson.Money()` writes it as a
+  whole number of the currency's minor units with its currency. A value that is
+  not a whole number of minor units is refused, not rounded: round it where it
+  is computed (`MinorUnits.Round`). A discount is an amount, never negative.
+  The front ends format with the `price` pipe or `formatPrice`, and never divide
+  by a hundred. `WireMoneyContractTests` fails on a fraction that is not named.
+- **A refusal is a problem with a code** (ADR 0059): a `Refusal` declared beside
+  the slice (`code`, status, its sentence in es AND en), answered with
+  `TypedResults.Problem(statusCode: r.Status, extensions: r.Said(es: …, en: …))`
+  and named in the endpoint's metadata (`.WithMetadata(new Refuses(…))`). Never
+  `BadRequest("a sentence")`, never a status with a body of the slice's own
+  shape. The host localises and declares it; a domain invariant's English
+  sentence travels as `reason`, never as the detail.
+- **What an answer says beside itself is a `Message<TCode>`** (ADR 0059): a code
+  from an enum, what it is about, and the sentence — a front end composes its
+  own from the code, an agent reads the text.
   through `WireJson.Enums()`, in a query string bound as `WireEnum<T>` — by exact
   name in any case, never a number — and the contract tests hold both.
 - **A category declares its products' attributes** (ADR 0056): inherited down

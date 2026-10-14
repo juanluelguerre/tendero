@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Carter;
+using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
@@ -32,7 +33,12 @@ public sealed record CartLineView(
     string ProductName,
     string? VariantLabel,
     string? ImageId,
-    int Quantity);
+    int Quantity,
+    /// <summary>
+    /// How many of it can be bought now — not held for this cart, and the till
+    /// asks again: what a page needs to say *only one left* before paying does.
+    /// </summary>
+    int Available);
 
 public sealed record CartView(
     string CartId,
@@ -69,7 +75,7 @@ public static class CartHeaders
 
 public sealed record GetCartQuery(string? Token, string Culture) : IQuery<CartView>;
 
-public sealed class GetCartHandler(ICartRepository carts) : IQueryHandler<GetCartQuery, CartView>
+public sealed class GetCartHandler(ICartRepository carts, IAvailabilityReader availability) : IQueryHandler<GetCartQuery, CartView>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
 
@@ -84,8 +90,19 @@ public sealed class GetCartHandler(ICartRepository carts) : IQueryHandler<GetCar
         // A token whose cart was checked out yesterday is not an error: it is a
         // browser holding a stale string, and the answer is an empty basket
         // rather than the old order's contents.
-        return cart is null ? CartView.Empty(query.Culture, "EUR") : View(cart, query.Culture);
+        return cart is null
+            ? CartView.Empty(query.Culture, "EUR")
+            : await ViewAsync(cart, query.Culture, availability, cancellationToken);
     }
+
+    /// <summary>
+    /// The cart as it is read, with what the shelf has of each line now. Read
+    /// at the moment of answering and promised to nobody: the hold is the
+    /// order's, later (the stock saga), and the till asks again.
+    /// </summary>
+    internal static async Task<CartView> ViewAsync(
+        Cart cart, string culture, IAvailabilityReader availability, CancellationToken cancellationToken) =>
+        View(cart, culture, await availability.AvailableAsync([.. cart.Lines.Select(line => line.Sku)], cancellationToken));
 
     /// <summary>
     /// The cart in the language it is being read in. The lines keep every
@@ -93,7 +110,7 @@ public sealed class GetCartHandler(ICartRepository carts) : IQueryHandler<GetCar
     /// the shopper asks in English — the same chain `LocalizedText.In` applies
     /// everywhere else: that culture, then English, then whatever there is.
     /// </summary>
-    internal static CartView View(Cart cart, string culture) => new(
+    internal static CartView View(Cart cart, string culture, IReadOnlyDictionary<string, int> available) => new(
         cart.Id.ToString(),
         cart.Token,
         cart.Culture,
@@ -111,7 +128,9 @@ public sealed class GetCartHandler(ICartRepository carts) : IQueryHandler<GetCar
                 line.ProductName.In(culture),
                 line.VariantLabel?.In(culture),
                 line.ImageId,
-                line.Quantity))
+                line.Quantity,
+                // An article the shelf does not know is one there is none of.
+                Math.Max(0, available.GetValueOrDefault(line.Sku))))
         ]);
 }
 
@@ -154,7 +173,8 @@ public sealed class AddToCartValidator : AbstractValidator<AddToCartCommand>
 }
 
 public sealed class AddToCartHandler(
-    ICartRepository carts, IPurchasableReader purchasables, IUnitOfWork unitOfWork, TimeProvider clock, IActorAccessor actors)
+    ICartRepository carts, IPurchasableReader purchasables, IUnitOfWork unitOfWork, TimeProvider clock, IActorAccessor actors,
+    IAvailabilityReader availability)
     : ICommandHandler<AddToCartCommand, CartOutcome>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
@@ -187,7 +207,7 @@ public sealed class AddToCartHandler(
         else if (!string.Equals(cart.Currency, purchasable.Currency, StringComparison.OrdinalIgnoreCase))
         {
             return new CartOutcome(
-                CartResult.MixedCurrencies, GetCartHandler.View(cart, command.Culture),
+                CartResult.MixedCurrencies, await GetCartHandler.ViewAsync(cart, command.Culture, availability, cancellationToken),
                 $"{cart.Currency} and {purchasable.Currency}");
         }
 
@@ -209,7 +229,7 @@ public sealed class AddToCartHandler(
             // The caps live on the aggregate so a second caller — an agent over
             // UCP — cannot forget them. Turning the refusal into an answer is
             // this handler's job.
-            return new CartOutcome(CartResult.Refused, GetCartHandler.View(cart, command.Culture), exception.Message);
+            return new CartOutcome(CartResult.Refused, await GetCartHandler.ViewAsync(cart, command.Culture, availability, cancellationToken), exception.Message);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -219,7 +239,7 @@ public sealed class AddToCartHandler(
         if (started)
             CartsCreated.Record(actors.Current);
 
-        return new CartOutcome(CartResult.Changed, GetCartHandler.View(cart, command.Culture), null);
+        return new CartOutcome(CartResult.Changed, await GetCartHandler.ViewAsync(cart, command.Culture, availability, cancellationToken), null);
     }
 }
 
@@ -259,7 +279,7 @@ public sealed class SetCartLineValidator : AbstractValidator<SetCartLineCommand>
 }
 
 public sealed class SetCartLineHandler(
-    ICartRepository carts, IUnitOfWork unitOfWork, TimeProvider clock)
+    ICartRepository carts, IUnitOfWork unitOfWork, TimeProvider clock, IAvailabilityReader availability)
     : ICommandHandler<SetCartLineCommand, CartOutcome>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
@@ -283,12 +303,12 @@ public sealed class SetCartLineHandler(
         }
         catch (InvalidOperationException exception)
         {
-            return new CartOutcome(CartResult.UnknownLine, GetCartHandler.View(cart, command.Culture), exception.Message);
+            return new CartOutcome(CartResult.UnknownLine, await GetCartHandler.ViewAsync(cart, command.Culture, availability, cancellationToken), exception.Message);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CartOutcome(CartResult.Changed, GetCartHandler.View(cart, command.Culture), null);
+        return new CartOutcome(CartResult.Changed, await GetCartHandler.ViewAsync(cart, command.Culture, availability, cancellationToken), null);
     }
 }
 
@@ -297,6 +317,25 @@ public sealed class SetCartLineHandler(
 public sealed record AddToCartRequest(string Sku, int Quantity = 1);
 
 public sealed record SetCartLineRequest(int Quantity);
+
+/// <summary>What the cart refuses, by code.</summary>
+public static class CartRefusals
+{
+    public static readonly Refusal UnknownSku = new(
+        "UnknownSku", 404, "Ese artículo no está a la venta.", "That item is not on sale.");
+
+    public static readonly Refusal UnknownLine = new(
+        "UnknownLine", 404, "Ese artículo no está en el carrito.", "That item is not in the cart.");
+
+    public static readonly Refusal MixedCurrencies = new(
+        "MixedCurrencies", 400, "Un carrito lleva una sola moneda.", "A cart carries one currency.");
+
+    public static readonly Refusal Refused = new(
+        "CartRefused", 400, "El carrito no admite ese cambio.", "The cart does not take that change.");
+
+    public static readonly Refusal BelongsToSomebodyElse = new(
+        "CartBelongsToSomebodyElse", 409, "Ese carrito es de otra cuenta.", "That basket belongs to another account.");
+}
 
 public sealed class CartEndpoints : ICarterModule
 {
@@ -325,7 +364,7 @@ public sealed class CartEndpoints : ICarterModule
             .WithName("GetCart");
 
         cart.MapPost("/lines",
-            async Task<Results<Ok<CartView>, BadRequest<string>, NotFound<string>>> (
+            async Task<Results<Ok<CartView>, ProblemHttpResult>> (
                    AddToCartRequest request, string? culture,
                    HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -336,10 +375,11 @@ public sealed class CartEndpoints : ICarterModule
 
                 return Answer(http, resolved, outcome);
             })
+            .WithMetadata(Refusals)
             .WithName("AddToCart");
 
         cart.MapPut("/lines/{sku}",
-            async Task<Results<Ok<CartView>, BadRequest<string>, NotFound<string>>> (
+            async Task<Results<Ok<CartView>, ProblemHttpResult>> (
                    string sku, SetCartLineRequest request, string? culture,
                    HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -350,12 +390,13 @@ public sealed class CartEndpoints : ICarterModule
 
                 return Answer(http, resolved, outcome);
             })
+            .WithMetadata(Refusals)
             .WithName("SetCartLine");
 
         // DELETE is setting the quantity to zero, and it exists because that is
         // the verb a client reaches for. One handler, two spellings.
         cart.MapDelete("/lines/{sku}",
-            async Task<Results<Ok<CartView>, BadRequest<string>, NotFound<string>>> (
+            async Task<Results<Ok<CartView>, ProblemHttpResult>> (
                    string sku, string? culture,
                    HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -366,8 +407,13 @@ public sealed class CartEndpoints : ICarterModule
 
                 return Answer(http, resolved, outcome);
             })
+            .WithMetadata(Refusals)
             .WithName("RemoveCartLine");
     }
+
+    /// <summary>What a change to the cart is refused for, by code: every one of the three operations can answer each.</summary>
+    private static readonly Refuses Refusals = new(
+        CartRefusals.UnknownSku, CartRefusals.UnknownLine, CartRefusals.MixedCurrencies, CartRefusals.Refused);
 
     private static string? Token(HttpContext http) =>
         http.Request.Headers.TryGetValue(CartHeaders.Token, out var values) &&
@@ -375,7 +421,7 @@ public sealed class CartEndpoints : ICarterModule
             ? values.ToString()
             : null;
 
-    private static Results<Ok<CartView>, BadRequest<string>, NotFound<string>> Answer(
+    private static Results<Ok<CartView>, ProblemHttpResult> Answer(
         HttpContext http, string culture, CartOutcome outcome)
     {
         if (outcome.Cart is not null)
@@ -383,11 +429,24 @@ public sealed class CartEndpoints : ICarterModule
 
         return outcome.Result switch
         {
-            CartResult.UnknownSku => TypedResults.NotFound($"There is nothing on sale with SKU '{outcome.Detail}'."),
-            CartResult.UnknownLine => TypedResults.NotFound($"There is no line for '{outcome.Detail}' in this cart."),
-            CartResult.MixedCurrencies => TypedResults.BadRequest(
-                $"A cart carries one currency; this one would carry {outcome.Detail}."),
-            CartResult.Refused => TypedResults.BadRequest(outcome.Detail ?? "The cart refused that change."),
+            CartResult.UnknownSku => TypedResults.Problem(
+                statusCode: CartRefusals.UnknownSku.Status,
+                extensions: CartRefusals.UnknownSku.Said(
+                    es: $"No hay nada a la venta con el SKU «{outcome.Detail}».",
+                    en: $"There is nothing on sale with SKU '{outcome.Detail}'.")),
+            CartResult.UnknownLine => TypedResults.Problem(
+                statusCode: CartRefusals.UnknownLine.Status,
+                extensions: CartRefusals.UnknownLine.Said(
+                    es: $"No hay ninguna línea de «{outcome.Detail}» en este carrito.",
+                    en: $"There is no line for '{outcome.Detail}' in this cart.")),
+            CartResult.MixedCurrencies => TypedResults.Problem(
+                statusCode: CartRefusals.MixedCurrencies.Status,
+                extensions: CartRefusals.MixedCurrencies.Said(
+                    es: $"Este llevaría {outcome.Detail}.", en: $"This one would carry {outcome.Detail}.")),
+            // The cart's own caps, said by the aggregate: its sentence is the
+            // reason, and the refusal's the one a screen shows.
+            CartResult.Refused => TypedResults.Problem(
+                statusCode: CartRefusals.Refused.Status, extensions: CartRefusals.Refused.Said(reason: outcome.Detail)),
             _ => TypedResults.Ok(outcome.Cart!)
         };
     }

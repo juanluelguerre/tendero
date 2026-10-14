@@ -74,7 +74,7 @@ public sealed class TenderoTools
     /// leave. An agent learns what to send from the answer it already has,
     /// without a second call and without guessing a code from a label.
     /// </summary>
-    [McpServerTool(Name = "search_products")]
+    [McpServerTool(Name = "search_products", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         Search the shop's catalogue. Returns products, each carrying the variant that
         matched with its SKU, price and whether it can be bought right now, and the
@@ -104,10 +104,10 @@ public sealed class TenderoTools
         string[]? within = null,
         [Description("Attribute values as CODE:VALUE, from the facets, e.g. [\"COLOR:BLACK\", \"SIZE:42\"].")]
         string[]? facets = null,
-        [Description("Lowest price, inclusive.")]
-        decimal? minPrice = null,
-        [Description("Highest price, inclusive.")]
-        decimal? maxPrice = null,
+        [Description("Lowest price. " + SearchPrices.InMinorUnits)]
+        long? minPrice = null,
+        [Description("Highest price. " + SearchPrices.InMinorUnits)]
+        long? maxPrice = null,
         [Description("Only products on offer now.")]
         bool onOffer = false,
         [Description("Only products listed in the last 30 days.")]
@@ -123,15 +123,15 @@ public sealed class TenderoTools
             Brands = brands ?? [],
             Within = within ?? [],
             Facets = facets ?? [],
-            MinPrice = minPrice,
-            MaxPrice = maxPrice,
+            MinPrice = SearchPrices.FromMinorUnits(minPrice),
+            MaxPrice = SearchPrices.FromMinorUnits(maxPrice),
             OnOffer = onOffer,
             NewArrivals = newArrivals,
             InStock = inStock,
             Campaign = string.IsNullOrWhiteSpace(campaign) ? null : campaign.Trim(),
         };
 
-        return Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+        return Answered.In(Resolve(culture, requests), answered => Refusals.Readable(answered, () => dispatcher.SendAsync(
             new SearchProductsQuery(query, answered, page, pageSize, category, sort ?? ProductSort.Relevance,
                 filters.IsEmpty ? null : filters), cancellationToken)));
     }
@@ -143,7 +143,7 @@ public sealed class TenderoTools
     /// specification gave us. This one answers in Tendero's own shape, which is
     /// richer than UCP's Product for a shopper and narrower for an agent.
     /// </summary>
-    [McpServerTool(Name = "get_product_detail")]
+    [McpServerTool(Name = "get_product_detail", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         This shop's own view of one product: its structured attributes, its images, and
         every variant including the ones that are out of stock, each with its SKU.
@@ -160,17 +160,18 @@ public sealed class TenderoTools
     {
         var answered = Resolve(culture, requests);
 
-        var product = await Refusals.Readable(() => dispatcher.SendAsync(
+        var product = await Refusals.Readable(answered, () => dispatcher.SendAsync(
             new GetProductQuery(code, answered), cancellationToken));
 
         // A code nobody owns is a refusal with the code in it, not an empty
         // answer. An agent that gets null guesses; one that gets told will look
         // the product up again.
         return new Answered<ProductDetail>(answered, product
-            ?? throw new McpException($"There is no product with code '{code}'."));
+            ?? throw Refusals.Problem(ToolRefusals.ProductNotFound, answered,
+                es: $"No hay ningún producto con el código «{code}».", en: $"There is no product with code '{code}'."));
     }
 
-    [McpServerTool(Name = "get_product_specs")]
+    [McpServerTool(Name = "get_product_specs", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         One product's specs, each value with its source: 'catalogue', or 'description'
         when a person approved it from the product's own text — then with the exact
@@ -187,7 +188,7 @@ public sealed class TenderoTools
         CancellationToken cancellationToken = default) =>
         SpecsAsync(dispatcher, requests, [code], culture, cancellationToken);
 
-    [McpServerTool(Name = "compare_products")]
+    [McpServerTool(Name = "compare_products", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         Two to four products side by side: one row per attribute, one cell per product,
         in the order given. A cell whose source is 'none' means the shop does not know
@@ -204,7 +205,7 @@ public sealed class TenderoTools
         CancellationToken cancellationToken = default)
     {
         if (codes is not { Length: >= 2 })
-            throw new McpException("Compare at least two products; use get_product_specs for one.");
+            throw Refusals.Problem(ToolRefusals.TooFewToCompare, Resolve(culture, requests));
 
         return SpecsAsync(dispatcher, requests, codes, culture, cancellationToken);
     }
@@ -215,16 +216,18 @@ public sealed class TenderoTools
     {
         var answered = Resolve(culture, requests);
 
-        var sheet = await Refusals.Readable(() => dispatcher.SendAsync(
+        var sheet = await Refusals.Readable(answered, () => dispatcher.SendAsync(
             new ProductSpecsQuery([.. codes.Select(code => code.Trim())], answered), cancellationToken));
 
         // Told, not left empty: an agent handed an empty sheet guesses.
         return sheet.Products.Count == 0
-            ? throw new McpException($"There is no product with code {string.Join(" or ", codes.Select(code => $"'{code}'"))}.")
+            ? throw Refusals.Problem(ToolRefusals.ProductNotFound, answered,
+                es: $"No hay ningún producto con el código {string.Join(" ni ", codes.Select(code => $"«{code}»"))}.",
+                en: $"There is no product with code {string.Join(" or ", codes.Select(code => $"'{code}'"))}.")
             : new Answered<SpecSheet>(answered, sheet);
     }
 
-    [McpServerTool(Name = "list_categories")]
+    [McpServerTool(Name = "list_categories", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         The shop's category tree, each entry naming its parent and its full path,
         in the requested language. Use a code from here to browse with search_products.
@@ -235,10 +238,10 @@ public sealed class TenderoTools
         [Description("Answer in this language: es or en. Anything else falls back to es.")]
         string? culture = null,
         CancellationToken cancellationToken = default) =>
-        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(answered, () => dispatcher.SendAsync(
             new ListCategoriesQuery(answered), cancellationToken)));
 
-    [McpServerTool(Name = "list_offers")]
+    [McpServerTool(Name = "list_offers", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         The promotions running right now, named in the requested language, each with
         its kind and the date it ends. What actually applies to a basket, and what is
@@ -250,7 +253,7 @@ public sealed class TenderoTools
         [Description("Answer in this language: es or en. Anything else falls back to es.")]
         string? culture = null,
         CancellationToken cancellationToken = default) =>
-        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(answered, () => dispatcher.SendAsync(
             new ListOffersQuery(answered), cancellationToken)));
 
     /// <summary>
@@ -258,7 +261,7 @@ public sealed class TenderoTools
     /// <c>GET /api/pricing/campaigns</c>, so an agent asked "are there deals this
     /// week?" reads what the home's card is drawn from rather than scraping it.
     /// </summary>
-    [McpServerTool(Name = "list_campaigns")]
+    [McpServerTool(Name = "list_campaigns", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         The shop's campaigns running now or starting within 30 days, the leading one
         first: each with its name and line in the requested language, its kind (Event
@@ -274,10 +277,10 @@ public sealed class TenderoTools
         [Description("Answer in this language: es or en. Anything else falls back to es.")]
         string? culture = null,
         CancellationToken cancellationToken = default) =>
-        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(answered, () => dispatcher.SendAsync(
             new ListCampaignsQuery(answered), cancellationToken)));
 
-    [McpServerTool(Name = "get_return_policy")]
+    [McpServerTool(Name = "get_return_policy", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         How many days a shopper has to send something back. The window runs from
         DELIVERY, not from the day of purchase.
@@ -285,5 +288,5 @@ public sealed class TenderoTools
     public static Task<ReturnPolicy> GetReturnPolicyAsync(
         IQueryDispatcher dispatcher,
         CancellationToken cancellationToken = default) =>
-        Refusals.Readable(() => dispatcher.SendAsync(new ReturnPolicyQuery(), cancellationToken));
+        Refusals.Readable(CultureNegotiation.Default, () => dispatcher.SendAsync(new ReturnPolicyQuery(), cancellationToken));
 }

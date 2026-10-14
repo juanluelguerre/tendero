@@ -21,14 +21,14 @@
         <div class="fact">
           <dt>{{ t('sold') }}</dt>
           <dd class="fact__value numeric">
-            {{ figures.sold | price: store.uplift.value()?.currency ?? 'EUR' : culture.active() }}
+            {{ figures.sold | price: culture.active() }}
           </dd>
         </div>
         @if (figures.hasBaseline && figures.baseline !== null) {
           <div class="fact">
             <dt>{{ t('baseline') }}</dt>
             <dd class="fact__value numeric">
-              {{ figures.baseline | price: store.uplift.value()?.currency ?? 'EUR' : culture.active() }}
+              {{ figures.baseline | price: culture.active() }}
             </dd>
             @if (uplift(); as change) {
               <dd class="muted fact__note">{{ t('uplift', { change: change }) }}</dd>

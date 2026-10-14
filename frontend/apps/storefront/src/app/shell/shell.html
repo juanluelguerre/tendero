@@ -264,8 +264,18 @@
       class="relative flex"
       [class]="variant === 'row' ? 'ms-auto max-w-search flex-1 max-md:hidden' : 'w-full'"
       role="search"
-      (submit)="$event.preventDefault(); find(box.value)"
+      [attr.toolname]="variant === 'row' ? searchTool.name : null"
+      [attr.tooldescription]="variant === 'row' ? searchTool.description : null"
+      [attr.toolautosubmit]="variant === 'row' ? '' : null"
+      (submit)="sendSearch($event, box.value)"
     >
+      <!-- EXPERIMENTAL: the three `tool…` attributes above, and `name` and
+           `toolparamdescription` on the box, are WebMCP's *declarative*
+           proposal — this form offered to an agent as a tool, by markup
+           alone. It is in the browser (behind a flag) and not in the
+           specification; a browser that knows nothing of it ignores them.
+           On the header's form only: this template is drawn twice, and two
+           forms may not carry one tool's name. See `agent/search-form-tool.ts`. -->
       <label class="sr-only" [for]="'find-' + variant">{{ t('nav.searchLabel') }}</label>
       <!-- The box shows what the page is listing, so a results page says what
            it answered and the words can be refined where they were typed. -->
@@ -275,6 +285,8 @@
         [class.pe-tap]="!visual.available()"
         [class.pe-tap-2]="visual.available()"
         type="search"
+        name="q"
+        [attr.toolparamdescription]="variant === 'row' ? searchTool.query : null"
         [id]="'find-' + variant"
         [placeholder]="t('nav.search')"
         [value]="query()"

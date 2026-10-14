@@ -85,7 +85,10 @@ describe('the agents store', () => {
     store.trust(agent('a-1'), 'Verified');
     http
       .expectOne(`${Agents}/a-1/trust`)
-      .flush('Only an operator may verify.', { status: 409, statusText: 'Conflict' });
+      .flush(
+        { code: 'Refused', status: 409, title: 'Only an operator may verify.' },
+        { status: 409, statusText: 'Conflict' },
+      );
 
     expect([store.refusal(), store.busy()]).toEqual(['Only an operator may verify.', null]);
   });

@@ -35,10 +35,20 @@ export class OrderService {
    * culture goes as the explicit parameter, which wins over `Accept-Language`
    * (ADR 0013) so the confirmation comes back in the language on the screen.
    */
-  place(request: PlaceOrderRequest, cartToken: string | null, culture: string): Promise<OrderView> {
+  /**
+   * Places the order. The key travels in `Idempotency-Key`, the header every
+   * API that has one reads it from: pressing pay twice, a proxy retrying a
+   * timeout and an agent reissuing the request are one key, and one order.
+   */
+  place(
+    request: PlaceOrderRequest,
+    idempotencyKey: string,
+    cartToken: string | null,
+    culture: string,
+  ): Promise<OrderView> {
     return firstValueFrom(
       this.http.post<OrderView>(`${this.baseUrl}/api/checkout`, request, {
-        headers: cartToken ? { [TOKEN_HEADER]: cartToken } : {},
+        headers: { 'Idempotency-Key': idempotencyKey, ...(cartToken ? { [TOKEN_HEADER]: cartToken } : {}) },
         params: this.params(culture),
       }),
     );

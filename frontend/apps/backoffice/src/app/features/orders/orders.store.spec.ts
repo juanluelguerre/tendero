@@ -17,8 +17,7 @@ const order = (orderId: string, status: string): OrderSummary =>
     status,
     recipientName: 'Ana',
     city: 'Madrid',
-    total: 50,
-    currency: 'EUR',
+    total: { amount: 5000, currency: 'EUR' },
     createdAt: '2026-09-29T10:00:00Z',
   }) as unknown as OrderSummary;
 
@@ -125,7 +124,10 @@ describe('the orders store', () => {
     store.apply(order('b', 'Confirmed'), 'Ship', 'row');
     http
       .expectOne(`${Orders}/b/move`)
-      .flush('Cannot ship an order that is not paid.', { status: 409, statusText: 'Conflict' });
+      .flush(
+        { code: 'Refused', status: 409, title: 'Cannot ship an order that is not paid.' },
+        { status: 409, statusText: 'Conflict' },
+      );
 
     expect(store.orders().map((row) => row.status)).toEqual(['Shipped', 'Confirmed']);
     expect(store.refusal()).toEqual({ b: 'Cannot ship an order that is not paid.' });

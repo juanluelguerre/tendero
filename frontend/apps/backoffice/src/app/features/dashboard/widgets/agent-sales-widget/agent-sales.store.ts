@@ -2,6 +2,7 @@ import { computed, inject } from '@angular/core';
 import { translateObjectSignal } from '@jsverse/transloco';
 import { signalStore, withComputed, withProps } from '@ngrx/signals';
 import { CultureStore } from '@tendero/shared-i18n';
+import { majorUnits } from '@tendero/shared-util';
 import type { BarChartData } from '../../../../charts/chart-contract';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
@@ -33,7 +34,7 @@ export const AgentSalesStore = signalStore(
     /** Null until the series answers, or when agents bought nothing in the period. */
     byDay: computed<BarChartData | null>(() => {
       const series = store._series.value();
-      if (!series || series.current.every((point) => point.agentRevenue === 0)) return null;
+      if (!series || series.current.every((point) => point.agentRevenue.amount === 0)) return null;
       const words = store._words() as Partial<Record<string, string>>;
       return {
         categories: bucketLabels(series, store._culture.active()),
@@ -42,7 +43,7 @@ export const AgentSalesStore = signalStore(
             key: 'agents',
             label: words['byDay'] ?? '',
             role: 'agent',
-            values: series.current.map((point) => point.agentRevenue),
+            values: series.current.map((point) => majorUnits(point.agentRevenue)),
           },
         ],
       };

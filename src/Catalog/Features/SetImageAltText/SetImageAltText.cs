@@ -105,7 +105,12 @@ public sealed record SetImageAltTextRequest(string Es, string En);
 
 public sealed record SetImageAltTextResponse(string ProductId, string ImageId, ImageAltOutcome Outcome);
 
-public sealed record SetImageAltTextConflict(string Title, string Detail);
+public static class ImageAltRefusals
+{
+    /// <summary>An archived product is out of the catalogue: nothing about it changes until it is restored.</summary>
+    public static readonly Refusal Archived = new(
+        "ProductArchived", 409, "El producto está archivado.", "The product is archived.");
+}
 
 public sealed class SetImageAltTextEndpoint : ICarterModule
 {
@@ -114,7 +119,7 @@ public sealed class SetImageAltTextEndpoint : ICarterModule
         // PUT /api/catalog/products/{id}/images/{imageId}/alt  { "es": "…", "en": "…" }
         // The path with no model: what a shopkeeper types is what an approval applies.
         app.MapPut("/api/catalog/products/{id:guid}/images/{imageId}/alt",
-            async Task<Results<Ok<SetImageAltTextResponse>, NotFound, Conflict<SetImageAltTextConflict>>> (
+            async Task<Results<Ok<SetImageAltTextResponse>, NotFound, ProblemHttpResult>> (
                    Guid id, string imageId, SetImageAltTextRequest body, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(
@@ -123,13 +128,16 @@ public sealed class SetImageAltTextEndpoint : ICarterModule
                 return result.Outcome switch
                 {
                     ImageAltOutcome.NotFound or ImageAltOutcome.NoSuchImage => TypedResults.NotFound(),
-                    ImageAltOutcome.Archived => TypedResults.Conflict(new SetImageAltTextConflict(
-                        "The product is archived.",
-                        "Archived products are out of the catalogue and their pictures are not described.")),
+                    ImageAltOutcome.Archived => TypedResults.Problem(
+                        statusCode: ImageAltRefusals.Archived.Status,
+                        extensions: ImageAltRefusals.Archived.Said(
+                            es: "Los productos archivados están fuera del catálogo y sus imágenes no se describen.",
+                            en: "Archived products are out of the catalogue and their pictures are not described.")),
                     _ => TypedResults.Ok(new SetImageAltTextResponse(result.ProductId.Value.ToString(), imageId, result.Outcome))
                 };
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(ImageAltRefusals.Archived))
             .WithTags("Catalog")
             .WithName("SetImageAltText");
     }

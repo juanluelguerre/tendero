@@ -3,8 +3,11 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AppliedDiscount, CartLineView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { ProductImageUrls } from '@tendero/shared-util';
+import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../cart/cart.store';
+import { discountReason } from '../../cart/discount-reason';
+import { canAddOneMore, stockNote } from '../../cart/stock-note';
+import { TaxonomyStore } from '../../taxonomy/taxonomy.store';
 import { ShopLinks } from '../../shop-links';
 import { Icon, Notice, PricePipe } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
@@ -37,6 +40,7 @@ export class CartPage {
   protected readonly store = inject(CartStore);
   protected readonly culture = inject(CultureStore);
   private readonly images = inject(ProductImageUrls);
+  private readonly taxonomy = inject(TaxonomyStore);
 
   /** Line net, from the quote — never multiplied on the client. */
   /**
@@ -68,6 +72,24 @@ export class CartPage {
   protected remove(line: CartLineView): void {
     void this.store.remove(line.sku);
   }
+
+  /**
+   * Why a promotion did not apply, in this page's words: money the reader's
+   * way, a category by the name the menu gives it, an article by the name the
+   * basket gives it (`discountReason`).
+   */
+  protected reason(discount: AppliedDiscount, t: (key: string, params?: Record<string, unknown>) => string) {
+    return discountReason(discount, {
+      t,
+      money: (amount) => formatPrice(amount, this.culture.active()),
+      category: (code) => this.taxonomy.categories().find((category) => category.code === code)?.name ?? null,
+      product: (sku) => this.store.cart()?.lines.find((line) => line.sku === sku)?.productName ?? null,
+    });
+  }
+
+  /** What the line says about stock, or nothing; and whether "+" asks for something there is. */
+  protected readonly stockNote = stockNote;
+  protected readonly canAddOneMore = canAddOneMore;
 
   /** Kept so the template's `discount.outcome` narrows. */
   protected readonly applied: AppliedDiscount['outcome'] = 'Applied';

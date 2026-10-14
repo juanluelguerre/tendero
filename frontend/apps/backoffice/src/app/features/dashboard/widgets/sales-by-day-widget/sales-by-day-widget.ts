@@ -1,7 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatMajor, ShopCurrency } from '@tendero/shared-util';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { SalesByDayStore } from './sales-by-day.store';
@@ -20,9 +20,9 @@ export class SalesByDayWidget {
   private readonly culture = inject(CultureStore);
 
   protected readonly format = computed(() => {
-    const currency = this.store.series.value()?.currency ?? 'EUR';
+    const currency = this.store.series.value()?.current[0]?.revenue.currency ?? ShopCurrency;
     const culture = this.culture.active();
-    return (value: number) => formatPrice(value, currency, culture);
+    return (value: number) => formatMajor(value, currency, culture);
   });
 
   readonly period = input.required<DashboardPeriod>();

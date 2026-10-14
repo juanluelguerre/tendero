@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
 namespace ElGuerre.Tendero.Search.Tests;
@@ -112,7 +113,7 @@ public sealed class PriceBandsTests
         IReadOnlyList<(decimal? From, decimal? To)> bands = [(null, 25m), (25m, 50m), (50m, null)];
 
         var unchosen = FacetAssembler.Bands(bands, [3, 0, 2], SearchFilters.None);
-        Assert.Equal([(null, 25m), (50m, null)], unchosen.Select(band => (band.From, band.To)));
+        Assert.Equal([(null, new Money(25m, "EUR")), (new Money(50m, "EUR"), null)], unchosen.Select(band => (band.From, band.To)));
 
         var chosen = FacetAssembler.Bands(bands, [3, 0, 2], new SearchFilters { MinPrice = 25m, MaxPrice = 50m });
         Assert.Equal([false, true, false], chosen.Select(band => band.Chosen));

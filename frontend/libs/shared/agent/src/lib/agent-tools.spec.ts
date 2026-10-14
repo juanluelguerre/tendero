@@ -21,10 +21,22 @@ function aTool(name: string): ToolDescriptor {
   };
 }
 
+/** The tools a fake browser was handed, in the order it was handed them. */
+function registered(registerTool: { mock: { calls: unknown[][] } }): ToolDescriptor[] {
+  return registerTool.mock.calls.map(([tool]) => tool as ToolDescriptor);
+}
+
 describe('the agent surface', () => {
+  /**
+   * The draft of 9 October 2026: `registerTool`, **one call a tool**, each with
+   * a signal whose abort takes the tool back. The `provideContext({ tools })`
+   * this was first written against is in no draft any more, so in a browser
+   * that follows the specification nothing registered — and the spec passed,
+   * because its fake had the old method too.
+   */
   it('offers its tools to a browser that can host an agent', () => {
-    const provideContext = vi.fn();
-    const context: ModelContext = { provideContext };
+    const registerTool = vi.fn<ModelContext['registerTool']>(() => Promise.resolve());
+    const context: ModelContext = { registerTool };
 
     TestBed.configureTestingModule({
       providers: [{ provide: MODEL_CONTEXT, useValue: context }],
@@ -35,15 +47,61 @@ describe('the agent surface', () => {
 
     agent.register([aTool('search_products'), aTool('get_cart')]);
 
-    expect(provideContext).toHaveBeenCalledTimes(1);
-    expect(provideContext.mock.calls[0][0].tools.map((t: ToolDescriptor) => t.name)).toEqual([
-      'search_products',
-      'get_cart',
-    ]);
+    expect(registered(registerTool).map((tool) => tool.name)).toEqual(['search_products', 'get_cart']);
+    expect(registerTool.mock.calls.map(([, options]) => options?.signal?.aborted)).toEqual([false, false]);
   });
 
   /**
-   * The whole of `P6-5`. On a browser with no `navigator.modelContext` — which
+   * What a tool says of itself reaches the browser as it was written: an
+   * agent decides from `readOnlyHint` whether a call is safe to make unasked.
+   */
+  it('hands the browser what each tool says of itself', () => {
+    const registerTool = vi.fn<ModelContext['registerTool']>(() => Promise.resolve());
+    TestBed.configureTestingModule({ providers: [{ provide: MODEL_CONTEXT, useValue: { registerTool } }] });
+
+    TestBed.inject(AgentTools).register([
+      { ...aTool('get_cart'), annotations: { readOnlyHint: true } },
+      aTool('add_to_cart'),
+    ]);
+
+    expect(registered(registerTool).map((tool) => tool.annotations)).toEqual([{ readOnlyHint: true }, undefined]);
+  });
+
+  /**
+   * `registerTool` answers with a promise, and rejects it: a name already
+   * taken, a page not allowed the feature. A rejection nobody handles is an
+   * error in the shopper's console for a surface they never asked for, so it
+   * is handled — and the tools that did register stay.
+   */
+  it('is not broken by a browser that refuses a tool', async () => {
+    const registerTool = vi.fn((tool: ToolDescriptor) =>
+      tool.name === 'taken' ? Promise.reject(new DOMException('taken', 'InvalidStateError')) : Promise.resolve(),
+    );
+    TestBed.configureTestingModule({ providers: [{ provide: MODEL_CONTEXT, useValue: { registerTool } }] });
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+
+    TestBed.inject(AgentTools).register([aTool('taken'), aTool('get_cart')]);
+    await new Promise((done) => setTimeout(done));
+    process.off('unhandledRejection', unhandled);
+
+    expect(registerTool).toHaveBeenCalledTimes(2);
+    expect(unhandled).not.toHaveBeenCalled();
+  });
+
+  /** The app going away takes its tools with it: the signal each was registered under aborts. */
+  it('takes its tools back when the app is destroyed', () => {
+    const registerTool = vi.fn<ModelContext['registerTool']>(() => Promise.resolve());
+    TestBed.configureTestingModule({ providers: [{ provide: MODEL_CONTEXT, useValue: { registerTool } }] });
+
+    TestBed.inject(AgentTools).register([aTool('get_cart')]);
+    TestBed.resetTestingModule();
+
+    expect(registerTool.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  });
+
+  /**
+   * The whole of `P6-5`. On a browser with no `document.modelContext` — which
    * is every browser but one — registering does nothing and throws nothing.
    *
    * jsdom has no `modelContext`, so this is not a simulated absence: it is the
@@ -64,17 +122,17 @@ describe('the agent surface', () => {
    * and a double registration is a browser holding two identical tool sets.
    */
   it('registers once however many times it is asked', () => {
-    const provideContext = vi.fn();
+    const registerTool = vi.fn<ModelContext['registerTool']>(() => Promise.resolve());
 
     TestBed.configureTestingModule({
-      providers: [{ provide: MODEL_CONTEXT, useValue: { provideContext } }],
+      providers: [{ provide: MODEL_CONTEXT, useValue: { registerTool } }],
     });
 
     const agent = TestBed.inject(AgentTools);
     agent.register([aTool('one')]);
     agent.register([aTool('two')]);
 
-    expect(provideContext).toHaveBeenCalledTimes(1);
+    expect(registered(registerTool).map((tool) => tool.name)).toEqual(['one']);
   });
 
   /**
@@ -95,16 +153,17 @@ describe('the agent surface', () => {
    * counted as a refusal rather than as an answer.
    */
   it('reports every agent call, and a refusal as one', async () => {
-    const provideContext = vi.fn();
-    TestBed.configureTestingModule({ providers: [{ provide: MODEL_CONTEXT, useValue: { provideContext } }] });
+    const registerTool = vi.fn<ModelContext['registerTool']>(() => Promise.resolve());
+    TestBed.configureTestingModule({ providers: [{ provide: MODEL_CONTEXT, useValue: { registerTool } }] });
     const trackEvent = vi.spyOn(TestBed.inject(Telemetry), 'trackEvent');
 
     const declines: ToolDescriptor = { ...aTool('add_to_cart'), execute: () => Promise.resolve(refuse('no such SKU')) };
     TestBed.inject(AgentTools).register([aTool('search_products'), declines]);
-    const [search, add] = provideContext.mock.calls[0][0].tools as ToolDescriptor[];
+    const [search, add] = registered(registerTool);
+    const options = { signal: new AbortController().signal };
 
-    await search.execute({});
-    await add.execute({});
+    await search.execute({}, options);
+    await add.execute({}, options);
 
     expect(trackEvent.mock.calls).toEqual([
       ['webmcp_tool_invoked', { tool: 'search_products', outcome: 'answered' }, { actor: 'webmcp' }],
@@ -112,8 +171,18 @@ describe('the agent surface', () => {
     ]);
   });
 
-  it('detects the capability from the navigator it is given', () => {
-    expect(supportsModelContext({} as Navigator)).toBe(false);
-    expect(supportsModelContext({ modelContext: { provideContext: () => undefined } } as Navigator)).toBe(true);
+  /**
+   * By the method, not by the name: a browser still on the first shape has a
+   * `modelContext` and no `registerTool`, and calling it there would throw in
+   * the shell's constructor.
+   */
+  it('detects the capability from the document it is given', () => {
+    expect(supportsModelContext({} as Document)).toBe(false);
+    expect(supportsModelContext({ modelContext: { provideContext: () => undefined } } as unknown as Document)).toBe(
+      false,
+    );
+    expect(
+      supportsModelContext({ modelContext: { registerTool: () => Promise.resolve() } } as unknown as Document),
+    ).toBe(true);
   });
 });

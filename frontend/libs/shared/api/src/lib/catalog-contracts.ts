@@ -76,11 +76,11 @@ export type AttributeDefinitionView = Schemas['AttributeDefinitionView'];
 export type AttributeDefinitionList = Schemas['ListAttributeDefinitionsResult'];
 
 /**
- * Publish's 409. It was an anonymous object on the endpoint, so it had no schema
- * and was invisible from the client: nothing said publishing could be refused
- * for being archived, nor in what shape.
+ * A refusal, as the API writes every one (phase 13b; RFC 9457): a `code` to
+ * branch on, and the shop's sentence in the language asked. Each operation
+ * declares which codes it has; this is the shape they share.
  */
-export type PublishProductConflict = Schemas['PublishProductConflict'];
+export type Problem = Schemas['Problem'];
 
 /**
  * From the document since ADR 0043. They were narrowed here by hand, as "a

@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261009122512_AccentsFoldedInTheListsOfWork";
+    public override string LastMigrationId => "20261013102610_IdempotencyKeys";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -1849,6 +1849,42 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasFilter("outcome <> 'Allowed'");
 
                 b.ToTable("audit_entries", "audit");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.SharedKernel.IdempotencyRecord", b =>
+            {
+                b.Property<string>("Scope")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("scope");
+
+                b.Property<string>("Key")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("key");
+
+                b.Property<DateTimeOffset>("At")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("at");
+
+                b.Property<string>("Body")
+                    .HasColumnType("text")
+                    .HasColumnName("body");
+
+                b.Property<string>("Fingerprint")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("fingerprint");
+
+                b.Property<int?>("Status")
+                    .HasColumnType("integer")
+                    .HasColumnName("status");
+
+                b.HasKey("Scope", "Key")
+                    .HasName("pk_keys");
+
+                b.ToTable("keys", "idempotency");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>

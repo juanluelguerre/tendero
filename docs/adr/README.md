@@ -60,6 +60,7 @@
 | [0056](0056-a-category-declares-its-attributes.md) | A category declares its products' attributes: inherited down the branch, offered to whoever reads a source for claims and never enforced on a product; what a picture can show is the attribute's own to say. **Amended the same day**: a declared attribute is expected or *required*; a product without a required one is incomplete — shown, never refused | accepted |
 | [0057](0057-a-picture-says-what-it-shows.md) | A picture says which of the product's axis values it shows; a variant has no picture of its own and its gallery is derived; a level between product and variant is deferred, with what would bring it back | accepted |
 | [0058](0058-pictures-are-a-vector-space-of-their-own.md) | Pictures are a vector space of their own: SigLIP 2 in process, one point a picture keyed on the hash of its bytes, asked at endpoints beside the search and never inside it; a shopper's picture is never kept; the floors and the leg are left open with what was measured | accepted |
+| [0059](0059-the-wire-has-two-readers.md) | The wire has two readers: money is a whole number of minor units with its currency, a refusal is an RFC 9457 problem with a code declared for its operation, a message is a code and a sentence; the contract names its version and who may call each operation. A refusal is data in the kernel, written and declared by the host, so the kernel stays free of HTTP | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

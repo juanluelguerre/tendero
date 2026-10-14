@@ -88,7 +88,7 @@ public sealed class ShopperOrdersHandler(
                         line.ProductName, line.VariantLabel, line.Quantity,
                         canReturn ? Math.Max(0, left.GetValueOrDefault(line.Sku)) : 0)),
                 ],
-                view.Total, view.Currency));
+                view.Total.Amount, view.Total.Currency));
         }
 
         activity?.SetTag("ordering.orders", answer.Count);

@@ -15,9 +15,7 @@
         @for (row of store.rows(); track row.key) {
           <li class="ranking__row">
             <span class="ranking__name">{{ row.label }}</span>
-            <span class="numeric">{{
-              row.revenue | price: store.mix.value()?.currency ?? 'EUR' : culture.active()
-            }}</span>
+            <span class="numeric">{{ row.revenue | price: culture.active() }}</span>
           </li>
         }
       </ol>

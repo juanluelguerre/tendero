@@ -149,6 +149,8 @@ public sealed class PromotionEngineTests
         Assert.Equal(RuleReasons.NotCombinableWithCode, loser.Reason!.Code);
         Assert.Equal("No acumulable con SUMMER25.", loser.Reason.Explanation.In("es"));
         Assert.Equal("Not combinable with SUMMER25.", loser.Reason.Explanation.In("en"));
+        // And who took the slot, by itself: a page says it its own way.
+        Assert.Equal("SUMMER25", loser.Reason.Winner!.In("es"));
     }
 
     [Fact]
@@ -236,6 +238,116 @@ public sealed class PromotionEngineTests
         var suppressed = Suppressed(outcome, "BIG");
         Assert.Equal(RuleReasons.ConditionNotMetCode, suppressed.Reason!.Code);
         Assert.Contains("50.00 EUR", suppressed.Reason.Explanation.In("en"));
+    }
+
+    /// <summary>
+    /// **What was missing is data, not only a sentence** (ADR 0059). The
+    /// sentence says *a minimum of 50.00 EUR*, which is right for an agent and
+    /// wrong on a page: a page formats money its reader's way and names a
+    /// category by its name, and can do neither from prose. So the reason
+    /// carries the condition it asked and how far the cart is from it — the
+    /// difference worked out here, because a front end adds no money.
+    /// </summary>
+    [Fact]
+    public void An_unmet_minimum_carries_what_it_asked_and_how_much_is_missing()
+    {
+        var condition = new PromotionCondition(MinimumSubtotal: Build.Money(50m), CategoryCode: "KITCHEN");
+        var cart = Build.Cart(0m, "retail", Build.Line("PAN", 39.99m, categoryPath: "HOME/KITCHEN/COOKWARE"));
+
+        var reason = Suppressed(this.engine.Apply(
+            [Build.Promotion("BIG", new PercentOffLine(10m), condition: condition)], cart, Build.At()), "BIG").Reason!;
+
+        Assert.Equal(condition, reason.Requires);
+        Assert.Equal(Build.Money(10.01m), reason.ShortBy);
+        Assert.Null(reason.UnitsShort);
+    }
+
+    [Fact]
+    public void An_unmet_quantity_carries_how_many_units_are_missing()
+    {
+        var cart = Build.Cart(0m, "retail", Build.Line("SHIRT", 20m, quantity: 1, categoryPath: "APPAREL/SHIRT"));
+
+        var reason = Suppressed(this.engine.Apply(
+        [
+            Build.Promotion("3X2", new PercentOffLine(10m),
+                condition: new PromotionCondition(CategoryCode: "SHIRT", MinimumQuantity: 3))
+        ], cart, Build.At()), "3X2").Reason!;
+
+        Assert.Equal(2, reason.UnitsShort);
+        Assert.Null(reason.ShortBy);
+    }
+
+    /// <summary>
+    /// **Only what is missing is short** (Stryker, phase 13b's close: `&lt;`
+    /// read as `&lt;=` survived on both). A condition of two parts that fails on
+    /// one says nothing of the other: a minimum met to the cent is not *zero
+    /// short*, and the units asked for, all there, are not *zero units short*.
+    /// </summary>
+    [Fact]
+    public void What_is_met_exactly_is_not_short_of_anything()
+    {
+        var both = new PromotionCondition(MinimumSubtotal: Build.Money(50m), CategoryCode: "SHIRT", MinimumQuantity: 3);
+
+        // Fifty to the cent, and two shirts where three are asked.
+        var units = Suppressed(this.engine.Apply(
+            [Build.Promotion("BOTH", new PercentOffLine(10m), condition: both)],
+            Build.Cart(0m, "retail", Build.Line("SHIRT", 25m, quantity: 2, categoryPath: "APPAREL/SHIRT")), Build.At()), "BOTH").Reason!;
+
+        Assert.Null(units.ShortBy);
+        Assert.Equal(1, units.UnitsShort);
+
+        // Three shirts, and forty-five where fifty are asked.
+        var money = Suppressed(this.engine.Apply(
+            [Build.Promotion("BOTH", new PercentOffLine(10m), condition: both)],
+            Build.Cart(0m, "retail", Build.Line("SHIRT", 15m, quantity: 3, categoryPath: "APPAREL/SHIRT")), Build.At()), "BOTH").Reason!;
+
+        Assert.Equal(Build.Money(5m), money.ShortBy);
+        Assert.Null(money.UnitsShort);
+    }
+
+    /// <summary>
+    /// Units are counted across the lines a condition reaches, not line by line
+    /// (the same run: `Sum` read as `Max` survived, here and in the rule that
+    /// decides whether the condition is met at all). Two shirts of one kind and
+    /// one of another are three shirts.
+    /// </summary>
+    [Fact]
+    public void Units_are_counted_across_every_line_the_condition_reaches()
+    {
+        var three = new PromotionCondition(CategoryCode: "SHIRT", MinimumQuantity: 3);
+        PricedLine Shirt(string sku, int quantity) => Build.Line(sku, 20m, quantity: quantity, categoryPath: "APPAREL/SHIRT");
+
+        var met = this.engine.Apply(
+            [Build.Promotion("3X", new PercentOffLine(10m), condition: three)],
+            Build.Cart(0m, "retail", Shirt("RED", 2), Shirt("BLUE", 1)), Build.At());
+        Assert.Equal(DiscountOutcome.Applied, Find(met, "3X").Outcome);
+
+        var four = new PromotionCondition(CategoryCode: "SHIRT", MinimumQuantity: 4);
+        var reason = Suppressed(this.engine.Apply(
+            [Build.Promotion("4X", new PercentOffLine(10m), condition: four)],
+            Build.Cart(0m, "retail", Shirt("RED", 2), Shirt("BLUE", 1)), Build.At()), "4X").Reason!;
+
+        Assert.Equal(1, reason.UnitsShort);
+        // And the sentence an agent reads names every part of what was asked, in both languages.
+        Assert.Equal("Condition not met: at least 4 units and items from SHIRT.", reason.Explanation.In("en"));
+        Assert.Equal("No se cumple la condición: al menos 4 unidades y artículos de SHIRT.", reason.Explanation.In("es"));
+    }
+
+    /// <summary>Nothing in the cart is what the promotion is for: it asks what it asks, and nothing is "short".</summary>
+    [Fact]
+    public void A_condition_no_line_reaches_is_short_of_nothing()
+    {
+        var cart = Build.Cart(0m, "retail", Build.Line("PAN", 100m, categoryPath: "HOME/KITCHEN"));
+
+        var reason = Suppressed(this.engine.Apply(
+        [
+            Build.Promotion("APPAREL10", new PercentOffLine(10m),
+                condition: new PromotionCondition(MinimumSubtotal: Build.Money(50m), CategoryCode: "APPAREL"))
+        ], cart, Build.At()), "APPAREL10").Reason!;
+
+        Assert.Equal("APPAREL", reason.Requires!.CategoryCode);
+        Assert.Null(reason.ShortBy);
+        Assert.Null(reason.UnitsShort);
     }
 
     /// <summary>

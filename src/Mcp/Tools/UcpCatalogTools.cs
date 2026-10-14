@@ -32,7 +32,7 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 [McpServerToolType]
 public sealed class UcpCatalogTools
 {
-    [McpServerTool(Name = "search_catalog", UseStructuredContent = true)]
+    [McpServerTool(Name = "search_catalog", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         UCP catalog search. Free-text product discovery, answering with UCP Product
         objects and cursor pagination. All arguments are optional.
@@ -64,7 +64,7 @@ public sealed class UcpCatalogTools
             dispatcher, request, Culture(requests), BaseUrl(requests), cancellationToken));
     }
 
-    [McpServerTool(Name = "lookup_catalog", UseStructuredContent = true)]
+    [McpServerTool(Name = "lookup_catalog", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         UCP catalog lookup. Resolve products by identifier — the values that appear as
         `id` on a Product. Identifiers nobody owns come back as warnings, not errors.
@@ -91,7 +91,7 @@ public sealed class UcpCatalogTools
             dispatcher, request, Culture(requests), BaseUrl(requests), profiles, cancellationToken));
     }
 
-    [McpServerTool(Name = "get_product", UseStructuredContent = true)]
+    [McpServerTool(Name = "get_product", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""
         UCP product detail: one product with every option and every variant, so an
         agent can narrow to a purchasable SKU.

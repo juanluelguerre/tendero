@@ -32,7 +32,7 @@
       @if (request.refundAmount) {
         <p class="flex justify-between border-t border-hairline pt-2">
           <span class="muted">{{ t('returns.column.refund') }}</span>
-          <span class="numeric font-semibold">{{ request.refundAmount | price: 'EUR' : culture.active() }}</span>
+          <span class="numeric font-semibold">{{ request.refundAmount | price: culture.active() }}</span>
         </p>
       }
 

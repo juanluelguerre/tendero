@@ -48,7 +48,12 @@ public sealed record WithdrawProductResult(WithdrawOutcome Outcome, ProductId Pr
 /// <summary>The wire's shape: a flat id and a named outcome, as PublishProductResponse.</summary>
 public sealed record WithdrawProductResponse(string ProductId, WithdrawOutcome Outcome, ProductStatus Status);
 
-public sealed record WithdrawProductConflict(string Title, string Detail);
+public static class WithdrawRefusals
+{
+    /// <summary>An archived product is out of the catalogue: nothing about it changes until it is restored.</summary>
+    public static readonly Refusal Archived = new(
+        "ProductArchived", 409, "El producto está archivado.", "The product is archived.");
+}
 
 public sealed class WithdrawProductValidator : AbstractValidator<WithdrawProductCommand>
 {
@@ -66,7 +71,7 @@ public sealed class WithdrawProductEndpoint : ICarterModule
     {
         // POST /api/catalog/products/{id}/withdraw
         app.MapPost("/api/catalog/products/{id:guid}/withdraw",
-            async Task<Results<Ok<WithdrawProductResponse>, NotFound, Conflict<WithdrawProductConflict>>> (
+            async Task<Results<Ok<WithdrawProductResponse>, NotFound, ProblemHttpResult>> (
                    Guid id, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(new WithdrawProductCommand(new ProductId(id)), ct);
@@ -74,9 +79,11 @@ public sealed class WithdrawProductEndpoint : ICarterModule
                 return result.Outcome switch
                 {
                     WithdrawOutcome.NotFound => TypedResults.NotFound(),
-                    WithdrawOutcome.Archived => TypedResults.Conflict(new WithdrawProductConflict(
-                        "The product is archived.",
-                        "Archived products are already out of the catalogue.")),
+                    WithdrawOutcome.Archived => TypedResults.Problem(
+                        statusCode: WithdrawRefusals.Archived.Status,
+                        extensions: WithdrawRefusals.Archived.Said(
+                            es: "Los productos archivados ya están fuera del catálogo.",
+                            en: "Archived products are already out of the catalogue.")),
                     // Past the two refusals there is always a product, so a status.
                     _ => TypedResults.Ok(new WithdrawProductResponse(
                         result.ProductId.Value.ToString(),
@@ -85,6 +92,7 @@ public sealed class WithdrawProductEndpoint : ICarterModule
                 };
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(WithdrawRefusals.Archived))
             .WithTags("Catalog")
             .WithName("WithdrawProduct");
     }

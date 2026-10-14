@@ -4,17 +4,22 @@ import { expect, test, type Page } from '@playwright/test';
  * The shop opened to a browser agent (WebMCP, phase 6).
  *
  * **A browser is the only place this can be tested.** The tools are registered
- * against `navigator.modelContext`, executed by the browser's own agent, and
+ * against `document.modelContext`, executed by the browser's own agent, and
  * they call the same Angular services the interface calls — so there is no layer
  * underneath where any of that is observable. The unit tests cover the
  * registration mechanism and the degradation; what happens when a tool actually
  * runs against the running shop lives here.
  *
- * `navigator.modelContext` is Chrome-only and under incubation at the W3C Web
+ * `document.modelContext` is Chrome-only and under incubation at the W3C Web
  * Machine Learning Community Group. Rather than depend on the runner's Chromium
  * having shipped it, these specs INSTALL a minimal one and capture what the shop
- * hands it. That tests our half — which is the half we own — and it keeps
- * working when the specification moves.
+ * hands it. That tests our half — which is the half we own.
+ *
+ * **The fake is the draft's shape and nothing else** (9 October 2026:
+ * `registerTool(tool, options)`, a call a tool, refusing a name twice the way
+ * the draft says). It first had `navigator.modelContext.provideContext`, and
+ * went on passing after the specification dropped both — a fake that accepts
+ * what no browser does proves only that we agree with ourselves.
  */
 
 interface ToolResult {
@@ -25,10 +30,18 @@ interface ToolResult {
 /** A page with an agent in it, holding whatever the shop registered. */
 async function withAgent(page: Page, path = '/es'): Promise<void> {
   await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'modelContext', {
+    const tools: { name: string }[] = [];
+    (window as unknown as { __tools: unknown[] }).__tools = tools;
+
+    Object.defineProperty(document, 'modelContext', {
       value: {
-        provideContext: (context: { tools: unknown[] }) => {
-          (window as unknown as { __tools: unknown[] }).__tools = context.tools;
+        registerTool: (tool: { name: string }, options?: { signal?: AbortSignal }) => {
+          if (tools.some((known) => known.name === tool.name))
+            return Promise.reject(new DOMException(`${tool.name} is registered`, 'InvalidStateError'));
+
+          tools.push(tool);
+          options?.signal?.addEventListener('abort', () => tools.splice(tools.indexOf(tool), 1));
+          return Promise.resolve();
         },
       },
       configurable: true,
@@ -46,14 +59,17 @@ function call(page: Page, name: string, input: Record<string, unknown>): Promise
         window as unknown as {
           __tools: {
             name: string;
-            execute: (i: unknown) => Promise<{ content: { text: string }[]; isError?: boolean }>;
+            execute: (
+              i: unknown,
+              options: { signal: AbortSignal },
+            ) => Promise<{ content: { text: string }[]; isError?: boolean }>;
           }[];
         }
       ).__tools;
       const tool = tools.find((candidate) => candidate.name === (toolName as string));
       if (!tool) throw new Error(`No tool named ${toolName as string}`);
 
-      const result = await tool.execute(toolInput);
+      const result = await tool.execute(toolInput, { signal: new AbortController().signal });
       return { text: result.content[0].text, isError: Boolean(result.isError) };
     },
     [name, input] as const,
@@ -81,6 +97,39 @@ test.describe('the agent surface', () => {
       'add_to_cart',
       'get_cart',
       'list_campaigns',
+    ]);
+  });
+
+  /**
+   * What an agent may do unasked. Five of the seven only read; narrowing the
+   * list moves the page the shopper is looking at and adding to the basket
+   * changes it, so neither says it only reads. Nothing here is *consequential*
+   * in the draft's sense — significant, real-world or not reversible: a basket
+   * is emptied with a click, and no tool pays.
+   */
+  test('says which tools only read', async ({ page }) => {
+    await withAgent(page);
+
+    const said = await page.evaluate(() =>
+      (
+        window as unknown as {
+          __tools: { name: string; annotations?: { readOnlyHint?: boolean; consequentialHint?: boolean } }[];
+        }
+      ).__tools.map((tool) => [
+        tool.name,
+        tool.annotations?.readOnlyHint ?? false,
+        tool.annotations?.consequentialHint ?? false,
+      ]),
+    );
+
+    expect(said).toEqual([
+      ['search_products', true, false],
+      ['list_filters', true, false],
+      ['apply_filter', false, false],
+      ['get_product', true, false],
+      ['add_to_cart', false, false],
+      ['get_cart', true, false],
+      ['list_campaigns', true, false],
     ]);
   });
 
@@ -213,7 +262,7 @@ test.describe('the agent surface', () => {
   });
 
   /**
-   * `P6-5`, in the browser. Without `navigator.modelContext` nothing registers,
+   * `P6-5`, in the browser. Without `document.modelContext` nothing registers,
    * nothing throws and the shop is unchanged — which is what "degrades
    * gracefully" is supposed to mean and rarely does.
    */
@@ -224,7 +273,7 @@ test.describe('the agent surface', () => {
     await page.goto('/es');
 
     await expect(page.getByRole('searchbox')).toBeVisible();
-    expect(await page.evaluate(() => 'modelContext' in navigator)).toBe(false);
+    expect(await page.evaluate(() => 'modelContext' in document)).toBe(false);
     expect(failures).toEqual([]);
   });
 });

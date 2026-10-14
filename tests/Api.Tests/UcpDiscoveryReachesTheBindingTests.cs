@@ -33,6 +33,30 @@ public sealed class UcpDiscoveryReachesTheBindingTests
     /// is a LIST for exactly this reason: one capability, two ways in, and each
     /// one has to actually be there.
     /// </summary>
+    /// <summary>
+    /// *Published artifacts MUST include a Cache-Control header with public and
+    /// max-age of at least 60 seconds, and MUST NOT be served with private,
+    /// no-store, or no-cache directives* (the specification, *Hosting*). The
+    /// profile and the shop's own schemas are what it publishes; a platform
+    /// that may not cache them fetches them on every request it makes.
+    /// </summary>
+    [Theory]
+    [InlineData("/.well-known/ucp")]
+    [InlineData("/ucp/schemas/com.elguerre.tendero.knowledge.json")]
+    public async Task What_the_shop_publishes_for_platforms_may_be_cached_as_the_specification_requires(string artifact)
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync(artifact, TestContext.Current.CancellationToken);
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        var caching = Assert.IsType<System.Net.Http.Headers.CacheControlHeaderValue>(response.Headers.CacheControl);
+        Assert.True(caching.Public);
+        Assert.True(caching.MaxAge >= TimeSpan.FromSeconds(60), $"max-age is {caching.MaxAge}");
+        Assert.False(caching.Private || caching.NoStore || caching.NoCache);
+    }
+
     [Fact]
     public async Task Every_binding_the_profile_advertises_is_really_served()
     {
@@ -124,10 +148,13 @@ public sealed class UcpDiscoveryReachesTheBindingTests
     /// <summary>
     /// And the two contracts stay apart on the one endpoint they share.
     ///
-    /// A UCP answer is an envelope in <c>structuredContent</c>; a Tendero answer
-    /// is the shop's own shape in <c>content</c>. If those ever converge, one of
-    /// the two protocols is being served badly — and the tool list is the place
-    /// it would show first, because that is what a client branches on.
+    /// Both answer in <c>structuredContent</c> — since 2026-10-13 the shop's own
+    /// tools declare the shape of their answers too, as the specification asks —
+    /// and what tells them apart is what was always the difference: a UCP answer
+    /// is the protocol's envelope, with its <c>ucp</c> member and its version; a
+    /// Tendero answer is the shop's own shape, and does not pretend to be UCP.
+    /// It used to be told by the shop's tools having no structured content at
+    /// all, which was a gap doing duty as a distinction.
     /// </summary>
     [Fact]
     public async Task The_two_contracts_are_distinguishable_on_the_endpoint_they_share()
@@ -149,7 +176,9 @@ public sealed class UcpDiscoveryReachesTheBindingTests
 
         // The shop's own carries the shop's own answer, and no UCP envelope —
         // it is not pretending to be UCP, which is the honest half.
-        Assert.False(shop.TryGetProperty("structuredContent", out _));
+        var own = shop.GetProperty("structuredContent");
+        Assert.DoesNotContain(own.EnumerateObject(), member => member.NameEquals("ucp"));
+        Assert.True(own.GetProperty("windowDays").GetInt32() > 0);
         Assert.Contains(
             "windowDays",
             shop.GetProperty("content")[0].GetProperty("text").GetString(),

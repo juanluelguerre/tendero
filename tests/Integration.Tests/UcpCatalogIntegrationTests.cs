@@ -150,13 +150,13 @@ public sealed class UcpCatalogIntegrationTests(PostgresFixture postgres)
             var product = UcpCatalogMapper.From(detail, BaseUrl);
 
             Assert.Equal(
-                (long)decimal.Round(detail.PriceFrom * 100m, 0, MidpointRounding.ToEven),
+                MinorUnits.From(detail.PriceFrom.Amount, detail.PriceFrom.Currency),
                 product.PriceRange.Min.Amount);
 
             foreach (var (variant, source) in product.Variants.Zip(detail.Variants))
             {
                 Assert.Equal(
-                    (long)decimal.Round(source.PriceAmount * 100m, 0, MidpointRounding.ToEven),
+                    MinorUnits.From(source.Price.Amount, source.Price.Currency),
                     variant.Price.Amount);
             }
         }

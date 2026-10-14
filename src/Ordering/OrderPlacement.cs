@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Contracts;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
@@ -48,14 +49,27 @@ public enum PlaceOrderOutcome
     /// One of the shop's own rules for agents said no (P11-6): the detail names the
     /// rule and the numbers. Nothing charged, and the denial is audited.
     /// </summary>
-    AgentRefused
+    AgentRefused,
+
+    /// <summary>
+    /// The cart asks for more of something than there is, and the shop knew it
+    /// at the till. Nothing charged and nothing placed; <see
+    /// cref="PlaceOrderResult.Shortages"/> says which and by how many. The stock
+    /// saga still holds stock after the order exists — that is for the race,
+    /// two shoppers and the last unit, which no check made here can see.
+    /// </summary>
+    InsufficientStock
 }
+
+/// <summary>An article the cart asks for more of than can be bought now.</summary>
+public sealed record StockShortage(string Sku, int Requested, int Available);
 
 public sealed record PlaceOrderResult(
     PlaceOrderOutcome Outcome,
     Order? Order,
     CartPricing? Pricing,
-    string? Detail) : IAuditedResult
+    string? Detail,
+    IReadOnlyList<StockShortage>? Shortages = null) : IAuditedResult
 {
     /// <summary>A declined card is the shop saying no, which is a denial; a
     /// provider that did not answer is a fault. Each refusal carries its words,
@@ -67,7 +81,7 @@ public sealed record PlaceOrderResult(
         PlaceOrderOutcome.NothingToShip or PlaceOrderOutcome.UnknownShippingOption or
             PlaceOrderOutcome.UnknownSkus or PlaceOrderOutcome.PriceChanged or
             PlaceOrderOutcome.PaymentDeclined or PlaceOrderOutcome.NotMandated or
-            PlaceOrderOutcome.AgentRefused => AuditOutcome.Denied
+            PlaceOrderOutcome.AgentRefused or PlaceOrderOutcome.InsufficientStock => AuditOutcome.Denied
     };
 
     string? IAuditedResult.AuditReason =>
@@ -93,10 +107,11 @@ public sealed record PlacementRequest(
 /// behaviour goes down or out rather than across (invariant 2), the same call
 /// <see cref="OrderAccess"/> makes.
 ///
-/// Six things happen and the order matters. The shipping option is rated by the
+/// Seven things happen and the order matters. The shipping option is rated by the
 /// call that offered it; the quote is recomputed and its fingerprint compared
-/// (ADR 0016); the money is authorised **before the order exists** (ADR 0025); the
-/// order is placed with everything frozen onto it; and the cart is closed.
+/// (ADR 0016); the shelf is asked whether there is that much; the money is
+/// authorised **before the order exists** (ADR 0025); the order is placed with
+/// everything frozen onto it; and the cart is closed.
 ///
 /// **The caller commits**, so whatever else it changes lands in the same
 /// transaction as the order and the events that drive the rest — UCP completes a
@@ -113,7 +128,8 @@ public sealed class OrderPlacement(
     IAgentPolicy agentPolicy,
     IAgentActivity agentActivity,
     IOptions<CheckoutOptions> options,
-    TimeProvider clock)
+    TimeProvider clock,
+    IAvailabilityReader availability)
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
 
@@ -206,6 +222,28 @@ public sealed class OrderPlacement(
                 activity?.SetTag("agent.rule", verdict.Rule);
                 return new PlaceOrderResult(PlaceOrderOutcome.AgentRefused, null, pricing, $"{verdict.Rule}: {verdict.Detail}");
             }
+        }
+
+        // 3d · Is there that much of it? Asked last of the refusals and before
+        // any money, so the shortage the shop can already see costs what a
+        // declined card costs — nothing. It holds nothing: the hold is the
+        // saga's, after the order exists, and that one settles the race.
+        var available = await availability.AvailableAsync([.. cart.Lines.Select(line => line.Sku)], cancellationToken);
+
+        StockShortage[] shortages =
+        [
+            .. cart.Lines
+                .Select(line => new StockShortage(line.Sku, line.Quantity, Math.Max(0, available.GetValueOrDefault(line.Sku))))
+                .Where(line => line.Requested > line.Available)
+        ];
+
+        if (shortages.Length > 0)
+        {
+            activity?.SetTag("checkout.outcome", "insufficient_stock");
+            return new PlaceOrderResult(
+                PlaceOrderOutcome.InsufficientStock, null, pricing,
+                string.Join("; ", shortages.Select(line => $"{line.Sku}: {line.Requested} asked for, {line.Available} available")),
+                shortages);
         }
 
         // 4 · The money. Nothing has been written yet, so a decline costs

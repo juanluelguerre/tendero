@@ -10,13 +10,16 @@ import { DashboardRefresh } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { AgentSalesStore } from './agent-sales.store';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const point = (start: string, agentRevenue: number) => ({
   start,
-  revenue: agentRevenue * 2,
+  revenue: eur(agentRevenue * 2),
   orders: 2,
   units: 2,
   agentOrders: agentRevenue > 0 ? 1 : 0,
-  agentRevenue,
+  agentRevenue: eur(agentRevenue),
   newCustomers: 0,
   returningCustomers: 0,
 });
@@ -51,7 +54,6 @@ describe('the agent sales store', () => {
       .flush({ orders: 4, agentOrders: 1, byAgent: [] });
     http.expectOne('http://api/api/dashboard/sales/series?period=Week').flush({
       period: 'Week',
-      currency: 'EUR',
       timeZone: 'Europe/Madrid',
       step: 'Day',
       current: [point('2026-10-12T00:00:00+02:00', 40), point('2026-10-13T00:00:00+02:00', 0)],

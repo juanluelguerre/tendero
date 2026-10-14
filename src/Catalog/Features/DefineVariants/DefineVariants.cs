@@ -77,13 +77,19 @@ public sealed class DefineVariantsValidator : AbstractValidator<DefineVariantsCo
     }
 }
 
+public static class VariantRefusals
+{
+    public static readonly Refusal Rejected = new(
+        "VariantsRejected", 409, "El producto no admite esas variantes.", "The product does not take those variants.");
+}
+
 public sealed class DefineVariantsEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         // POST /api/catalog/products/{id}/variants
         app.MapPost("/api/catalog/products/{id:guid}/variants",
-            async Task<Results<Ok<DefineVariantsResponse>, NotFound, Conflict<string>>> (
+            async Task<Results<Ok<DefineVariantsResponse>, NotFound, ProblemHttpResult>> (
                    Guid id, DefineVariantsRequest request,
                    ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -97,11 +103,14 @@ public sealed class DefineVariantsEndpoint : ICarterModule
                 return result.Outcome switch
                 {
                     DefineVariantsOutcome.NotFound => TypedResults.NotFound(),
-                    DefineVariantsOutcome.Rejected => TypedResults.Conflict(result.Reason!),
+                    // The aggregate's own no: its sentence is the reason.
+                    DefineVariantsOutcome.Rejected => TypedResults.Problem(
+                        statusCode: VariantRefusals.Rejected.Status, extensions: VariantRefusals.Rejected.Said(reason: result.Reason)),
                     _ => TypedResults.Ok(new DefineVariantsResponse(result.Created, result.Existing))
                 };
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(VariantRefusals.Rejected))
             .WithTags("Catalog")
             .WithName("DefineVariants");
     }

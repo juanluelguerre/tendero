@@ -23,7 +23,7 @@ public sealed class SearchProductsToolTests
 
     private static SearchHit Hit(string code, string name, decimal price = 29.90m, bool inStock = true) =>
         new("id-" + code, code, name, name.ToLowerInvariant().Replace(' ', '-'), "Vertex", "Sartenes", "v-" + code, "SKU-" + code,
-            price, price, price, "EUR", null, inStock, 1.0);
+            new Money(price, "EUR"), new Money(price, "EUR"), new Money(price, "EUR"), null, inStock, 1.0);
 
     private static JsonElement Arguments(string json) => JsonDocument.Parse(json).RootElement.Clone();
 

@@ -1,5 +1,6 @@
 import type { Params } from '@angular/router';
 import type { FacetKind, ProductSort } from '@tendero/shared-api';
+import { minorUnits, ShopCurrency } from '@tendero/shared-util';
 
 /**
  * What a listing is narrowed by, and how it lives in the URL (R-7.3, F-3).
@@ -160,8 +161,10 @@ export function searchParams(
   // A category page is a place; narrowing inside it by category is navigation, not `within`.
   if (filters.within.length && !place.category) params['within'] = [...filters.within];
   if (filters.values.length) params['f'] = [...filters.values];
-  if (filters.minPrice !== null) params['minPrice'] = String(filters.minPrice);
-  if (filters.maxPrice !== null) params['maxPrice'] = String(filters.maxPrice);
+  // The address keeps a price as a person types it (`price=30-60`); the API is
+  // asked in the unit it answers prices in, whole minor units (ADR 0059).
+  if (filters.minPrice !== null) params['minPrice'] = String(minorUnits(filters.minPrice, ShopCurrency));
+  if (filters.maxPrice !== null) params['maxPrice'] = String(minorUnits(filters.maxPrice, ShopCurrency));
   if (filters.onOffer) params['onOffer'] = 'true';
   if (filters.newArrivals) params['newArrivals'] = 'true';
   if (filters.inStock) params['inStock'] = 'true';

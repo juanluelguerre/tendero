@@ -92,8 +92,11 @@ public sealed class CombiningPromotionEngine : IPromotionEngine
 
             if (!IsMetBy(promotion.Condition, current))
             {
+                var (shortBy, unitsShort) = ShortOf(promotion.Condition, current);
                 results.Add(AppliedDiscount.Suppressed(
-                    promotion, RuleReasons.ConditionNotMet(Describe(promotion.Condition)), currency));
+                    promotion,
+                    RuleReasons.ConditionNotMet(Describe(promotion.Condition), promotion.Condition, shortBy, unitsShort),
+                    currency));
                 continue;
             }
 
@@ -147,6 +150,27 @@ public sealed class CombiningPromotionEngine : IPromotionEngine
 
         return condition.MinimumQuantity is not { } quantity
             || reached.Sum(index => cart.Lines[index].Quantity) >= quantity;
+    }
+
+    /// <summary>
+    /// How far a cart is from a condition it does not meet, read the way
+    /// <see cref="IsMetBy"/> reads it: the minimum against what the cart is worth
+    /// now, the quantity against the lines the condition reaches. Nothing at all
+    /// when no line is reached — a cart with no shirt in it is not *two shirts
+    /// short* of anything a shopper was trying to do.
+    /// </summary>
+    private static (Money? ShortBy, int? UnitsShort) ShortOf(PromotionCondition condition, PricedCart cart)
+    {
+        var reached = Reached(condition, cart);
+        if (reached.Count == 0)
+            return (null, null);
+
+        Money? shortBy = condition.MinimumSubtotal is { } minimum && cart.Net < minimum ? minimum - cart.Net : null;
+
+        var units = reached.Sum(index => cart.Lines[index].Quantity);
+        int? unitsShort = condition.MinimumQuantity is { } quantity && units < quantity ? quantity - units : null;
+
+        return (shortBy, unitsShort);
     }
 
     /// <summary>

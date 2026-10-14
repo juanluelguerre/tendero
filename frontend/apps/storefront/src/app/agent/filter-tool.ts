@@ -1,4 +1,5 @@
 import type { SearchFacet } from '@tendero/shared-api';
+import { majorUnits } from '@tendero/shared-util';
 import { withPrice, type ListingFilters, type ListingPlace } from '../listing/listing-filters';
 
 /**
@@ -30,9 +31,12 @@ export function describeFacets(facets: readonly SearchFacet[], total: number): s
 
   const lines = facets.map((facet) => {
     if (facet.kind === 'Price' && facet.price) {
+      // Said in the unit the tool takes back: minPrice and maxPrice are amounts
+      // as a person writes them (49.9), in the currency named here.
       const { min, max, chosenMin, chosenMax } = facet.price;
-      const chosen = chosenMin !== null || chosenMax !== null ? ` (chosen: ${chosenMin ?? ''}–${chosenMax ?? ''})` : '';
-      return `- ${facet.code} (${facet.label}): from ${min} to ${max}; send minPrice and/or maxPrice${chosen}`;
+      const said = (end: typeof chosenMin) => (end ? majorUnits(end) : '');
+      const chosen = chosenMin !== null || chosenMax !== null ? ` (chosen: ${said(chosenMin)}–${said(chosenMax)})` : '';
+      return `- ${facet.code} (${facet.label}): from ${majorUnits(min)} to ${majorUnits(max)} ${min.currency}; send minPrice and/or maxPrice${chosen}`;
     }
 
     const options = facet.options

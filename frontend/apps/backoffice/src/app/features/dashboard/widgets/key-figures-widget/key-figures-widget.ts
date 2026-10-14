@@ -23,9 +23,8 @@ export class KeyFiguresWidget {
 
   protected readonly figures = computed(() => {
     const culture = this.culture.active();
-    const currency = this.store.sales.value()?.currency ?? 'EUR';
     return keyFigures(this.store.sources(), {
-      money: (amount) => formatPrice(amount, currency, culture),
+      money: (amount) => formatPrice(amount, culture),
       share: (ratio) => formatShare(ratio, culture),
       decimal: (value) => new Intl.NumberFormat(culture, { maximumFractionDigits: 2 }).format(value),
     });

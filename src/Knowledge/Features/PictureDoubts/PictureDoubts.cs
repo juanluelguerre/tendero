@@ -156,7 +156,11 @@ public sealed record DecidePictureDoubtRequest(PictureDoubtDecision Decision);
 
 public sealed record DecidePictureDoubtResponse(string DoubtId, PictureDoubtDecision Decision);
 
-public sealed record PictureDoubtConflict(string Title, string Detail);
+public static class PictureDoubtRefusals
+{
+    public static readonly Refusal NotWaiting = new(
+        "DoubtNotWaiting", 409, "La duda ya no espera una decisión.", "The doubt is not waiting for a decision.");
+}
 
 public sealed class PictureDoubtsEndpoints : ICarterModule
 {
@@ -182,7 +186,7 @@ public sealed class PictureDoubtsEndpoints : ICarterModule
 
         // POST /api/knowledge/picture-doubts/{id}/decide  { "decision": "PictureIsFine" }
         app.MapPost("/api/knowledge/picture-doubts/{id:guid}/decide",
-                async Task<Results<Ok<DecidePictureDoubtResponse>, NotFound, Conflict<PictureDoubtConflict>>> (
+                async Task<Results<Ok<DecidePictureDoubtResponse>, NotFound, ProblemHttpResult>> (
                     Guid id, DecidePictureDoubtRequest body, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 {
                     var result = await dispatcher.SendAsync(new DecidePictureDoubtCommand(new PictureDoubtId(id), body.Decision), ct);
@@ -190,13 +194,16 @@ public sealed class PictureDoubtsEndpoints : ICarterModule
                     return result.Outcome switch
                     {
                         DecidePictureDoubtOutcome.NotFound => TypedResults.NotFound(),
-                        DecidePictureDoubtOutcome.NotWaiting => TypedResults.Conflict(new PictureDoubtConflict(
-                            "The doubt is not waiting for a decision.",
-                            "It was already decided, or the picture was read again and no longer raises it.")),
+                        DecidePictureDoubtOutcome.NotWaiting => TypedResults.Problem(
+                            statusCode: PictureDoubtRefusals.NotWaiting.Status,
+                            extensions: PictureDoubtRefusals.NotWaiting.Said(
+                                es: "Ya se decidió, o la imagen se volvió a leer y ya no la plantea.",
+                                en: "It was already decided, or the picture was read again and no longer raises it.")),
                         _ => TypedResults.Ok(new DecidePictureDoubtResponse(result.DoubtId.ToString(), body.Decision)),
                     };
                 })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(PictureDoubtRefusals.NotWaiting))
             .WithTags("Knowledge")
             .WithName("DecidePictureDoubt");
     }

@@ -392,8 +392,19 @@ classDiagram
     }
     class RuleReason {
         <<record>>
-        +string Code
+        +RuleReasonCode Code
         +LocalizedText Explanation
+        +PromotionCondition? Requires
+        +Money? ShortBy
+        +int? UnitsShort
+        +LocalizedText? Winner
+    }
+    class RuleReasonCode {
+        <<enumeration>>
+        NotCombinableWith
+        SupersededByExclusive
+        ConditionNotMet
+        NothingToDiscount
     }
     class TaxLineView {
         <<record>>
@@ -418,6 +429,7 @@ classDiagram
     PricedCart "1" --> "*" PricedLine : Lines
     Promotion --> PromotionCondition : Condition
     Promotion --> PromotionEffect : Effect
+    RuleReason --> PromotionCondition : Requires
 ```
 
 ### Events

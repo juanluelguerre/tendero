@@ -114,6 +114,32 @@ public sealed class UcpCheckoutSessionTests(PostgresFixture postgres)
         Assert.Null(await person.AskAsync(new HandOffCheckoutSessionQuery(id), ct));
     }
 
+    /// <summary>
+    /// An agent asking for more than there is, is told at completion which line
+    /// and how many there are — the same till, so the same answer as the
+    /// storefront's — and nothing is charged or placed.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task More_than_there_is_is_an_issue_on_its_line_and_nothing_is_placed()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        await using var shop = await Shop.OpenAsync(postgres, nameof(More_than_there_is_is_an_issue_on_its_line_and_nothing_is_placed), new Agent("claude-desktop-test", test: true));
+        await shop.StockAsync(Sku, 1, ct);
+
+        var id = new CheckoutSessionId(Guid.Parse((await shop.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 2)], Described, "es"), ct)).Session!.Id));
+
+        var refused = await shop.SendAsync(new CompleteCheckoutSessionCommand(id, FakePaymentProvider.CardOk, "ucp-short-1", "es"), ct);
+
+        Assert.Equal(CheckoutSessionOutcome.NotPlaced, refused.Outcome);
+        var issue = Assert.Single(refused.Session!.Issues);
+        Assert.Equal((CheckoutIssueCodes.ItemUnavailable, $"line:{Sku}", "2 asked for, 1 available"), (issue.Code, issue.Target, issue.Detail));
+
+        await using var context = shop.Factory.Create();
+        Assert.Empty(await context.Orders.ToListAsync(ct));
+    }
+
     [Fact]
     [Trait("Category", "Integration")]
     public async Task A_declined_card_places_nothing_and_a_canceled_session_changes_no_more()
@@ -121,6 +147,9 @@ public sealed class UcpCheckoutSessionTests(PostgresFixture postgres)
         postgres.SkipIfUnavailable();
         var ct = TestContext.Current.CancellationToken;
         await using var shop = await Shop.OpenAsync(postgres, nameof(A_declined_card_places_nothing_and_a_canceled_session_changes_no_more), new Agent("claude-desktop-test", test: true));
+        // On the shelf, so that what refuses is the card: the till asks the
+        // shelf before it asks the bank.
+        await shop.StockAsync(Sku, 5, ct);
 
         var id = new CheckoutSessionId(Guid.Parse((await shop.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], Described, "es"), ct)).Session!.Id));
 

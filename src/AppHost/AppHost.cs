@@ -1089,6 +1089,7 @@ internal static class SeedFileEnvironment
         ("Pricing__Seed__PriceListsPath", "pricelists.sample.json"),
         ("Pricing__Seed__PromotionsPath", "promotions.sample.json"),
         ("Pricing__Campaigns__FilePath", "campaigns.sample.json"),
+        ("Kits__Seed__TemplatesPath", "kits.sample.json"),
         ("Inventory__Warehouses__FilePath", "warehouses.sample.json"),
         ("Inventory__Stock__FilePath", "stock.sample.json")
     ];

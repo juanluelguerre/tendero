@@ -132,7 +132,10 @@ describe('the campaigns page', () => {
     [...pane.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'campaigns.schedule')?.click();
     http
       .expectOne(`${Calendar}/HOGAR/schedule`)
-      .flush('The window closes at 2026-01-01, which has already passed.', { status: 400, statusText: 'Bad Request' });
+      .flush(
+        { code: 'Refused', status: 400, title: 'The window closes at 2026-01-01, which has already passed.' },
+        { status: 400, statusText: 'Bad Request' },
+      );
     TestBed.tick();
 
     expect(pane.querySelector('[role=alert]')?.textContent?.trim()).toBe(

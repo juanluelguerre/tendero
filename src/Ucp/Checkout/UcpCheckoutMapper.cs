@@ -82,14 +82,14 @@ public static class UcpCheckoutMapper
                 {
                     Id = line.Sku,
                     Title = line.VariantLabel is { Length: > 0 } label ? $"{line.Title} · {label}" : line.Title,
-                    Price = Minor(line.UnitPrice),
+                    Price = Minor(line.UnitPrice, session.Currency),
                     ImageUrl = line.ImageId is { } image ? links.Image(image) : null,
                 },
                 Quantity = line.Quantity,
                 Totals =
                 [
-                    new UcpTotal { Type = "subtotal", Amount = Minor(line.Total) },
-                    new UcpTotal { Type = "total", Amount = Minor(line.Total) },
+                    new UcpTotal { Type = "subtotal", Amount = Minor(line.Total, session.Currency) },
+                    new UcpTotal { Type = "total", Amount = Minor(line.Total, session.Currency) },
                 ],
             })],
             Totals = Totals(session),
@@ -109,7 +109,7 @@ public static class UcpCheckoutMapper
                     {
                         Code = session.Coupons.Contains(discount.Code, StringComparer.OrdinalIgnoreCase) ? discount.Code : null,
                         Title = discount.Label,
-                        Amount = Minor(Math.Abs(discount.Amount)),
+                        Amount = Minor(Math.Abs(discount.Amount), session.Currency),
                         Automatic = !session.Coupons.Contains(discount.Code, StringComparer.OrdinalIgnoreCase),
                     })],
                 }
@@ -142,21 +142,21 @@ public static class UcpCheckoutMapper
         if (totals is null)
             return [new UcpTotal { Type = "subtotal", Amount = 0 }, new UcpTotal { Type = "total", Amount = 0 }];
 
-        List<UcpTotal> entries = [new UcpTotal { Type = "subtotal", Amount = Minor(totals.Subtotal) }];
+        List<UcpTotal> entries = [new UcpTotal { Type = "subtotal", Amount = Minor(totals.Subtotal, session.Currency) }];
         if (totals.DiscountTotal != 0m)
-            entries.Add(new UcpTotal { Type = "items_discount", Amount = -Minor(Math.Abs(totals.DiscountTotal)) });
+            entries.Add(new UcpTotal { Type = "items_discount", Amount = -Minor(Math.Abs(totals.DiscountTotal), session.Currency) });
         if (session.SelectedShippingOption is not null)
-            entries.Add(new UcpTotal { Type = "fulfillment", Amount = Minor(totals.Shipping) });
+            entries.Add(new UcpTotal { Type = "fulfillment", Amount = Minor(totals.Shipping, session.Currency) });
 
         List<UcpTotalLine> vat = [];
         foreach (var tax in totals.Taxes)
         {
             var rate = (tax.Rate * 100m).ToString("0.##", CultureInfo.InvariantCulture);
-            vat.Add(new UcpTotalLine { DisplayText = session.Culture == "en" ? $"Base at {rate}% VAT" : $"Base al {rate} % de IVA", Amount = Minor(tax.Base) });
-            vat.Add(new UcpTotalLine { DisplayText = session.Culture == "en" ? $"VAT {rate}%" : $"IVA {rate} %", Amount = Minor(tax.Amount) });
+            vat.Add(new UcpTotalLine { DisplayText = session.Culture == "en" ? $"Base at {rate}% VAT" : $"Base al {rate} % de IVA", Amount = Minor(tax.Base, session.Currency) });
+            vat.Add(new UcpTotalLine { DisplayText = session.Culture == "en" ? $"VAT {rate}%" : $"IVA {rate} %", Amount = Minor(tax.Amount, session.Currency) });
         }
 
-        var total = Minor(totals.Total);
+        var total = Minor(totals.Total, session.Currency);
         entries.Add(new UcpTotal
         {
             Type = "total",
@@ -196,7 +196,7 @@ public static class UcpCheckoutMapper
                             Description = option.EstimatedDays is { } days
                                 ? new UcpPlainDescription { Plain = session.Culture == "en" ? $"Arrives in {days} days" : $"Llega en {days} días" }
                                 : null,
-                            Totals = [new UcpTotal { Type = "total", Amount = Minor(option.Amount) }],
+                            Totals = [new UcpTotal { Type = "total", Amount = Minor(option.Amount, session.Currency) }],
                         })],
                         SelectedOptionId = session.SelectedShippingOption,
                     },
@@ -371,9 +371,13 @@ public static class UcpCheckoutMapper
             destination.AddressRegion, destination.PostalCode, destination.AddressCountry.ToUpperInvariant(), destination.PhoneNumber);
     }
 
-    /// <summary>Minor units: 39,00 € is 3900. Away from zero, as a till would.</summary>
-    public static long Minor(decimal amount) => (long)Math.Round(amount * 100m, MidpointRounding.AwayFromZero);
+    /// <summary>
+    /// Minor units: 39,00 € is 3900, and 3900 ¥ is 3900 too — the currency's own
+    /// exponent, from the one table the shop's wire reads (<see cref="MinorUnits"/>).
+    /// Away from zero, as a till would.
+    /// </summary>
+    public static long Minor(decimal amount, string currency) => MinorUnits.From(amount, currency);
 
     /// <summary>Minor units back to the amount: what a mandate approved, in the money Ordering speaks.</summary>
-    public static decimal Major(long minor) => minor / 100m;
+    public static decimal Major(long minor, string currency) => MinorUnits.ToAmount(minor, currency);
 }

@@ -1,17 +1,24 @@
 /**
- * The shape of `navigator.modelContext`, declared here because no library ships
+ * The shape of `document.modelContext`, declared here because no library ships
  * it yet.
  *
  * WebMCP is under incubation at the W3C Web Machine Learning Community Group
- * (Google and Microsoft), and Chrome shipped `navigator.modelContext` in
- * February 2026. **It is not on the standards track and it is Chrome-only**, and
- * that label travels with it everywhere in this repository rather than being
- * discovered later by a reader.
+ * (Google and Microsoft). **It is not on the standards track and it is
+ * Chrome-only**, and that label travels with it everywhere in this repository
+ * rather than being discovered later by a reader.
  *
  * Declaring the surface ourselves rather than depending on a typings package is
- * the same call ADR 0006 makes about dependencies: this is thirty lines, the
+ * the same call ADR 0006 makes about dependencies: this is forty lines, the
  * specification will move, and a package that lags the browser is worse than a
  * file we can edit.
+ *
+ * **And it did move.** This file was first written against what Chrome shipped
+ * in February 2026 — `navigator.modelContext.provideContext({ tools })`, the
+ * whole set in one call. The Community Group's draft of 9 October 2026 has
+ * neither: the context hangs from the `Document`, a tool is registered by a
+ * call of its own that answers with a promise, it is taken back by aborting a
+ * signal, and it says of itself whether it only reads. What follows is that
+ * draft's IDL, member for member, for the part the shop uses.
  */
 
 /** A parameter schema, in the JSON Schema subset the specification uses. */
@@ -27,6 +34,28 @@ export interface ToolResponse {
   readonly isError?: boolean;
 }
 
+/**
+ * What a tool says of itself (the draft's `ToolAnnotations`). Each is a hint an
+ * agent may act on and false when left unsaid — so a tool that only reads has
+ * to say so, or an agent that asks before anything that might change something
+ * asks before every search.
+ */
+export interface ToolAnnotations {
+  /** It changes no state: it only reads. */
+  readonly readOnlyHint?: boolean;
+  /** Its answer carries text the page's author does not vouch for. */
+  readonly untrustedContentHint?: boolean;
+  /** What it does is significant, real-world or cannot be taken back. */
+  readonly consequentialHint?: boolean;
+}
+
+/** What the browser hands a tool when it runs it (`ToolExecuteCallbackOptions`). */
+export interface ToolExecuteOptions {
+  /** Aborted when the agent gives the call up. */
+  readonly signal: AbortSignal;
+}
+
+/** The draft's `ModelContextTool`. */
 export interface ToolDescriptor {
   readonly name: string;
 
@@ -40,11 +69,30 @@ export interface ToolDescriptor {
    */
   readonly description: string;
   readonly inputSchema: ToolInputSchema;
-  execute(input: Readonly<Record<string, unknown>>): Promise<ToolResponse>;
+  readonly annotations?: ToolAnnotations;
+
+  /**
+   * The draft types the answer `Promise<any>`; the shop's is MCP's content
+   * shape, because that is what an agent already knows how to read — and
+   * `isError` is how a refusal arrives as one.
+   */
+  execute(input: Readonly<Record<string, unknown>>, options: ToolExecuteOptions): Promise<ToolResponse>;
+}
+
+/** How a tool is registered (`ModelContextRegisterToolOptions`). */
+export interface RegisterToolOptions {
+  /** Aborting it takes the tool back: the draft has no `unregisterTool`. */
+  readonly signal?: AbortSignal;
 }
 
 export interface ModelContext {
-  provideContext(context: { readonly tools: readonly ToolDescriptor[] }): void;
+  /**
+   * One tool. The promise is rejected with `InvalidStateError` for a name
+   * already registered, an empty description, or a name that is not letters,
+   * digits, `_`, `-` and `.`; with `NotAllowedError` where the page is not
+   * allowed the feature.
+   */
+  registerTool(tool: ToolDescriptor, options?: RegisterToolOptions): Promise<void>;
 }
 
 /**
@@ -54,13 +102,17 @@ export interface ModelContext {
  * nothing registers, nothing is imported, and the shop is exactly the shop it
  * was. There is no flag and no fallback path to maintain, because the absence of
  * a fallback is the point — WebMCP adds a surface, it does not replace one.
+ *
+ * Detected by the method the shop calls, not by the name it hangs from: a
+ * browser still on the first shape has a `modelContext` with no `registerTool`,
+ * and there too the right thing to do is nothing.
  */
-export function supportsModelContext(target: Navigator = navigator): boolean {
-  return 'modelContext' in target && typeof target.modelContext === 'object';
+export function supportsModelContext(target: Document = document): boolean {
+  return typeof target.modelContext?.registerTool === 'function';
 }
 
 declare global {
-  interface Navigator {
+  interface Document {
     readonly modelContext?: ModelContext;
   }
 }

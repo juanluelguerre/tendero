@@ -246,7 +246,7 @@ public static class ArgumentSchemas
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
-        Converters = { WireJson.Enums() },
+        Converters = { WireJson.Enums(), WireJson.Money() },
     };
 
     public static JsonElement Of(Type arguments) =>

@@ -36,7 +36,7 @@ public sealed class ReviewProductTests
         Assert.False(review.Descriptions.ContainsKey("en"));
         Assert.Equal(["en"], review.MissingCultures);
         Assert.Equal("Clothing", review.Category);
-        Assert.Equal(24.90m, review.PriceAmount);
+        Assert.Equal(new Money(24.90m, "EUR"), review.Price);
     }
 
     [Fact]

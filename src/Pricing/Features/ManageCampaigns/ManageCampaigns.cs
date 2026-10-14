@@ -395,6 +395,51 @@ public sealed record CreateCampaignRequest(string Code, CampaignDetailsRequest D
 
 public sealed record CampaignChangeResponse(CampaignChange Change, ManagedCampaignView Campaign);
 
+/// <summary>
+/// What a change to a campaign is refused for, by code. A 400 is one the caller
+/// can fix in the request; a 409 is about the campaign's state, or its code
+/// being taken.
+/// </summary>
+public static class CampaignRefusals
+{
+    public static readonly Refusal InvalidCode = new(
+        "InvalidCampaignCode", 400,
+        "Eso no es un código de campaña: mayúsculas con guiones bajos, una letra primero (TENDERO_DAYS).",
+        "That is not a campaign code: upper snake case, a letter first (TENDERO_DAYS).");
+
+    public static readonly Refusal UnknownPromotion = new(
+        "UnknownPromotion", 400, "La campaña nombra una promoción que no existe.", "The campaign names a promotion that does not exist.");
+
+    public static readonly Refusal UnknownImage = new(
+        "UnknownImage", 400, "La campaña nombra una imagen que no está guardada.", "The campaign names a picture that is not stored.");
+
+    public static readonly Refusal WindowClosed = new(
+        "WindowClosed", 400, "La ventana de la campaña no es válida o ya ha pasado.", "The campaign's window is not valid, or has passed.");
+
+    public static readonly Refusal AlreadyExists = new(
+        "AlreadyExists", 409, "Ya hay una campaña con ese código.", "There is already a campaign with that code.");
+
+    public static readonly Refusal NotEditable = new(
+        "NotEditable", 409, "La campaña ya no se puede editar en el estado en que está.", "The campaign can no longer be edited in the state it is in.");
+
+    public static readonly Refusal NotAllowed = new(
+        "NotAllowed", 409, "La campaña no admite ese paso desde donde está.", "The campaign does not take that step from where it is.");
+
+    /// <summary>Every refusal a change to a campaign has: each of the moves can answer each.</summary>
+    public static readonly Refuses All = new(
+        InvalidCode, UnknownPromotion, UnknownImage, WindowClosed, AlreadyExists, NotEditable, NotAllowed);
+
+    public static Refusal Of(CampaignChange change) => change switch
+    {
+        CampaignChange.UnknownPromotion => UnknownPromotion,
+        CampaignChange.UnknownImage => UnknownImage,
+        CampaignChange.WindowClosed => WindowClosed,
+        CampaignChange.AlreadyExists => AlreadyExists,
+        CampaignChange.NotEditable => NotEditable,
+        _ => NotAllowed,
+    };
+}
+
 public sealed class ManageCampaignsEndpoints : ICarterModule
 {
     /// <summary>
@@ -422,38 +467,55 @@ public sealed class ManageCampaignsEndpoints : ICarterModule
                     : TypedResults.NotFound())
             .WithName("GetManagedCampaign");
 
-        calendar.MapPost("/", async Task<Results<Ok<CampaignChangeResponse>, BadRequest<string>, NotFound, Conflict<string>>> (
+        calendar.MapPost("/", async Task<Results<Created<CampaignChangeResponse>, NotFound, ProblemHttpResult>> (
                 CreateCampaignRequest request, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 if (!CampaignCode.TryParse(request.Code, out var code))
-                    return TypedResults.BadRequest(
-                        $"'{request.Code}' is not a campaign code: upper snake case, a letter first, at most {CampaignCode.MaxLength} characters (TENDERO_DAYS).");
+                    return TypedResults.Problem(
+                        statusCode: CampaignRefusals.InvalidCode.Status,
+                        extensions: CampaignRefusals.InvalidCode.Said(
+                            es: $"«{request.Code}» no lo es; como mucho {CampaignCode.MaxLength} caracteres.",
+                            en: $"'{request.Code}' is not one; at most {CampaignCode.MaxLength} characters.",
+                            path: "$.code"));
 
-                return Http(await dispatcher.SendAsync(new CreateCampaignCommand(code, request.Details.ToDetails()), ct));
+                // 201 and where the campaign is: the one move here that makes
+                // something with an address of its own.
+                var result = await dispatcher.SendAsync(new CreateCampaignCommand(code, request.Details.ToDetails()), ct);
+                return Http(result) switch
+                {
+                    { Result: Ok<CampaignChangeResponse> made } => TypedResults.Created($"/api/pricing/campaign-calendar/{code}", made.Value),
+                    { Result: ProblemHttpResult refused } => refused,
+                    _ => TypedResults.NotFound(),
+                };
             })
+            .WithMetadata(CampaignRefusals.All)
             .WithName("CreateCampaign");
 
-        calendar.MapPut("/{code}", async Task<Results<Ok<CampaignChangeResponse>, BadRequest<string>, NotFound, Conflict<string>>> (
+        calendar.MapPut("/{code}", async Task<Results<Ok<CampaignChangeResponse>, NotFound, ProblemHttpResult>> (
                 string code, CampaignDetailsRequest request, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 CampaignCode.TryParse(code, out var parsed)
                     ? Http(await dispatcher.SendAsync(new UpdateCampaignCommand(parsed, request.ToDetails()), ct))
                     : TypedResults.NotFound())
+            .WithMetadata(CampaignRefusals.All)
             .WithName("UpdateCampaign");
 
         calendar.MapPost("/{code}/schedule", (string code, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 MoveAsync(code, parsed => new ScheduleCampaignCommand(parsed), dispatcher, ct))
+            .WithMetadata(CampaignRefusals.All)
             .WithName("ScheduleCampaign");
 
         calendar.MapPost("/{code}/unschedule", (string code, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 MoveAsync(code, parsed => new UnscheduleCampaignCommand(parsed), dispatcher, ct))
+            .WithMetadata(CampaignRefusals.All)
             .WithName("UnscheduleCampaign");
 
         calendar.MapPost("/{code}/end", (string code, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 MoveAsync(code, parsed => new EndCampaignCommand(parsed), dispatcher, ct))
+            .WithMetadata(CampaignRefusals.All)
             .WithName("EndCampaign");
     }
 
-    private static async Task<Results<Ok<CampaignChangeResponse>, BadRequest<string>, NotFound, Conflict<string>>> MoveAsync(
+    private static async Task<Results<Ok<CampaignChangeResponse>, NotFound, ProblemHttpResult>> MoveAsync(
         string code, Func<CampaignCode, ICommand<CampaignResult>> command, ICommandDispatcher dispatcher, CancellationToken ct) =>
         CampaignCode.TryParse(code, out var parsed)
             ? Http(await dispatcher.SendAsync(command(parsed), ct))
@@ -463,14 +525,16 @@ public sealed class ManageCampaignsEndpoints : ICarterModule
     /// A refusal the caller can fix in the request is a 400; one about the
     /// campaign's state or its code being taken is a 409; not there is a 404.
     /// </summary>
-    private static Results<Ok<CampaignChangeResponse>, BadRequest<string>, NotFound, Conflict<string>> Http(CampaignResult result) =>
+    private static Results<Ok<CampaignChangeResponse>, NotFound, ProblemHttpResult> Http(CampaignResult result) =>
         result.Change switch
         {
             CampaignChange.NotFound => TypedResults.NotFound(),
-            CampaignChange.UnknownPromotion or CampaignChange.UnknownImage or CampaignChange.WindowClosed =>
-                TypedResults.BadRequest(result.Detail ?? result.Change.ToString()),
-            CampaignChange.AlreadyExists or CampaignChange.NotEditable or CampaignChange.NotAllowed =>
-                TypedResults.Conflict(result.Detail ?? result.Change.ToString()),
+            // The change is the code; what the campaign itself said is the reason.
+            CampaignChange.UnknownPromotion or CampaignChange.UnknownImage or CampaignChange.WindowClosed
+                or CampaignChange.AlreadyExists or CampaignChange.NotEditable or CampaignChange.NotAllowed =>
+                TypedResults.Problem(
+                    statusCode: CampaignRefusals.Of(result.Change).Status,
+                    extensions: CampaignRefusals.Of(result.Change).Said(reason: result.Detail)),
             _ => TypedResults.Ok(new CampaignChangeResponse(result.Change, result.Campaign!)),
         };
 }

@@ -2,6 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { CellKind, ResultCell, ResultTable } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
+import { ShopCurrency } from '@tendero/shared-util';
 
 /** A column as the table draws it: its heading's key, and whether it lines up as figures. */
 interface Heading {
@@ -68,7 +69,7 @@ export class StewardTable {
     const culture = this.culture.active();
     const plain = new Intl.NumberFormat(culture, { maximumFractionDigits: 2 });
     const days = new Intl.NumberFormat(culture, { maximumFractionDigits: 1 });
-    const money = new Intl.NumberFormat(culture, { style: 'currency', currency: currency ?? 'EUR' });
+    const money = new Intl.NumberFormat(culture, { style: 'currency', currency: currency ?? ShopCurrency });
     const show = (cell: ResultCell, kind: CellKind): Shown => {
       const numeric = Figures.includes(kind);
       if (cell.number !== null && cell.number !== undefined) {

@@ -8,7 +8,7 @@ namespace ElGuerre.Tendero.SharedKernel;
 /// number. One definition, because the API and the MCP server serialise the same
 /// records with two different option sets, and a rule written twice is two rules.
 /// </summary>
-public static class WireJson
+public static partial class WireJson
 {
     public static JsonConverter Enums() => new NamesOnlyEnumConverter();
 

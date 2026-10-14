@@ -43,16 +43,33 @@ export class PageTitles extends TitleStrategy {
       .subscribe(([name, brand]) => this.title.setTitle(name ? `${name} · ${brand}` : brand));
   }
 
+  /** The path the router is on, and the path a page last named itself on. */
+  private path = '';
+  private named: string | null = null;
+
   override updateTitle(snapshot: RouterStateSnapshot): void {
+    this.path = pathOf(snapshot.url);
+
+    // The same page under another query — a filter, a sort, a page number —
+    // is the same page, and it will not name itself again: its name stays.
+    if (this.named === this.path) return;
+
+    this.named = null;
     const key = this.buildTitle(snapshot);
     this.page.next(key ? { key } : null);
   }
 
-  /** For a page whose name is data — it replaces the route's until the next
-      navigation. */
+  /** For a page whose name is data — it replaces the route's until the
+      router leaves that page; a change of query alone is not leaving it. */
   name(text: string): void {
+    this.named = this.path;
     this.page.next({ text });
   }
+}
+
+/** An address without its query and fragment: what says which page it is. */
+function pathOf(url: string): string {
+  return url.split(/[?#]/, 1)[0];
 }
 
 /** Route titles become translation keys, translated and branded. */

@@ -29,10 +29,10 @@ public sealed record GetProductPerformanceQuery(
 
 /// <param name="Total">Every product that sold, not only the rows shown.</param>
 public sealed record ProductPerformance(
-    DashboardPeriod Period, PerformanceRanking Ranking, string? Category, string Currency, int Total, IReadOnlyList<ProductSales> Rows);
+    DashboardPeriod Period, PerformanceRanking Ranking, string? Category, int Total, IReadOnlyList<ProductSales> Rows);
 
 /// <param name="Name">As the order recorded it: the snapshot, not today's name (ADR 0002).</param>
-public sealed record ProductSales(string ProductId, string Name, int Units, decimal Revenue);
+public sealed record ProductSales(string ProductId, string Name, int Units, Money Revenue);
 
 public static class ProductPerformanceFigures
 {
@@ -45,8 +45,10 @@ public static class ProductPerformanceFigures
         // Worst is the same ranking read from the other end.
         var ordered = ranking == PerformanceRanking.Best ? ranked : [.. ranked.Reverse()];
 
-        return new ProductPerformance(period, ranking, category, DashboardCurrency.Of(placed), ranked.Count,
-            [.. ordered.Take(limit).Select(sold => new ProductSales(sold.Key, sold.Name, sold.Units, sold.Revenue))]);
+        var currency = DashboardCurrency.Of(placed);
+
+        return new ProductPerformance(period, ranking, category, ranked.Count,
+            [.. ordered.Take(limit).Select(sold => new ProductSales(sold.Key, sold.Name, sold.Units, new Money(sold.Revenue, currency)))]);
     }
 }
 

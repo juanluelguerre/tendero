@@ -78,7 +78,7 @@
       [class.text-md]="line"
       [class.text-muted]="!item.inStock"
     >
-      {{ hit().priceAmount | price: hit().priceCurrency : culture.active() }}
+      {{ hit().price | price: culture.active() }}
     </p>
 
     @if (reason(); as why) {

@@ -42,7 +42,7 @@ comes first so that they are born observed instead of instrumented afterwards.
 - Given any page, then LCP, INP and CLS are reported per route; an unhandled error
   is reported through Angular's `ErrorHandler`; `url.full` carries no query string
   and no id.
-- Given `navigator.modelContext` exists and a WebMCP tool is invoked, then the
+- Given `document.modelContext` exists and a WebMCP tool is invoked, then the
   event carries `actor.kind=webmcp`.
 - Given the storefront without analytics consent, then technical telemetry still
   flows without personal data, and behavioural events do not.

@@ -6,6 +6,7 @@ import { patchState, signalStore, withComputed, withHooks, withMethods, withProp
 import type { OrderView, ReturnableLineView, ReturnReason, ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
+import { refusalSentence } from '@tendero/shared-util';
 import { OrderService } from '../../data-access/order.service';
 import { type ReturnableLine, returnableLines } from './returnable';
 
@@ -155,7 +156,7 @@ export const OrderStore = signalStore(
               failure.status === 409
                 ? store._transloco.translate('order.returnClosed')
                 : store._transloco.translate('order.returnFailed', {
-                    reason: typeof failure.error === 'string' ? failure.error : '',
+                    reason: refusalSentence(failure.error),
                   }),
           });
         } finally {

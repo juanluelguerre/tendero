@@ -48,7 +48,7 @@ public sealed class ArchitectureRules
             // EVERYTHING the assembly drags in for its slices is forbidden, plus
             // the assembly's own non-Domain namespaces. The list is computed, not
             // written: adding a package to the context puts it in the rule by itself.
-            var forbidden = ForbiddenForDomainIn(assembly);
+            var forbidden = ForbiddenFor(assembly, DomainSuffix);
             Assert.NotEmpty(forbidden);
 
             // The domain is the heart: if it needs anything beyond the
@@ -60,6 +60,28 @@ public sealed class ArchitectureRules
 
             Assert.True(result.IsSuccessful, Describe(assembly, result));
         }
+    }
+
+    /// <summary>
+    /// The kit solver is a function of its problem and nothing else (phase 13c):
+    /// no search, no price list, no model, no clock. That is what lets it be held
+    /// to properties — never over the budget, the same kit in any order, as good
+    /// as trying every kit there is — and it is the reason it has a namespace of
+    /// its own inside Search. The day it needs Pricing to bound a branch, those
+    /// properties are about two systems, and this says so first.
+    /// </summary>
+    [Fact]
+    public void The_kit_solver_depends_on_the_shared_kernel_and_nothing_else()
+    {
+        const string Kits = ".Kits";
+        var forbidden = ForbiddenFor(Solution.Search, Kits);
+
+        var solver = Types.InAssembly(Solution.Search).That().ResideInNamespaceEndingWith(Kits);
+        Assert.NotEmpty(solver.GetTypes());
+
+        var result = solver.ShouldNot().HaveDependencyOnAny(forbidden).GetResult();
+
+        Assert.True(result.IsSuccessful, Describe(Solution.Search, result));
     }
 
     /// <summary>
@@ -697,13 +719,14 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
-    /// What <paramref name="assembly"/>'s domain may not touch: the assemblies
-    /// its .csproj references (minus the framework and the SharedKernel) and its
-    /// own namespaces outside Domain.
+    /// What a pure namespace of <paramref name="assembly"/> may not touch — its
+    /// domain, or the kit solver: the assemblies its .csproj references (minus
+    /// the framework and the SharedKernel) and its own namespaces outside that
+    /// one.
     /// </summary>
-    private static string[] ForbiddenForDomainIn(Assembly assembly)
+    private static string[] ForbiddenFor(Assembly assembly, string suffix)
     {
-        var domainNamespace = assembly.GetName().Name + DomainSuffix;
+        var domainNamespace = assembly.GetName().Name + suffix;
 
         var externals = assembly.GetReferencedAssemblies()
             .Select(reference => reference.Name)

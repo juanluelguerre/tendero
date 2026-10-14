@@ -9,8 +9,11 @@ public sealed record SearchForShopperArguments(
     [property: Description("The language to answer in: es or en.")] string? Culture = null,
     [property: Description("A category code to search inside, e.g. KITCHEN. Leave unset to search the whole shop.")] string? Category = null,
     [property: Description("A brand, as the shop spells it.")] string? Brand = null,
-    [property: Description("Lowest price, inclusive.")] decimal? MinPrice = null,
-    [property: Description("Highest price, inclusive.")] decimal? MaxPrice = null,
+    // In the shop's currency as a person says it, and as this tool answers a
+    // price: the reader is the shop's own small model, which says what it is
+    // handed — the wire's minor units are for a program (ADR 0059).
+    [property: Description("Lowest price, inclusive, in the shop's currency as a person says it: 40 is 40 EUR.")] decimal? MinPrice = null,
+    [property: Description("Highest price, inclusive, in the shop's currency as a person says it: 40 is 40 EUR.")] decimal? MaxPrice = null,
     [property: Description("Only products on offer now.")] bool OnOffer = false,
     [property: Description("Only products that can be bought now.")] bool InStock = false);
 
@@ -67,7 +70,7 @@ public sealed class SearchProductsTool(IQueryDispatcher queries) : ReadTool<Sear
         var found = new ProductsForShopper(total,
             [
                 .. page.Hits.Take(MaxProducts).Select(hit => new ProductForShopper(
-                    hit.Code, hit.Name, hit.Brand, hit.Category, hit.PriceAmount, hit.PriceCurrency, hit.InStock)),
+                    hit.Code, hit.Name, hit.Brand, hit.Category, hit.Price.Amount, hit.Price.Currency, hit.InStock)),
             ],
             new SearchAsRun(arguments.Text, arguments.Category, arguments.Brand, arguments.MinPrice, arguments.MaxPrice,
                 arguments.OnOffer, arguments.InStock));

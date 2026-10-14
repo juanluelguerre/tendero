@@ -23,7 +23,14 @@ public static class UcpServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddTenderoUcp(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<UcpOptions>(configuration.GetSection(UcpOptions.SectionName));
+        services.AddOptions<UcpOptions>()
+            .Bind(configuration.GetSection(UcpOptions.SectionName))
+            // A wrong address here is an extension every platform drops without
+            // saying so: found when the shop starts, by the shop.
+            .Validate(
+                options => options.OwnSchemasUrl is null || UcpAuthority.BindsOwn(options.OwnSchemasUrl),
+                $"{UcpOptions.SectionName}:{nameof(UcpOptions.OwnSchemasUrl)} must be an https origin under the domain the shop's own capability names reverse to (UCP, Authority Binding).")
+            .ValidateOnStart();
         services.AddHttpClient<IPlatformProfiles, HttpPlatformProfiles>(client => client.Timeout = TimeSpan.FromSeconds(5))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 

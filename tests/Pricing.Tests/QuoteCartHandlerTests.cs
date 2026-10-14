@@ -35,7 +35,7 @@ public sealed class QuoteCartHandlerTests
         Handler().HandleAsync(
             new QuoteCartQuery("es",
                 [.. lines.Select(line => new QuoteLineInput(line.Sku, line.Quantity))],
-                shipping, coupons ?? []),
+                shipping is { } amount ? new Money(amount, "EUR") : null, coupons ?? []),
             CancellationToken.None);
 
     // ---------- What the shop refuses ----------
@@ -69,6 +69,24 @@ public sealed class QuoteCartHandlerTests
 
         Assert.Equal(QuoteOutcome.MixedCurrencies, result.Outcome);
         Assert.Equal(["EUR", "USD"], result.Offending);
+    }
+
+    /// <summary>
+    /// Shipping arrives as money now, so it arrives with a currency (phase 13b)
+    /// — and one that is not the goods' is the same mistake as goods in two. It
+    /// used to be a bare number the server stamped with the cart's currency,
+    /// which would have read five dollars as five euros without a word.
+    /// </summary>
+    [Fact]
+    public async Task Shipping_in_another_currency_than_the_goods_is_refused()
+    {
+        var result = await Handler().HandleAsync(
+            new QuoteCartQuery("es", [new QuoteLineInput("SHIRT", 1)], new Money(5m, "USD"), []),
+            CancellationToken.None);
+
+        Assert.Equal(QuoteOutcome.MixedCurrencies, result.Outcome);
+        Assert.Equal(["EUR", "USD"], result.Offending);
+        Assert.Null(result.Quote);
     }
 
     // ---------- Segments ----------

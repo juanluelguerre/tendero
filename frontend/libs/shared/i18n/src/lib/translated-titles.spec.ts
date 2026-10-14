@@ -70,4 +70,30 @@ describe('page titles', () => {
 
     expect(TestBed.inject(Title).getTitle()).toBe('Zapatillas Pulse Runner · Tendero');
   });
+
+  /**
+   * Found in a browser on 2026-10-13: a category's tab said *Hogar · Tendero*
+   * until the first filter, and *Sección · Tendero* ever after. A filter is a
+   * navigation — the address gains `?price=-30` — and every navigation put the
+   * route's word back, while the page, still showing the same category, had
+   * no reason to name itself again. The same page under another query is the
+   * same page.
+   */
+  it('keeps a page its own name while only the query changes', async () => {
+    await arrive('/cart');
+    TestBed.inject(PageTitles).name('Hogar');
+
+    await TestBed.inject(Router).navigateByUrl('/cart?price=-30');
+
+    expect(TestBed.inject(Title).getTitle()).toBe('Hogar · Tendero');
+  });
+
+  it('gives the name up when the page is another one', async () => {
+    await arrive('/cart');
+    TestBed.inject(PageTitles).name('Hogar');
+
+    await TestBed.inject(Router).navigateByUrl('/');
+
+    expect(TestBed.inject(Title).getTitle()).toBe('Tendero');
+  });
 });

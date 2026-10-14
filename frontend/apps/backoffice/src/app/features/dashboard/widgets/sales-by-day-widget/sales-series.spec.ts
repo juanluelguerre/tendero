@@ -2,20 +2,22 @@ import type { SalesSeries } from '@tendero/shared-api';
 import { describe, expect, it } from 'vitest';
 import { toBarChart } from './sales-series';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const point = (start: string, revenue: number) => ({
   start,
-  revenue,
+  revenue: eur(revenue),
   orders: 1,
   units: 1,
   agentOrders: 0,
-  agentRevenue: 0,
+  agentRevenue: eur(0),
   newCustomers: 1,
   returningCustomers: 0,
 });
 
 const WEEK: SalesSeries = {
   period: 'Week',
-  currency: 'EUR',
   timeZone: 'Europe/Madrid',
   step: 'Day',
   current: [point('2026-10-12T00:00:00+02:00', 520), point('2026-10-13T00:00:00+02:00', 930)],

@@ -314,9 +314,9 @@ sibling of "MCP is a transport over the query dispatcher": a tool with its own
 route to the API is a second implementation of a rule, and only one of the two
 would have tests.
 
-**The degradation is the feature detection.** Without `navigator.modelContext`
+**The degradation is the feature detection.** Without `document.modelContext`
 nothing registers, nothing renders differently and there is no fallback path to
-maintain — invariant 8 read the way it was meant. `navigator.modelContext` is
+maintain — invariant 8 read the way it was meant. `document.modelContext` is
 Chrome-only and under incubation at the W3C Web Machine Learning Community
 Group, and that label travels with it in the code rather than being discovered
 by a reader later.

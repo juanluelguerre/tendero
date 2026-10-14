@@ -13,6 +13,15 @@ import type { components } from './generated/schema';
 type Schemas = components['schemas'];
 
 /**
+ * Money as every amount in the contract is written (phase 13b): a whole number
+ * of the currency's **minor units** and the currency — 113,90 € is
+ * `{ amount: 11390, currency: 'EUR' }`. Never divided by a hundred by hand:
+ * `formatPrice` and the `price` pipe turn it into text, and `majorUnits` into
+ * a number for a chart.
+ */
+export type Money = Schemas['Money'];
+
+/**
  * A promotion as the shopkeeper sees it. The combination column is the reason
  * the screen exists: the question is not "how much is this worth" but "if I add
  * it, what stops applying".

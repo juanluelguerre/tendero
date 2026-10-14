@@ -2,28 +2,30 @@ import type { CheckoutFunnel, OperationsSummary, SalesSeries, SalesSummary } fro
 import { describe, expect, it } from 'vitest';
 import { keyFigures } from './key-figures';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const say = {
-  money: (amount: number) => `€${amount}`,
+  money: (amount: { amount: number }) => `€${amount.amount / 100}`,
   share: (ratio: number) => `${Math.round(ratio * 100)}%`,
   decimal: (value: number) => value.toFixed(2),
 };
 const figures = (revenue: number, orders: number, units: number, averageOrderValue: number) => ({
-  revenue,
+  revenue: eur(revenue),
   orders,
   units,
-  averageOrderValue,
+  averageOrderValue: eur(averageOrderValue),
   unitsPerOrder: Math.round((units / orders) * 100) / 100,
 });
 const SALES = {
   period: 'Week',
-  currency: 'EUR',
   current: figures(900, 9, 12, 100),
   previous: figures(600, 6, 9, 100),
   bestSellers: [],
 } as unknown as SalesSummary;
 const point = (revenue: number, orders: number, units: number) => ({
   start: '2026-10-12T00:00:00+02:00',
-  revenue,
+  revenue: eur(revenue),
   orders,
   units,
 });

@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Ordering.Features.Dashboard;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
+using static ElGuerre.Tendero.Ordering.Tests.Amounts;
 
 namespace ElGuerre.Tendero.Ordering.Tests;
 
@@ -32,7 +33,7 @@ public sealed class SalesMixTests
         var mix = SalesMixFigures.Of(DashboardPeriod.Week, orders);
 
         Assert.Equal(
-            [new ChannelSales(OrderChannel.Web, 2, 29.90m), new ChannelSales(OrderChannel.Mcp, 1, 14.95m), new ChannelSales(OrderChannel.Ucp, 1, 14.95m)],
+            [new ChannelSales(OrderChannel.Web, 2, Eur(29.90m)), new ChannelSales(OrderChannel.Mcp, 1, Eur(14.95m)), new ChannelSales(OrderChannel.Ucp, 1, Eur(14.95m))],
             mix.ByChannel);
     }
 
@@ -56,7 +57,7 @@ public sealed class SalesMixTests
         var mix = SalesMixFigures.Of(DashboardPeriod.Week, orders);
 
         Assert.Equal(
-            [new CategorySales("COOKWARE", 1, 40m), new CategorySales("MUGS", 3, 25m), new CategorySales(null, 1, 99m)],
+            [new CategorySales("COOKWARE", 1, Eur(40m)), new CategorySales("MUGS", 3, Eur(25m)), new CategorySales(null, 1, Eur(99m))],
             mix.ByCategory);
     }
 

@@ -1,4 +1,4 @@
-import { formatPrice } from '@tendero/shared-util';
+import { formatMajor, majorUnits, ShopCurrency } from '@tendero/shared-util';
 import { PricePipe } from '@tendero/shared-ui';
 import { Component, computed, inject } from '@angular/core';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
@@ -28,7 +28,7 @@ export class CampaignsWidget {
 
   /** The chart's axis and figures: a function the chart calls, where a template would use the price pipe. */
   protected readonly money = (amount: number): string =>
-    formatPrice(amount, this.store.uplift.value()?.currency ?? 'EUR', this.culture.active());
+    formatMajor(amount, this.store.uplift.value()?.sold.currency ?? ShopCurrency, this.culture.active());
   private readonly words = translateObjectSignal('dashboard.campaigns');
 
   protected readonly name = computed(() => {
@@ -42,7 +42,7 @@ export class CampaignsWidget {
   protected readonly uplift = computed(() => {
     const figures = this.store.uplift.value();
     return figures?.baseline != null
-      ? formatChange(changeOf(figures.sold, figures.baseline), this.culture.active())
+      ? formatChange(changeOf(figures.sold.amount, figures.baseline.amount), this.culture.active())
       : null;
   });
 
@@ -61,12 +61,12 @@ export class CampaignsWidget {
     return {
       categories: days.map((day) => format.format(new Date(day.start)).replace('.', '')),
       series: [
-        { key: 'sold', label: words.sold ?? '', role: 'data', values: days.map((day) => day.sold) },
+        { key: 'sold', label: words.sold ?? '', role: 'data', values: days.map((day) => majorUnits(day.sold)) },
         {
           key: 'baseline',
           label: words.baseline ?? '',
           role: 'previous',
-          values: days.map((day) => day.baseline ?? 0),
+          values: days.map((day) => (day.baseline ? majorUnits(day.baseline) : 0)),
         },
       ],
     };

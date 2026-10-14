@@ -351,7 +351,11 @@ internal static class ClaimsReviewed
 
 public sealed record ReviewClaimResponse(string ClaimId, ReviewOutcome Outcome);
 
-public sealed record ReviewClaimConflict(string Title, string Detail);
+public static class ClaimRefusals
+{
+    public static readonly Refusal NotWaiting = new(
+        "ClaimNotWaiting", 409, "La afirmación ya no espera revisión.", "The claim is not waiting for review.");
+}
 
 public sealed class ReviewClaimsEndpoints : ICarterModule
 {
@@ -383,16 +387,18 @@ public sealed class ReviewClaimsEndpoints : ICarterModule
                 (Guid id, ICommandDispatcher dispatcher, CancellationToken ct) => Review(id, ReviewDecision.Approve, dispatcher, ct))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Knowledge")
+            .WithMetadata(new Refuses(ClaimRefusals.NotWaiting))
             .WithName("ApproveClaim");
 
         app.MapPost("/api/knowledge/claims/{id:guid}/reject",
                 (Guid id, ICommandDispatcher dispatcher, CancellationToken ct) => Review(id, ReviewDecision.Reject, dispatcher, ct))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Knowledge")
+            .WithMetadata(new Refuses(ClaimRefusals.NotWaiting))
             .WithName("RejectClaim");
     }
 
-    private static async Task<Results<Ok<ReviewClaimResponse>, NotFound, Conflict<ReviewClaimConflict>>> Review(
+    private static async Task<Results<Ok<ReviewClaimResponse>, NotFound, ProblemHttpResult>> Review(
         Guid id, ReviewDecision decision, ICommandDispatcher dispatcher, CancellationToken ct)
     {
         var result = await dispatcher.SendAsync(new ReviewClaimCommand(new ClaimId(id), decision), ct);
@@ -400,9 +406,11 @@ public sealed class ReviewClaimsEndpoints : ICarterModule
         return result.Outcome switch
         {
             ReviewOutcome.NotFound => TypedResults.NotFound(),
-            ReviewOutcome.NotWaiting or ReviewOutcome.WeakSupport => TypedResults.Conflict(new ReviewClaimConflict(
-                "The claim is not waiting for review.",
-                "It was already decided, or its description changed and a newer claim replaced it.")),
+            ReviewOutcome.NotWaiting or ReviewOutcome.WeakSupport => TypedResults.Problem(
+                statusCode: ClaimRefusals.NotWaiting.Status,
+                extensions: ClaimRefusals.NotWaiting.Said(
+                    es: "Ya se decidió, o su descripción cambió y otra más nueva la sustituyó.",
+                    en: "It was already decided, or its description changed and a newer claim replaced it.")),
             _ => TypedResults.Ok(new ReviewClaimResponse(
                 result.ClaimId.ToString(), result.Outcome)),
         };

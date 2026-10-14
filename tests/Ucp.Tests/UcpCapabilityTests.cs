@@ -32,6 +32,35 @@ public sealed class UcpCapabilityTests
     }
 
     /// <summary>
+    /// **A capability's schema is an address a platform fetches**, and the
+    /// protocol's own are published under the version: the specification's
+    /// examples write `https://ucp.dev/2026-08-25/schemas/shopping/checkout.json`.
+    /// The shop declared `https://ucp.dev/schemas/…`, which is the `$id` the
+    /// schemas carry in the protocol's source tree and answers 404 — found on
+    /// 2026-10-13 by asking for it, after a year in which every test read the
+    /// vendored copy and none read the address.
+    ///
+    /// What can be held here without a network: the address is under the
+    /// version the shop declares, and the rest of it names a schema the vendored
+    /// release really has.
+    /// </summary>
+    [Fact]
+    public void The_protocols_own_capabilities_point_at_the_schemas_published_for_the_version_declared()
+    {
+        var published = $"https://ucp.dev/{UcpSpecification.Version}/schemas/";
+        var own = UcpCapabilities.Declared.Where(capability => capability.Id.StartsWith("dev.ucp.", StringComparison.Ordinal)).ToList();
+
+        Assert.Equal(6, own.Count);
+        Assert.All(own, capability =>
+        {
+            Assert.StartsWith(published, capability.Schema, StringComparison.Ordinal);
+            Assert.True(
+                File.Exists(Path.Combine(AppContext.BaseDirectory, "ucp-schemas", capability.Schema[published.Length..])),
+                $"{capability.Id} points at {capability.Schema}, which the vendored release does not have.");
+        });
+    }
+
+    /// <summary>
     /// Ordered by id, because a manifest whose keys move between runs makes a
     /// snapshot test a coin toss.
     /// </summary>

@@ -101,7 +101,9 @@ public sealed class UcpProfileDocumentTests
 
         // capability.json business_schema: entity requires version, and the
         // merchant schema adds schema — the URL a platform fetches.
-        // The specification's capabilities point at ucp.dev; an extension of ours
+        // The specification's capabilities point at ucp.dev, under the version —
+        // where its schemas are published; the unversioned address this test held
+        // them to until 2026-10-13 answers 404. An extension of ours
         // (com.elguerre.tendero.*, P11-8) at the schema this API serves.
         foreach (var capability in ucp["capabilities"]!.AsObject())
         {
@@ -109,7 +111,7 @@ public sealed class UcpProfileDocumentTests
 
             Assert.NotNull(declaration["version"]);
             Assert.StartsWith(
-                capability.Key.StartsWith("com.elguerre.tendero.", StringComparison.Ordinal) ? "http://localhost/ucp/schemas/" : "https://ucp.dev/schemas/",
+                capability.Key.StartsWith("com.elguerre.tendero.", StringComparison.Ordinal) ? "http://localhost/ucp/schemas/" : $"https://ucp.dev/{ElGuerre.Tendero.Ucp.UcpSpecification.Version}/schemas/",
                 declaration["schema"]!.GetValue<string>(),
                 StringComparison.Ordinal);
         }

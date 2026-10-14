@@ -11,20 +11,22 @@ import { DashboardRefresh } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { SalesByDayWidget } from './sales-by-day-widget';
 
+/** Money as the API sends it: minor units and its currency. */
+const eur = (amount: number) => ({ amount: Math.round(amount * 100), currency: 'EUR' });
+
 const point = (start: string, revenue: number) => ({
   start,
-  revenue,
+  revenue: eur(revenue),
   orders: 1,
   units: 1,
   agentOrders: 0,
-  agentRevenue: 0,
+  agentRevenue: eur(0),
   newCustomers: 1,
   returningCustomers: 0,
 });
 
 const WEEK: SalesSeries = {
   period: 'Week',
-  currency: 'EUR',
   timeZone: 'Europe/Madrid',
   step: 'Day',
   current: [point('2026-10-12T00:00:00+02:00', 520)],

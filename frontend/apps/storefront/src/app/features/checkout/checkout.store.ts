@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { form, maxLength, pattern, required } from '@angular/forms/signals';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
-import type { AddressRequest, ShippingOptionView } from '@tendero/shared-api';
+import type { AddressRequest, Money, ShippingOptionView } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
@@ -125,7 +125,6 @@ export const CheckoutStore = signalStore(
     _idempotencyKey: crypto.randomUUID(),
   })),
   withComputed(({ _cart, _draft }) => ({
-    currency: computed(() => _cart.quote()?.currency ?? 'EUR'),
     /** The address as the API takes it: the optional fields null when empty. */
     address: computed<AddressRequest>(() => {
       const draft = _draft();
@@ -140,7 +139,7 @@ export const CheckoutStore = signalStore(
     }),
   })),
   withMethods((store) => {
-    const money = (amount: number): string => formatPrice(amount, store.currency(), store._culture.active());
+    const money = (amount: Money): string => formatPrice(amount, store._culture.active());
 
     /** One sentence a shopper can act on — see `checkoutProblem`. */
     const describe = (error: unknown): string =>
@@ -148,6 +147,8 @@ export const CheckoutStore = signalStore(
         error as { status?: number; error?: unknown },
         (key, params) => store._transloco.translate(key, params),
         money,
+        // An article is called what the basket calls it.
+        (sku) => store._cart.cart()?.lines.find((line) => line.sku === sku)?.productName ?? null,
       );
 
     /**
@@ -226,8 +227,8 @@ export const CheckoutStore = signalStore(
               shippingOptionCode: option.code,
               quoteHash: quote.inputHash,
               instrument: store.instrument(),
-              idempotencyKey: store._idempotencyKey,
             },
+            store._idempotencyKey,
             store._cart.token(),
             store._culture.active(),
           );

@@ -29,7 +29,7 @@ public sealed record OrderLinePreview(string Sku, string Name, string? ImageId);
 /// key signed it, and what it approved. Enough to answer "who said this could be
 /// bought?" from the list; the evidence itself stays on the order.
 /// </summary>
-public sealed record OrderMandateSummary(string Kind, string Issuer, decimal ApprovedTotal, string Currency, DateTimeOffset? ExpiresAt);
+public sealed record OrderMandateSummary(string Kind, string Issuer, Money ApprovedTotal, DateTimeOffset? ExpiresAt);
 
 public sealed record OrderSummary(
     string OrderId,
@@ -38,8 +38,7 @@ public sealed record OrderSummary(
     OrderMode Mode,
     /// <summary>Null unless an agent placed it under a verified mandate (P11-5).</summary>
     OrderMandateSummary? Mandate,
-    string Currency,
-    decimal Total,
+    Money Total,
     int LineCount,
     string RecipientName,
     string City,
@@ -84,10 +83,9 @@ public sealed record OrderSummary(
         order.Status,
         order.Mode,
         order.Mandate is { } mandate
-            ? new OrderMandateSummary(mandate.Kind, mandate.Issuer, mandate.ApprovedTotal, mandate.Currency, mandate.ExpiresAt)
+            ? new OrderMandateSummary(mandate.Kind, mandate.Issuer, new Money(mandate.ApprovedTotal, mandate.Currency), mandate.ExpiresAt)
             : null,
-        order.Currency,
-        order.Total.Amount,
+        order.Total,
         order.Lines.Count,
         order.ShippingAddress.RecipientName,
         order.ShippingAddress.City,
@@ -231,6 +229,17 @@ public sealed class MoveOrderHandler(
     }
 }
 
+/// <summary>What moving an order is refused for, by code.</summary>
+public static class OrderRefusals
+{
+    public static readonly Refusal UnknownOrder = new(
+        "UnknownOrder", 404, "No hay ningún pedido con ese identificador.", "There is no order with that id.");
+
+    /// <summary>The state machine's own no (invariant 5): the table says which moves an order has from where it is.</summary>
+    public static readonly Refusal IllegalTransition = new(
+        "IllegalTransition", 409, "El pedido no admite ese paso desde donde está.", "The order does not take that step from where it is.");
+}
+
 public sealed class OrderAdminEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
@@ -253,7 +262,7 @@ public sealed class OrderAdminEndpoints : ICarterModule
             .WithName("ListOrders");
 
         orders.MapPost("/{orderId:guid}/move",
-            async Task<Results<Ok<OrderSummary>, BadRequest<string>, NotFound<string>, Conflict<string>>> (
+            async Task<Results<Ok<OrderSummary>, ProblemHttpResult>> (
                    Guid orderId, MoveOrderRequest request,
                    ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -262,11 +271,12 @@ public sealed class OrderAdminEndpoints : ICarterModule
 
                 return result.Outcome switch
                 {
-                    MoveOrderOutcome.UnknownOrder => TypedResults.NotFound($"There is no order {orderId}."),
-                    MoveOrderOutcome.IllegalTransition => TypedResults.Conflict(result.Detail!),
+                    MoveOrderOutcome.UnknownOrder => TypedResults.Problem(statusCode: OrderRefusals.UnknownOrder.Status, extensions: OrderRefusals.UnknownOrder.Said(path: "$.orderId")),
+                    MoveOrderOutcome.IllegalTransition => TypedResults.Problem(statusCode: OrderRefusals.IllegalTransition.Status, extensions: OrderRefusals.IllegalTransition.Said(path: "$.to", reason: result.Detail)),
                     _ => TypedResults.Ok(OrderSummary.Of(result.Order!))
                 };
             })
+            .WithMetadata(new Refuses(OrderRefusals.UnknownOrder, OrderRefusals.IllegalTransition))
             .WithName("MoveOrder");
     }
 

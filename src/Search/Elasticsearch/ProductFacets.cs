@@ -5,6 +5,7 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Offers;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Search.Elasticsearch;
 
@@ -621,9 +622,11 @@ internal static class FacetAssembler
         ProductFilters filters,
         string culture,
         AttributeDefinitions definitions,
-        CategoryTree categories)
+        CategoryTree categories,
+        string currency = ShopOptions.DefaultCurrency)
     {
         var asked = filters.Asked;
+        Money? In(decimal? amount) => amount is { } value ? new Money(value, currency) : null;
         var facets = new List<SearchFacet>();
 
         AddOptions(facets, FacetCodes.Category, FacetKind.Category, CategoryLabel.In(culture), counts.Categories, asked.Within,
@@ -639,10 +642,10 @@ internal static class FacetAssembler
         {
             facets.Add(new SearchFacet(FacetCodes.Price, FacetKind.Price, PriceLabel.In(culture), [],
                 new PriceFacetRange(
-                    counts.Price?.Min ?? asked.MinPrice ?? 0,
-                    counts.Price?.Max ?? asked.MaxPrice ?? 0,
-                    asked.MinPrice,
-                    asked.MaxPrice,
+                    new Money(counts.Price?.Min ?? asked.MinPrice ?? 0, currency),
+                    new Money(counts.Price?.Max ?? asked.MaxPrice ?? 0, currency),
+                    In(asked.MinPrice),
+                    In(asked.MaxPrice),
                     bands)));
         }
 
@@ -690,11 +693,14 @@ internal static class FacetAssembler
 
     /// <summary>The bands with their counts, the empty ones dropped unless chosen.</summary>
     public static IReadOnlyList<PriceBand> Bands(
-        IReadOnlyList<(decimal? From, decimal? To)> bands, IReadOnlyList<long> counts, SearchFilters asked) =>
+        IReadOnlyList<(decimal? From, decimal? To)> bands, IReadOnlyList<long> counts, SearchFilters asked,
+        string currency = ShopOptions.DefaultCurrency) =>
     [
         .. bands
             .Select((band, position) => new PriceBand(
-                band.From, band.To, position < counts.Count ? counts[position] : 0,
+                band.From is { } from ? new Money(from, currency) : null,
+                band.To is { } to ? new Money(to, currency) : null,
+                position < counts.Count ? counts[position] : 0,
                 band.From == asked.MinPrice && band.To == asked.MaxPrice))
             .Where(band => band.Count > 0 || band.Chosen)
     ];

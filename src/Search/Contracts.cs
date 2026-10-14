@@ -280,6 +280,23 @@ public sealed record SearchFilters
 }
 
 /// <summary>
+/// A price filter as it crosses the wire: **a whole number of the shop's
+/// currency's minor units**, the unit every price is answered in (ADR 0059), so
+/// a facet's end can be sent straight back. It used to be a decimal in major
+/// units, and an agent that returned a facet's `3000` was asking for what costs
+/// three thousand euros. Inside, a filter is the amount the index holds.
+/// </summary>
+public static class SearchPrices
+{
+    /// <summary>How the parameter is described wherever it is declared: the REST query and the MCP tool.</summary>
+    public const string InMinorUnits =
+        "A price, inclusive, as a whole number of the currency's minor units — the unit prices are answered in: 2990 is 29.90 EUR.";
+
+    public static decimal? FromMinorUnits(long? price, string currency = ShopOptions.DefaultCurrency) =>
+        price is { } minor ? MinorUnits.ToAmount(minor, currency) : null;
+}
+
+/// <summary>
 /// What a facet is. It tells the screen how to draw one and the tracking plan
 /// what to call it (`filter_applied {facet}`); the values themselves are in its
 /// options.
@@ -358,12 +375,17 @@ public sealed record FacetOption(string Value, string Label, long Count, bool Ch
 /// the results — rounded to prices a person would say and each with its count.
 /// All of it ignores the price filter itself (disjunctive), or choosing a band
 /// would make the others vanish.
+///
+/// Every end is money, as the wire writes it (phase 13b). What a client sends
+/// back to narrow by price is the query's own `minPrice` and `maxPrice`, in
+/// major units — an address a person reads — which it gets from these with
+/// the currency's own exponent, not by assuming a hundred.
 /// </summary>
 public sealed record PriceFacetRange(
-    decimal Min,
-    decimal Max,
-    decimal? ChosenMin,
-    decimal? ChosenMax,
+    Money Min,
+    Money Max,
+    Money? ChosenMin,
+    Money? ChosenMax,
     IReadOnlyList<PriceBand> Bands);
 
 /// <summary>
@@ -373,7 +395,7 @@ public sealed record PriceFacetRange(
 /// </summary>
 /// <param name="From">Null for the lowest band ("up to 25 €").</param>
 /// <param name="To">Null for the highest band ("100 € and above").</param>
-public sealed record PriceBand(decimal? From, decimal? To, long Count, bool Chosen);
+public sealed record PriceBand(Money? From, Money? To, long Count, bool Chosen);
 
 /// <summary>
 /// A result is a PRODUCT, even though what matched was one specific variant
@@ -391,10 +413,11 @@ public sealed record SearchHit(
     string? Category,
     string MatchedVariantId,
     string MatchedSku,
-    decimal PriceAmount,
-    decimal PriceFrom,
-    decimal PriceTo,
-    string PriceCurrency,
+    /// <summary>The matched variant's price. Money, as every amount on the wire is (phase 13b): minor units and its currency.</summary>
+    Money Price,
+    /// <summary>The cheapest and the dearest variant of the product: what a card says when they differ.</summary>
+    Money PriceFrom,
+    Money PriceTo,
     string? ImageId,
     /// <summary>
     /// Whether the variant that matched can be bought right now.
@@ -547,7 +570,8 @@ public sealed record ProductSearchDocument
     /// <summary>This variant as a result card, the one mapping every reader of the index shares.</summary>
     public SearchHit ToHit(double score) => new(
         ProductId, Code, Name, Slug, Brand, Category, Id, Sku,
-        PriceAmount, PriceFrom, PriceTo, PriceCurrency, ImageId, InStock, score);
+        new Money(PriceAmount, PriceCurrency), new Money(PriceFrom, PriceCurrency), new Money(PriceTo, PriceCurrency),
+        ImageId, InStock, score);
 
     /// <summary>
     /// The attributes' searchable text, IN THE INDEX'S CULTURE.

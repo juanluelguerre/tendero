@@ -6,6 +6,7 @@ using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Offers;
+using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
 
@@ -324,12 +325,14 @@ public sealed class ProductFacetsTests
     [Fact]
     public void The_price_facet_carries_the_range_the_choice_and_the_bands()
     {
-        var bands = new[] { new PriceBand(null, 30, 3, false), new PriceBand(30, null, 5, true) };
+        var bands = new[] { new PriceBand(null, new Money(30, "EUR"), 3, false), new PriceBand(new Money(30, "EUR"), null, 5, true) };
 
         var price = Assemble(Counts(), new SearchFilters { MinPrice = 30 }, "es", bands).Single(facet => facet.Kind == FacetKind.Price);
 
         Assert.Empty(price.Options);
-        Assert.Equal((18.50m, 169m, (decimal?)30m, (decimal?)null), (price.Price!.Min, price.Price.Max, price.Price.ChosenMin, price.Price.ChosenMax));
+        Assert.Equal(
+            (new Money(18.50m, "EUR"), new Money(169m, "EUR"), (Money?)new Money(30m, "EUR"), (Money?)null),
+            (price.Price!.Min, price.Price.Max, price.Price.ChosenMin, price.Price.ChosenMax));
         Assert.Equal(bands, price.Price.Bands);
     }
 

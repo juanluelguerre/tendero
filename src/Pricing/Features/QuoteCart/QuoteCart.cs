@@ -32,7 +32,7 @@ namespace ElGuerre.Tendero.Pricing.Features.QuoteCart;
 public sealed record QuoteCartQuery(
     string Culture,
     IReadOnlyList<QuoteLineInput> Lines,
-    decimal? Shipping,
+    Money? Shipping,
     IReadOnlyList<string> Coupons) : IQuery<QuoteCartResult>;
 
 public sealed record QuoteLineInput(string Sku, int Quantity);
@@ -77,7 +77,7 @@ public sealed class QuoteCartValidator : AbstractValidator<QuoteCartQuery>
                 .WithMessage("A SKU may appear only once; use its quantity.");
 
         RuleFor(query => query.Shipping)
-            .GreaterThanOrEqualTo(0m).When(query => query.Shipping is not null)
+            .Must(shipping => shipping!.Value.Amount >= 0m).When(query => query.Shipping is not null)
             .WithMessage("Shipping cannot be negative.");
     }
 }
@@ -86,7 +86,7 @@ public sealed class QuoteCartValidator : AbstractValidator<QuoteCartQuery>
 
 public sealed record QuoteCartRequest(
     IReadOnlyList<QuoteLineRequest> Lines,
-    decimal? Shipping = null,
+    Money? Shipping = null,
     IReadOnlyList<string>? Coupons = null);
 
 public sealed record QuoteLineRequest(string Sku, int Quantity);
@@ -100,45 +100,78 @@ public sealed record QuotedLineResponse(
     string VariantId,
     string Sku,
     int Quantity,
-    decimal UnitPrice,
+    Money UnitPrice,
     string PriceSource,
-    decimal Discount,
-    decimal Net);
+    /// <summary>What came off this line: an amount, never negative — the name says which way it goes.</summary>
+    Money Discount,
+    Money Net);
 
 public sealed record AppliedDiscountResponse(
     string PromotionCode,
     string Label,
-    decimal Amount,
+    /// <summary>What it took off, never negative: zero for one that did not apply, with its reason beside it.</summary>
+    Money Amount,
     string Effect,
     CombinationPolicy Combination,
     DiscountOutcome Outcome,
-    string? ReasonCode,
-    string? Reason);
+    /// <summary>Why it did not apply, to branch on; null for one that did.</summary>
+    RuleReasonCode? ReasonCode,
+    /// <summary>The same, as a sentence in the language asked: what an agent reads. A page composes its own from the code and what follows.</summary>
+    string? Reason,
+    /// <summary>What it asked for and did not get, for <see cref="RuleReasonCode.ConditionNotMet"/>.</summary>
+    DiscountRequirement? Requires,
+    /// <summary>The promotion that took its place, by name, when one did.</summary>
+    string? Winner);
 
-public sealed record TaxLineResponse(string TaxClass, decimal Rate, decimal Base, decimal Amount);
+/// <summary>
+/// A promotion's condition as a page needs it (ADR 0059): the money as money,
+/// the category and the article by their codes — a page has the names — and how
+/// far the cart is from it, worked out by the shop.
+/// </summary>
+public sealed record DiscountRequirement(
+    Money? MinimumSubtotal,
+    int? MinimumQuantity,
+    string? CategoryCode,
+    string? Sku,
+    /// <summary>How much more the cart has to be worth, when the minimum is what failed.</summary>
+    Money? ShortBy,
+    /// <summary>How many more units of what it reaches, when the quantity is what failed.</summary>
+    int? UnitsShort);
+
+public sealed record TaxLineResponse(string TaxClass, decimal Rate, Money Base, Money Amount);
 
 public sealed record QuoteResponse(
     string QuoteId,
     string InputHash,
     DateTimeOffset IssuedAt,
     DateTimeOffset ExpiresAt,
-    string Currency,
     string Segment,
     IReadOnlyList<QuotedLineResponse> Lines,
     IReadOnlyList<AppliedDiscountResponse> Discounts,
     IReadOnlyList<TaxLineResponse> Taxes,
-    decimal Subtotal,
-    decimal DiscountTotal,
-    decimal Shipping,
-    decimal TaxTotal,
-    decimal Total);
+    Money Subtotal,
+    /// <summary>Every discount that applied, added up: an amount, never negative. The total is the subtotal less this, plus shipping.</summary>
+    Money DiscountTotal,
+    Money Shipping,
+    Money TaxTotal,
+    Money Total);
+
+/// <summary>What a quote refuses, by code.</summary>
+public static class QuoteRefusals
+{
+    public static readonly Refusal UnknownSkus = new(
+        "UnknownSkus", 400, "Hay artículos que la tienda no vende.", "Some of these are not on sale here.");
+
+    public static readonly Refusal MixedCurrencies = new(
+        "MixedCurrencies", 400, "Un carrito lleva una sola moneda.", "A cart carries one currency.");
+}
 
 public sealed class QuoteCartEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("/api/pricing/quote",
-            async Task<Results<Ok<QuoteResponse>, BadRequest<string>>> (
+            async Task<Results<Ok<QuoteResponse>, ProblemHttpResult>> (
                    QuoteCartRequest request, string? culture,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -157,10 +190,17 @@ public sealed class QuoteCartEndpoint : ICarterModule
 
                 return result.Outcome switch
                 {
-                    QuoteOutcome.UnknownSkus => TypedResults.BadRequest(
-                        $"Unknown SKUs: {string.Join(", ", result.Offending)}."),
-                    QuoteOutcome.MixedCurrencies => TypedResults.BadRequest(
-                        $"A cart carries one currency; this one carries {string.Join(", ", result.Offending)}."),
+                    QuoteOutcome.UnknownSkus => TypedResults.Problem(
+                        statusCode: QuoteRefusals.UnknownSkus.Status,
+                        extensions: QuoteRefusals.UnknownSkus.Said(
+                            es: $"No se venden: {string.Join(", ", result.Offending)}.",
+                            en: $"Not on sale: {string.Join(", ", result.Offending)}.",
+                            path: "$.lines")),
+                    QuoteOutcome.MixedCurrencies => TypedResults.Problem(
+                        statusCode: QuoteRefusals.MixedCurrencies.Status,
+                        extensions: QuoteRefusals.MixedCurrencies.Said(
+                            es: $"Este llevaría {string.Join(", ", result.Offending)}.",
+                            en: $"This one would carry {string.Join(", ", result.Offending)}.")),
                     _ => TypedResults.Ok(Response(result.Quote!, resolved))
                 };
             })
@@ -169,6 +209,7 @@ public sealed class QuoteCartEndpoint : ICarterModule
             // public is the tariff: the segment comes from the principal, never
             // from the body (see Segments).
             .AllowAnonymous()
+            .WithMetadata(new Refuses(QuoteRefusals.UnknownSkus, QuoteRefusals.MixedCurrencies))
             .WithTags("Pricing")
             .WithName("QuoteCart");
     }
@@ -178,27 +219,32 @@ public sealed class QuoteCartEndpoint : ICarterModule
         quote.InputHash,
         quote.IssuedAt,
         quote.ExpiresAt,
-        quote.Currency,
         quote.Segment,
         [.. quote.Lines.Select(line => new QuotedLineResponse(
             line.VariantId.ToString(), line.Sku, line.Quantity,
-            line.UnitPrice.Amount, line.PriceSource, line.Discount.Amount, line.Net.Amount))],
+            line.UnitPrice, line.PriceSource, line.Discount, line.Net))],
         [.. quote.Discounts.Select(discount => new AppliedDiscountResponse(
             discount.PromotionCode,
             discount.Label.In(culture),
-            discount.Amount.Amount,
+            discount.Amount,
             discount.EffectKind,
             discount.Combination,
             discount.Outcome,
             discount.Reason?.Code,
-            discount.Reason?.Explanation.In(culture)))],
+            discount.Reason?.Explanation.In(culture),
+            discount.Reason is { Requires: { } asked } reason
+                ? new DiscountRequirement(
+                    asked.MinimumSubtotal, asked.MinimumQuantity, asked.CategoryCode, asked.Sku,
+                    reason.ShortBy, reason.UnitsShort)
+                : null,
+            discount.Reason?.Winner?.In(culture)))],
         [.. quote.Taxes.Select(tax => new TaxLineResponse(
-            tax.TaxClass, tax.Rate, tax.Base.Amount, tax.Amount.Amount))],
-        quote.Subtotal.Amount,
-        quote.DiscountTotal.Amount,
-        quote.Shipping.Amount,
-        quote.TaxTotal.Amount,
-        quote.Total.Amount);
+            tax.TaxClass, tax.Rate, tax.Base, tax.Amount))],
+        quote.Subtotal,
+        quote.DiscountTotal,
+        quote.Shipping,
+        quote.TaxTotal,
+        quote.Total);
 }
 
 public sealed class QuoteCartHandler(
@@ -248,13 +294,19 @@ public sealed class QuoteCartHandler(
             return new QuoteCartResult(QuoteOutcome.MixedCurrencies, null, currencies);
 
         var currency = currencies[0];
+
+        // Shipping in another currency than the goods' is the same mistake as
+        // goods in two: one cart, one currency.
+        if (query.Shipping is { } sent && !string.Equals(sent.Currency, currency, StringComparison.OrdinalIgnoreCase))
+            return new QuoteCartResult(QuoteOutcome.MixedCurrencies, null, [.. new[] { currency, sent.Currency.ToUpperInvariant() }.Order(StringComparer.Ordinal)]);
+
         var book = await priceLists.BookAsync(cancellationToken);
 
         var lines = query.Lines
             .Select(line => Price(bySku[line.Sku.Trim()], line.Quantity, book, segment, at))
             .ToArray();
 
-        var shipping = new Money(query.Shipping ?? 0m, currency);
+        var shipping = new Money(query.Shipping?.Amount ?? 0m, currency);
         var cart = new PricedCart(currency, segment, lines, shipping);
 
         var all = await promotions.AllAsync(cancellationToken);
@@ -349,7 +401,7 @@ public sealed class QuoteCartHandler(
                 .OrderBy(line => line.Sku, StringComparer.OrdinalIgnoreCase)
                 .Select(line => $"{line.Sku.Trim().ToUpperInvariant()}x{line.Quantity}")),
             string.Join(',', query.Coupons.Order(StringComparer.OrdinalIgnoreCase)),
-            (query.Shipping ?? 0m).ToString(CultureInfo.InvariantCulture),
+            (query.Shipping?.Amount ?? 0m).ToString(CultureInfo.InvariantCulture),
             book.Fingerprint(),
             Fingerprints.Of(promotions
                 .OrderBy(promotion => promotion.Code, StringComparer.Ordinal)

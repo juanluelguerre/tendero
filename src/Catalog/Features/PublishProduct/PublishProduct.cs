@@ -68,7 +68,12 @@ public sealed record PublishProductResponse(string ProductId, PublishOutcome Out
 /// JSON and no schema at all: a generated client could not see that this
 /// endpoint can refuse on the grounds of being archived, nor in what shape.
 /// </summary>
-public sealed record PublishProductConflict(string Title, string Detail);
+public static class PublishRefusals
+{
+    /// <summary>An archived product is out of the catalogue: nothing about it changes until it is restored.</summary>
+    public static readonly Refusal Archived = new(
+        "ProductArchived", 409, "El producto está archivado.", "The product is archived.");
+}
 
 public sealed class PublishProductValidator : AbstractValidator<PublishProductCommand>
 {
@@ -89,7 +94,7 @@ public sealed class PublishProductEndpoint : ICarterModule
         // anonymous object was invisible to any client — it had no name, so it
         // could have no schema — and it is now a record with the same JSON.
         app.MapPost("/api/catalog/products/{id:guid}/publish",
-            async Task<Results<Ok<PublishProductResponse>, NotFound, Conflict<PublishProductConflict>>> (
+            async Task<Results<Ok<PublishProductResponse>, NotFound, ProblemHttpResult>> (
                    Guid id, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(new PublishProductCommand(new ProductId(id)), ct);
@@ -101,9 +106,11 @@ public sealed class PublishProductEndpoint : ICarterModule
                 return result.Outcome switch
                 {
                     PublishOutcome.NotFound => TypedResults.NotFound(),
-                    PublishOutcome.Archived => TypedResults.Conflict(new PublishProductConflict(
-                        "The product is archived.",
-                        "Archived products stay out of the catalogue. Restore it before publishing.")),
+                    PublishOutcome.Archived => TypedResults.Problem(
+                        statusCode: PublishRefusals.Archived.Status,
+                        extensions: PublishRefusals.Archived.Said(
+                            es: "Los productos archivados quedan fuera del catálogo. Recupéralo antes de publicarlo.",
+                            en: "Archived products stay out of the catalogue. Restore it before publishing.")),
                     // Past the two refusals there is always a product, so a status.
                     _ => TypedResults.Ok(new PublishProductResponse(
                         result.ProductId.Value.ToString(),
@@ -112,6 +119,7 @@ public sealed class PublishProductEndpoint : ICarterModule
                 };
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(PublishRefusals.Archived))
             .WithTags("Catalog")
             .WithName("PublishProduct");
     }

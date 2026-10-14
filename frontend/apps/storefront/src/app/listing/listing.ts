@@ -32,6 +32,7 @@ import {
 import { listingIndexing } from './listing-indexing';
 import { ListingPageSize, ListingStore } from './listing.store';
 import { chipsOf, sayablePrice, type CategoryLink, type Chip } from './listing-view';
+import { ShopCurrency } from '@tendero/shared-util';
 
 /** The template's `t`, handed to the methods that word things, so a language switch rewords them. */
 type Translate = (key: string, params?: Record<string, unknown>) => string;
@@ -83,7 +84,7 @@ export class Listing {
   protected readonly facets = computed(() => this.ready()?.facets ?? []);
 
   /** The shop sells in one currency today; the listing reads it from what it lists rather than assuming it. */
-  protected readonly currency = computed(() => this.ready()?.hits[0]?.priceCurrency ?? 'EUR');
+  protected readonly currency = computed(() => this.ready()?.hits[0]?.price.currency ?? ShopCurrency);
 
   /** A search orders by relevance; a listing with no words has nothing to be relevant to, so it is "recommended". */
   protected readonly searching = computed(() => (this.state.place()?.query ?? '') !== '');

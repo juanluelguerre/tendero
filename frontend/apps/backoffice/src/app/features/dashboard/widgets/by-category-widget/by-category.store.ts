@@ -1,6 +1,7 @@
 import { computed, inject } from '@angular/core';
 import { translateObjectSignal } from '@jsverse/transloco';
 import { signalStore, withComputed, withProps } from '@ngrx/signals';
+import type { Money } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
@@ -11,7 +12,7 @@ export interface CategoryRow {
   readonly key: string;
   readonly label: string;
   readonly units: number;
-  readonly revenue: number;
+  readonly revenue: Money;
 }
 
 /** A ranking is read in five: the rest are one row. */
@@ -60,7 +61,11 @@ export const ByCategoryStore = signalStore(
           key: 'others',
           label: words.others ?? '',
           units: rest.reduce((sum, row) => sum + row.units, 0),
-          revenue: rest.reduce((sum, row) => sum + row.revenue, 0),
+          // Whole numbers of one currency's minor units: the sum is exact.
+          revenue: {
+            amount: rest.reduce((sum, row) => sum + row.revenue.amount, 0),
+            currency: rest[0].revenue.currency,
+          },
         });
       }
       if (none)

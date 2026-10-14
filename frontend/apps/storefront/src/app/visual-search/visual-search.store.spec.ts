@@ -131,7 +131,7 @@ describe('searching with a picture', () => {
   /** One picture refused must not be the last picture that can be given. */
   it('takes another picture after one was refused, and lets go of the first one’s address', async () => {
     store.give({ picture, how: 'chosen' });
-    (await asked()).flush('no', { status: 400, statusText: 'Bad Request' });
+    (await asked()).flush({ code: 'Refused', status: 400, title: 'no' }, { status: 400, statusText: 'Bad Request' });
 
     store.give({ picture, how: 'pasted' });
     (await asked()).flush({ items: [] });
@@ -142,7 +142,7 @@ describe('searching with a picture', () => {
 
   it('opening the panel again clears what the last picture was told', async () => {
     store.give({ picture, how: 'chosen' });
-    (await asked()).flush('no', { status: 429, statusText: 'Too Many' });
+    (await asked()).flush({ code: 'Refused', status: 429, title: 'no' }, { status: 429, statusText: 'Too Many' });
     store.close();
 
     store.toggle();

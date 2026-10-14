@@ -126,7 +126,16 @@ public sealed record SetImageShowsRequest(IReadOnlyDictionary<string, string> Sh
 
 public sealed record SetImageShowsResponse(string ProductId, string ImageId, ImageShowsOutcome Outcome);
 
-public sealed record SetImageShowsConflict(string Title, string Detail);
+public static class ImageShowsRefusals
+{
+    /// <summary>An archived product is out of the catalogue: nothing about it changes until it is restored.</summary>
+    public static readonly Refusal Archived = new(
+        "ProductArchived", 409, "El producto está archivado.", "The product is archived.");
+
+    /// <summary>A picture shows what a variant still sold holds, and nothing else (ADR 0056).</summary>
+    public static readonly Refusal NotSold = new(
+        "NotSold", 409, "Ninguna variante del producto es eso.", "No variant of the product is that.");
+}
 
 public sealed class SetImageShowsEndpoint : ICarterModule
 {
@@ -134,7 +143,7 @@ public sealed class SetImageShowsEndpoint : ICarterModule
     {
         // PUT /api/catalog/products/{id}/images/{imageId}/shows  { "shows": { "COLOR": "BLACK" } }
         app.MapPut("/api/catalog/products/{id:guid}/images/{imageId}/shows",
-            async Task<Results<Ok<SetImageShowsResponse>, NotFound, Conflict<SetImageShowsConflict>>> (
+            async Task<Results<Ok<SetImageShowsResponse>, NotFound, ProblemHttpResult>> (
                    Guid id, string imageId, SetImageShowsRequest body, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(
@@ -143,16 +152,22 @@ public sealed class SetImageShowsEndpoint : ICarterModule
                 return result.Outcome switch
                 {
                     ImageShowsOutcome.NotFound or ImageShowsOutcome.NoSuchImage => TypedResults.NotFound(),
-                    ImageShowsOutcome.Archived => TypedResults.Conflict(new SetImageShowsConflict(
-                        "The product is archived.",
-                        "Archived products are out of the catalogue and their pictures are not changed.")),
-                    ImageShowsOutcome.NotSold => TypedResults.Conflict(new SetImageShowsConflict(
-                        "No variant of the product is that.",
-                        result.Refusal ?? "A picture can only show what a variant still sold holds.")),
+                    ImageShowsOutcome.Archived => TypedResults.Problem(
+                        statusCode: ImageShowsRefusals.Archived.Status,
+                        extensions: ImageShowsRefusals.Archived.Said(
+                            es: "Los productos archivados están fuera del catálogo y sus imágenes no se cambian.",
+                            en: "Archived products are out of the catalogue and their pictures are not changed.")),
+                    ImageShowsOutcome.NotSold => TypedResults.Problem(
+                        statusCode: ImageShowsRefusals.NotSold.Status,
+                        extensions: ImageShowsRefusals.NotSold.Said(
+                            es: "Una imagen solo puede mostrar lo que tiene una variante que todavía se vende.",
+                            en: "A picture can only show what a variant still sold holds.",
+                            reason: result.Refusal)),
                     _ => TypedResults.Ok(new SetImageShowsResponse(result.ProductId.Value.ToString(), imageId, result.Outcome))
                 };
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .WithMetadata(new Refuses(ImageShowsRefusals.Archived, ImageShowsRefusals.NotSold))
             .WithTags("Catalog")
             .WithName("SetImageShows");
     }

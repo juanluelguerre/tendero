@@ -46,6 +46,12 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<AIInvocation> AIInvocations => Set<AIInvocation>();
 
     /// <summary>
+    /// The idempotency keys callers send (phase 13b): what makes a retry not
+    /// happen twice on any surface that writes. No context's, like the audit log.
+    /// </summary>
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
+
+    /// <summary>
     /// Pre-convention configuration: what is true of a TYPE wherever it appears.
     /// Today that is the strongly-typed ids; see <see cref="StronglyTypedIds"/>.
     /// </summary>
@@ -77,6 +83,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new CampaignConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
         modelBuilder.ApplyConfiguration(new AIInvocationConfiguration());
+        modelBuilder.ApplyConfiguration(new IdempotencyRecordConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
 
         SnakeCaseNames.Apply(modelBuilder);

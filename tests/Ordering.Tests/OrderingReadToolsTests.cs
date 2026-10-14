@@ -5,6 +5,7 @@ using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using static ElGuerre.Tendero.Ordering.Tests.Amounts;
 
 namespace ElGuerre.Tendero.Ordering.Tests;
 
@@ -21,13 +22,13 @@ public sealed class OrderingReadToolsTests
             Asked.Add(query);
             object answer = query switch
             {
-                GetSalesSummaryQuery sales => new SalesSummary(sales.Period, "EUR",
-                    new SalesFigures(120m, 3, 6, 40m, 2m), new SalesFigures(60m, 2, 3, 30m, 1.5m),
-                    [new BestSeller("MUG-1", "Mug", 4, 40m)]),
-                GetSalesMixQuery mix => new SalesMix(mix.Period, "EUR", [], new ChannelSales(null, 0, 0m),
-                    [new CategorySales("MUGS", 4, 40m), new CategorySales(null, 2, 80m)]),
+                GetSalesSummaryQuery sales => new SalesSummary(sales.Period,
+                    new SalesFigures(Eur(120m), 3, 6, Eur(40m), 2m), new SalesFigures(Eur(60m), 2, 3, Eur(30m), 1.5m),
+                    [new BestSeller("MUG-1", "Mug", 4, Eur(40m))]),
+                GetSalesMixQuery mix => new SalesMix(mix.Period, [], new ChannelSales(null, 0, Eur(0m)),
+                    [new CategorySales("MUGS", 4, Eur(40m)), new CategorySales(null, 2, Eur(80m))]),
                 GetProductPerformanceQuery performance => new ProductPerformance(performance.Period, performance.Ranking,
-                    performance.Category, "EUR", 7, [new ProductSales("p-1", "Mug", 4, 40m)]),
+                    performance.Category, 7, [new ProductSales("p-1", "Mug", 4, Eur(40m))]),
                 // Every reason is in the query's answer, zero included; a model is given only those with units.
                 GetReturnsSummaryQuery returns => new ReturnsSummary(returns.Period, 2, 3,
                     [new ReasonUnits(ReturnReason.WrongSize, 0), new ReasonUnits(ReturnReason.Damaged, 3)], 1,

@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Evaluation;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
 namespace ElGuerre.Tendero.SearchEval.Tests;
@@ -134,7 +135,7 @@ public sealed class NoAnswerQueriesTests
     }
 
     private static SearchHit Hit(string productId, string name) =>
-        new(productId, "CODE", name, "slug", null, null, "variant", "SKU", 10, 10, 10, "EUR", null, true, 1);
+        new(productId, "CODE", name, "slug", null, null, "variant", "SKU", new Money(10, "EUR"), new Money(10, "EUR"), new Money(10, "EUR"), null, true, 1);
 
     private sealed class Answering(params SearchHit[] hits) : ISearchStrategy
     {

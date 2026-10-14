@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Ordering.Contracts;
 
@@ -18,13 +19,20 @@ namespace ElGuerre.Tendero.Ordering.Contracts;
 ///
 /// Every id is a flat string. `OrderId` is a record struct and serialises as
 /// <c>{"value":"…"}</c> — the mistake CLAUDE.md warns no unit test will catch.
+///
+/// Every amount is a <see cref="Money"/>, which the wire writes as minor units
+/// and its currency (phase 13b): an order said its currency once and its
+/// amounts as bare numbers, so a reader had to carry the one to the others.
+/// A discount is an amount, never negative; its name says which way it goes.
 /// </summary>
 public sealed record OrderLineView(
-    string Sku, string ProductName, string? VariantLabel, decimal UnitPrice, int Quantity);
+    string Sku, string ProductName, string? VariantLabel, Money UnitPrice, int Quantity,
+    /// <summary>What the line comes to, the unit price times the quantity: the server's arithmetic, so no reader multiplies money.</summary>
+    Money Total);
 
-public sealed record OrderDiscountView(string PromotionCode, string Label, decimal Amount);
+public sealed record OrderDiscountView(string PromotionCode, string Label, Money Amount);
 
-public sealed record OrderTaxView(string TaxClass, decimal Rate, decimal Base, decimal Amount);
+public sealed record OrderTaxView(string TaxClass, decimal Rate, Money Base, Money Amount);
 
 public sealed record OrderView(
     string OrderId,
@@ -32,18 +40,17 @@ public sealed record OrderView(
     /// <summary><c>Live</c>, or <c>Test</c> for a rehearsal a test credential placed (ADR 0038).</summary>
     OrderMode Mode,
     string Culture,
-    string Currency,
     DateTimeOffset CreatedAt,
     string ShippingAddress,
     string ShippingLabel,
     IReadOnlyList<OrderLineView> Lines,
     IReadOnlyList<OrderDiscountView> Discounts,
     IReadOnlyList<OrderTaxView> Taxes,
-    decimal Subtotal,
-    decimal DiscountTotal,
-    decimal Shipping,
-    decimal TaxTotal,
-    decimal Total,
+    Money Subtotal,
+    Money DiscountTotal,
+    Money Shipping,
+    Money TaxTotal,
+    Money Total,
     /// <summary>
     /// Why the order stopped, when it did.
     ///
@@ -58,27 +65,26 @@ public sealed record OrderView(
         order.Status,
         order.Mode,
         order.Culture,
-        order.Currency,
         order.CreatedAt,
         order.ShippingAddress.SingleLine(),
         order.Shipping.Label,
         [
             .. order.Lines.Select(line => new OrderLineView(
-                line.Sku, line.ProductName, line.VariantLabel, line.UnitPrice.Amount, line.Quantity))
+                line.Sku, line.ProductName, line.VariantLabel, line.UnitPrice, line.Quantity, line.Total))
         ],
         [
             .. order.Discounts.Select(discount => new OrderDiscountView(
-                discount.PromotionCode, discount.Label, discount.Amount.Amount))
+                discount.PromotionCode, discount.Label, discount.Amount))
         ],
         [
             .. order.Taxes.Select(tax => new OrderTaxView(
-                tax.TaxClass, tax.Rate, tax.Base.Amount, tax.Amount.Amount))
+                tax.TaxClass, tax.Rate, tax.Base, tax.Amount))
         ],
-        order.Totals.Subtotal.Amount,
-        order.Totals.DiscountTotal.Amount,
-        order.Totals.Shipping.Amount,
-        order.Totals.TaxTotal.Amount,
-        order.Totals.Total.Amount,
+        order.Totals.Subtotal,
+        order.Totals.DiscountTotal,
+        order.Totals.Shipping,
+        order.Totals.TaxTotal,
+        order.Totals.Total,
         order.Stop?.Code,
         order.Stop?.Detail);
 }
@@ -98,7 +104,7 @@ public sealed record ReturnView(
     string OrderId,
     ReturnStatus Status,
     string? Resolution,
-    decimal? RefundAmount,
+    Money? RefundAmount,
     DateTimeOffset CreatedAt,
     IReadOnlyList<ReturnLineView> Lines,
     /// <summary>
@@ -114,7 +120,7 @@ public sealed record ReturnView(
         request.OrderId.ToString(),
         request.Status,
         request.Resolution,
-        request.RefundAmount?.Amount,
+        request.RefundAmount,
         request.CreatedAt,
         [
             .. request.Lines.Select(line => new ReturnLineView(

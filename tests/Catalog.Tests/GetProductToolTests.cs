@@ -24,7 +24,7 @@ public sealed class GetProductToolTests
     private static ProductDetail Pan(string? description) => new(
         "id-1", "PAN-IRON-26", "Sartén de hierro fundido de 26 cm", "sarten-de-hierro-fundido", description, "Vertex",
         [new CategoryStep("KITCHEN", "Cocina"), new CategoryStep("PANS", "Sartenes")],
-        [], [], [], [], 42m, 42m, "EUR", [], [], ProductStatus.Active, DateTimeOffset.UnixEpoch);
+        [], [], [], [], new Money(42m, "EUR"), new Money(42m, "EUR"), [], [], ProductStatus.Active, DateTimeOffset.UnixEpoch);
 
     private static JsonElement Arguments(string json) => JsonDocument.Parse(json).RootElement.Clone();
 

@@ -374,12 +374,37 @@ public sealed class ReturnPolicyHandler : IQueryHandler<ReturnPolicyQuery, Retur
         Task.FromResult(new ReturnPolicy((int)ReturnRequest.Window.TotalDays));
 }
 
+/// <summary>What a return is refused for, by code.</summary>
+public static class ReturnRefusals
+{
+    public static readonly Refusal UnknownOrder = new(
+        "UnknownOrder", 404, "No hay ningún pedido con ese identificador.", "There is no order with that id.");
+
+    public static readonly Refusal WindowClosed = new(
+        "ReturnWindowClosed", 409, "El plazo para devolver este pedido ha terminado.", "The time to return this order has passed.");
+
+    public static readonly Refusal Refused = new(
+        "ReturnRefused", 400, "Esa devolución no se puede abrir tal como se pide.", "That return cannot be opened as asked.");
+
+    public static readonly Refusal UnknownReturn = new(
+        "UnknownReturn", 404, "No hay ninguna devolución con ese identificador.", "There is no return with that id.");
+
+    public static readonly Refusal IllegalTransition = new(
+        "IllegalTransition", 409, "La devolución no admite ese paso desde donde está.", "The return does not take that step from where it is.");
+
+    public static readonly Refusal NothingToRefund = new(
+        "NothingToRefund", 409, "No queda nada que reembolsar de esta devolución.", "There is nothing left to refund for this return.");
+
+    public static readonly Refusal RefundFailed = new(
+        "RefundFailed", 400, "El reembolso no se ha podido hacer.", "The refund could not be made.");
+}
+
 public sealed class ReturnEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("/api/orders/{orderId:guid}/returns",
-            async Task<Results<Ok<ReturnView>, BadRequest<string>, NotFound<string>, Conflict<string>>> (
+            async Task<Results<Ok<ReturnView>, ProblemHttpResult>> (
                    Guid orderId, RequestReturnRequest request, string? culture,
                    HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -392,9 +417,9 @@ public sealed class ReturnEndpoints : ICarterModule
 
                 return result.Outcome switch
                 {
-                    RequestReturnOutcome.UnknownOrder => TypedResults.NotFound($"There is no order {orderId}."),
-                    RequestReturnOutcome.WindowClosed => TypedResults.Conflict(result.Detail!),
-                    RequestReturnOutcome.Refused => TypedResults.BadRequest(result.Detail!),
+                    RequestReturnOutcome.UnknownOrder => TypedResults.Problem(statusCode: ReturnRefusals.UnknownOrder.Status, extensions: ReturnRefusals.UnknownOrder.Said(path: "$.orderId")),
+                    RequestReturnOutcome.WindowClosed => TypedResults.Problem(statusCode: ReturnRefusals.WindowClosed.Status, extensions: ReturnRefusals.WindowClosed.Said(reason: result.Detail)),
+                    RequestReturnOutcome.Refused => TypedResults.Problem(statusCode: ReturnRefusals.Refused.Status, extensions: ReturnRefusals.Refused.Said(reason: result.Detail)),
                     _ => TypedResults.Ok(ReturnView.From(result.Return!))
                 };
             })
@@ -404,6 +429,7 @@ public sealed class ReturnEndpoints : ICarterModule
             // OrderAccess — which is where "whose order is this" can be asked.
             .AllowAnonymous()
             .WithTags("Returns")
+            .WithMetadata(new Refuses(ReturnRefusals.UnknownOrder, ReturnRefusals.WindowClosed, ReturnRefusals.Refused))
             .WithName("RequestReturn");
 
         // Outside the group below on purpose: that one requires the
@@ -436,7 +462,7 @@ public sealed class ReturnEndpoints : ICarterModule
             .WithName("ListReturns");
 
         queue.MapPost("/{returnId:guid}/decide",
-            async Task<Results<Ok<ReturnView>, BadRequest<string>, NotFound<string>, Conflict<string>>> (
+            async Task<Results<Ok<ReturnView>, ProblemHttpResult>> (
                    Guid returnId, DecideReturnRequest request,
                    ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
@@ -445,13 +471,15 @@ public sealed class ReturnEndpoints : ICarterModule
 
                 return result.Outcome switch
                 {
-                    DecideReturnOutcome.UnknownReturn => TypedResults.NotFound($"There is no return {returnId}."),
-                    DecideReturnOutcome.IllegalTransition => TypedResults.Conflict(result.Detail!),
-                    DecideReturnOutcome.NothingToRefund => TypedResults.Conflict(result.Detail!),
-                    DecideReturnOutcome.RefundFailed => TypedResults.BadRequest(result.Detail!),
+                    DecideReturnOutcome.UnknownReturn => TypedResults.Problem(statusCode: ReturnRefusals.UnknownReturn.Status, extensions: ReturnRefusals.UnknownReturn.Said(path: "$.returnId")),
+                    DecideReturnOutcome.IllegalTransition => TypedResults.Problem(statusCode: ReturnRefusals.IllegalTransition.Status, extensions: ReturnRefusals.IllegalTransition.Said(reason: result.Detail)),
+                    DecideReturnOutcome.NothingToRefund => TypedResults.Problem(statusCode: ReturnRefusals.NothingToRefund.Status, extensions: ReturnRefusals.NothingToRefund.Said(reason: result.Detail)),
+                    DecideReturnOutcome.RefundFailed => TypedResults.Problem(statusCode: ReturnRefusals.RefundFailed.Status, extensions: ReturnRefusals.RefundFailed.Said(reason: result.Detail)),
                     _ => TypedResults.Ok(ReturnView.From(result.Return!))
                 };
             })
+            .WithMetadata(new Refuses(
+                ReturnRefusals.UnknownReturn, ReturnRefusals.IllegalTransition, ReturnRefusals.NothingToRefund, ReturnRefusals.RefundFailed))
             .WithName("DecideReturn");
     }
 }

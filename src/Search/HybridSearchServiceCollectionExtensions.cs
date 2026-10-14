@@ -28,6 +28,12 @@ public static class HybridSearchServiceCollectionExtensions
 
         services.AddOptions<HybridSearchOptions>().Bind(configuration.GetSection(HybridSearchOptions.Section));
 
+        // The kits the shop offers and the function that fills one (phase 13c):
+        // a committed file, and a solver that knows nothing but its problem.
+        services.AddOptions<Kits.Seed.KitSeedOptions>().Bind(configuration.GetSection(Kits.Seed.KitSeedOptions.SectionName));
+        services.TryAddSingleton<Kits.IKitTemplateReader, Kits.Seed.SeedFileKitTemplates>();
+        services.TryAddSingleton<Kits.IKitSolver, Kits.BranchAndBoundKitSolver>();
+
         return services.AddSearchStrategies();
     }
 

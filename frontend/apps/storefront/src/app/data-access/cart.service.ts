@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, type HttpResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { CartView, PriceQuote, ShippingOptionsResponse } from '@tendero/shared-api';
+import type { CartView, Money, PriceQuote, ShippingOptionsResponse } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import type { Observable } from 'rxjs';
 
@@ -42,7 +42,7 @@ export class CartService {
 
   quote(
     lines: readonly { sku: string; quantity: number }[],
-    shipping: number,
+    shipping: Money | null,
     culture: string,
   ): Observable<PriceQuote> {
     return this.http.post<PriceQuote>(

@@ -321,7 +321,7 @@ implement a handler of its own.
 
 ### WebMCP
 
-**MCP inside the browser tab**, through `navigator.modelContext`. The agent runs
+**MCP inside the browser tab**, through `document.modelContext`. The agent runs
 in the page the shopper already has open, so it **inherits their session** — the
 reason this surface is cheap and phase 11 is expensive. Chrome-only and under
 incubation at the W3C Web Machine Learning Community Group; that label travels

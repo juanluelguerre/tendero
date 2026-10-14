@@ -86,7 +86,7 @@ function category(code: string, parent: string | null, depth: number): CategoryV
 }
 
 function offer(code: string, name: string, kind = 'percent-off-line'): OfferView {
-  return { code, name, kind, amount: null, until: null };
+  return { code, name, kind, percent: null, amountOff: null, buy: null, free: null, until: null };
 }
 
 function hit(id: string): SearchHit {
@@ -99,10 +99,9 @@ function hit(id: string): SearchHit {
     category: null,
     matchedVariantId: `${id}-DEFAULT`,
     matchedSku: `${id}-DEFAULT`,
-    priceAmount: 19.9,
-    priceFrom: 19.9,
-    priceTo: 19.9,
-    priceCurrency: 'EUR',
+    price: { amount: 1990, currency: 'EUR' },
+    priceFrom: { amount: 1990, currency: 'EUR' },
+    priceTo: { amount: 1990, currency: 'EUR' },
     imageId: null,
     inStock: true,
     score: 1,

@@ -14,9 +14,14 @@ import { returnableLines } from './returnable';
 function anOrder(...lines: Array<[sku: string, quantity: number]>): OrderView {
   return {
     orderId: 'o1',
-    lines: lines.map(
-      ([sku, quantity]) => ({ sku, productName: sku, variantLabel: null, unitPrice: 20, quantity }) as OrderLineView,
-    ),
+    lines: lines.map(([sku, quantity]): OrderLineView => ({
+      sku,
+      productName: sku,
+      variantLabel: null,
+      unitPrice: { amount: 2000, currency: 'EUR' },
+      quantity,
+      total: { amount: 2000 * quantity, currency: 'EUR' },
+    })),
   } as unknown as OrderView;
 }
 

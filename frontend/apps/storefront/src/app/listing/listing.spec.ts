@@ -159,7 +159,8 @@ describe('the listing', () => {
     await settle(harness);
 
     expect(url().get('price')).toBe('30-60');
-    expect(last()).toMatchObject({ minPrice: '30', maxPrice: '60' });
+    // The address in what a person types, the API in the unit it answers in.
+    expect(last()).toMatchObject({ minPrice: '3000', maxPrice: '6000' });
     const boxes = [...column(element).querySelectorAll<HTMLInputElement>('.range__input')].map((box) => box.value);
     expect(boxes).toEqual(['30', '60']);
   });
@@ -248,10 +249,9 @@ const hit = (id: string): SearchHit => ({
   category: null,
   matchedVariantId: `${id}-DEFAULT`,
   matchedSku: `${id}-DEFAULT`,
-  priceAmount: 49.9,
-  priceFrom: 49.9,
-  priceTo: 49.9,
-  priceCurrency: 'EUR',
+  price: { amount: 4990, currency: 'EUR' },
+  priceFrom: { amount: 4990, currency: 'EUR' },
+  priceTo: { amount: 4990, currency: 'EUR' },
   imageId: null,
   inStock: true,
   score: 1,
@@ -276,13 +276,13 @@ function page(params: Record<string, string | string[]>): SearchResultPage {
       label: 'Precio',
       options: [],
       price: {
-        min: 29.9,
-        max: 169,
+        min: { amount: 2990, currency: 'EUR' },
+        max: { amount: 16900, currency: 'EUR' },
         chosenMin: null,
         chosenMax: null,
         bands: [
-          { from: 30, to: 60, count: 1, chosen: false },
-          { from: 60, to: null, count: 1, chosen: false },
+          { from: { amount: 3000, currency: 'EUR' }, to: { amount: 6000, currency: 'EUR' }, count: 1, chosen: false },
+          { from: { amount: 6000, currency: 'EUR' }, to: null, count: 1, chosen: false },
         ],
       },
     },

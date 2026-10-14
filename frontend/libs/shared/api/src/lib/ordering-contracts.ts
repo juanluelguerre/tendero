@@ -6,7 +6,7 @@
  *
  * Regenerate with `npm run generate:api-types` from `frontend/`.
  */
-import type { components } from './generated/schema';
+import type { components, operations } from './generated/schema';
 
 type Schemas = components['schemas'];
 
@@ -39,11 +39,13 @@ export type OrderDiscountView = Schemas['OrderDiscountView'];
 export type OrderTaxView = Schemas['OrderTaxView'];
 
 /**
- * What comes back on a 409 at checkout: the price moved between the quote and
- * the till, and the NEW fingerprint travels so the screen can show the
+ * What comes back on a 409 at checkout, whichever of its refusals it is: a
+ * problem with its code (phase 13b). When the code is `PriceChanged`, the price
+ * moved between the quote and the till, and the NEW fingerprint and totals
+ * travel as members beside the problem's own, so the screen can show the
  * difference rather than just refusing.
  */
-export type PriceChangedResponse = Schemas['PriceChangedResponse'];
+export type CheckoutConflict = operations['PlaceOrder']['responses'][409]['content']['application/problem+json'];
 
 /** An order and the returns opened against it — one page, one call. */
 export type OrderDetail = Schemas['OrderDetail'];

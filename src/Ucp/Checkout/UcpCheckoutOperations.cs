@@ -36,7 +36,8 @@ public sealed record UcpCheckoutCall(UcpNegotiated Negotiated, UcpLinks Links)
 /// errors; negotiation, dispatch, translation and AP2's signatures are here.
 /// </summary>
 public sealed class UcpCheckoutOperations(
-    ICommandDispatcher commands, IQueryDispatcher queries, IMerchantSigner signer, CheckoutMandates mandates)
+    ICommandDispatcher commands, IQueryDispatcher queries, IMerchantSigner signer, CheckoutMandates mandates,
+    IIdempotencyStore keys, IPrincipalAccessor principals)
 {
     /// <summary>
     /// The capabilities active for this caller: its platform profile, fetched from a
@@ -58,6 +59,14 @@ public sealed class UcpCheckoutOperations(
                 _ => new UcpAnswer(400, new UcpProtocolError("invalid_profile_url", "This shop does not fetch platform profiles from that address.")),
             });
 
+        // The protocol version first, on every request (§Request-Time Validation):
+        // the shop declares one version and no `supported_versions`, so any other
+        // is refused before a capability is compared — across versions the same
+        // name is not the same shape.
+        if (profile.Version != UcpSpecification.Version)
+            return (null, new UcpAnswer(422, new UcpProtocolError("version_unsupported",
+                $"Protocol version {profile.Version} is not supported. This shop implements version {UcpSpecification.Version}.")));
+
         var active = UcpNegotiation.Intersect(UcpCapabilities.Declared, profile);
         if (!active.Contains(CheckoutCapability.Name))
             return (null, new UcpAnswer(200, Error("capabilities_incompatible", "The platform and this shop share no checkout capability.", "unrecoverable")));
@@ -70,13 +79,15 @@ public sealed class UcpCheckoutOperations(
             profile), null);
     }
 
-    public async Task<UcpAnswer> CreateAsync(UcpCheckoutRequest request, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
-        Answer(await commands.SendAsync(new OpenCheckoutSessionCommand(
-            UcpCheckoutMapper.Lines(request), Allowed(UcpCheckoutMapper.Details(request), call.Active), culture), cancellationToken), call, created: true);
+    public Task<UcpAnswer> CreateAsync(UcpCheckoutRequest request, string? idempotencyKey, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
+        OnceAsync("create_checkout", null, idempotencyKey, request, cancellationToken, async () =>
+            Kept(await commands.SendAsync(new OpenCheckoutSessionCommand(
+                UcpCheckoutMapper.Lines(request), Allowed(UcpCheckoutMapper.Details(request), call.Active), culture), cancellationToken), call, created: true));
 
-    public async Task<UcpAnswer> UpdateAsync(Guid id, UcpCheckoutRequest request, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
-        Answer(await commands.SendAsync(new UpdateCheckoutSessionCommand(
-            new CheckoutSessionId(id), UcpCheckoutMapper.Lines(request), Allowed(UcpCheckoutMapper.Details(request), call.Active), culture), cancellationToken), call);
+    public Task<UcpAnswer> UpdateAsync(Guid id, UcpCheckoutRequest request, string? idempotencyKey, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
+        OnceAsync("update_checkout", id, idempotencyKey, request, cancellationToken, async () =>
+            Kept(await commands.SendAsync(new UpdateCheckoutSessionCommand(
+                new CheckoutSessionId(id), UcpCheckoutMapper.Lines(request), Allowed(UcpCheckoutMapper.Details(request), call.Active), culture), cancellationToken), call));
 
     public async Task<UcpAnswer> GetAsync(Guid id, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
         Answer(await queries.SendAsync(new GetCheckoutSessionQuery(new CheckoutSessionId(id), culture), cancellationToken), call);
@@ -86,6 +97,11 @@ public sealed class UcpCheckoutOperations(
     /// sandbox handler's credential token names the fake provider's instrument.
     /// With AP2 negotiated, a checkout mandate is required, and it has to authorise
     /// this session's terms as they are now.
+    ///
+    /// The key is asked whose it is **before** the mandate is read: a retry of a
+    /// completion that went through arrives at a session that is no longer open,
+    /// and has to be answered the order it placed, not told its mandate is for a
+    /// checkout that changed.
     /// </summary>
     public async Task<UcpAnswer> CompleteAsync(
         Guid id, UcpCompleteRequest request, string? idempotencyKey, string culture, UcpCheckoutCall call, CancellationToken cancellationToken)
@@ -102,21 +118,89 @@ public sealed class UcpCheckoutOperations(
             return new UcpAnswer(400, new UcpProtocolError("invalid_request", $"The instrument must come from the handler '{UcpCheckoutMapper.SandboxHandlerId}' with a credential token."));
 
         var sessionId = new CheckoutSessionId(id);
-        MandateScope? scope = null;
-        if (call.Ap2)
-        {
-            var (refusal, verified) = await VerifyMandateAsync(sessionId, request.Ap2?.CheckoutMandate, culture, call, cancellationToken);
-            if (refusal is not null)
-                return refusal;
-            scope = verified;
-        }
 
-        return Answer(await commands.SendAsync(new CompleteCheckoutSessionCommand(
-            sessionId, instrument.Credential!.Token!, idempotencyKey, culture, scope), cancellationToken), call);
+        return await OnceAsync("complete_checkout", id, idempotencyKey, request, cancellationToken, async () =>
+        {
+            MandateScope? scope = null;
+            if (call.Ap2)
+            {
+                var (refusal, verified) = await VerifyMandateAsync(sessionId, request.Ap2?.CheckoutMandate, culture, call, cancellationToken);
+                if (refusal is not null)
+                    return (refusal, false);
+                scope = verified;
+            }
+
+            return Kept(await commands.SendAsync(new CompleteCheckoutSessionCommand(
+                sessionId, instrument.Credential!.Token!, idempotencyKey, culture, scope), cancellationToken), call);
+        });
     }
 
-    public async Task<UcpAnswer> CancelAsync(Guid id, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
-        Answer(await commands.SendAsync(new CancelCheckoutSessionCommand(new CheckoutSessionId(id), culture), cancellationToken), call);
+    public Task<UcpAnswer> CancelAsync(Guid id, string? idempotencyKey, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
+        OnceAsync("cancel_checkout", id, idempotencyKey, Nothing, cancellationToken, async () =>
+            Kept(await commands.SendAsync(new CancelCheckoutSessionCommand(new CheckoutSessionId(id), culture), cancellationToken), call));
+
+    /// <summary>
+    /// **An operation that changes something, once for its key** (UCP, the REST
+    /// binding's *Idempotency-Key*: store the key with the result, give that
+    /// result back to a duplicate whose body matches, 409 for one whose body
+    /// does not). The request is the operation, its session and its body; the
+    /// key is the agent's, so two agents may choose the same one.
+    ///
+    /// What is kept is what changed something. A refusal changed nothing, so
+    /// its key is free: an agent told a checkout is not ready fixes it and
+    /// completes with the key it had. And an answer is kept as the JSON it was,
+    /// so a signed checkout comes back as the bytes that were signed.
+    ///
+    /// Without a key the operation simply runs — the specification's *SHOULD*.
+    /// Completing is the one that requires it, above.
+    /// </summary>
+    private async Task<UcpAnswer> OnceAsync(
+        string operation, Guid? session, string? key, object request, CancellationToken cancellationToken,
+        Func<Task<(UcpAnswer Answer, bool Changed)>> run)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return (await run()).Answer;
+
+        if (key.Length > Idempotency.MaximumKeyLength)
+            return new UcpAnswer(400, new UcpProtocolError("invalid_request", $"An idempotency key is at most {Idempotency.MaximumKeyLength} characters."));
+
+        var scope = $"ucp:{principals.Current.Agent}";
+        var fingerprint = Idempotency.Fingerprint(operation, session?.ToString() ?? "", JsonSerializer.Serialize(request, request.GetType()));
+
+        switch (await keys.ClaimAsync(scope, key, fingerprint, cancellationToken))
+        {
+            case IdempotencyClaim.Replayed kept:
+                return new UcpAnswer(kept.Status, JsonNode.Parse(kept.Body)!);
+            case IdempotencyClaim.Mismatched:
+                return new UcpAnswer(409, new UcpProtocolError("idempotency_key_reused", "This idempotency key was used for another request: a key names one request, and a new request needs a new key."));
+            case IdempotencyClaim.InFlight:
+                return new UcpAnswer(409, new UcpProtocolError("idempotency_in_progress", "The request this idempotency key names is still running: ask again for its answer."));
+        }
+
+        try
+        {
+            var (answer, changed) = await run();
+            if (changed)
+                await keys.CompleteAsync(scope, key, answer.Status, JsonSerializer.Serialize(answer.Body, answer.Body.GetType()), cancellationToken);
+            else
+                await keys.ReleaseAsync(scope, key, cancellationToken);
+
+            return answer;
+        }
+        catch
+        {
+            // Not the request's token: a cancelled request still has to give its key back.
+            await keys.ReleaseAsync(scope, key, CancellationToken.None);
+            throw;
+        }
+    }
+
+    /// <summary>The body of an operation that has none: cancelling is its session and nothing else.</summary>
+    private static readonly object Nothing = new { };
+
+    /// <summary>An answer, and whether what it reports changed anything — which is what makes it worth keeping under a key.</summary>
+    private (UcpAnswer Answer, bool Changed) Kept(CheckoutSessionResult result, UcpCheckoutCall call, bool created = false) =>
+        (Answer(result, call, created), result.Outcome == CheckoutSessionOutcome.Ok);
 
     /// <summary>
     /// The mandate against the session as it is now (UCP §Business Verification):
@@ -153,11 +237,13 @@ public sealed class UcpCheckoutOperations(
         var total = mandate.Checkout["totals"]!.AsArray()
             .Single(entry => entry?["type"]?.GetValue<string>() == "total")!["amount"]!.GetValue<long>();
 
+        var currency = mandate.Checkout["currency"]!.GetValue<string>();
+
         return new MandateScope(
             mandate.Vct,
             mandate.IssuerKeyId,
             mandate.CheckoutHash,
-            new Money(UcpCheckoutMapper.Major(total), mandate.Checkout["currency"]!.GetValue<string>()),
+            new Money(UcpCheckoutMapper.Major(total, currency), currency),
             mandate.ExpiresAt);
     }
 

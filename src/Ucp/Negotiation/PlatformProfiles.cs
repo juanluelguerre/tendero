@@ -12,6 +12,13 @@ namespace ElGuerre.Tendero.Ucp.Negotiation;
 /// </summary>
 public sealed record PlatformProfile(IReadOnlyDictionary<string, IReadOnlySet<string>> Capabilities)
 {
+    /// <summary>
+    /// The protocol version the platform speaks: its profile's <c>ucp.version</c>,
+    /// which the shop validates on every request before it compares a capability.
+    /// The shop's own, for a profile built in a test that is not about versions.
+    /// </summary>
+    public string Version { get; init; } = UcpSpecification.Version;
+
     public IReadOnlyList<Signing.Jwk> Keys { get; init; } = [];
 }
 
@@ -52,6 +59,16 @@ public sealed class UcpOptions
     /// where this API publishes its seeded agents' profiles.
     /// </summary>
     public string[] TrustedPlatformHosts { get; set; } = [];
+
+    /// <summary>
+    /// Where the schemas of the shop's own extensions (`com.elguerre.tendero.*`)
+    /// are published: an `https` origin under the domain those names reverse to,
+    /// because that is the only place a platform will accept them from (UCP's
+    /// authority binding, <see cref="UcpAuthority"/>). Null is wherever the shop
+    /// is served — right for a shop on that domain, and on any other host the
+    /// extension is one a conformant platform drops. Checked when the shop starts.
+    /// </summary>
+    public string? OwnSchemasUrl { get; set; }
 
     /// <summary>How long a fetched profile is trusted before it is fetched again.</summary>
     public TimeSpan ProfileCacheLifetime { get; set; } = TimeSpan.FromMinutes(10);
@@ -146,7 +163,8 @@ public sealed class HttpPlatformProfiles(HttpClient http, Microsoft.Extensions.O
     }
 
     /// <summary>
-    /// `ucp.capabilities`: a map of name to a list of entries, each with a `version`;
+    /// `ucp.version`, which the base schema requires; `ucp.capabilities`: a map of
+    /// name to a list of entries, each with a `version`;
     /// and the top-level `keys`, where a key this shop cannot read is skipped rather
     /// than the profile refused — UCP's key vocabulary is open.
     /// </summary>
@@ -154,6 +172,7 @@ public sealed class HttpPlatformProfiles(HttpClient http, Microsoft.Extensions.O
     {
         if (root.ValueKind != JsonValueKind.Object
             || !root.TryGetProperty("ucp", out var ucp) || ucp.ValueKind != JsonValueKind.Object
+            || !ucp.TryGetProperty("version", out var protocol) || protocol.ValueKind != JsonValueKind.String
             || !ucp.TryGetProperty("capabilities", out var capabilities) || capabilities.ValueKind != JsonValueKind.Object)
             return null;
 
@@ -169,7 +188,7 @@ public sealed class HttpPlatformProfiles(HttpClient http, Microsoft.Extensions.O
                 .ToHashSet(StringComparer.Ordinal);
         }
 
-        return new PlatformProfile(parsed) { Keys = KeysOf(root) };
+        return new PlatformProfile(parsed) { Version = protocol.GetString()!, Keys = KeysOf(root) };
     }
 
     private static IReadOnlyList<Signing.Jwk> KeysOf(JsonElement root)
