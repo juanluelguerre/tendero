@@ -514,6 +514,42 @@ Two things to know before using it:
 - **What a tool does, it does**: `add_to_cart` puts a line in the cart of the
   session the tab is in, exactly as the button would.
 
+### Where each of the browser's tools is declared
+
+Eight tools, declared in **two different ways**, which is why a search of the
+templates for `toolname` finds only one of them:
+
+| Tool | What it does | Only reads | How it is declared | Where |
+|---|---|---|---|---|
+| `search_products` | Finds products and tells the agent | yes | script | `storefront-tools.ts`, `searchProducts()` |
+| `get_product` | One product, with every variant and its SKU | yes | script | `storefront-tools.ts`, `getProduct()` |
+| `list_filters` | What the list on screen can be narrowed by | yes | script | `storefront-tools.ts`, `listFilters()` |
+| `apply_filter` | Narrows the list the shopper is looking at | no | script | `storefront-tools.ts`, `applyFilter()` |
+| `add_to_cart` | Puts one SKU in the shopper's own cart | no | script | `storefront-tools.ts`, `addToCart()` |
+| `get_cart` | The cart, its total and its discounts | yes | script | `storefront-tools.ts`, `getCart()` |
+| `list_campaigns` | The campaigns running or about to | yes | script | `storefront-tools.ts`, `listCampaigns()` |
+| `show_search_results` | Sends the shopper's page to a search's results | — | **markup** (experimental) | `shell/shell.html`, the header's `<form>`; `agent/search-form-tool.ts` |
+
+All under `frontend/apps/storefront/src/app/`.
+
+**From script — the seven, the way the draft defines.** Nothing of them is in
+any template. Each is a method of `StorefrontTools` (`agent/storefront-tools.ts`)
+that returns the tool as an object — its name, a description written for a
+model, an input schema, its annotations and the `execute` that runs it — and
+`all()` returns the seven. Three files, one step each:
+
+1. **Declared** — `agent/storefront-tools.ts`: what each tool is.
+2. **Registered** — `frontend/libs/shared/agent/src/lib/agent-tools.ts`,
+   `AgentTools.register`: one `document.modelContext.registerTool(…)` a tool,
+   all under one signal whose abort takes them back. Shared by both apps; the
+   tools themselves are the storefront's.
+3. **Started** — `shell/shell.ts`, in the constructor:
+   `this.agent.register(this.tools.all());` — once, with the page.
+
+**From markup — the eighth.** It is not in `storefront-tools.ts` and nothing
+registers it: the browser makes it from the form's attributes. The next
+section is about it.
+
 ### The eighth tool, declared in the markup — experimental
 
 Seven of the tools are registered from script, the way the draft defines

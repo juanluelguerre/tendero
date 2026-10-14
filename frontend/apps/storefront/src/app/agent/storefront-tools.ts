@@ -46,6 +46,13 @@ export class StorefrontTools {
   /** Enough to answer with, few enough not to fill a model's context. */
   private static readonly MaximumResults = 8;
 
+  /**
+   * The seven tools registered from script. An eighth, `show_search_results`,
+   * is not here and is registered by nobody: it is the header's search form,
+   * declared in its markup (`search-form-tool.ts`, `shell/shell.html`). The
+   * table of all eight is in `docs/mcp.md`, *Where each of the browser's tools
+   * is declared*.
+   */
   all(): readonly ToolDescriptor[] {
     return [
       this.searchProducts(),
