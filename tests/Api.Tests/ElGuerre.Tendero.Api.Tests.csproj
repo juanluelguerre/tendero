@@ -10,6 +10,12 @@
          launchBrowser. Nothing is launched here: WebApplicationFactory brings the
          API up inside the process. -->
     <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+    <!-- Nothing here is hot-reloaded. From SDK 11.0.100-rc.2 a Debug build of a
+         web project gives its dependants dotnet watch's browser tools, and this
+         one then fails: "scoped css bundles do not have matching endpoints:
+         _framework/Microsoft.NET.Sdk.BlazorWeb.DotNetWatch…" (phase 13c's close).
+         The API itself keeps hot reload. -->
+    <EnableHotReloadInRuntimeConfigDevFile>false</EnableHotReloadInRuntimeConfigDevFile>
   </PropertyGroup>
 
   <ItemGroup>
