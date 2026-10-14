@@ -22,12 +22,17 @@ const order = (status = 'Delivered'): OrderView =>
 describe('the order store', () => {
   let handedOver: OrderView | undefined;
   let reads: number;
+  /** The languages the order was read in. */
+  let readIn: string[];
+  let culture: ReturnType<typeof signal<string>>;
   let returning: () => Promise<ReturnView>;
   let sent: unknown[];
 
   beforeEach(() => {
     handedOver = undefined;
     reads = 0;
+    readIn = [];
+    culture = signal('es');
     returning = async () => ({ returnId: 'R-1', lines: [] }) as unknown as ReturnView;
     sent = [];
   });
@@ -41,13 +46,14 @@ describe('the order store', () => {
           provide: Router,
           useValue: { getCurrentNavigation: () => (handedOver ? { extras: { state: { order: handedOver } } } : null) },
         },
-        { provide: CultureStore, useValue: { active: signal('es') } },
+        { provide: CultureStore, useValue: { active: culture } },
         { provide: TranslocoService, useValue: { translate: (key: string) => key } },
         {
           provide: OrderService,
           useValue: {
-            get: async () => (
+            get: async (_id: string, language: string) => (
               reads++,
+              readIn.push(language),
               {
                 order: order(),
                 returns: sent.map(() => ({ returnId: 'R-1', lines: [] })),
@@ -63,6 +69,18 @@ describe('the order store', () => {
   }
 
   const settled = () => new Promise((done) => setTimeout(done));
+
+  /** Switching language keeps the page (one route for every language): the order is read again in the new one. */
+  it('reads the order again in the new language when the language changes', async () => {
+    opened();
+    await settled();
+
+    culture.set('en');
+    TestBed.tick();
+    await settled();
+
+    expect(readIn).toEqual(['es', 'en']);
+  });
 
   /** Straight from checkout: the order is on screen at once, and read again for what can go back. */
   it('shows the order checkout handed over at once, and reads it again', async () => {

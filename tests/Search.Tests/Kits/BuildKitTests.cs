@@ -37,9 +37,10 @@ public sealed class BuildKitTests
 
     private static Money Euros(decimal amount) => new(amount, "EUR");
 
-    private static SearchHit Hit(string code, decimal price, string currency = "EUR") =>
+    /// <param name="score">Left at 0, the search's own order gives it (<see cref="Shop"/>); set, it is the score a test needs, a tie for instance.</param>
+    private static SearchHit Hit(string code, decimal price, string currency = "EUR", double score = 0) =>
         new($"id-{code}", code, $"Name of {code}", code.ToLowerInvariant(), "Kuisina", "COOKWARE", $"v-{code}", $"SKU-{code}",
-            new Money(price, currency), new Money(price, currency), new Money(price, currency), null, InStock: true, Score: 1);
+            new Money(price, currency), new Money(price, currency), new Money(price, currency), null, InStock: true, Score: score);
 
     /// <summary>The shop's search, answering each slot by its words and remembering what it was asked.</summary>
     private sealed class Shop(Func<ProductSearchQuery, SearchHit[]> answers) : ISearchStrategy
@@ -49,7 +50,10 @@ public sealed class BuildKitTests
         public Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default)
         {
             Asked.Add(query);
-            var hits = answers(query);
+            var given = answers(query);
+            // As a real search answers: the score falls with the rank. A hit a test
+            // scored keeps its score.
+            SearchHit[] hits = [.. given.Select((hit, rank) => hit.Score == 0 ? hit with { Score = given.Length - rank } : hit)];
             return Task.FromResult(new SearchResultPage(hits, hits.Length, 1, query.PageSize, 0));
         }
     }
@@ -233,6 +237,33 @@ public sealed class BuildKitTests
         Assert.Equal("PAN-EUR", result.Kit!.Slots[0].Product!.Code);
     }
 
+    /// <summary>
+    /// Two products the search scored the same are ranked by their code, not by
+    /// whichever the index happened to return first (the author, 2026-10-14: the
+    /// same ask chose two coffee makers, because lexical relevance tied them and
+    /// the index's order broke the tie one way, the warm hybrid search the other).
+    /// </summary>
+    [Fact]
+    public async Task Products_the_search_scored_the_same_are_ranked_by_their_code()
+    {
+        var (result, _) = await Build(500m, answers: query => query.Text == "sartén"
+            ? [Hit("PAN-SET", 44.95m, score: 2), Hit("PAN-IRON", 49.90m, score: 2)]
+            : TheStory(query));
+
+        Assert.Equal("PAN-IRON", result.Kit!.Slots[0].Product!.Code);
+    }
+
+    /// <summary>Only a tie moves: an order that does not follow the scores, as a reranker's need not, stays the search's.</summary>
+    [Fact]
+    public async Task An_order_that_does_not_follow_the_scores_is_kept()
+    {
+        var (result, _) = await Build(500m, answers: query => query.Text == "sartén"
+            ? [Hit("PAN-SET", 44.95m, score: 1), Hit("PAN-IRON", 49.90m, score: 3)]
+            : TheStory(query));
+
+        Assert.Equal("PAN-SET", result.Kit!.Slots[0].Product!.Code);
+    }
+
     /// <summary>A kit that cannot hold what it needs is still an answer — and says it is not whole.</summary>
     [Fact]
     public async Task A_kit_missing_a_slot_it_needs_is_an_answer_that_says_it_is_not_complete()
@@ -303,10 +334,10 @@ public sealed class BuildKitTests
 
         Assert.Equal(
         [
-            (null, "Kit de cocina: 113.90 EUR de 120.00 EUR."),
-            ("pan", "Sartén: Name of PAN-IRON, 49.90 EUR."),
-            ("knife", "Cuchillo: Name of KNIFE-CHEF, 64.00 EUR. Name of KNIVES-3 está mejor valorado y no cabía: cuesta 55.00 EUR más y quedaban 6.10 EUR."),
-            ("board", "Sin tabla de cortar: lo más barato cuesta 24.90 EUR y quedaban 6.10 EUR."),
+            (null, "Kit de cocina: 113,90 € de 120,00 €."),
+            ("pan", "Sartén: Name of PAN-IRON, 49,90 €."),
+            ("knife", "Cuchillo: Name of KNIFE-CHEF, 64,00 €. Name of KNIVES-3 está mejor valorado y no cabía: cuesta 55,00 € más y quedaban 6,10 €."),
+            ("board", "Sin tabla de cortar: lo más barato cuesta 24,90 € y quedaban 6,10 €."),
         ], Said(result.Kit!));
     }
 
@@ -317,10 +348,10 @@ public sealed class BuildKitTests
 
         Assert.Equal(
         [
-            (null, "Kitchen starter kit: 113.90 EUR of 120.00 EUR."),
-            ("pan", "Frying pan: Name of PAN-IRON, 49.90 EUR."),
-            ("knife", "Knife: Name of KNIFE-CHEF, 64.00 EUR. Name of KNIVES-3 ranks higher and did not fit: it costs 55.00 EUR more and 6.10 EUR was left."),
-            ("board", "No chopping board: the cheapest costs 24.90 EUR and 6.10 EUR was left."),
+            (null, "Kitchen starter kit: €113.90 of €120.00."),
+            ("pan", "Frying pan: Name of PAN-IRON, €49.90."),
+            ("knife", "Knife: Name of KNIFE-CHEF, €64.00. Name of KNIVES-3 ranks higher and did not fit: it costs €55.00 more and €6.10 was left."),
+            ("board", "No chopping board: the cheapest costs €24.90 and €6.10 was left."),
         ], Said(result.Kit!));
     }
 
@@ -332,10 +363,10 @@ public sealed class BuildKitTests
 
         Assert.Equal(
         [
-            (null, "Kit de cocina: 193.80 EUR de 500.00 EUR."),
-            ("pan", "Sartén: Name of PAN-IRON, 49.90 EUR."),
-            ("knife", "Cuchillo: Name of KNIVES-3, 119.00 EUR."),
-            ("board", "Tabla de cortar: Name of BOARD, 24.90 EUR."),
+            (null, "Kit de cocina: 193,80 € de 500,00 €."),
+            ("pan", "Sartén: Name of PAN-IRON, 49,90 €."),
+            ("knife", "Cuchillo: Name of KNIVES-3, 119,00 €."),
+            ("board", "Tabla de cortar: Name of BOARD, 24,90 €."),
         ], Said(result.Kit!));
     }
 
@@ -414,8 +445,12 @@ public sealed class BuildKitTests
             }
 
             var named = kit.Explanation
-                .SelectMany(sentence => System.Text.RegularExpressions.Regex.Matches(sentence.Text, @"(\d+\.\d{2}) EUR"))
-                .Select(match => decimal.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture))
+                .SelectMany(sentence => System.Text.RegularExpressions.Regex.Matches(
+                    sentence.Text, culture == "en" ? @"€(\d[\d,]*\.\d{2})" : @"(\d[\d.]*,\d{2}) €"))
+                // Back from how each language writes an amount (MoneyText) to the amount.
+                .Select(match => decimal.Parse(
+                    culture == "en" ? match.Groups[1].Value.Replace(",", "") : match.Groups[1].Value.Replace(".", "").Replace(",", "."),
+                    System.Globalization.CultureInfo.InvariantCulture))
                 .ToList();
 
             Assert.NotEmpty(named);

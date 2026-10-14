@@ -54,9 +54,13 @@ function askFrom(params: ParamMap): KitAsk {
 const heldTo = (template: KitTemplate | null, needs: readonly string[]) =>
   needs.filter((need) => template?.requirements.some((option) => option.facet === need) ?? false);
 
-/** One question to the solver, as a key: the same key is the same kit. */
-const keyOf = (template: string, budget: Money, requirements: readonly string[]) =>
-  `${template}|${budget.amount}|${requirements.join(',')}`;
+/**
+ * One question to the solver, as a key: the same key is the same kit. The
+ * language is part of it, because the kit's names are the shop's in that
+ * language, and a switch keeps the page: the kit is asked again in the new one.
+ */
+const keyOf = (template: string, budget: Money, requirements: readonly string[], culture: string) =>
+  `${template}|${budget.amount}|${requirements.join(',')}|${culture}`;
 
 interface KitState {
   readonly kit: KitView | null;
@@ -69,6 +73,8 @@ interface KitState {
   readonly cartProblem: string | null;
   /** The question last put to the solver, so the address the page writes is not asked again. */
   readonly _lastAsked: string | null;
+  /** The box on the kits' list sent the shopper here (K-6): the first kit the page builds is the sentence's. */
+  readonly _fromSentence: boolean;
 }
 
 export type KitPageState = 'loading' | 'notFound' | 'failed' | 'ready';
@@ -102,6 +108,7 @@ export const KitStore = signalStore(
     adding: false,
     cartProblem: null,
     _lastAsked: null,
+    _fromSentence: inject(Router).currentNavigation()?.extras.state?.['kitSource'] === 'sentence',
   })),
   withProps(() => {
     const route = inject(ActivatedRoute);
@@ -150,14 +157,20 @@ export const KitStore = signalStore(
     };
   }),
   withComputed(({ code, _templates, kit }) => {
+    // The kits last read, kept while they are read again in another language:
+    // the page is not taken back to loading under the shopper (the author,
+    // 2026-10-14).
+    const templates = linkedSignal<KitTemplate[] | undefined, KitTemplate[] | undefined>({
+      source: () => _templates.value(),
+      computation: (now, previous) => now ?? previous?.value,
+    });
     const template = computed<KitTemplate | null>(
-      () => _templates.value()?.find((each) => each.code.toUpperCase() === code().toUpperCase()) ?? null,
+      () => templates()?.find((each) => each.code.toUpperCase() === code().toUpperCase()) ?? null,
     );
     return {
       template,
       state: computed<KitPageState>(() => {
-        if (_templates.status() === 'error') return 'failed';
-        if (!_templates.hasValue()) return 'loading';
+        if (templates() === undefined) return _templates.status() === 'error' ? 'failed' : 'loading';
         return template() ? 'ready' : 'notFound';
       }),
       /** What adding the kit would put in the cart. */
@@ -170,12 +183,18 @@ export const KitStore = signalStore(
   })),
   withMethods((store) => {
     /** Asks the shop for the kit, and what it comes to at the basket. */
-    const ask = async (template: string, budget: Money, requirements: readonly string[], counted: boolean) => {
+    /** `counted` is who asked, for `kit_built`; none for a kit rebuilt from the address. */
+    const ask = async (
+      template: string,
+      budget: Money,
+      requirements: readonly string[],
+      counted: 'form' | 'sentence' | null,
+    ) => {
       patchState(store, {
         building: true,
         failed: false,
         cartProblem: null,
-        _lastAsked: keyOf(template, budget, requirements),
+        _lastAsked: keyOf(template, budget, requirements, store._culture.active()),
       });
       try {
         const kit = await firstValueFrom(
@@ -191,7 +210,7 @@ export const KitStore = signalStore(
             filled: lines.length,
             empty: kit.slots.length - lines.length,
             binding: kit.binding.toLowerCase() as 'none' | 'budget' | 'candidates',
-            source: 'form',
+            source: counted,
           });
 
         // What it comes to with the shop's promotions: a second answer, and
@@ -227,7 +246,7 @@ export const KitStore = signalStore(
         if (!template || !budget || store.building()) return;
 
         const requirements = [...store.required()];
-        const asking = ask(template.code, budget, requirements, true);
+        const asking = ask(template.code, budget, requirements, 'form');
         void store._router.navigate([], {
           relativeTo: store._route,
           queryParams: { budget: typed.trim().replace(',', '.'), needs: requirements.join(',') || null },
@@ -236,9 +255,17 @@ export const KitStore = signalStore(
       },
 
       /** The kit the address asks for, unless it is the one this page has just asked for. */
-      _follow: signalMethod<{ template: string; budget: Money; requirements: readonly string[] } | null>((asked) => {
-        if (!asked || keyOf(asked.template, asked.budget, asked.requirements) === store._lastAsked()) return;
-        void ask(asked.template, asked.budget, asked.requirements, false);
+      _follow: signalMethod<{
+        template: string;
+        budget: Money;
+        requirements: readonly string[];
+        culture: string;
+      } | null>((asked) => {
+        if (!asked || keyOf(asked.template, asked.budget, asked.requirements, asked.culture) === store._lastAsked())
+          return;
+        const counted = store._fromSentence() ? 'sentence' : null;
+        patchState(store, { _fromSentence: false });
+        void ask(asked.template, asked.budget, asked.requirements, counted);
       }),
 
       /**
@@ -277,7 +304,12 @@ export const KitStore = signalStore(
           const template = store.template();
           const budget = moneyOf(store._asked().budget);
           if (!template || !budget) return null;
-          return { template: template.code, budget, requirements: heldTo(template, store._asked().needs) };
+          return {
+            template: template.code,
+            budget,
+            requirements: heldTo(template, store._asked().needs),
+            culture: store._culture.active(),
+          };
         }),
       );
     },

@@ -309,6 +309,8 @@ Answers UCP has no capability for, in this shop's own shapes.
 | `get_return_policy` | How many days to send something back, from delivery |
 | `get_product_specs` | One product's specs, each value with its source — `catalogue`, or `description` with the exact words a person approved and how well they support it (phase 10) |
 | `compare_products` | Two to four products aligned row by row; a cell whose source is `none` is *no data*, never a guess (phase 10) |
+| `list_kits` | The kits the shop puts together to a budget: each one's code, name, slots (needed or optional) and requirements as `CODE:VALUE` — `GET /api/kits` (phase 13c) |
+| `build_kit` | One kit solved for a budget in minor units, with requirements from `list_kits`: the total, what is left, what held it back, each slot with its product or why it is empty, and the shop's sentences — the page's query, `POST /api/kits/{template}/build`. A kit the shop does not have is refused as `KitNotFound`, naming it (phase 13c, K-7) |
 
 The last two waited for phase 10 on purpose: a comparison that cannot say "no
 data" with authority is a comparison that guesses (ADR 0018). They are one query
@@ -513,6 +515,28 @@ Two things to know before using it:
   that service, which is not something the shop needs in order to be tried.
 - **What a tool does, it does**: `add_to_cart` puts a line in the cart of the
   session the tab is in, exactly as the button would.
+
+**Nobody asks before a tool runs** (checked 2026-10-14, Edge 155):
+`search_products`, then `get_product`, then `add_to_cart`, called as an agent
+would. The line was in the cart in 69 ms with no prompt from the browser or
+the shop. Edge reports each tool's annotations, `consequentialHint` among them,
+and the shop's are all `false`. Whether to ask first is the calling agent's
+choice.
+
+**The browser's own agent does not use them yet.** Copilot in Edge does not
+see a page's WebMCP tools, and no flag turns that on. In
+`MicrosoftEdge/webmcp-labs` issue #17 (opened 2026-10-06, still open), a
+Microsoft engineer answers that there is no public way to test WebMCP with
+Copilot in Edge, the drawer included, and that the testing flag does not enable
+it. **To see a model drive the shop's tools today**, the same repository has
+**WebMCP Explorer**. It is an extension loaded unpacked from
+`webmcp-explorer/dist/`, with an agent loop over Azure OpenAI, OpenAI,
+Anthropic or any Chat Completions endpoint, a local one included (Ollama at
+`http://localhost:11434/v1`, no key). The model must call tools. It has not
+been tried with the shop yet. **For the future**: try it with a local model,
+and check again whether Copilot has started reading the page's tools. When
+it does, a capture of Copilot driving Tendero belongs in the article on the
+three agent surfaces.
 
 ### Where each of the browser's tools is declared
 

@@ -40,9 +40,10 @@ test.describe('searching with a picture', () => {
     page.route('**/api/search/by-image/status', (route) => route.fulfill({ json: { available: true } }));
 
   test('a shop without visual search has the search box it always had, and searches by words', async ({ page }) => {
-    const status = page.waitForResponse('**/api/search/by-image/status');
+    // Said by the test, as `available` says the opposite: a stack started with
+    // its eyes on answers available, and this is about one that does not.
+    await page.route('**/api/search/by-image/status', (route) => route.fulfill({ json: { available: false } }));
     await open(page);
-    expect((await (await status).json()).available).toBe(false);
 
     await expect(camera(page)).toHaveCount(0);
 

@@ -34,6 +34,15 @@ public sealed class TinoOptions
     /// <summary>The one tried when it does not.</summary>
     public string? Fallback { get; init; }
 
+    /// <summary>
+    /// Whether the storefront has a model at all: on, and a profile named here
+    /// that the shop has configured. Configured, not probed: no model is called
+    /// to answer it. Tino's status asks it, and so does the kits' sentence box
+    /// (K-6), which runs on this same profile, so the two cannot disagree.
+    /// </summary>
+    public bool HasModel(ModelProfiles profiles) =>
+        Enabled && new[] { Model, Fallback }.Any(name => name is { Length: > 0 } && profiles.Find(name) is not null);
+
     /// <summary>A gathering call's answer at most: a tool call, or the word that ends it.</summary>
     public int MaxOutputTokens { get; init; } = 400;
 

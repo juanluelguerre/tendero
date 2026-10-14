@@ -1,0 +1,16 @@
+[
+  { "culture": "es", "sentence": "quiero un kit de cocina para inducción por menos de 200 euros", "template": "KITCHEN_STARTER", "budget": 20000, "requirements": ["INDUCTION:true"] },
+  { "culture": "es", "sentence": "algo para montar mi primera cocina, unos 150 €", "template": "KITCHEN_STARTER", "budget": 15000, "requirements": [] },
+  { "culture": "es", "sentence": "necesito todo para hacer café en casa, hasta 120", "template": "COFFEE_CORNER", "budget": 12000, "requirements": [] },
+  { "culture": "es", "sentence": "un rincón para el café con cafetera de inducción, máximo 90 euros", "template": "COFFEE_CORNER", "budget": 9000, "requirements": ["INDUCTION:true"] },
+  { "culture": "es", "sentence": "me mudo y necesito montar un escritorio para teletrabajar por 300 €", "template": "DESK", "budget": 30000, "requirements": [] },
+  { "culture": "es", "sentence": "silla y mesa para estudiar, presupuesto de 250", "template": "DESK", "budget": 25000, "requirements": [] },
+  { "culture": "es", "sentence": "un regalo bonito para mi madre", "template": null, "budget": null, "requirements": [] },
+  { "culture": "es", "sentence": "zapatillas para correr de menos de 80 €", "template": null, "budget": null, "requirements": [] },
+  { "culture": "en", "sentence": "a kitchen kit for induction under €200", "template": "KITCHEN_STARTER", "budget": 20000, "requirements": ["INDUCTION:true"] },
+  { "culture": "en", "sentence": "everything I need to start cooking, around 100 euros", "template": "KITCHEN_STARTER", "budget": 10000, "requirements": [] },
+  { "culture": "en", "sentence": "a coffee setup for my flat under 150 EUR", "template": "COFFEE_CORNER", "budget": 15000, "requirements": [] },
+  { "culture": "en", "sentence": "a home office desk and chair, budget of 400", "template": "DESK", "budget": 40000, "requirements": [] },
+  { "culture": "en", "sentence": "pour-over coffee things for an induction hob, up to €80", "template": "COFFEE_CORNER", "budget": 8000, "requirements": ["INDUCTION:true"] },
+  { "culture": "en", "sentence": "running shoes for 2 people", "template": null, "budget": null, "requirements": [] }
+]

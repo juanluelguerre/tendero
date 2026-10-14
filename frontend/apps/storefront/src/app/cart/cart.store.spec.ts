@@ -14,15 +14,17 @@ const cart = (lines: { sku: string; quantity: number }[]): CartView =>
 /** The basket and what it costs: every change is followed by a fresh quote, and the token travels by hand (ADR 0016, ADR 0047). */
 describe('the cart store', () => {
   let http: HttpTestingController;
+  let culture: ReturnType<typeof signal<string>>;
 
   beforeEach(() => {
     localStorage.clear();
+    culture = signal('es');
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: API_BASE_URL, useValue: 'http://api' },
-        { provide: CultureStore, useValue: { active: signal('es') } },
+        { provide: CultureStore, useValue: { active: culture } },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -60,6 +62,29 @@ describe('the cart store', () => {
     await added(store, cart([]));
 
     expect([store.isEmpty(), store.quote()]).toEqual([true, null]);
+  });
+
+  /**
+   * Switching language keeps the shell and the store (one route for every
+   * language): the basket is read again in the new one, its products' names and
+   * its discounts' reasons being the shop's in that language (2026-10-14).
+   */
+  it('reads the basket and its quote again in the new language when the language changes', async () => {
+    const store = TestBed.inject(CartStore);
+    await added(store, cart([{ sku: 'SKU-1', quantity: 2 }]));
+
+    culture.set('en');
+    TestBed.tick();
+    await new Promise((settled) => setTimeout(settled));
+    http
+      .expectOne('http://api/api/cart?culture=en')
+      .flush(cart([{ sku: 'SKU-1', quantity: 2 }]), { headers: { 'X-Cart-Token': 'T-1' } });
+    await new Promise((settled) => setTimeout(settled));
+    http
+      .expectOne('http://api/api/pricing/quote?culture=en')
+      .flush({ total: { amount: 0, currency: 'EUR' }, lines: [] });
+
+    expect(store.itemCount()).toBe(2);
   });
 
   it('keeps the server’s refusal to say beside the button, rather than throwing it', async () => {

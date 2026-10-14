@@ -43,6 +43,14 @@ public enum ToolAudience
 
     /// <summary>The storefront's assistant, asked by a shopper: what the shop sells, and that shopper's own orders.</summary>
     Shopper,
+
+    /// <summary>
+    /// A slice of Assist reading for itself, behind one page, and handed to no
+    /// agent (phase 13c: the sentence that fills a kit's form reads the shop's
+    /// kits). An agent takes every read of its own audience, so a read made for
+    /// a page and given to one would change that agent unmeasured.
+    /// </summary>
+    Page,
 }
 
 /// <param name="Data">The tool's own DTO: codes, names, figures — never a customer.</param>
@@ -101,11 +109,14 @@ public enum FactSource
     /// <summary>A sentence of the product's description: published with the product, approved by nobody line by line.</summary>
     Description,
 
-    /// <summary>A rule of the shop's own — its return policy.</summary>
+    /// <summary>A rule of the shop's own — its return policy, its shipping terms.</summary>
     Policy,
 
     /// <summary>The asking shopper's own order.</summary>
     Order,
+
+    /// <summary>The shop's offers (phase 13c): a campaign running or about to, what it holds and until when — or that a product is on offer now.</summary>
+    Campaign,
 
     /// <summary>Something the shop tells whoever asks — that order questions need signing in.</summary>
     Notice,

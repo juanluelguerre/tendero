@@ -34,7 +34,8 @@ import { expect, test, type Page } from '@playwright/test';
 async function firstProduct(page: Page): Promise<{ href: string; name: string }> {
   await page.goto('/es');
   await page.getByRole('searchbox').fill('zapatillas');
-  await page.getByRole('button', { name: /buscar|search/i }).click();
+  // The whole name: with visual search on, "Buscar con una imagen" is a button too.
+  await page.getByRole('button', { name: /^(buscar|search)$/i }).click();
 
   // **The RESULTS' first card, not the page's.** The home page grew cards of its
   // own (new arrivals, 2026-09-04) with the same link class, and this used to

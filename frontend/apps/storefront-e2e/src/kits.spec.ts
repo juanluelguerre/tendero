@@ -44,6 +44,63 @@ test.describe('the kits', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
+  /**
+   * What was asked lives in the address. Switching language goes to another
+   * page (/es → /en), and a kit held only in the old page's memory came back
+   * empty (the author, 2026-10-14).
+   */
+  test('keeps the kit, rebuilt in the new language, when the language is switched', async ({ page }) => {
+    await page.goto('/es/kits/COFFEE_CORNER');
+    await page.getByLabel('Tu presupuesto').fill('300');
+    await page.getByRole('button', { name: 'Montar el kit' }).click();
+    await expect(page).toHaveURL(/\/es\/kits\/COFFEE_CORNER\?budget=300$/);
+    await expect(page.getByText(/de 300,00\s€/)).toBeVisible();
+
+    await page
+      .getByRole('banner')
+      .getByRole('button', { name: /tu cuenta y tus preferencias/i })
+      .click();
+    await page.locator('#account-menu').getByRole('button', { name: 'en', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/en\/kits\/COFFEE_CORNER\?budget=300$/);
+    await expect(page.getByLabel('Your budget')).toHaveValue('300');
+    await expect(page.getByText(/of €300\.00 · €[\d.,]+ left/)).toBeVisible();
+  });
+
+  /**
+   * A sentence that fills the form (K-6): the model names the kit, from the
+   * script in CI, because no model fits a runner. Code reads the budget and
+   * "induction", and the kit's page builds it with the form showing what was
+   * understood. The sentence is also one the local model gets right
+   * (`tools/kit-sentences`), so the spec holds on a stack with the real model;
+   * "a kitchen kit for induction" is one it does not.
+   */
+  test('a sentence takes the shopper to the kit it names, with the form filled', async ({ page }) => {
+    test.skip(!process.env['TINO_SCRIPTED'] && !process.env['CI'], 'needs the stack started with Tendero__TinoScript');
+
+    await page.goto('/en/kits');
+    await page
+      .getByLabel('Tell us in your own words')
+      .fill('everything I need to start cooking on induction, under €200');
+    await page.getByRole('button', { name: 'Find my kit' }).click();
+
+    await expect(page).toHaveURL(/\/en\/kits\/KITCHEN_STARTER\?budget=200&needs=INDUCTION(:|%3A)true$/);
+    await expect(page.getByLabel('Your budget')).toHaveValue('200');
+    await expect(page.getByRole('switch', { name: 'induction' })).toBeChecked();
+    await expect(page.getByText(/of €200\.00 · €[\d.,]+ left/)).toBeVisible();
+  });
+
+  /** With no model the box is not drawn, and the list is the page it was (invariant 8). */
+  test('offers no sentence box when the shop cannot read one', async ({ page }) => {
+    const status = await (await page.request.get('/api/kits/understand/status')).json();
+    test.skip(status.available === true, 'the stack has a model: the box is drawn');
+
+    await page.goto('/en/kits');
+
+    await expect(page.getByRole('heading', { level: 1, name: 'Kits' })).toBeVisible();
+    await expect(page.getByLabel('Tell us in your own words')).toHaveCount(0);
+  });
+
   test('a budget that is not a number builds nothing', async ({ page }) => {
     await page.goto('/en/kits/KITCHEN_STARTER');
 

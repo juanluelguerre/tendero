@@ -387,10 +387,92 @@ otherwise, because two of them go against the roadmap.
    two different coffee makers. The first call ranked the Aroma Compacta first
    and every later call the 6-cup stovetop. The solver ranks by a slot's
    position in an ordinary search, so its answer is only as stable as that
-   search. Not investigated yet. The guess is the hybrid search falling back
-   to lexical on a cold first call. A shared link that gives another kit
-   would break the promise above, so it is owed before K-8.
+   search. **Measured the same day.** Asked of Elasticsearch alone, with
+   the lexical query's fields, the coffee-maker slot ranks the Aroma Compacta
+   first in both languages. It is tied with the 6-cup stovetop (9.063 in es,
+   15.812 in en), and the index's order breaks the tie. The warm hybrid search
+   puts the 6-cup stovetop first and the Aroma Compacta fourth. So the first
+   call, which chose the Aroma, ranked as lexical search does: its vector or
+   reranking stage did not answer in time, and the search degraded as invariant
+   8 asks. It was not caught in the act, because a degradation is on the span
+   and on `tendero.search.degraded`, not in the answer. Two things follow. A
+   kit is only as stable as the search's stages that answered, and lexical
+   relevance has ties nothing breaks. **Decided by the author (2026-10-14): keep
+   the hybrid ranking, warm it, break ties by code.** Built the same day:
+   - `BuildKitHandler.TiesByCode` puts each run of equal scores in code order
+     before the candidates are ranked. Only ties move, so a reranker's order,
+     which need not follow the scores, stays its own. On this catalogue it also
+     makes lexical and hybrid agree on the coffee maker: the stovetop's code
+     comes first.
+   - `WarmHybridSearchAtStartupWorker`: once the vector layer answers (it waits,
+     every 5 s for two minutes), the API asks the hybrid search once in each
+     language, as `WarmVisualSearchAtStartupWorker` does for pictures. Without
+     the vector layer it does nothing, and a failure costs only the warming.
+     It shortens the cold window and does not close it. A search that still
+     degrades, because a model is down, ranks lexically by design (invariant
+     8), and the tie-break keeps even that answer the same each time.
+   - The kit's sentences now write money as the reader's language does
+     (`MoneyText`: "113,90 €", "€113.90"). They wrote "113.90 EUR" to everyone.
+     At the author's word, so do the other sentences the server writes for a
+     reader: the shipping terms and an order's total, which Tino cites, and a
+     promotion's unmet minimum. Tino's suite, run once against it, gave 28 of 30,
+     its best before (`docs/analysis/tino-models.md`).
 6. **K-6 · A sentence**: the parse, its fixture, the form filled from it.
+   *As built (2026-10-14), option A of `docs/plans/2026-10-14-kit-k6-a-sentence.md`*.
+   The slice `Assist/Kits/UnderstandKitSentence` reads the shop's kits through
+   `list_kits`, a read Search provides (ADR 0054). It has a new audience,
+   `ToolAudience.Page`: a read a slice makes for a page and that no agent is
+   handed, because Tino takes every read of its own audience and would have
+   changed unmeasured. Two departures from the plan, both on the side of
+   invariant 12:
+   - **The model chooses only the kit.** It is one closed question in plain
+     text, among the kits' names and *none of these*. **Code reads the budget
+     and the requirements**, because they are written in the sentence: an
+     amount counts when a currency is beside it or a price cue comes before it
+     ("menos de", "hasta", "under"…), so "para 4 personas" is not a budget,
+     and a requirement counts when its label is in the sentence as a word,
+     accents aside. That makes one call to the model instead of two, and
+     nothing a reader could read with certainty is left to it.
+   - **The box is on the kits' list, and the sentence builds.** Since K-5's
+     fix, an ask lives in the address. So the box sends the shopper to
+     `/kits/CODE?budget=…&needs=…`, and the page builds that kit with the form
+     showing what was understood, for the shopper to correct and build again.
+     The plan had the form filled and nothing built. The navigation's state,
+     not the address, marks it as the sentence's, so that one `kit_built`
+     counts with `source: sentence` and a reload counts nothing.
+   It runs on the storefront's model, Tino's profile. With Tino off, no
+   profile, or a model that fails, the answer is `understood: false`, never a
+   refusal. `GET /api/kits/understand/status` (configured, not probed) says
+   whether to draw the box at all, and with no model the list is the page it
+   was. `kit_sentence_read` (understood or not, which kit, whether a budget
+   was said) answers whether a sentence gets a shopper to a kit. The browser
+   spec scripts the model's answer (`tino.script.json`, the step *put a kit
+   together*).
+   **Measured (2026-10-14)**, `node tools/kit-sentences/run.mjs` against the
+   running stack: 14 sentences (8 es, 6 en; three name no kit), local
+   `qwen3.5-4b-q8_0`, **13 of 14 right whole** (kit, budget and
+   requirements), each in 131 to 367 ms. The one miss is *"a kitchen kit for
+   induction under €200"*, which the model answers *none of these*. It does the
+   same without the budget, and without "induction", so it is the model not
+   hearing "kitchen kit" as "Kitchen starter kit". It is the browser spec's
+   sentence, which is scripted there. One wording was tried against it: listing
+   what each kit is made of. That came out **worse, 12 of 14**, and also lost
+   *"everything I need to start cooking"*, so the question stays as it is. Code
+   read every budget and requirement right in the 11 sentences where a kit was
+   named.
 7. **K-7 · `build_kit`** over MCP, if decision 7 says so.
+   *As built (2026-10-14)*: two tools in `Mcp/Tools/TenderoTools.cs`, not
+   one. `build_kit` takes a template's code, so an agent needs to learn the
+   codes, and `list_kits` gives them, with each kit's slots and its
+   requirements as `CODE:VALUE`. Both are the REST endpoints' own queries,
+   read-only and anonymous like the server's other reads, and annotated as
+   such. The budget is in **minor units**, as the wire answers prices and as
+   `search_products` takes them. The answer is the page's `KitView`: total,
+   what is left, what held the kit back, every slot with its product or its
+   gap, and the shop's sentences. A template the shop does not have is the
+   problem `KitNotFound` (404), naming it in the language asked and pointing
+   to `list_kits`. Pricing the kit at the basket stays where it is on the
+   page: a second answer, here the checkout's. The server's
+   `tendero.agent.tool_calls` counts both by name, with nothing added.
 8. **K-8 · Close**: the ADR, Stryker over what the phase touched, the
    captures, the notebook and the book's material map.

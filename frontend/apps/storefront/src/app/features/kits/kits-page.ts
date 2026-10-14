@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Notice, StatusPill } from '@tendero/shared-ui';
@@ -12,11 +13,16 @@ import { KitsStore } from './kits.store';
  */
 @Component({
   selector: 'storefront-kits',
-  imports: [TranslocoDirective, RouterLink, Notice, StatusPill],
+  imports: [TranslocoDirective, RouterLink, FormField, Notice, StatusPill],
   providers: [KitsStore],
   templateUrl: './kits-page.html',
 })
 export class KitsPage {
   protected readonly links = inject(ShopLinks);
   protected readonly store = inject(KitsStore);
+
+  protected understand(event: Event): void {
+    event.preventDefault();
+    void this.store.understand();
+  }
 }

@@ -1,18 +1,19 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, RedirectFunction, Route, Router } from '@angular/router';
+import { CanActivateFn, RedirectFunction, Route, Router, UrlMatcher } from '@angular/router';
 import { Culture, CultureStore, SUPPORTED_CULTURES } from '@tendero/shared-i18n';
 import { Shell } from './shell/shell';
 
 /**
  * The shop, under whichever language segment led to it.
  *
- * One array, mounted once per culture, so `/es/cart` and `/en/cart` are the same
- * five routes and cannot drift apart. Generating them from
- * `SUPPORTED_CULTURES` rather than writing `:culture` is deliberate: a parameter
- * matches ANY first segment, so `/cart` would be a page in a language called
- * "cart" until a guard talked it out of it. With two cultures the explicit form
- * is shorter, and it is the router itself that rejects a language we do not
- * speak.
+ * One array under one route for every language (`cultureSegment`), so `/es/cart`
+ * and `/en/cart` are the same routes and cannot drift apart, and switching
+ * language changes a parameter rather than the route: the shell, Tino's
+ * conversation and the page are kept (the author, 2026-10-14). It was one route
+ * per language until then, and the switch destroyed and remade all three. Not a
+ * bare `:culture`, which matches ANY first segment and would make `/cart` a page
+ * in a language called "cart": the matcher takes a segment only when it is a
+ * language the shop speaks, so the router itself still rejects the rest.
  */
 const shopRoutes: Route[] = [
   {
@@ -120,7 +121,7 @@ const shopRoutes: Route[] = [
  * somebody to when their URL does not say.
  */
 export const useCultureFromUrl: CanActivateFn = (route) => {
-  inject(CultureStore).use(route.data['culture'] as Culture);
+  inject(CultureStore).use(route.paramMap.get('culture') as Culture);
   return true;
 };
 
@@ -141,13 +142,21 @@ export const toPreferredCulture: RedirectFunction = (data) => {
   });
 };
 
+/** The first segment, when it is a language the shop speaks, as the parameter `culture`. */
+export const cultureSegment: UrlMatcher = (segments) =>
+  segments.length > 0 && (SUPPORTED_CULTURES as readonly string[]).includes(segments[0].path)
+    ? { consumed: [segments[0]], posParams: { culture: segments[0] } }
+    : null;
+
 export const appRoutes: Route[] = [
-  ...SUPPORTED_CULTURES.map((culture) => ({
-    path: culture,
+  {
+    matcher: cultureSegment,
     component: Shell,
+    // Runs again when only the language changes — the default, written here
+    // because it is the point: the switch is a change of parameter.
+    runGuardsAndResolvers: 'paramsChange',
     canActivate: [useCultureFromUrl],
-    data: { culture },
     children: shopRoutes,
-  })),
+  },
   { path: '**', redirectTo: toPreferredCulture },
 ];

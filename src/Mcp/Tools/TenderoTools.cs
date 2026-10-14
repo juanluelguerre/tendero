@@ -6,6 +6,7 @@ using ElGuerre.Tendero.Ordering.Features.Returns;
 using ElGuerre.Tendero.Pricing.Features.ListCampaigns;
 using ElGuerre.Tendero.Pricing.Features.ListOffers;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Features.BuildKit;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Http;
@@ -26,8 +27,8 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 /// nothing here may implement a handler or touch a <c>*.Domain</c> namespace, so
 /// a tool cannot quietly become logic.
 ///
-/// **Eight: the roadmap's five, the two that stood in for its missing two, and
-/// the shop's campaigns (R-8, H-5).**
+/// **Ten: the roadmap's five, the two that stood in for its missing two, the
+/// shop's campaigns (R-8, H-5), and its kits (phase 13c, K-7).**
 /// <c>get_product_specs</c> and <c>compare_products</c> answer from approved,
 /// source-backed claims, so they waited for <c>Knowledge</c> (phase 10) — a
 /// comparison tool with no claims cannot say "no data" with any authority, which
@@ -279,6 +280,72 @@ public sealed class TenderoTools
         CancellationToken cancellationToken = default) =>
         Answered.In(Resolve(culture, requests), answered => Refusals.Readable(answered, () => dispatcher.SendAsync(
             new ListCampaignsQuery(answered), cancellationToken)));
+
+    /// <summary>
+    /// The kits the shop puts together (phase 13c, K-7): the same query as
+    /// <c>GET /api/kits</c>, so an agent learns a kit's code and what it can be
+    /// asked to work with before it asks for one.
+    /// </summary>
+    [McpServerTool(Name = "list_kits", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
+    [Description("""
+        The kits this shop puts together to a budget, in the requested language: each
+        kit's code, its name, its slots (what goes in it, and whether each is needed or
+        optional), and its requirements — what the kit can be asked to work with, as
+        CODE:VALUE (e.g. INDUCTION:true). Build one with build_kit.
+        """)]
+    public static Task<Answered<IReadOnlyList<KitTemplateView>>> ListKitsAsync(
+        IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
+        [Description("Answer in this language: es or en. Anything else falls back to es.")]
+        string? culture = null,
+        CancellationToken cancellationToken = default) =>
+        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(answered, () => dispatcher.SendAsync(
+            new ListKitsQuery(answered), cancellationToken)));
+
+    /// <summary>
+    /// A kit solved for a budget (phase 13c, K-7; the spec's decision 7): the
+    /// page's query, so an agent buying for somebody gets the arithmetic the
+    /// page shows — the total, what is left, what held the kit back, and each
+    /// slot with its product or the reason it is empty — as data, not a
+    /// paragraph. The budget is in minor units, as the wire answers prices and
+    /// as <c>search_products</c> takes them. Pricing it at the basket is the
+    /// checkout's job, as on the page.
+    /// </summary>
+    [McpServerTool(Name = "build_kit", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
+    [Description("""
+        Puts one of the shop's kits together for a budget: one product a slot, the best
+        ranked that is in stock and fits, never over the budget. Answers the total, what
+        is left, what held the kit back (budget, or the shop having nothing for a slot),
+        each slot with its product (code, SKU, price) or why it is empty, and the shop's
+        own sentences explaining it. Prices are shown prices; promotions apply in the
+        basket. Codes and requirements come from list_kits.
+        """)]
+    public static async Task<Answered<KitView>> BuildKitAsync(
+        IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
+        [Description("The kit's code, from list_kits, e.g. KITCHEN_STARTER.")]
+        string template,
+        [Description("The most the kit may cost. " + SearchPrices.InMinorUnits)]
+        long budget,
+        [Description("What every fitting product must work with, as CODE:VALUE from the kit's requirements, e.g. [\"INDUCTION:true\"].")]
+        string[]? requirements = null,
+        [Description("Answer in this language: es or en. Anything else falls back to es.")]
+        string? culture = null,
+        CancellationToken cancellationToken = default)
+    {
+        var answered = Resolve(culture, requests);
+        var money = new Money(
+            SearchPrices.FromMinorUnits(budget, BuildKitHandler.Currency)!.Value, BuildKitHandler.Currency);
+
+        var result = await Refusals.Readable(answered, () => dispatcher.SendAsync(
+            new BuildKitQuery(template, money, answered, requirements ?? []), cancellationToken));
+
+        // Told, by name and with where to look, never handed an empty kit.
+        return new Answered<KitView>(answered, result.Kit
+            ?? throw Refusals.Problem(ToolRefusals.KitNotFound, answered,
+                es: $"La tienda no tiene ningún kit «{template}»; list_kits dice cuáles hay.",
+                en: $"The shop has no kit '{template}'; list_kits says which there are."));
+    }
 
     [McpServerTool(Name = "get_return_policy", UseStructuredContent = true, ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("""

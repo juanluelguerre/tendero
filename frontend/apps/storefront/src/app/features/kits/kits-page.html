@@ -4,6 +4,31 @@
     <p class="mt-1 text-muted">{{ t('kits.listLede') }}</p>
   </header>
 
+  <!-- A sentence that fills a kit's form (K-6). Drawn only when the shop can
+       read one: with no model the list is the page it was. -->
+  @if (store.offersSentence()) {
+    <form class="mb-6 grid gap-2 rounded-lg border border-hairline bg-surface p-5" (submit)="understand($event)">
+      <label class="grid gap-2">
+        <span class="text-sm font-semibold">{{ t('kits.sentence') }}</span>
+        <span class="flex gap-3 max-xs:flex-col">
+          <input
+            class="field flex-1"
+            autocomplete="off"
+            [formField]="store.sentenceForm.text"
+            [attr.aria-describedby]="'kit-sentence-hint'"
+          />
+          <button type="submit" class="button" [disabled]="store.reading() || !store.sentenceForm().valid()">
+            {{ t(store.reading() ? 'kits.sentenceReading' : 'kits.sentenceAsk') }}
+          </button>
+        </span>
+      </label>
+      <span id="kit-sentence-hint" class="text-xs text-muted">{{ t('kits.sentenceHint') }}</span>
+      @if (store.notUnderstood()) {
+        <lib-notice tone="info" live="polite">{{ t('kits.sentenceNotUnderstood') }}</lib-notice>
+      }
+    </form>
+  }
+
   @switch (store.state()) {
     @case ('loading') {
       <p class="text-muted" aria-live="polite">{{ t('kits.loading') }}</p>

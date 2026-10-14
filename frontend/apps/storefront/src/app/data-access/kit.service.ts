@@ -1,6 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { BuildKitRequest, KitTemplate, KitView } from '@tendero/shared-api';
+import type {
+  BuildKitRequest,
+  KitSentenceAvailability,
+  KitSentenceUnderstood,
+  KitTemplate,
+  KitView,
+} from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
@@ -25,5 +31,21 @@ export class KitService {
     return this.http.post<KitView>(`${this.baseUrl}/api/kits/${encodeURIComponent(template)}/build`, request, {
       params: new HttpParams().set('culture', culture),
     });
+  }
+
+  /** A shopper's sentence read into a kit's form (K-6): which kit, a budget, the requirements. Nothing is built. */
+  understand(sentence: string, culture: string): Observable<KitSentenceUnderstood> {
+    return this.http.post<KitSentenceUnderstood>(
+      `${this.baseUrl}/api/kits/understand`,
+      { sentence },
+      {
+        params: new HttpParams().set('culture', culture),
+      },
+    );
+  }
+
+  /** Whether a sentence can be read at all: configured, not probed, so no model is asked. */
+  sentenceStatus(): Observable<KitSentenceAvailability> {
+    return this.http.get<KitSentenceAvailability>(`${this.baseUrl}/api/kits/understand/status`);
   }
 }

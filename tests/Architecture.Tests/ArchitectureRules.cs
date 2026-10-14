@@ -474,6 +474,9 @@ public sealed class ArchitectureRules
         {
             [ToolAudience.Shopkeeper] = [.. whoTheyAre, "OrderId"],
             [ToolAudience.Shopper] = whoTheyAre,
+            // A read a slice makes for a page (K-6): no person behind it at all,
+            // so the strictest of the two.
+            [ToolAudience.Page] = [.. whoTheyAre, "OrderId"],
         };
         Assert.Equal(Enum.GetValues<ToolAudience>().Order(), forbidden.Keys.Order());
 

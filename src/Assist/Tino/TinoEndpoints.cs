@@ -56,13 +56,7 @@ public sealed class TinoEndpoints : ICarterModule
         // Configured, not probed: no model is called to answer it (the plan's ruling 8).
         app.MapGet("/api/assistant/status",
                 Ok<TinoAvailability> (IOptions<TinoOptions> options, ModelProfiles profiles, IEnumerable<ISupportScorer> scorers) =>
-                {
-                    var settings = options.Value;
-                    string?[] names = [settings.Model, settings.Fallback];
-                    return TypedResults.Ok(new TinoAvailability(
-                        settings.Enabled && scorers.Any()
-                        && names.Any(name => name is { Length: > 0 } && profiles.Find(name) is not null)));
-                })
+                    TypedResults.Ok(new TinoAvailability(scorers.Any() && options.Value.HasModel(profiles))))
             .AllowAnonymous()
             .WithTags("Assistant")
             .WithName("GetTinoAvailability");
