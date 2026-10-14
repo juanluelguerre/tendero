@@ -139,13 +139,22 @@ export class Listing {
     });
   }
 
-  /** "1–24 de 55 resultados para «mochila»", or "8 productos" when all of them are on screen. */
+  /**
+   * "1–24 de 55 resultados para «mochila»", or "8 productos" when all of them are on
+   * screen. When nothing matched the words, the search answers with the nearest
+   * (`Related`) and the count says so — "35 productos parecidos a «…»" — rather
+   * than calling them results under a notice that says nothing matched.
+   */
   protected count(t: Translate): string {
     const ready = this.ready();
     if (!ready) return t('listing.loading');
 
     const query = this.state.place()?.query ?? '';
-    const prefix = query ? 'listing.count.for.' : 'listing.count.';
+    const prefix = !query
+      ? 'listing.count.'
+      : ready.answer?.match === 'Related'
+        ? 'listing.count.related.'
+        : 'listing.count.for.';
     const shown = ready.hits.length;
 
     if (ready.total === 1) return t(prefix + 'one', { query });

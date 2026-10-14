@@ -12,13 +12,16 @@ describe('list_campaigns, as an agent reads it', () => {
   it('gives each campaign its window, time left, holds with their coupon, and its products', () => {
     const text = describeCampaigns(
       [
-        campaign({ endsAt: '2026-10-07T16:12:00Z', holds: [{ name: 'Envío gratis desde 50 €', couponCode: null }] }),
+        campaign({
+          endsAt: '2026-10-07T16:12:00Z',
+          holds: [{ code: 'SHIP0', name: 'Envío gratis desde 50 €', couponCode: null }],
+        }),
         campaign({
           code: 'BLACK_FRIDAY',
           name: 'Black Friday',
           phase: 'Upcoming',
           startsAt: '2026-10-04T10:00:00Z',
-          holds: [{ name: 'Black Friday', couponCode: 'BF2026' }],
+          holds: [{ code: 'BLACKFRIDAY', name: 'Black Friday', couponCode: 'BF2026' }],
         }),
       ],
       'en',

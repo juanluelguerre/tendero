@@ -2,6 +2,7 @@ using System.Text;
 using Elastic.Clients.Elasticsearch;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
+using ElGuerre.Tendero.Search.Offers;
 using Xunit;
 
 namespace ElGuerre.Tendero.Search.Tests;
@@ -74,7 +75,7 @@ public sealed class ElasticsearchRequestBodyTests
         var (client, bodies) = Capturing();
 
         await Assert.ThrowsAnyAsync<Exception>(() =>
-            new ElasticsearchFullMatch(client).AnyAsync(new ProductSearchQuery("poner la mesa", "es", Category: "KITCHEN"), Ct));
+            Adapters.FullMatch(client).AnyAsync(new ProductSearchQuery("poner la mesa", "es", Category: "KITCHEN"), Ct));
 
         var body = Assert.Single(bodies);
         Assert.Contains("\"status\"", body);
@@ -89,6 +90,31 @@ public sealed class ElasticsearchRequestBodyTests
         Assert.DoesNotContain("\"cross_fields\"", body);
         Assert.DoesNotContain("\"fuzziness\"", body);
         Assert.DoesNotContain("description", body);
+    }
+
+    /// <summary>
+    /// "Does the shop sell this" is asked of what the shopper is looking at: the
+    /// products that pass their filters. Counted without them, "menaje" with *on
+    /// offer* switched on was called exact — plenty of kitchenware says "menaje" —
+    /// while every card was a sweatshirt or a glove on offer, and the shopper's
+    /// assistant said those gloves were on offer to someone who asked for kitchenware
+    /// (2026-10-14). With no filter chosen, the count is the one it always was.
+    /// </summary>
+    [Fact]
+    public async Task The_full_match_count_is_of_the_products_that_pass_the_shoppers_filters()
+    {
+        var (client, bodies) = Capturing();
+        var apparelOnOffer = new OfferScope(false, ["APPAREL"], []);
+
+        await Assert.ThrowsAnyAsync<Exception>(() => Adapters.FullMatch(client, apparelOnOffer)
+            .AnyAsync(new ProductSearchQuery("menaje", "es", Filters: new SearchFilters { OnOffer = true }), Ct));
+        await Assert.ThrowsAnyAsync<Exception>(() => Adapters.FullMatch(client, apparelOnOffer)
+            .AnyAsync(new ProductSearchQuery("menaje", "es"), Ct));
+
+        Assert.Equal(2, bodies.Count);
+        Assert.Contains("\"APPAREL\"", bodies[0]);
+        Assert.Contains("\"active\"", bodies[0]);
+        Assert.DoesNotContain("APPAREL", bodies[1]);
     }
 
     /// <summary>
@@ -109,7 +135,7 @@ public sealed class ElasticsearchRequestBodyTests
         var (client, bodies) = Capturing();
 
         await Assert.ThrowsAnyAsync<Exception>(() =>
-            new ElasticsearchFullMatch(client).AnyAsync(new ProductSearchQuery(text, culture), Ct));
+            Adapters.FullMatch(client).AnyAsync(new ProductSearchQuery(text, culture), Ct));
 
         var body = Assert.Single(bodies);
         Assert.Equal(clauses, Occurrences(body, "\"multi_match\""));
@@ -133,7 +159,7 @@ public sealed class ElasticsearchRequestBodyTests
         var (client, bodies) = Capturing();
 
         await Assert.ThrowsAnyAsync<Exception>(() =>
-            new ElasticsearchFullMatch(client).AnyAsync(new ProductSearchQuery(text, "es"), Ct));
+            Adapters.FullMatch(client).AnyAsync(new ProductSearchQuery(text, "es"), Ct));
 
         var body = Assert.Single(bodies);
         Assert.Equal(clauses, Occurrences(body, "\"multi_match\""));

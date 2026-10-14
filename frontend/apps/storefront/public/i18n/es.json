@@ -320,6 +320,11 @@
         "one": "1 resultado para «{{query}}»",
         "all": "{{total}} resultados para «{{query}}»",
         "page": "{{from}}–{{to}} de {{total}} resultados para «{{query}}»"
+      },
+      "related": {
+        "one": "1 producto parecido a «{{query}}»",
+        "all": "{{total}} productos parecidos a «{{query}}»",
+        "page": "{{from}}–{{to}} de {{total}} productos parecidos a «{{query}}»"
       }
     },
     "chips": {
@@ -463,6 +468,7 @@
     "nearest": "Lo que sí dice",
     "openOrder": "Abrir este pedido →",
     "seeAll": "Ver los {{count}} resultados →",
+    "seeAllRelated": "Ver los {{count}} productos parecidos →",
     "on": {
       "Product": "En: este producto",
       "Order": "En: este pedido"
@@ -471,7 +477,8 @@
       "Claim": "Aprobado por el tendero",
       "DataSheet": "De la ficha del producto",
       "Description": "De la descripción del producto",
-      "Policy": "Política de devoluciones",
+      "Policy": "Normas de la tienda",
+      "Campaign": "Ofertas de la tienda",
       "Order": "Tu pedido",
       "Notice": "La tienda",
       "quoteTitle": "Aprobado a partir de estas palabras",
@@ -481,6 +488,7 @@
     "fallback": {
       "title": "Tino no está respondiendo ahora.",
       "results": "Estos son los resultados de búsqueda para tus palabras.",
+      "related": "La búsqueda no ha encontrado nada que coincida con tus palabras; esto es lo más parecido.",
       "nothing": "Y la búsqueda no ha encontrado nada para tus palabras. Prueba con menos en el buscador.",
       "tooMany": "Demasiadas preguntas en un minuto. La búsqueda no ha encontrado nada para tus palabras; prueba en un momento."
     },
@@ -548,8 +556,24 @@
     "said.better": "«{{name}}» está mejor valorado y no cabía: le faltaban {{short}}.",
     "said.noCandidate": "La tienda no tiene ahora nada que sirva aquí.",
     "said.overBudget": "El más barato cuesta {{price}}: {{short}} más de lo que quedaba.",
+    "sentence": "Dínoslo con tus palabras",
+    "sentenceAsk": "Buscar mi kit",
+    "sentenceHint": "Por ejemplo: «un kit de cocina para inducción por menos de 200 €». Rellenamos el kit con lo que entendamos y tú lo revisas.",
+    "sentenceNotUnderstood": "No hemos sabido qué kit buscas. Elige uno de la lista.",
+    "sentenceReading": "Leyéndolo…",
     "title": "Kits",
     "trail": "Dónde estás",
     "whatGoesIn": "Qué lleva"
+  },
+  "card": {
+    "deal": {
+      "amountOff": "{{amount}} menos en tu pedido",
+      "amountOffFrom": "{{amount}} menos en tu pedido desde {{minimum}}",
+      "percentOff": "{{percent}} % menos",
+      "percentOffFrom": "{{percent}} % menos en pedidos desde {{minimum}}",
+      "buyXGetY": "{{take}}x{{pay}}",
+      "freeShipping": "Envío gratis",
+      "freeShippingFrom": "Envío gratis desde {{minimum}}"
+    }
   }
 }

@@ -37,7 +37,7 @@ everything here that is not *planned* is emitted.
 | Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
 | Tino | Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? | Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. | `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`, `tendero.tino.turns` | emitted |
 | Search with a picture | Does anyone search with a picture, and does the picture find what they wanted? | If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. | `search_by_image_submitted`, `search_by_image_result_followed` | emitted |
-| Kits | Are kits asked for, and can the shop fill them at the budgets people give; and is a solved kit worth buying? | A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. | `kit_built`, `kit_added_to_cart` | emitted |
+| Kits | Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit? | A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant. | `kit_built`, `kit_added_to_cart`, `kit_sentence_read` | emitted |
 
 ### Backoffice
 
@@ -453,7 +453,7 @@ browser event, behavioural. A shopper asked the shop to build a kit and got an a
 
 Answers:
 
-- **Kits** — Are kits asked for, and can the shop fill them at the budgets people give; and is a solved kit worth buying?
+- **Kits** — Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
@@ -470,12 +470,26 @@ browser event, behavioural. A shopper put a built kit in the cart (phase 13c, K-
 
 Answers:
 
-- **Kits** — Are kits asked for, and can the shop fill them at the budgets people give; and is a solved kit worth buying?
+- **Kits** — Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `template` | string | — | The kit's code, as in kit_built. |
 | `lines` | number | — | How many products were added: one a filled slot. |
+
+### `kit_sentence_read`
+
+browser event, behavioural. A shopper wrote what kit they want and the shop read it (phase 13c, K-6): once per sentence sent, understood or not. Never the sentence itself. Only with analytics consent.
+
+Answers:
+
+- **Kits** — Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `understood` | boolean | — | Whether the sentence named one of the shop's kits. Not understood, the shopper is left with the list. |
+| `template` | string | — | The kit it named, as in kit_built; none when it named none. |
+| `budget` | boolean | — | Whether the sentence said a budget, read by code. |
 
 ## Metrics
 

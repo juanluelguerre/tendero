@@ -26,8 +26,8 @@ interface Drawn {
   readonly named: readonly Named[];
   /** The card of the product a "its details do not say" is about, when the shop could read one. */
   readonly about: SearchHit | null;
-  /** What the search behind the answer was asked, and how many it found, when there is more to see. */
-  readonly more: { readonly text: string; readonly total: number } | null;
+  /** What the search behind the answer was asked, how many it found, and whether only the nearest, when there is more to see. */
+  readonly more: { readonly text: string; readonly total: number; readonly nearest: boolean } | null;
 }
 
 /**
@@ -135,7 +135,7 @@ export class TinoPanel {
 function moreOf(exchange: Exchange): Drawn['more'] {
   if (exchange.state === 'fallback')
     return exchange.found > exchange.cards.length
-      ? { text: exchange.answer?.searchText || exchange.question, total: exchange.found }
+      ? { text: exchange.answer?.searchText || exchange.question, total: exchange.found, nearest: exchange.nearest }
       : null;
 
   const answer = exchange.answer;
@@ -146,6 +146,6 @@ function moreOf(exchange: Exchange): Drawn['more'] {
   const search = [...answer.reads].reverse().find((read) => read.tool === 'search_products');
   const text = (search?.arguments as { text?: unknown } | undefined)?.text;
   return search && typeof text === 'string' && (search.total ?? 0) > answer.products.length
-    ? { text, total: search.total ?? 0 }
+    ? { text, total: search.total ?? 0, nearest: false }
     : null;
 }

@@ -296,8 +296,9 @@ public sealed class CombiningPromotionEngine : IPromotionEngine
 
         if (condition.MinimumSubtotal is { } minimum)
         {
-            es.Add($"un mínimo de {minimum}");
-            en.Add($"a minimum of {minimum}");
+            // As each language writes money (MoneyText): "50,00 €", "€50.00".
+            es.Add($"un mínimo de {MoneyText.In(minimum, "es")}");
+            en.Add($"a minimum of {MoneyText.In(minimum, "en")}");
         }
 
         if (condition.MinimumQuantity is { } quantity)

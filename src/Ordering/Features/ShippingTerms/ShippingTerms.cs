@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Options;
@@ -168,7 +167,6 @@ internal sealed class ShippingWords(string culture)
         };
     }
 
-    /// <summary>As an order's total is written for the same reader: two decimals and the currency's code.</summary>
-    private static string Amount(Money money) =>
-        string.Create(CultureInfo.InvariantCulture, $"{money.Amount:0.00} {money.Currency}");
+    /// <summary>As the reader's language writes money (<see cref="MoneyText"/>): "4,95 €", "€4.95". It said "4.95 EUR" to both (phase 13c).</summary>
+    private string Amount(Money money) => MoneyText.In(money, culture);
 }

@@ -443,11 +443,12 @@
     {
       "name": "Kits",
       "area": "storefront",
-      "question": "Are kits asked for, and can the shop fill them at the budgets people give; and is a solved kit worth buying?",
-      "decision": "A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else.",
+      "question": "Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?",
+      "decision": "A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant.",
       "signals": [
         "kit_built",
-        "kit_added_to_cart"
+        "kit_added_to_cart",
+        "kit_sentence_read"
       ]
     }
   ],
@@ -1165,6 +1166,25 @@
         "lines": {
           "type": "number",
           "description": "How many products were added: one a filled slot."
+        }
+      }
+    },
+    {
+      "name": "kit_sentence_read",
+      "description": "A shopper wrote what kit they want and the shop read it (phase 13c, K-6): once per sentence sent, understood or not. Never the sentence itself. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "understood": {
+          "type": "boolean",
+          "description": "Whether the sentence named one of the shop's kits. Not understood, the shopper is left with the list."
+        },
+        "template": {
+          "type": "string",
+          "description": "The kit it named, as in kit_built; none when it named none."
+        },
+        "budget": {
+          "type": "boolean",
+          "description": "Whether the sentence said a budget, read by code."
         }
       }
     }

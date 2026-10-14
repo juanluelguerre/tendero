@@ -81,6 +81,13 @@
       {{ hit().price | price: culture.active() }}
     </p>
 
+    @if (deal(); as words) {
+      <!-- A promotion it is in, quiet under the price (phase 13c): not *Oferta*,
+           because its own price does not move — "5,00 € menos en tu pedido desde
+           40,00 €". `data-deal` is the tests' hook. -->
+      <p class="mt-1 text-2xs leading-snug font-medium text-body" data-deal>{{ t(words.key, words.params) }}</p>
+    }
+
     @if (reason(); as why) {
       <p class="mt-1 flex items-start gap-1 text-2xs leading-snug text-muted">
         <svg

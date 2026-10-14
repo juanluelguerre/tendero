@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Offers;
 
 namespace ElGuerre.Tendero.Search.Elasticsearch;
 
@@ -17,7 +18,7 @@ namespace ElGuerre.Tendero.Search.Elasticsearch;
 /// that outgrew it would move the grouping into an aggregation — written down
 /// here with its number rather than built for a volume the shop does not have.
 /// </summary>
-internal sealed class ElasticsearchProductProfiles(ElasticsearchClient client) : IProductProfileReader
+internal sealed class ElasticsearchProductProfiles(ElasticsearchClient client, IRunningOffers offers) : IProductProfileReader
 {
     /// <summary>
     /// Variant documents one request may read: the largest category of the
@@ -66,7 +67,7 @@ internal sealed class ElasticsearchProductProfiles(ElasticsearchClient client) :
         if (!response.IsValidResponse)
             throw new SearchUnavailableException($"reading product profiles by {by}", response.DebugInformation);
 
-        var profiles = ProductProfile.Of(response.Documents);
+        var profiles = ProductProfile.Of(response.Documents, await offers.DealsNowAsync(culture, ct));
         activity?.SetTag("search.profiles.found", profiles.Count);
 
         return profiles;

@@ -428,7 +428,25 @@ public sealed record SearchHit(
     /// (ADR 0015).
     /// </summary>
     bool InStock,
-    double Score);
+    double Score)
+{
+    /// <summary>
+    /// The promotions this product is in right now (phase 13c, <c>ProductDeals</c>
+    /// in Pricing): "5 € off the order from 40 €" on a pan, which is not *on offer*
+    /// because the pan's own price does not move. Asked of Pricing when the page is
+    /// read, never indexed. Empty when it is in none, or when the reader runs
+    /// without Pricing (the worker, the search evaluation).
+    /// </summary>
+    public IReadOnlyList<ProductDeal> Deals { get; init; } = [];
+}
+
+/// <summary>
+/// A promotion a product is in, as data (ADR 0059): a card composes its own words
+/// from <see cref="Terms"/>, an agent reads the sentence the server writes from
+/// the same terms (<see cref="DealText"/>).
+/// </summary>
+/// <param name="Name">The promotion's name in the reader's language: "5 € en menaje".</param>
+public sealed record ProductDeal(string Code, string Name, DealTerms Terms);
 
 /// <param name="Answer">
 /// What kind of answer this page is. Null for a browse or a date order.
@@ -567,11 +585,17 @@ public sealed record ProductSearchDocument
 
     public static string IndexNameFor(string culture) => $"products_{culture}";
 
-    /// <summary>This variant as a result card, the one mapping every reader of the index shares.</summary>
-    public SearchHit ToHit(double score) => new(
+    /// <summary>
+    /// This variant as a result card, the one mapping every reader of the index
+    /// shares — with the promotions it is in, when the reader asked Pricing for them.
+    /// </summary>
+    public SearchHit ToHit(double score, DealBook? deals = null) => new(
         ProductId, Code, Name, Slug, Brand, Category, Id, Sku,
         new Money(PriceAmount, PriceCurrency), new Money(PriceFrom, PriceCurrency), new Money(PriceTo, PriceCurrency),
-        ImageId, InStock, score);
+        ImageId, InStock, score)
+    {
+        Deals = deals?.For(Sku, CategoryCodes) ?? [],
+    };
 
     /// <summary>
     /// The attributes' searchable text, IN THE INDEX'S CULTURE.

@@ -41,14 +41,15 @@ public sealed record CampaignView(
     string? ImageAlt);
 
 /// <summary>
-/// One promotion a campaign holds, as the card says it. <paramref name="CouponCode"/>
+/// One promotion a campaign holds, as the card says it, by its <paramref name="Code"/>
+/// — what the shopper's assistant reads its terms by (phase 13c). <paramref name="CouponCode"/>
 /// is null for a promotion that applies by itself, and the code to type for one
 /// that needs it — data, not a sentence, so each language phrases it (the page:
 /// "con el código BF2026"). A coupon promotion is shown but not counted in
 /// <c>?campaign=</c>: a price that needs a code is not the price the listing
 /// shows everybody.
 /// </summary>
-public sealed record CampaignHold(string Name, string? CouponCode);
+public sealed record CampaignHold(string Code, string Name, string? CouponCode);
 
 /// <summary>The leading campaign first; empty when none is near — a home never shows an empty stage.</summary>
 public sealed record ListCampaignsResult(IReadOnlyList<CampaignView> Items);
@@ -133,6 +134,6 @@ public sealed class ListCampaignsHandler(ICampaignReader campaigns, IPromotionRe
             .Select(code => promotions.GetValueOrDefault(code))
             .OfType<Promotion>()
             .Where(promotion => promotion.Segment is null)
-            .Select(promotion => new CampaignHold(promotion.Name.In(culture), promotion.CouponCode)),
+            .Select(promotion => new CampaignHold(promotion.Code, promotion.Name.In(culture), promotion.CouponCode)),
     ];
 }

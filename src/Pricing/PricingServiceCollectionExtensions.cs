@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Pricing.Adapters;
 using ElGuerre.Tendero.Pricing.Engine;
 using ElGuerre.Tendero.Pricing.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -42,6 +43,9 @@ public static class PricingServiceCollectionExtensions
         services.AddKeyedSingleton<ITaxCalculator, FlatVatTaxCalculator>(FlatVatTaxCalculator.Key);
         services.AddKeyedSingleton<ITaxCalculator, ZeroTaxCalculator>(ZeroTaxCalculator.Key);
         services.TryAddSingleton<ITaxCalculatorRegistry, KeyedTaxCalculatorRegistry>();
+
+        // What the shop runs, as the storefront's assistant reads it (phase 13c, ADR 0054).
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IReadTool, Features.ListCampaigns.ListCampaignsTool>());
 
         return services;
     }

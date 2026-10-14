@@ -38,7 +38,8 @@ public sealed record ProductProfile(SearchHit Card, string? Category, IReadOnlyL
     /// that can be bought, then the cheapest, then the lowest id — so the same
     /// documents always draw the same card.
     /// </summary>
-    public static IReadOnlyList<ProductProfile> Of(IEnumerable<ProductSearchDocument> variants) =>
+    /// <param name="deals">The promotions running, so each card says which it is in (phase 13c).</param>
+    public static IReadOnlyList<ProductProfile> Of(IEnumerable<ProductSearchDocument> variants, DealBook? deals = null) =>
     [
         .. variants
             .GroupBy(variant => variant.ProductId, StringComparer.Ordinal)
@@ -51,7 +52,7 @@ public sealed record ProductProfile(SearchHit Card, string? Category, IReadOnlyL
                     .First();
 
                 return new ProductProfile(
-                    card.ToHit(score: 0d),
+                    card.ToHit(score: 0d, deals),
                     card.Category,
                     [
                         .. product.SelectMany(variant => variant.FacetValues.Concat(variant.AxisValues))

@@ -101,6 +101,9 @@ describe('the search page, when the answer is not an exact match', () => {
     expect(element.textContent).toContain('Nothing matches “regalo abuela” exactly');
     expect(element.textContent).toContain('The closest things we sell');
     expect(element.querySelectorAll('storefront-product-card')).toHaveLength(2);
+    // The count says what the notice says: these are the nearest, not results for the words.
+    expect(element.textContent).toContain('2 products like “regalo abuela”');
+    expect(element.textContent).not.toContain('results for');
   });
 
   it('shows the returns card above the products for a question about returns', async () => {
@@ -143,6 +146,7 @@ describe('the search page, when the answer is not an exact match', () => {
 
     expect(element.textContent).not.toContain('Looking for returns?');
     expect(element.textContent).not.toContain('exactly');
+    expect(element.textContent).toContain('2 results for “zapatillas running mujer”');
   });
 });
 
@@ -160,6 +164,12 @@ const TRANSLATIONS = {
     related: {
       title: 'Nothing matches “{{query}}” exactly',
       heading: 'The closest things we sell',
+    },
+  },
+  listing: {
+    count: {
+      for: { all: '{{total}} results for “{{query}}”' },
+      related: { all: '{{total}} products like “{{query}}”' },
     },
   },
 };

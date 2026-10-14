@@ -25,6 +25,8 @@ public sealed class SearchProductsToolTests
         new("id-" + code, code, name, name.ToLowerInvariant().Replace(' ', '-'), "Vertex", "Sartenes", "v-" + code, "SKU-" + code,
             new Money(price, "EUR"), new Money(price, "EUR"), new Money(price, "EUR"), null, inStock, 1.0);
 
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
     private static JsonElement Arguments(string json) => JsonDocument.Parse(json).RootElement.Clone();
 
     [Fact]
@@ -68,6 +70,125 @@ public sealed class SearchProductsToolTests
         Assert.Empty(answer.Facts!);
         // But it says which products there are: an answer may name these, and no other.
         Assert.Equal([new Subject("PAN-1", "Sartén")], answer.Subjects);
+    }
+
+    /// <summary>
+    /// Asked for products on offer, the filter is what makes each one true: so each
+    /// is on offer now, and a card can say so citing it. Without the fact, "muéstrame
+    /// menaje con esos 5 € de descuento" found seven pans and the answer was dropped
+    /// whole — every reason cited a product nothing had been said of (2026-10-14).
+    /// </summary>
+    [Theory]
+    [InlineData("es", "Sartén de aluminio está en oferta ahora.")]
+    [InlineData("en", "Sartén de aluminio is on offer now.")]
+    public async Task Products_found_on_offer_are_each_said_to_be_on_offer(string culture, string said)
+    {
+        var page = new SearchResultPage([Hit("PAN-1", "Sartén de aluminio"), Hit("PAN-2", "Cazo")], 2, 1, 12, 1);
+
+        var answer = await new SearchProductsTool(new Shop(page)).ReadAsync(
+            Arguments($$"""{"text":"menaje","onOffer":true,"culture":"{{culture}}"}"""), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, answer.Facts!.Count);
+        var first = answer.Facts[0];
+        Assert.Equal(("PAN-1", FactSource.Campaign, said), (first.Subject, first.Source, first.Text));
+        Assert.Equal("PAN-2", answer.Facts[1].Subject);
+    }
+
+    /// <summary>
+    /// When no product carries the words, the search answers with the nearest, and
+    /// the model is told so: "these are like it", not "these are it".
+    /// </summary>
+    [Fact]
+    public async Task Nothing_matching_the_words_is_said_and_the_nearest_are_still_shown()
+    {
+        var page = new SearchResultPage([Hit("PAN-1", "Sartén")], 9, 1, 12, 1, new SearchAnswer(SearchMatch.Related));
+
+        var answer = await new SearchProductsTool(new Shop(page)).ReadAsync(Arguments("""{"text":"regalo abuela"}"""), Ct);
+
+        var found = (ProductsForShopper)answer.Data;
+        Assert.True(found.OnlyNearest);
+        Assert.Equal("PAN-1", Assert.Single(found.Products).Code);
+    }
+
+    /// <summary>
+    /// Asked for kitchenware on offer when none is, the nearest on offer were a
+    /// sweatshirt and gloves, and the assistant said the gloves were on offer to a
+    /// shopper who asked for kitchenware (2026-10-14). A filter the shopper chose
+    /// that nothing of what they asked for passes is an answer: none.
+    /// </summary>
+    [Fact]
+    public async Task Nothing_on_offer_matching_the_words_is_none_on_offer_not_the_nearest_on_offer()
+    {
+        var page = new SearchResultPage([Hit("GLOVES", "Guantes técnicos táctiles")], 7, 1, 12, 1, new SearchAnswer(SearchMatch.Related));
+
+        var answer = await new SearchProductsTool(new Shop(page)).ReadAsync(
+            Arguments("""{"text":"menaje","onOffer":true,"culture":"es"}"""), Ct);
+
+        var found = (ProductsForShopper)answer.Data;
+        Assert.True(found.OnlyNearest);
+        Assert.Empty(found.Products);
+        Assert.Equal((0, (int?)0, 0), (answer.Rows, answer.Total, found.Total));
+        Assert.Empty(answer.Subjects!);
+        // And it is said, so an answer can rest on it: "no hay menaje en oferta ahora".
+        var none = Assert.Single(answer.Facts!);
+        Assert.Equal((Fact.TheShop, FactSource.Campaign, "No hay nada en oferta ahora que coincida con «menaje»."),
+            (none.Subject, none.Source, none.Text));
+    }
+
+    /// <summary>
+    /// A product in a promotion is said to be, with the promotion's terms, so a card
+    /// can say why it is shown: asked "muéstrame menaje con esos 5 €", Tino wanted to
+    /// show a baking dish *because it is in the 5 € promotion* and nothing said so
+    /// (2026-10-14).
+    /// </summary>
+    [Theory]
+    [InlineData("es", "Bandeja de horno entra en «5 € en menaje»: 5,00 € menos en el pedido si suma al menos 40,00 €.")]
+    [InlineData("en", "Bandeja de horno is in “5 € en menaje”: €5.00 off the order when it comes to at least €40.00.")]
+    public async Task A_product_in_a_promotion_is_said_to_be_with_its_terms(string culture, string said)
+    {
+        var terms = new DealTerms(DealKind.AmountOffOrder, AmountOff: new Money(5, "EUR"), MinimumSubtotal: new Money(40, "EUR"), ReachesSome: true);
+        var dish = Hit("DISH", "Bandeja de horno") with { Deals = [new ProductDeal("KITCHEN5", "5 € en menaje", terms)] };
+
+        var answer = await new SearchProductsTool(new Shop(new SearchResultPage([dish, Hit("PAN-1", "Sartén")], 2, 1, 12, 1)))
+            .ReadAsync(Arguments($$"""{"text":"menaje","culture":"{{culture}}"}"""), Ct);
+
+        var fact = Assert.Single(answer.Facts!);
+        Assert.Equal(("DISH", FactSource.Campaign, said), (fact.Subject, fact.Source, fact.Text));
+    }
+
+    /// <summary>
+    /// Nothing kitchenware has its own price cut, but all of it is in the 5 € off the
+    /// order. Asked for kitchenware on offer, the live Tino answered only *no hay
+    /// nada en oferta ahora que coincida con «menaje»*: true, and no help to a
+    /// shopper looking at a 5 € promotion (2026-10-14). So code asks again without
+    /// the filter and answers with what is in a promotion, each with its terms, and
+    /// "see all" leads to that search.
+    /// </summary>
+    [Fact]
+    public async Task Nothing_on_offer_but_products_in_a_promotion_answers_with_those()
+    {
+        var terms = new DealTerms(DealKind.AmountOffOrder, AmountOff: new Money(5, "EUR"), MinimumSubtotal: new Money(40, "EUR"), ReachesSome: true);
+        var pan = Hit("PAN-1", "Sartén") with { Deals = [new ProductDeal("KITCHEN5", "5 € en menaje", terms)] };
+        var shop = new ByFilter(
+            onOffer: new SearchResultPage([Hit("GLOVES", "Guantes")], 7, 1, 12, 1, new SearchAnswer(SearchMatch.Related)),
+            plain: new SearchResultPage([pan, Hit("BOARD", "Tabla")], 28, 1, 12, 1, new SearchAnswer(SearchMatch.Exact)));
+
+        var answer = await new SearchProductsTool(shop).ReadAsync(Arguments("""{"text":"menaje","onOffer":true,"culture":"es"}"""), Ct);
+
+        var found = (ProductsForShopper)answer.Data;
+        Assert.Equal(["PAN-1"], found.Products.Select(product => product.Code));
+        Assert.False(found.OnlyNearest);
+        Assert.False(found.Search.OnOffer);
+        var fact = Assert.Single(answer.Facts!);
+        Assert.Equal("PAN-1", fact.Subject);
+        Assert.StartsWith("Sartén entra en «5 € en menaje»", fact.Text);
+    }
+
+    /// <summary>The search, answering by whether "on offer" was asked.</summary>
+    private sealed class ByFilter(SearchResultPage onOffer, SearchResultPage plain) : IQueryDispatcher
+    {
+        public Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default) =>
+            Task.FromResult((TResult)(object)(((SearchProductsQuery)(object)query).Filters?.OnOffer == true ? onOffer : plain));
     }
 
     [Fact]

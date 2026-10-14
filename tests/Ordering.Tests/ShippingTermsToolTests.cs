@@ -56,9 +56,9 @@ public sealed class ShippingTermsToolTests
         Assert.Equal(
         [
             "La tienda hace envíos a cualquier país, al mismo precio.",
-            "Envío estándar cuesta 4.95 EUR y tarda unos 3 días.",
-            "Envío estándar es gratis en pedidos desde 50.00 EUR.",
-            "Envío exprés cuesta 9.95 EUR y tarda 1 día.",
+            "Envío estándar cuesta 4,95 € y tarda unos 3 días.",
+            "Envío estándar es gratis en pedidos desde 50,00 €.",
+            "Envío exprés cuesta 9,95 € y tarda 1 día.",
         ], Said(answer));
         Assert.All(answer.Facts!, fact => Assert.Equal((Fact.TheShop, FactSource.Policy), (fact.Subject, fact.Source)));
         Assert.Equal((4, (int?)null), (answer.Rows, answer.Total));
@@ -73,9 +73,9 @@ public sealed class ShippingTermsToolTests
         Assert.Equal(
         [
             "The shop delivers to every country, at the same price.",
-            "Standard delivery costs 4.95 EUR and takes about 3 days.",
-            "Standard delivery is free on orders from 50.00 EUR.",
-            "Express delivery costs 9.95 EUR and takes 1 day.",
+            "Standard delivery costs €4.95 and takes about 3 days.",
+            "Standard delivery is free on orders from €50.00.",
+            "Express delivery costs €9.95 and takes 1 day.",
         ], Said(answer));
     }
 
@@ -99,8 +99,8 @@ public sealed class ShippingTermsToolTests
         Assert.Equal(
         [
             "The shop delivers to these countries: BE, DE, ES, FR, IT, NL, PT.",
-            "Delivery to the Peninsula (ES, PT) costs 3.95 EUR and takes about 2 days.",
-            "Delivery to Europe (BE, DE, FR, IT, NL) costs 8.95 EUR and takes about 5 days.",
+            "Delivery to the Peninsula (ES, PT) costs €3.95 and takes about 2 days.",
+            "Delivery to Europe (BE, DE, FR, IT, NL) costs €8.95 and takes about 5 days.",
         ], Said(answer));
         Assert.Null(((ShippingTermsForShopper)answer.Data).Delivers);
     }
@@ -118,7 +118,7 @@ public sealed class ShippingTermsToolTests
         Assert.Equal(
         [
             "La tienda hace envíos a PT.",
-            "Envío a la Península (ES, PT) cuesta 3.95 EUR y tarda unos 2 días.",
+            "Envío a la Península (ES, PT) cuesta 3,95 € y tarda unos 2 días.",
         ], Said(answer));
         Assert.True(((ShippingTermsForShopper)answer.Data).Delivers);
     }

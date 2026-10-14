@@ -77,8 +77,8 @@ describe('the campaign card', () => {
     const { element } = await render(
       event({
         holds: [
-          { name: 'Black Friday', couponCode: 'BF2026' },
-          { name: '3x2 en camisetas', couponCode: null },
+          { code: 'BLACKFRIDAY', name: 'Black Friday', couponCode: 'BF2026' },
+          { code: 'SHIRT3X2', name: '3x2 en camisetas', couponCode: null },
         ],
       }),
     );

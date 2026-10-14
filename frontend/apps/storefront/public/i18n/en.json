@@ -320,6 +320,11 @@
         "one": "1 result for “{{query}}”",
         "all": "{{total}} results for “{{query}}”",
         "page": "{{from}}–{{to}} of {{total}} results for “{{query}}”"
+      },
+      "related": {
+        "one": "1 product like “{{query}}”",
+        "all": "{{total}} products like “{{query}}”",
+        "page": "{{from}}–{{to}} of {{total}} products like “{{query}}”"
       }
     },
     "chips": {
@@ -463,6 +468,7 @@
     "nearest": "What they do say",
     "openOrder": "Open this order →",
     "seeAll": "See all {{count}} results →",
+    "seeAllRelated": "See all {{count}} similar products →",
     "on": {
       "Product": "On: this product",
       "Order": "On: this order"
@@ -471,7 +477,8 @@
       "Claim": "Approved by the shopkeeper",
       "DataSheet": "From the product's data sheet",
       "Description": "From the product's description",
-      "Policy": "Return policy",
+      "Policy": "The shop's terms",
+      "Campaign": "The shop's offers",
       "Order": "Your order",
       "Notice": "The shop",
       "quoteTitle": "Approved from these words",
@@ -481,6 +488,7 @@
     "fallback": {
       "title": "Tino is not answering right now.",
       "results": "These are the search results for your words.",
+      "related": "The search found nothing that matches your words; this is the closest.",
       "nothing": "And the search found nothing for your words. Try fewer of them in the search box.",
       "tooMany": "Too many questions in a minute. The search found nothing for your words; try again shortly."
     },
@@ -548,8 +556,24 @@
     "said.better": "“{{name}}” ranks higher and did not fit: it was {{short}} short.",
     "said.noCandidate": "The shop has nothing for this right now.",
     "said.overBudget": "The cheapest costs {{price}}: {{short}} more than was left.",
+    "sentence": "Tell us in your own words",
+    "sentenceAsk": "Find my kit",
+    "sentenceHint": "For example: “a kitchen kit for induction under €200”. We fill the kit in with what we understood, and you check it.",
+    "sentenceNotUnderstood": "We could not tell which kit you mean. Choose one from the list.",
+    "sentenceReading": "Reading it…",
     "title": "Kits",
     "trail": "Where you are",
     "whatGoesIn": "What goes in it"
+  },
+  "card": {
+    "deal": {
+      "amountOff": "{{amount}} off your order",
+      "amountOffFrom": "{{amount}} off your order from {{minimum}}",
+      "percentOff": "{{percent}}% off",
+      "percentOffFrom": "{{percent}}% off orders from {{minimum}}",
+      "buyXGetY": "{{take}} for {{pay}}",
+      "freeShipping": "Free shipping",
+      "freeShippingFrom": "Free shipping from {{minimum}}"
+    }
   }
 }

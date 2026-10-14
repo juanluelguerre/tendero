@@ -475,7 +475,8 @@ internal sealed partial class ElasticsearchLexicalSearch(
         if (!response.IsValidResponse)
             throw new SearchUnavailableException("query", response.DebugInformation);
 
-        var hits = response.Hits.Select(SearchHits.From).ToList();
+        var deals = await offers.DealsNowAsync(query.Culture, ct);
+        var hits = response.Hits.Select(hit => SearchHits.From(hit, deals)).ToList();
         var counts = FacetCounts.Read(response.Aggregations, filters);
         var products = response.Aggregations is null ? hits.Count : counts.Total;
 
@@ -668,19 +669,34 @@ internal sealed partial class ElasticsearchLexicalSearch(
 /// count reads only the fields that say what a product IS
 /// (<see cref="ElasticsearchLexicalSearch.IdentityFields"/>) and forgives no typos.
 /// A count, not a search: nothing is scored or fetched.
+///
+/// It counts **the products that pass the shopper's filters**, the same filters
+/// the cards pass (<see cref="ElasticsearchHitReader"/>). Counted without them,
+/// "menaje" with *on offer* switched on was exact — plenty of kitchenware says
+/// "menaje" — while every card was clothing on offer and none of it kitchenware
+/// (phase 13c). With no filter chosen the count is the one it always was.
 /// </summary>
-internal sealed class ElasticsearchFullMatch(ElasticsearchClient client) : ILexicalFullMatch
+internal sealed class ElasticsearchFullMatch(ElasticsearchClient client, IRunningOffers offers, TimeProvider clock)
+    : ILexicalFullMatch
 {
     public async Task<bool> AnyAsync(ProductSearchQuery query, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(query.Text))
             return false;
 
+        var filters = query.Filters ?? SearchFilters.None;
+        var chosen = filters.IsEmpty
+            ? null
+            : ProductFilters.From(
+                filters, await offers.NowAsync(ct), ElasticsearchLexicalSearch.Today(clock),
+                await offers.CampaignAskedAsync(filters, ct)).All();
+
+        // Every filter in ONE `.Filter(...)` call: a second call replaces the first.
         var response = await client.CountAsync<ProductSearchDocument>(c => c
             .Indices(ProductSearchDocument.IndexNameFor(query.Culture))
             .Query(q => q.Bool(b => b
                 .Must(ElasticsearchLexicalSearch.AllWordsInWhatItIs(query.Text))
-                .Filter(ElasticsearchLexicalSearch.ActiveInBranch(query.Category)))),
+                .Filter([.. ElasticsearchLexicalSearch.ActiveInBranch(query.Category), .. ElasticsearchHitReader.Chosen(chosen)]))),
             ct);
 
         if (!response.IsValidResponse)
@@ -745,15 +761,17 @@ internal sealed class ElasticsearchHitReader(
         if (!response.IsValidResponse)
             throw new SearchUnavailableException("reading cards for vector hits", response.DebugInformation);
 
-        return [.. response.Hits.Select(SearchHits.From)];
+        var deals = await offers.DealsNowAsync(culture, ct);
+        return [.. response.Hits.Select(hit => SearchHits.From(hit, deals))];
     }
 
-    private static Action<QueryDescriptor<ProductSearchDocument>>[] Chosen(Query? chosen) =>
+    /// <summary>The shopper's filters as one clause of a bool's filter, or none.</summary>
+    internal static Action<QueryDescriptor<ProductSearchDocument>>[] Chosen(Query? chosen) =>
         chosen is null ? [] : [filter => filter.Bool(new BoolQuery { Filter = [chosen] })];
 }
 
 /// <summary>A document hit as the search contract's <see cref="SearchHit"/>, in one place for both readers.</summary>
 internal static class SearchHits
 {
-    public static SearchHit From(Hit<ProductSearchDocument> hit) => hit.Source!.ToHit(hit.Score ?? 0d);
+    public static SearchHit From(Hit<ProductSearchDocument> hit, DealBook? deals = null) => hit.Source!.ToHit(hit.Score ?? 0d, deals);
 }

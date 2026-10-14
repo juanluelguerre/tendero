@@ -532,6 +532,121 @@
         ]
       }
     },
+    "/api/kits/understand": {
+      "post": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "UnderstandKitSentence",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnderstandKitSentenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KitSentenceUnderstood"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Invalid"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests in a row: wait a moment.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before asking again.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            },
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "TooManyRequests"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kits/understand/status": {
+      "get": {
+        "tags": [
+          "Kits"
+        ],
+        "operationId": "GetKitSentenceAvailability",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KitSentenceAvailability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/steward/proposals": {
       "get": {
         "tags": [
@@ -10398,11 +10513,15 @@
       },
       "CampaignHold": {
         "required": [
+          "code",
           "name",
           "couponCode"
         ],
         "type": "object",
         "properties": {
+          "code": {
+            "type": "string"
+          },
           "name": {
             "type": "string"
           },
@@ -11209,6 +11328,99 @@
           "Month"
         ]
       },
+      "DealKind": {
+        "enum": [
+          "PercentOffLine",
+          "AmountOffOrder",
+          "BuyXGetY",
+          "FreeShipping"
+        ]
+      },
+      "DealTerms": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/DealKind"
+          },
+          "percent": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "amountOff": {
+            "required": [
+              "amount",
+              "currency"
+            ],
+            "type": "object",
+            "properties": {
+              "amount": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "integer",
+                "format": "int64"
+              },
+              "currency": {
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Money: a whole number of the currency\u0027s minor unit (ISO 4217) and the currency. 113.90 EUR is 11390."
+          },
+          "buy": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "free": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "minimumSubtotal": {
+            "required": [
+              "amount",
+              "currency"
+            ],
+            "type": "object",
+            "properties": {
+              "amount": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "integer",
+                "format": "int64"
+              },
+              "currency": {
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Money: a whole number of the currency\u0027s minor unit (ISO 4217) and the currency. 113.90 EUR is 11390."
+          },
+          "minimumQuantity": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "reachesSome": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "DecidePictureDoubtRequest": {
         "required": [
           "decision"
@@ -11457,6 +11669,7 @@
           "Description",
           "Policy",
           "Order",
+          "Campaign",
           "Notice"
         ]
       },
@@ -11680,6 +11893,53 @@
           "SearchStopped",
           "Incomplete"
         ]
+      },
+      "KitSentenceAvailability": {
+        "required": [
+          "available"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          }
+        }
+      },
+      "KitSentenceUnderstood": {
+        "required": [
+          "template",
+          "budget",
+          "requirements",
+          "understood"
+        ],
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "budget": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Money"
+              }
+            ]
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "understood": {
+            "type": "boolean"
+          }
+        }
       },
       "KitSlotView": {
         "required": [
@@ -13328,6 +13588,25 @@
             "items": {
               "$ref": "#/components/schemas/SearchHit"
             }
+          }
+        }
+      },
+      "ProductDeal": {
+        "required": [
+          "code",
+          "name",
+          "terms"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "terms": {
+            "$ref": "#/components/schemas/DealTerms"
           }
         }
       },
@@ -15494,6 +15773,12 @@
           "score": {
             "type": "number",
             "format": "double"
+          },
+          "deals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductDeal"
+            }
           }
         }
       },
@@ -16733,6 +17018,17 @@
             "type": "string"
           },
           "text": {
+            "type": "string"
+          }
+        }
+      },
+      "UnderstandKitSentenceRequest": {
+        "required": [
+          "sentence"
+        ],
+        "type": "object",
+        "properties": {
+          "sentence": {
             "type": "string"
           }
         }

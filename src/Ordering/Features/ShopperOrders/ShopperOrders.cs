@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using ElGuerre.Tendero.Ordering.Contracts;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
@@ -186,12 +185,6 @@ public sealed class MyOrdersTool(IQueryDispatcher queries, ShopperScreen screen,
 /// </summary>
 internal sealed class OrderWords(string culture, DateTimeZone zone)
 {
-    private static readonly string[] Meses =
-        ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-
-    private static readonly string[] Months =
-        ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
     private bool English => culture == "en";
 
     public string SignInOrOpenTheOrder => English
@@ -219,7 +212,8 @@ internal sealed class OrderWords(string culture, DateTimeZone zone)
             says.Add(English ? $"It was delivered on {Day(delivered)}." : $"Se entregó el {Day(delivered)}.");
 
         says.AddRange(order.Lines.Select(line => English ? $"It holds {Item(line, line.Quantity)}." : $"Incluye {Item(line, line.Quantity)}."));
-        says.Add(string.Create(CultureInfo.InvariantCulture, $"Total: {order.Total:0.00} {order.Currency}."));
+        // As the reader's language writes money (MoneyText): "113,85 €", "€113.85".
+        says.Add($"Total: {MoneyText.In(new Money(order.Total, order.Currency), culture)}.");
 
         switch (order)
         {
@@ -253,7 +247,7 @@ internal sealed class OrderWords(string culture, DateTimeZone zone)
     private string Day(DateTimeOffset moment)
     {
         var day = Instant.FromDateTimeOffset(moment).InZone(zone).Date;
-        return English ? $"{day.Day} {Months[day.Month - 1]} {day.Year}" : $"{day.Day} de {Meses[day.Month - 1]} de {day.Year}";
+        return DayText.In(day.Year, day.Month, day.Day, culture);
     }
 
     private string Status(OrderStatus status) => (status, English) switch

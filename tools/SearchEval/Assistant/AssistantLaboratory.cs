@@ -17,6 +17,10 @@ using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Features.ShopperOrders;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Persistence;
+using ElGuerre.Tendero.Pricing;
+using ElGuerre.Tendero.Pricing.Adapters;
+using ElGuerre.Tendero.Pricing.Features.ListCampaigns;
+using ElGuerre.Tendero.Pricing.Ports;
 using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
@@ -78,6 +82,10 @@ public static class AssistantLaboratory
             ["Catalog:Attributes:FilePath"] = seed("attributes.sample.json"),
             ["Catalog:Categories:FilePath"] = seed("categories.sample.json"),
             ["Inventory:Warehouses:FilePath"] = seed("warehouses.sample.json"),
+            // The shop's offers, for Tino's list_campaigns (phase 13c): its tariffs
+            // and promotions as files, and its campaigns seeded into the calendar below.
+            ["Pricing:Seed:PriceListsPath"] = seed("pricelists.sample.json"),
+            ["Pricing:Seed:PromotionsPath"] = seed("promotions.sample.json"),
             ["Shop:TimeZone"] = "Europe/Madrid",
             ["Tino:Enabled"] = "true",
             ["Tino:Model"] = Profile,
@@ -95,11 +103,13 @@ public static class AssistantLaboratory
             typeof(IStockLedger).Assembly,
             typeof(ProposeClaimsCommand).Assembly,
             typeof(SearchProductsQuery).Assembly,
+            typeof(ListCampaignsQuery).Assembly,
             typeof(ProposableCommands).Assembly);
         services.AddTenderoPersistence(database);
         services.AddCatalog(configuration);
         services.AddInventory(configuration);
         services.AddOrdering(configuration);
+        services.AddPricing(configuration);
         services.AddKnowledge(configuration);
         services.AddLexicalSearch(elasticsearch);
         services.AddHybridSearch(configuration);
@@ -129,6 +139,19 @@ public static class AssistantLaboratory
             await using (var scope = provider.CreateAsyncScope())
                 await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new ImportProductsCommand("seed"), cancellationToken);
             await PublishAndDescribeAsync(provider, cancellationToken);
+        }
+
+        // The shop's campaigns, as the stack's worker seeds them (phase 13c): a
+        // case asking for today's offers reads them. Those whose window has closed
+        // are left out, so the cases that cite one hold while the seed's runs.
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            await CampaignSeedFile.SeedAsync(
+                Path.Combine(repositoryRoot, "seed", "campaigns.sample.json"),
+                scope.ServiceProvider.GetRequiredService<ICampaignRepository>(),
+                scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+                TimeProvider.System,
+                cancellationToken: cancellationToken);
         }
 
         // The index is the laboratory's own node's: rebuilt every run, from the shop.

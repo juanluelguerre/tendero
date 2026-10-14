@@ -27,6 +27,8 @@ export interface Exchange extends ConversationExchange {
   readonly cards: readonly SearchHit[];
   /** For the fallback: how many the search found in all. */
   readonly found: number;
+  /** For the fallback: nothing matched the words, so the search found only the nearest (its answer is `Related`). */
+  readonly nearest: boolean;
   readonly cause: FallbackCause | null;
 }
 
@@ -111,10 +113,14 @@ export const TinoStore = signalStore(
     const settle = store._settle;
 
     /** The search's results for the shopper's words: what there is when Tino is not. */
-    const searched = (text: string): Observable<Pick<Exchange, 'cards' | 'found'>> =>
+    const searched = (text: string): Observable<Pick<Exchange, 'cards' | 'found' | 'nearest'>> =>
       store._search.search(text, store._culture.active(), FallbackCards).pipe(
-        map((page) => ({ cards: page.hits.slice(0, FallbackCards), found: page.total })),
-        catchError(() => of({ cards: [] as readonly SearchHit[], found: 0 })),
+        map((page) => ({
+          cards: page.hits.slice(0, FallbackCards),
+          found: page.total,
+          nearest: page.answer?.match === 'Related',
+        })),
+        catchError(() => of({ cards: [] as readonly SearchHit[], found: 0, nearest: false })),
       );
 
     const fellBack = (id: number, question: string, cause: FallbackCause, answer: TinoAnswer | null) => {
@@ -183,7 +189,7 @@ export const TinoStore = signalStore(
         const text = question.trim();
         if (!text || store.busy()) return;
 
-        const id = store._begin(text, { answer: null, cards: [], found: 0, cause: null });
+        const id = store._begin(text, { answer: null, cards: [], found: 0, nearest: false, cause: null });
         const request: TinoTurnRequest = {
           messages: [...store._history(), { role: 'user', text }],
           context,

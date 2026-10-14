@@ -114,6 +114,20 @@ describe('the listing', () => {
     return aside;
   }
 
+  /**
+   * A card in a promotion says so under its price (phase 13c): 33 kitchenware cards
+   * said nothing of the 5 € off the order they were all in. The words are the
+   * card's own, from the terms; the figures are money, formatted here.
+   */
+  it('says under the price the promotion a card is in, and nothing on a card in none', async () => {
+    const { element } = await open();
+
+    const cards = [...element.querySelectorAll('storefront-product-card')];
+    const said = (card: Element) => card.querySelector('[data-deal]')?.textContent?.replace(/s+/g, ' ').trim();
+    expect(said(cards[0])).toBe('€5.00 off your order from €40.00');
+    expect(said(cards[1])).toBeUndefined();
+  });
+
   it('asks for the category with no filters, and draws each filter as a named group', async () => {
     const { element } = await open();
 
@@ -238,6 +252,11 @@ const TRANSLATIONS = {
     section: { switches: 'Offers' },
     clearAll: 'Clear all',
   },
+  card: {
+    deal: {
+      amountOffFrom: '{{amount}} off your order from {{minimum}}',
+    },
+  },
 };
 
 const hit = (id: string): SearchHit => ({
@@ -255,6 +274,22 @@ const hit = (id: string): SearchHit => ({
   imageId: null,
   inStock: true,
   score: 1,
+  // A in the 5 € off the order from 40 € (phase 13c); B in none.
+  deals:
+    id === 'a'
+      ? [
+          {
+            code: 'KITCHEN5',
+            name: '5 € en menaje',
+            terms: {
+              kind: 'AmountOffOrder',
+              amountOff: { amount: 500, currency: 'EUR' },
+              minimumSubtotal: { amount: 4000, currency: 'EUR' },
+              reachesSome: true,
+            },
+          },
+        ]
+      : [],
 });
 
 /** The facets a shoe category answers with; `chosen` follows what was asked, as the API's does. */
