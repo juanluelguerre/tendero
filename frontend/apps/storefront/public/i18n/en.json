@@ -117,7 +117,8 @@
     "departments": "Departments",
     "sectionsOf": "{{name}}: its sections",
     "offers": "Offers",
-    "newArrivals": "New arrivals"
+    "newArrivals": "New arrivals",
+    "kits": "Kits"
   },
   "order": {
     "confirming": "Thank you. We have your order and are confirming it.",
@@ -515,5 +516,40 @@
     "nothing": "No picture in the shop looks like yours.",
     "noPicture": "Give the shop a picture and it shows you the nearest things it has.",
     "pageTitle": "Search with a picture"
+  },
+  "kits": {
+    "add": "Add the kit to the basket",
+    "addOne": "Add this one to the basket",
+    "addSome": "Add these {{count}} to the basket",
+    "all": "See every kit",
+    "atTheBasket": "{{total}} at the basket",
+    "atTheBasketHint": "With the shop's promotions, applied when you add it.",
+    "budget": "Your budget",
+    "budgetHint": "In euros. The shop does not go over it.",
+    "build": "Build the kit",
+    "buildAgain": "Build again",
+    "buildFailed": "The kit cannot be built right now. Try again in a moment.",
+    "building": "Building…",
+    "empty": "No {{slot}}",
+    "failed": "The kits did not answer. Try again in a moment.",
+    "how": "The shop picks one of each from what is in stock, the best ranked that fits your budget, and tells you what it left out and why.",
+    "incomplete": "Not everything needed fits that budget: this is what does.",
+    "kitTitle": "Kit",
+    "lede": "What it takes, chosen to fit what you want to spend.",
+    "listLede": "Sets the shop builds to your budget, and explains.",
+    "loading": "Loading the kits…",
+    "needed": "needed",
+    "none": "The shop has no kits right now.",
+    "notFound": "There is no such kit.",
+    "ofBudget": "of {{budget}} · {{left}} left",
+    "open": "Build this kit",
+    "optional": "optional",
+    "requirements": "It has to work with",
+    "said.better": "“{{name}}” ranks higher and did not fit: it was {{short}} short.",
+    "said.noCandidate": "The shop has nothing for this right now.",
+    "said.overBudget": "The cheapest costs {{price}}: {{short}} more than was left.",
+    "title": "Kits",
+    "trail": "Where you are",
+    "whatGoesIn": "What goes in it"
   }
 }

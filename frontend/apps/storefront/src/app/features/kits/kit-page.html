@@ -1,0 +1,196 @@
+<section *transloco="let t" class="pt-6 pb-8">
+  @switch (store.state()) {
+    @case ('loading') {
+      <p class="text-muted" aria-live="polite">{{ t('kits.loading') }}</p>
+    }
+    @case ('failed') {
+      <lib-notice tone="bad" live="assertive">{{ t('kits.failed') }}</lib-notice>
+    }
+    @case ('notFound') {
+      <p class="mb-3 text-muted">{{ t('kits.notFound') }}</p>
+      <a class="text-body" [routerLink]="links.kits()">{{ t('kits.all') }}</a>
+    }
+    @case ('ready') {
+      @let template = store.template()!;
+      @let kit = store.kit();
+
+      <nav class="mb-3 text-sm text-muted" [attr.aria-label]="t('kits.trail')">
+        <a class="text-muted" [routerLink]="links.home()">{{ t('nav.shop') }}</a>
+        ›
+        <a class="text-muted" [routerLink]="links.kits()">{{ t('kits.title') }}</a>
+      </nav>
+
+      <header class="mb-5">
+        <h1 class="text-2xl tracking-tight">{{ template.name }}</h1>
+        <p class="mt-1 text-muted">{{ t('kits.lede') }}</p>
+      </header>
+
+      <div class="grid grid-cols-[320px_minmax(0,1fr)] items-start gap-6 max-tab:grid-cols-[minmax(0,1fr)]">
+        <!-- What the shopper gives. The budget is the one thing asked; the
+             switches are what this kit's slots can be held to, so a kit never
+             offers a requirement it cannot hold a product to. -->
+        <form class="grid gap-4 rounded-lg border border-hairline bg-surface p-5" (submit)="build($event)">
+          <label class="grid gap-2">
+            <span class="text-sm font-semibold">{{ t('kits.budget') }}</span>
+            <input
+              class="field"
+              inputmode="decimal"
+              autocomplete="off"
+              [formField]="store.budgetForm.budget"
+              [attr.aria-describedby]="'kit-budget-hint'"
+            />
+            <span id="kit-budget-hint" class="text-xs text-muted">{{ t('kits.budgetHint') }}</span>
+          </label>
+
+          @if (template.requirements.length > 0) {
+            <fieldset class="grid gap-3">
+              <legend class="mb-2 text-sm font-semibold">{{ t('kits.requirements') }}</legend>
+              @for (option of template.requirements; track option.facet) {
+                <label class="flex min-h-tap items-center justify-between gap-3">
+                  <span>{{ option.label }}</span>
+                  <input
+                    #toggle
+                    type="checkbox"
+                    role="switch"
+                    [checked]="store.required().includes(option.facet)"
+                    (change)="store.require(option.facet, toggle.checked)"
+                  />
+                </label>
+              }
+            </fieldset>
+          }
+
+          <!-- The one clay action is *Build* until there is a kit; after, the
+               clay is the basket's and this one steps back. -->
+          <button
+            type="submit"
+            class="button flex w-full"
+            [class.button--quiet]="kit !== null"
+            [disabled]="store.building() || !store.budgetForm().valid()"
+          >
+            {{ t(store.building() ? 'kits.building' : kit ? 'kits.buildAgain' : 'kits.build') }}
+          </button>
+        </form>
+
+        <div class="grid gap-5" aria-live="polite">
+          @if (store.failed()) {
+            <lib-notice tone="bad" live="assertive">{{ t('kits.buildFailed') }}</lib-notice>
+          }
+
+          @if (kit) {
+            <!-- The total against the budget: every figure is the solver's. -->
+            <div>
+              <p class="flex flex-wrap items-baseline gap-3">
+                <strong class="numeric text-3xl">{{ kit.total | price: culture.active() }}</strong>
+                <span class="text-muted">
+                  {{
+                    t('kits.ofBudget', {
+                      budget: kit.budget | price: culture.active(),
+                      left: kit.left | price: culture.active(),
+                    })
+                  }}
+                </span>
+              </p>
+              <div class="mt-3 h-nudge overflow-hidden rounded-md bg-hairline" aria-hidden="true">
+                <div class="h-full bg-body" [style.width.%]="spentShare(kit.total, kit.budget)"></div>
+              </div>
+              @if (!kit.complete) {
+                <p class="mt-3 text-sm text-warning" role="status">{{ t('kits.incomplete') }}</p>
+              }
+            </div>
+
+            <ul class="grid">
+              @for (slot of kit.slots; track slot.code) {
+                <li class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 border-b border-hairline py-4">
+                  <storefront-product-image
+                    class="size-thumb-xl rounded-md bg-raised object-cover"
+                    [src]="slot.product ? imageUrl(slot.product) : null"
+                    [alt]="slot.product?.name ?? slot.name"
+                  />
+
+                  <div class="min-w-0">
+                    <p class="flex flex-wrap items-center gap-2 text-xs text-muted">
+                      <span class="eyebrow">{{ slot.name }}</span>
+                      <lib-status-pill [tone]="slot.required ? 'neutral' : 'muted'">
+                        {{ t(slot.required ? 'kits.needed' : 'kits.optional') }}
+                      </lib-status-pill>
+                    </p>
+
+                    @if (slot.product; as product) {
+                      <a
+                        class="mt-1 block font-semibold text-body"
+                        [routerLink]="links.product(product.slug, product.code)"
+                      >
+                        {{ product.name }}
+                      </a>
+                    } @else {
+                      <p class="mt-1 font-semibold text-muted">{{ t('kits.empty', { slot: slot.name }) }}</p>
+                    }
+
+                    <!-- Only where there is something to say: what ranked
+                         higher and did not fit, or why the slot is empty. -->
+                    @let why = said(slot, t);
+                    @if (why) {
+                      <p class="mt-1 text-sm text-muted">{{ why }}</p>
+                    }
+                  </div>
+
+                  <p class="numeric font-semibold">
+                    @if (slot.product; as product) {
+                      {{ product.price | price: culture.active() }}
+                    } @else {
+                      <span class="text-muted" aria-hidden="true">—</span>
+                    }
+                  </p>
+                </li>
+              }
+            </ul>
+
+            @if (store.lines().length > 0) {
+              <div class="flex flex-wrap items-center justify-between gap-4">
+                <p>
+                  @if (store.atTheBasket(); as quote) {
+                    <strong class="numeric text-lg">
+                      {{ t('kits.atTheBasket', { total: quote.total | price: culture.active() }) }}
+                    </strong>
+                    <span class="block text-sm text-muted">{{ t('kits.atTheBasketHint') }}</span>
+                  }
+                </p>
+
+                <button type="button" class="button" [disabled]="store.adding()" (click)="store.addToCart()">
+                  {{
+                    kit.complete
+                      ? t('kits.add')
+                      : store.lines().length === 1
+                        ? t('kits.addOne')
+                        : t('kits.addSome', { count: store.lines().length })
+                  }}
+                </button>
+              </div>
+
+              @if (store.cartProblem(); as problem) {
+                <lib-notice tone="bad" live="assertive">{{ t(problem) }}</lib-notice>
+              }
+            }
+          } @else {
+            <!-- Before building, what the kit is made of: the page is never half empty. -->
+            <div>
+              <h2 class="mb-3 text-lg">{{ t('kits.whatGoesIn') }}</h2>
+              <ul class="grid">
+                @for (slot of template.slots; track slot.code) {
+                  <li class="flex items-center gap-3 border-b border-hairline py-3">
+                    <span>{{ slot.name }}</span>
+                    <lib-status-pill [tone]="slot.required ? 'neutral' : 'muted'">
+                      {{ t(slot.required ? 'kits.needed' : 'kits.optional') }}
+                    </lib-status-pill>
+                  </li>
+                }
+              </ul>
+              <p class="mt-3 text-sm text-muted">{{ t('kits.how') }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</section>

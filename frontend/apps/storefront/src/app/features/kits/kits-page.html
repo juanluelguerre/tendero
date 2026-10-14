@@ -1,0 +1,39 @@
+<section *transloco="let t" class="pt-6 pb-8">
+  <header class="mb-5">
+    <h1 class="text-2xl tracking-tight">{{ t('kits.title') }}</h1>
+    <p class="mt-1 text-muted">{{ t('kits.listLede') }}</p>
+  </header>
+
+  @switch (store.state()) {
+    @case ('loading') {
+      <p class="text-muted" aria-live="polite">{{ t('kits.loading') }}</p>
+    }
+    @case ('failed') {
+      <lib-notice tone="bad" live="assertive">{{ t('kits.failed') }}</lib-notice>
+    }
+    @case ('ready') {
+      <ul class="grid grid-cols-3 gap-5 max-tab:grid-cols-2 max-xs:grid-cols-1">
+        @for (kit of store.templates(); track kit.code) {
+          <li class="grid content-start gap-3 rounded-lg border border-hairline bg-surface p-5">
+            <h2 class="text-lg">
+              <a class="text-body" [routerLink]="links.kit(kit.code)">{{ kit.name }}</a>
+            </h2>
+            <ul class="grid gap-2 text-sm">
+              @for (slot of kit.slots; track slot.code) {
+                <li class="flex items-center gap-2">
+                  <span>{{ slot.name }}</span>
+                  <lib-status-pill [tone]="slot.required ? 'neutral' : 'muted'">
+                    {{ t(slot.required ? 'kits.needed' : 'kits.optional') }}
+                  </lib-status-pill>
+                </li>
+              }
+            </ul>
+            <a class="button button--quiet" [routerLink]="links.kit(kit.code)">{{ t('kits.open') }}</a>
+          </li>
+        } @empty {
+          <li class="text-muted">{{ t('kits.none') }}</li>
+        }
+      </ul>
+    }
+  }
+</section>

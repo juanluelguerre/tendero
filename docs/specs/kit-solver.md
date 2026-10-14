@@ -353,6 +353,23 @@ otherwise, because two of them go against the roadmap.
 4. **K-4 · The mock-up**, for the author, before any screen.
 5. **K-5 · The storefront's form** (`P13-8`), the page store, add to cart, the
    events, the browser spec.
+   *As built (2026-10-14), on the wire of phase 13b — and **not yet seen in a
+   browser***: `/kits` lists the templates and `/kits/:code` is one, both under
+   `features/kits/`, with *Kits* in the header's row. The budget is a Signal
+   Form's one field, read as a person types it (`59,90`) and sent as `Money`;
+   the requirements are the template's own, as switches. The page store asks
+   for the kit and then, through the call the cart makes, for what its lines
+   come to with the shop's promotions — the solver's slice does not reach
+   Pricing. **Each slot's sentence is composed by the page** from what the
+   answer carries (`kit-sentences.ts`: the reason, the product, the amounts;
+   decided on the mock-up), and the server's sentences stay for an agent.
+   Adding the kit is one `add` a line through the shop's one cart, so what the
+   cart refuses it refuses there, in its own words; the button says *the kit*,
+   *this one* or *these N* by what there is to add. `kit_built` and
+   `kit_added_to_cart` are in the tracking plan, the budget as a band. What
+   the mock-up draws and this does not: an icon a slot — a row shows the
+   product's own picture, or the shop's placeholder for an empty one. The
+   browser spec (`kits.spec.ts`) is written and has not been run.
 6. **K-6 · A sentence**: the parse, its fixture, the form filled from it.
 7. **K-7 · `build_kit`** over MCP, if decision 7 says so.
 8. **K-8 · Close**: the ADR, Stryker over what the phase touched, the

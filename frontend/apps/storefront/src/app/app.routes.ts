@@ -52,6 +52,18 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/compare/compare-page').then((m) => m.ComparePage),
   },
   {
+    // The shop's kits (phase 13c, K-5): the templates it wrote, and one of
+    // them built for a budget. The kit page names itself once it knows which.
+    path: 'kits',
+    title: 'kits.title',
+    loadComponent: () => import('./features/kits/kits-page').then((m) => m.KitsPage),
+  },
+  {
+    path: 'kits/:code',
+    title: 'kits.kitTitle',
+    loadComponent: () => import('./features/kits/kit-page').then((m) => m.KitPage),
+  },
+  {
     // An agent's checkout that needs a person (UCP's requires_escalation): the
     // link it gives them lands here, takes over the cart and goes to checkout.
     path: 'checkout/continue/:sessionId',

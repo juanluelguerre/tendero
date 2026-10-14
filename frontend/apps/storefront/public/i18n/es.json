@@ -117,7 +117,8 @@
     "departments": "Departamentos",
     "sectionsOf": "{{name}}: sus secciones",
     "offers": "Ofertas",
-    "newArrivals": "Novedades"
+    "newArrivals": "Novedades",
+    "kits": "Kits"
   },
   "order": {
     "confirming": "Gracias. Hemos recibido tu pedido y estamos confirmándolo.",
@@ -515,5 +516,40 @@
     "nothing": "Ninguna imagen de la tienda se parece a la tuya.",
     "noPicture": "Dale a la tienda una imagen y te enseña lo más parecido que tiene.",
     "pageTitle": "Buscar con una imagen"
+  },
+  "kits": {
+    "add": "Añadir el kit a la cesta",
+    "addOne": "Añadir este a la cesta",
+    "addSome": "Añadir estos {{count}} a la cesta",
+    "all": "Ver todos los kits",
+    "atTheBasket": "{{total}} en la cesta",
+    "atTheBasketHint": "Con las promociones de la tienda, que se aplican al añadirlo.",
+    "budget": "Tu presupuesto",
+    "budgetHint": "En euros. La tienda no se pasa de él.",
+    "build": "Montar el kit",
+    "buildAgain": "Montarlo otra vez",
+    "buildFailed": "Ahora mismo no se puede montar el kit. Inténtalo dentro de un momento.",
+    "building": "Montándolo…",
+    "empty": "Sin {{slot}}",
+    "failed": "Los kits no han respondido. Inténtalo dentro de un momento.",
+    "how": "La tienda elige uno de cada entre lo que hay en stock, el mejor valorado que quepa en tu presupuesto, y te dice qué ha dejado fuera y por qué.",
+    "incomplete": "No cabe todo lo necesario en ese presupuesto: esto es lo que sí cabe.",
+    "kitTitle": "Kit",
+    "lede": "Lo que hace falta, elegido para que quepa en lo que quieres gastar.",
+    "listLede": "Conjuntos que la tienda monta a tu presupuesto, y te explica.",
+    "loading": "Cargando los kits…",
+    "needed": "necesario",
+    "none": "La tienda no tiene kits ahora mismo.",
+    "notFound": "Ese kit no existe.",
+    "ofBudget": "de {{budget}} · quedan {{left}}",
+    "open": "Montar este kit",
+    "optional": "opcional",
+    "requirements": "Tiene que servir para",
+    "said.better": "«{{name}}» está mejor valorado y no cabía: le faltaban {{short}}.",
+    "said.noCandidate": "La tienda no tiene ahora nada que sirva aquí.",
+    "said.overBudget": "El más barato cuesta {{price}}: {{short}} más de lo que quedaba.",
+    "title": "Kits",
+    "trail": "Dónde estás",
+    "whatGoesIn": "Qué lleva"
   }
 }

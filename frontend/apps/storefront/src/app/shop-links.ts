@@ -25,12 +25,17 @@ export class ShopLinks {
   readonly compare = computed(() => ['/', this.culture(), 'compare']);
   /** *Compra con tu agente*: how to point an assistant at the shop (R-8, H-5). */
   readonly agents = computed(() => ['/', this.culture(), 'agents']);
+  readonly kits = computed(() => ['/', this.culture(), 'kits']);
 
   /**
    * A department or a section. The CODE is in the URL and not the name, for the
    * reason ADR 0026 gives about products: a name is not stable and does not
    * survive a translation, and this one has two of them.
    */
+  kit(code: string): unknown[] {
+    return ['/', this.culture(), 'kits', code];
+  }
+
   category(code: string): unknown[] {
     return ['/', this.culture(), 'c', code];
   }

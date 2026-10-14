@@ -439,6 +439,16 @@
         "search_by_image_submitted",
         "search_by_image_result_followed"
       ]
+    },
+    {
+      "name": "Kits",
+      "area": "storefront",
+      "question": "Are kits asked for, and can the shop fill them at the budgets people give; and is a solved kit worth buying?",
+      "decision": "A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else.",
+      "signals": [
+        "kit_built",
+        "kit_added_to_cart"
+      ]
     }
   ],
   "events": [
@@ -1093,6 +1103,68 @@
         "position": {
           "type": "number",
           "description": "Its place in the answer, from 1."
+        }
+      }
+    },
+    {
+      "name": "kit_built",
+      "description": "A shopper asked the shop to build a kit and got an answer (phase 13c, K-5): once per kit built, complete or not. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "template": {
+          "type": "string",
+          "description": "The kit's code, as the shop's file names it (KITCHEN_STARTER). A closed set: the templates the shop wrote."
+        },
+        "budget": {
+          "type": "string",
+          "values": [
+            "under_50",
+            "50_100",
+            "100_200",
+            "200_500",
+            "500_plus"
+          ],
+          "description": "The budget asked for, as a band in the shop's currency. Never the figure typed."
+        },
+        "filled": {
+          "type": "number",
+          "description": "How many slots got a product."
+        },
+        "empty": {
+          "type": "number",
+          "description": "How many slots were left empty, required or not."
+        },
+        "binding": {
+          "type": "string",
+          "values": [
+            "none",
+            "budget",
+            "candidates"
+          ],
+          "description": "What held the kit back: nothing, the budget, or the shop having nothing for a slot."
+        },
+        "source": {
+          "type": "string",
+          "values": [
+            "form",
+            "sentence"
+          ],
+          "description": "Whether the request came from the form or from a sentence a model read into it (K-6)."
+        }
+      }
+    },
+    {
+      "name": "kit_added_to_cart",
+      "description": "A shopper put a built kit in the cart (phase 13c, K-5): once per kit added, with every line it could add. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "template": {
+          "type": "string",
+          "description": "The kit's code, as in kit_built."
+        },
+        "lines": {
+          "type": "number",
+          "description": "How many products were added: one a filled slot."
         }
       }
     }
