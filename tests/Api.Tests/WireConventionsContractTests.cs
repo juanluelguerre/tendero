@@ -313,7 +313,11 @@ public sealed partial class WireConventionsContractTests
         Assert.NotNull(refused);
         var body = JsonNode.Parse(await refused.Content.ReadAsStringAsync(Ct))!;
         Assert.Equal(("application/problem+json", "TooManyRequests"), (refused.Content.Headers.ContentType?.MediaType, body["code"]!.GetValue<string>()));
-        Assert.InRange(refused.Headers.RetryAfter!.Delta!.Value.TotalSeconds, 1, 60);
+        // The limiter's own wait, not a floor: the window is a minute from the
+        // first call, and the calls that fill it take seconds — so most of the
+        // minute is left (Stryker, phase 13b's close: `Max(1, …)` read as
+        // `Min(1, …)` said one second, and a range from one let it through).
+        Assert.InRange(refused.Headers.RetryAfter!.Delta!.Value.TotalSeconds, 30, 60);
     }
 
     private static StringContent JsonContent(object body) =>

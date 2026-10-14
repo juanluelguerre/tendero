@@ -53,6 +53,16 @@ public sealed class UcpAuthorityTests
         Assert.Equal(binds, UcpAuthority.Binds("com.example.pay", schema));
 
     /// <summary>
+    /// A single label is no authority even for a name that starts with it. The
+    /// row above asks `localhost` about `com.example.pay`, which it could not
+    /// bind anyway, so the mutant that let one label through survived Stryker
+    /// (phase 13b's close: `||` read as `&amp;&amp;`).
+    /// </summary>
+    [Fact]
+    public void A_single_label_host_binds_not_even_a_name_that_starts_with_it() =>
+        Assert.False(UcpAuthority.Binds("localhost.tendero.kits", "https://localhost/schema.json"));
+
+    /// <summary>
     /// **The profile the shop publishes**, told where its own schemas are
     /// (`Ucp:OwnSchemasUrl`): every capability it declares is bound, the
     /// specification's to `ucp.dev` and its own to a host under `elguerre.com`.

@@ -126,12 +126,47 @@ public sealed class CheckoutIdempotencyHeaderTests
         Assert.Equal((HttpStatusCode.NotFound, 1), (status, dispatcher.Sent));
     }
 
-    /// <summary>Answers that there is no such cart, counting; and can ask something of the test while it runs.</summary>
+    /// <summary>
+    /// **A shelf that is short is a 409 that says what there is** (ADR 0025,
+    /// amended): the till refused before any money, and the answer carries each
+    /// article with what was asked and what can be bought, beside the problem's
+    /// own members — what a screen needs to offer to buy that many. The till's
+    /// own decision is proven on Postgres (`CheckoutLoopTests`); this is the
+    /// endpoint saying it, which nothing else held.
+    /// </summary>
+    [Fact]
+    public async Task A_shelf_that_is_short_is_a_conflict_that_says_what_there_is()
+    {
+        var (client, _, dispatcher, owner) = Compose();
+        using var _ = owner;
+        dispatcher.Answer = new PlaceOrderResult(
+            PlaceOrderOutcome.InsufficientStock, null, null, "PAN-26: 2 asked for, 1 available",
+            [new StockShortage("PAN-26", 2, 1)]);
+
+        var (status, body) = await PlaceAsync(client, Order(), "k-short");
+        var problem = JsonNode.Parse(body)!;
+
+        Assert.Equal(HttpStatusCode.Conflict, status);
+        Assert.Equal("InsufficientStock", problem["code"]!.GetValue<string>());
+        Assert.Equal(CheckoutRefusals.InsufficientStock.Title.In("es"), problem["title"]!.GetValue<string>());
+
+        var shortage = Assert.Single(problem["shortages"]!.AsArray())!;
+        Assert.Equal(("PAN-26", 2, 1), (shortage["sku"]!.GetValue<string>(), shortage["requested"]!.GetValue<int>(), shortage["available"]!.GetValue<int>()));
+
+        // Refused, so the key is free: the shopper takes one out and pays again with it.
+        dispatcher.Answer = null;
+        var (again, _) = await PlaceAsync(client, Order(), "k-short");
+        Assert.Equal((HttpStatusCode.NotFound, 2), (again, dispatcher.Sent));
+    }
+
+    /// <summary>Answers that there is no such cart — or what it is told to — counting; and can ask something of the test while it runs.</summary>
     private sealed class Counting : ICommandDispatcher
     {
         public int Sent { get; private set; }
 
         public Func<Task>? WhileRunning { get; set; }
+
+        public PlaceOrderResult? Answer { get; set; }
 
         public async Task<TResult> SendAsync<TResult>(ICommand<TResult> command, CancellationToken cancellationToken = default)
         {
@@ -142,7 +177,7 @@ public sealed class CheckoutIdempotencyHeaderTests
                 await inside();
             }
 
-            return (TResult)(object)new PlaceOrderResult(PlaceOrderOutcome.UnknownSkus, null, null, "MUG-1");
+            return (TResult)(object)(Answer ?? new PlaceOrderResult(PlaceOrderOutcome.UnknownSkus, null, null, "MUG-1"));
         }
     }
 }

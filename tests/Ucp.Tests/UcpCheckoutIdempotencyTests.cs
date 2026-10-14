@@ -185,6 +185,13 @@ public sealed class UcpCheckoutIdempotencyTests
         var answer = await shop.Operations.CreateAsync(Buying(2), new string('k', Idempotency.MaximumKeyLength + 1), "es", Call, Ct);
 
         Assert.Equal((0, 400), (shop.Sent, answer.Status));
+
+        // And the longest key the column keeps is a key like any other (Stryker,
+        // phase 13b's close: `>` read as `>=` survived).
+        var longest = await shop.Operations.CreateAsync(Buying(2), new string('k', Idempotency.MaximumKeyLength), "es", Call, Ct);
+
+        Assert.Equal(1, shop.Sent);
+        Assert.NotEqual(400, longest.Status);
     }
 
     /// <summary>The operations over a dispatcher that counts, a store in memory and an agent with a name.</summary>

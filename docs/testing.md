@@ -90,11 +90,11 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | project | mutated with | of covered | of total | set |
 |---|---|---:|---:|---|
 | `src/Search` | `Search.Tests`, `SearchEval.Tests` | 83.38 % | 59.53 % | 2026-10-08 · phase 13a's close, one run, the model-held tests left out; eleven gaps closed after it |
-| `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 70.95 % | 62.50 % | 2026-09-26 |
+| `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 80.82 % | 70.73 % | 2026-10-13 · phase 13b's close, one run; 70.95 % since 2026-09-26 |
 | `tools/TrafficSim` | `TrafficSim.Tests` | 87.66 % | 87.10 % | 2026-09-26 · `Model/`, `Scheduling/`, `Queries/` |
 | `src/Knowledge` | `Knowledge.Tests` | 77.34 % | 67.91 % | 2026-10-09 · phase 13a's close, with the picture reading in it |
 | `src/Accounts` | `Accounts.Tests` | 80.08 % | 58.31 % | 2026-09-29 · R-7/R-8 close, first run 75.52 % |
-| `src/Pricing` | `Pricing.Tests` | 83.06 % | 62.59 % | 2026-09-29 · first baseline, first run 81.41 % |
+| `src/Pricing` | `Pricing.Tests` | 83.23 % | 64.03 % | 2026-10-13 · phase 13b's close, one run; 83.06 % since 2026-09-29 |
 | `src/Assist` | `Assist.Tests` | 86.31 % | 79.42 % | 2026-10-09 · phase 13a's close, with the alt-text job in it; first run 85.30 %, under phase 12b's 86.26 % |
 | `src/AI` | `AI.Tests` | 75.00 % | 58.54 % | 2026-10-09 · phase 13a's close; first run 71.88 %, under phase 12's 72.02 % |
 
@@ -106,7 +106,11 @@ score" rather than an error; convert first (the offsets start at the file's firs
 character, after any byte-order mark). **Stryker only mutates a project a test
 project references directly**: `src/Mcp` and `src/ServiceDefaults`, reached from
 `Api.Tests` only through `src/Api`, fail with *No project found* and have no
-config; their phase code is proven by hand mutations at level 1.
+config; their phase code is proven by hand mutations at level 1. **A
+configuration that names `Integration.Tests` (Ordering's) is run with
+`--test-project` pointing at its unit suite only.** With the Postgres suite in
+the run, Testcontainers starts a database for every mutant. Phase 11's close
+said so, phase 13b's ran it anyway, and the run hung for eight hours.
 
 **Search's baseline was measured with layer B inside `src/Search`, and layer B
 left the same day** (ADR 0032, amended): the classifier, its anchors, its
@@ -937,6 +941,112 @@ another program's containers.
   (`docs/search-evaluation.md`).
 - **`tools/SeedImages`** has no Stryker configuration; its phase code is proven
   by the hand mutations in its commits and by the defects board.
+
+**Phase 13b's close (2026-10-14)**: the wire. Money in minor units, refusals as
+problems with a code, a promotion's reason as data, the till asking the shelf
+first, and the audit's MUSTs on MCP, UCP and WebMCP. Two projects were run
+whole (`Pricing` and `Ucp`, both changed throughout) and five were scoped to
+the phase's files. Each ran alone, one after the other, with no stack running,
+overnight on 2026-10-13. Reports are in
+`docs/blog/reports/2026-10-13-phase-13b-wire/stryker/`.
+
+| project | mutated with | run 1 | survivors |
+|---|---|---:|---:|
+| `src/Pricing` | `Pricing.Tests` | **83.23 %** (baseline 83.06 %) | 80 |
+| `src/Ucp` | `Ucp.Tests`, `Api.Tests` | **80.82 %** (baseline 70.95 %) | 172 |
+| `src/SharedKernel`, scoped (`Idempotency`, `Messages`, `Refusals`, `WireMoney`) | its three suites | 72.32 % | 31 |
+| `src/Api`, scoped (`OpenApiContract.cs`, `OpenApiMoney.cs`, `Problems.cs`) | `Api.Tests` | 91.40 % | 8 |
+| `src/Accounts`, scoped (`ManageAgents.cs`) | `Accounts.Tests` | 78.57 % | 6 |
+| `src/Search`, scoped (`Contracts.cs`, `SearchProducts.cs`) | `Search.Tests`, `SearchEval.Tests` | 81.11 % | 17 |
+| `src/Ordering`, scoped (`OrderPlacement.cs`, `Checkout.cs`, `ManageCart/`) | `Ordering.Tests` only | 8.20 % | 56 |
+
+No baseline fell, and Ucp's rose by ten points. Most of that rise is the phase's
+own tests (idempotency, the authority binding, the problems) reaching code that
+was already there.
+
+**The Ordering run with its Postgres suite hung, and was stopped after eight
+hours.** Its configuration names `Integration.Tests` beside `Ordering.Tests`,
+and with those tests in the run Testcontainers starts a database for each
+mutant. At 00:45 Stryker had 159 mutants to test. At 08:30 its log had not
+moved since then, and a fresh Postgres was still coming up every minute. It was
+run again with `Ordering.Tests` only (`--test-project`), as at phase 11's close,
+and that run took 56 seconds. Its 8.20 % is not a score of the phase's code.
+These files are endpoints and handlers, which no unit test reaches. The
+integration suite and `Api.Tests` hold them, and `Api.Tests` cannot be given to
+Stryker for a project it reaches only through `src/Api`. The Ordering code the
+phase wrote (the till asking the shelf, the 409 that says what is left) is
+proven by the hand mutations in its commit. The 56 survivors are the
+refusals' sentences and the meters' names in static initialisers (**noise**:
+the contract tests hold each refusal's code and status, and `TrackingPlanTests`
+holds the meters). Two conditionals in `GetCart` are held by the Postgres
+suite. **Next time**: a phase close runs Ordering with its unit tests only from
+the start, and says so. The integration suite is no part of a mutation run.
+
+**What Stryker found, and what closed it.** Each gap below has a test, seen red
+against the mutant made by hand and restored:
+
+- **Pricing, how far a promotion is short.** What is met exactly was never
+  asked, so `<` read as `<=` survived in `ShortBy` and in `UnitsShort`. Nor
+  was a condition over several lines asked, so `Sum` read as `Max` survived in
+  `ShortOf`, and in `IsMetBy` under it, a rule older than the phase that
+  nothing held either.
+- **SharedKernel, what a refusal says.** A blank `reason` was written as if it
+  were one, and a detail in one language alone was said to whoever asked in
+  the other. `RefusalSaidTests` is new.
+- **Api, the cache's half of a refusal.** `Vary: Accept-Language` could be
+  emptied and nothing noticed. **`Retry-After`** was asserted between one and
+  sixty seconds, so `Max(1, …)` read as `Min(1, …)` (always one) passed. The
+  window is a minute from the first call, so the test now asks for most of it.
+- **Ucp, two boundaries.** The longest idempotency key the column keeps was
+  never sent, so `>` read as `>=` survived. And a single-label host was asked
+  only about a name it could not bind anyway, so `||` read as `&&` survived. It
+  would have let `https://localhost/…` vouch for `localhost.anything`.
+
+**Left, and what each is.**
+
+- **`Pricing`** (80). The phase's are `RuleReason`'s sentences (6). They are
+  **noise**: the reason travels as a code with `requires`, `shortBy`,
+  `unitsShort` and `winner`, and the storefront composes its own sentence from
+  those. The rest are older than the phase. `Promotion.cs`'s `Canonical` parts
+  (23) only feed a fingerprint. The quote's fingerprint orders (`OrderBy` read
+  as descending) are **equivalent**, because any one order makes the same key.
+  `PricedCart.Min` on a tie is **equivalent**, because equal amounts are the
+  same amount. `PricingSeedFiles` (10) is read once, at start.
+- **`Ucp`** (172). In `UcpCheckoutOperations` (27), the operation names passed
+  to `OnceAsync` are **equivalent** case by case: a mutant empties one name,
+  and an empty name is still not any of the other three. The
+  protocol errors' `content` is **noise**: a platform branches on the code.
+  The capability gating of destination, shipping and coupons (L253–255) is
+  older than the phase and **written down**: no test drops fulfilment from the
+  negotiation at the operations' level, only at the mapper's. In
+  `UcpAuthority`, `Any` read as `All` over empty labels is **equivalent**,
+  because `Uri` refuses a host with an empty label before it gets there. So is
+  `BindsOwn`'s `All` read as `Any` while the shop declares one extension of its
+  own. The mappers (48) and `SdJwt` (11) predate the phase.
+- **`SharedKernel`, scoped** (31). The exponent table's currency keys and the
+  common refusals' sentences are static initialisers that Stryker's runner
+  cannot toggle (**runner artefact**). `WireMoney`'s exception messages are
+  **noise**, because the tests ask whether it refuses and not in which words.
+  The `StringBuilder`'s initial capacity is **equivalent**.
+- **`Api`, scoped** (8). The OpenAPI response's description is the refusals'
+  titles joined (**noise**). `SecuritySchemes ??=` read as `=` is
+  **equivalent**: the document declares no schemes before this. The `carried`
+  check's `&&` read as `||` is **equivalent**, because a refusal never carries
+  null. `RefusalOf`'s fallback to the common refusals by code (three mutants)
+  is **unreachable** today: every endpoint declares the refusals it answers,
+  common ones included (`Checkout` names its three idempotency refusals), and
+  the contract test fails on one that does not.
+- **`Accounts`, scoped** (6): an activity's name and a refusal's title
+  (**noise**).
+- **`Search`, scoped** (17): the query validator's rules, `minPrice` and
+  `maxPrice` among them. They are held by `Api.Tests`, which the configuration
+  does not include, and they ask whether a query is valid, not what it is told.
+  Nothing survived in `SearchPrices`.
+- **Not run**: `Catalog`, `Inventory` and `Knowledge` changed only in how their
+  endpoints answer a refusal, and the contract tests hold that endpoint by
+  endpoint. `src/Mcp` has no configuration (above). Its phase code
+  (`McpAuthorization`, a misnamed argument answered as `Invalid`) is proven by
+  the hand mutations in the phase's commit.
 
 ## Property-based (CsCheck)
 

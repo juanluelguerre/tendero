@@ -61,6 +61,9 @@ public sealed class RefusalsAreProblemsTests
         Assert.Equal(QuoteRefusals.UnknownSkus.Title.In("en"), en["title"]!.GetValue<string>());
         Assert.Equal(("No se venden: NOPE-1.", "Not on sale: NOPE-1."), (es["detail"]!.GetValue<string>(), en["detail"]!.GetValue<string>()));
         Assert.Equal(("es", "en"), (string.Join(',', spanish.Content.Headers.ContentLanguage), string.Join(',', english.Content.Headers.ContentLanguage)));
+        // And a cache is told the answer depends on the language asked (ADR 0013): a
+        // refusal in Spanish is not what an English reader is handed next.
+        Assert.Contains("Accept-Language", spanish.Headers.Vary);
 
         // What waited in the problem to be said is not sent as it waited.
         Assert.DoesNotContain(es.AsObject(), member => member.Key.StartsWith('$'));
