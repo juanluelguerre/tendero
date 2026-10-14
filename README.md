@@ -339,9 +339,17 @@ git clone https://github.com/juanluelguerre/tendero.git
 cd tendero
 (cd frontend && npm ci)          # once, and again when package-lock.json changes
 dotnet tool restore              # EF tools and Stryker, pinned
+git config core.hooksPath .githooks   # once: the repository's own git hooks (a commit message carries no attribution trailer)
 
 dotnet run --project src/AppHost
 ```
+
+Working on it with Claude Code, the repository brings its own setup:
+`.claude/settings.json` (a guard that refuses a commit with an attribution
+trailer, and a .NET build while the stack holds `src/*/bin`, plus a
+confirmation before any commit or push), the skills `hand-mutation` and
+`phase-close`, the read-only `conventions-reviewer` agent, and the Postgres
+MCP server in `.mcp.json` ([Profiling the database](#profiling-the-database-from-an-ai-assistant-mcp)).
 
 The `npm ci` is a prerequisite in the way `dotnet restore` is: the AppHost does
 not install packages on every start, because two installers over one
@@ -585,6 +593,64 @@ launches the AppHost from a `.vscode/launch.json` configuration of type
 
 The switches combine. With none of them, every AI stage is off and the shop runs
 on its non-AI paths — which is exactly what a default F5 should be.
+
+### Profiling the database from an AI assistant (MCP)
+
+The stack's Postgres is always on **`localhost:35432`**, database `tendero-db`,
+user `postgres`, and Elasticsearch on **`localhost:39200`**. The ports are fixed
+in `src/AppHost/AppHost.cs` so that a tool configured once keeps working, and
+they are not 5432 and 9200 so that they do not collide with the database and
+the search engine a developer already runs for work.
+
+`.mcp.json` declares **`tendero-postgres`**, [Postgres MCP Pro](https://github.com/crystaldba/postgres-mcp)
+(MIT, image `crystaldba/postgres-mcp:0.3.0`, run with Docker; a tool beside the
+app, not a dependency of it). It gives an assistant such as Claude Code the
+schema, `EXPLAIN` plans, the slowest queries, index advice and a health check
+over the running stack's database. It runs **read-only**
+(`--access-mode=restricted`): read-only transactions and a time limit, so a
+`CREATE` or `UPDATE` is refused. To set it up:
+
+1. **The connection string**, with the password Aspire generated and keeps in
+   the AppHost's user secrets (`Parameters:postgres-password`). Put it in an
+   environment variable that Claude Code reads when it starts, never in a file
+   in the repository:
+
+   ```bash
+   dotnet user-secrets list --project src/AppHost | grep postgres-password
+   export TENDERO_PG_URL="postgresql://postgres:<that password>@localhost:35432/tendero-db"
+   ```
+
+   On Windows, `setx TENDERO_PG_URL "postgresql://…"` keeps it for new
+   terminals. Without the variable, the server starts with no password and
+   says so on its first call.
+2. **The query statistics, once.** The AppHost starts Postgres with
+   `pg_stat_statements` loaded (`shared_preload_libraries`), and the extension
+   has to be created in the database once. Run it from pgweb (`Tendero:Tools=true`,
+   or *Start* on `pgweb`) or from the container:
+
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+   ```
+
+   Without it, the top-queries and workload tools say the extension is
+   missing, and the rest still work. `hypopg` (hypothetical indexes) is not in
+   the image, so index advice that needs it says so.
+3. **Start the stack, then Claude Code** in the repository. It asks once
+   whether to trust the project's MCP servers; `/mcp` shows `tendero-postgres`
+   connected. Ask it, for example, *"which queries cost the most since the
+   stack started, and what does the plan of the worst one say?"*
+
+**Elasticsearch has no MCP server here, on purpose.** Elastic's standalone MCP
+server is deprecated. What replaces it, the Agent Builder MCP endpoint, lives
+in **Kibana** (9.2 and later), which this stack does not run; a third-party
+reading of Elastic's subscriptions puts it in the Enterprise tier, not checked
+against Elastic's own page (2026-10-14). For the index, use what is already
+there: **elasticvue** (`localhost:39201`) to look, and Elasticsearch's own REST
+API on `localhost:39200` to profile. An assistant can call it directly, for
+example `POST /products_es/_search` with `"profile": true` (one index a
+language: `products_es`, `products_en`), `GET /_nodes/stats`, or
+`GET /_nodes/hot_threads`. Never point any of this at `localhost:9200`: that is
+a developer's own Elasticsearch, not the stack's.
 
 ## The API contract: from C# to TypeScript
 

@@ -81,11 +81,12 @@ Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's loca
 Tendero__Tino=true dotnet run --project src/AppHost           # + Tino, the storefront's assistant, on the same local model and the support scorer — only on a GPU; without one it stays off and says so; or profile https-tino
 Tendero__Vision=true dotnet run --project src/AppHost         # + the local model's eyes: its vision projector, converted once (8.8 GB of download), so the same model reads pictures — only on a GPU (ADR 0031; docs/specs/images.md)
 Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json dotnet run --project src/AppHost  # Steward from a script (CI's browser spec): no model fits a runner, so the wiring is tested with scripted answers — anything else gets "I was not scripted for that" (docs/specs/steward.md, Evaluation and tests)
-Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json dotnet run --project src/AppHost      # Tino from a script, on any machine (CI's browser spec; TINO_SCRIPTED=1 to run it locally)
+Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json dotnet run --project src/AppHost      # Tino from a script, on any machine (CI's browser spec; TINO_SCRIPTED=1 to run it locally); the same script answers which kit a sentence names (K-6), since that runs on Tino's profile
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
 dotnet test --filter Category=Integration     # Testcontainers (skips without Docker)
 dotnet tool restore                           # EF tools and Stryker, pinned
+git config core.hooksPath .githooks           # once per clone: commit-msg refuses an attribution trailer
 dotnet tool run dotnet-ef migrations add <Name> --project src/Persistence
 dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-check  # from src/<Project>, at phase close
 dotnet run --project tools/SearchEval         # golden set NDCG report
