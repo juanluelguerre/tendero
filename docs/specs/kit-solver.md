@@ -310,7 +310,9 @@ otherwise, because two of them go against the roadmap.
    slots become a hard constraint that can make the whole kit fail.
 3. **Templates are the shop's, three of them, in a committed file.**
    *Otherwise*: a model proposes slots from the sentence — which is a model
-   choosing, one step removed.
+   choosing, one step removed. *Later* (the author, 2026-10-14): the
+   shopkeeper creates kits in the backoffice, which makes a template state
+   with a writer. That is in the delivery plan's standing backlog.
 4. **"For two" is left out, and said to be.** *Otherwise*: a slot may declare
    which attribute is per person (pieces of tableware, cups of a coffee
    maker, seats) and candidates below it are excluded — real for three or four
@@ -370,6 +372,24 @@ otherwise, because two of them go against the roadmap.
    the mock-up draws and this does not: an icon a slot — a row shows the
    product's own picture, or the shop's placeholder for an empty one. The
    browser spec (`kits.spec.ts`) is written and has not been run.
+   **Seen by the author the same day**, and one thing was wrong: switching
+   language emptied the page. The language is in the URL, so switching
+   navigates from `/es/kits/…` to `/en/kits/…`, a page with a store of its
+   own, and the kit was held only in the old one. Now what was asked lives
+   in the address, as a listing's filters do
+   (`?budget=59.90&needs=INDUCTION`). *Build* writes it there. A page that
+   opens with an ask builds that kit in its own language, which also covers
+   a reload, the back button and a link someone was sent. Requirements this
+   kit cannot hold a product to are dropped from the ask. Only *Build* counts
+   as `kit_built`, by the author's decision: a kit rebuilt from the address
+   was already asked for.
+   **Seen while trying it**: the same ask, sent twice within a minute, chose
+   two different coffee makers. The first call ranked the Aroma Compacta first
+   and every later call the 6-cup stovetop. The solver ranks by a slot's
+   position in an ordinary search, so its answer is only as stable as that
+   search. Not investigated yet. The guess is the hybrid search falling back
+   to lexical on a cold first call. A shared link that gives another kit
+   would break the promise above, so it is owed before K-8.
 6. **K-6 · A sentence**: the parse, its fixture, the form filled from it.
 7. **K-7 · `build_kit`** over MCP, if decision 7 says so.
 8. **K-8 · Close**: the ADR, Stryker over what the phase touched, the

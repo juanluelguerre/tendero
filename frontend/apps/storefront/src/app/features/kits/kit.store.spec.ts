@@ -1,10 +1,10 @@
 import { ApplicationRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Params, Router } from '@angular/router';
 import type { BuildKitRequest, KitTemplate, KitView, PriceQuote } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { Telemetry } from '@tendero/shared-telemetry';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CartStore } from '../../cart/cart.store';
 import { CartService } from '../../data-access/cart.service';
@@ -58,7 +58,9 @@ describe('the kit store', () => {
   let added: string[];
   let refusedSku: string | null;
   let events: unknown[][];
-  let went: unknown[];
+  /** Where the page went: the cart's page, or its own address with what was asked in it. */
+  let went: { commands: unknown[]; queryParams?: Params }[];
+  let query: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   let building: () => ReturnType<KitService['build']>;
 
   beforeEach(() => {
@@ -68,18 +70,40 @@ describe('the kit store', () => {
     refusedSku = null;
     events = [];
     went = [];
+    query = new BehaviorSubject(convertToParamMap({}));
     building = () => of(built);
   });
 
-  async function opened(code = 'KITCHEN_STARTER') {
+  async function opened(code = 'KITCHEN_STARTER', address: Params = {}) {
+    query.next(convertToParamMap(address));
     const failed = signal<string | null>(null);
 
     TestBed.configureTestingModule({
       providers: [
         KitStore,
-        { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ code })) } },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            paramMap: of(convertToParamMap({ code })),
+            queryParamMap: query,
+            snapshot: {
+              get queryParamMap() {
+                return query.value;
+              },
+            },
+          },
+        },
         { provide: CultureStore, useValue: { active: signal('es') } },
-        { provide: Router, useValue: { navigate: async (commands: unknown[]) => void went.push(commands) } },
+        {
+          // As the real one does: going to its own address with new parameters changes what the route reads.
+          provide: Router,
+          useValue: {
+            navigate: async (commands: unknown[], extras?: { queryParams?: Params }) => {
+              went.push({ commands, queryParams: extras?.queryParams });
+              if (extras?.queryParams) query.next(convertToParamMap(extras.queryParams));
+            },
+          },
+        },
         { provide: Telemetry, useValue: { trackEvent: (...event: unknown[]) => void events.push(event) } },
         {
           provide: KitService,
@@ -176,7 +200,7 @@ describe('the kit store', () => {
 
     expect(added).toEqual(['PAN-26']);
     expect(events.at(-1)).toEqual(['kit_added_to_cart', { template: 'KITCHEN_STARTER', lines: 1 }]);
-    expect(went).toHaveLength(1);
+    expect(went.at(-1)?.commands).toEqual(['/', 'es', 'cart']);
   });
 
   it('stays on the page with the cart’s own words when the cart refuses a line', async () => {
@@ -187,10 +211,59 @@ describe('the kit store', () => {
 
     await store.addToCart();
 
-    expect([store.cartProblem(), went, events.some(([name]) => name === 'kit_added_to_cart')]).toEqual([
-      'cart.failed',
-      [],
-      false,
-    ]);
+    expect([
+      store.cartProblem(),
+      went.some((each) => each.queryParams === undefined),
+      events.some(([name]) => name === 'kit_added_to_cart'),
+    ]).toEqual(['cart.failed', false, false]);
+  });
+
+  /**
+   * What was asked lives in the address, as a listing's filters do: switching
+   * language is a navigation to another page (/es → /en), and a kit held only
+   * in the page's memory came back empty (the author, 2026-10-14).
+   */
+  describe('the address', () => {
+    it('keeps the budget and what was switched on once the kit is built', async () => {
+      const store = await opened();
+      store.draft.set({ budget: '59,90' });
+      store.require('INDUCTION', true);
+
+      await store.build();
+
+      expect(went).toEqual([{ commands: [], queryParams: { budget: '59.90', needs: 'INDUCTION' } }]);
+    });
+
+    it('builds the kit it holds when the page opens, in the page’s language, and counts nothing', async () => {
+      const store = await opened('KITCHEN_STARTER', { budget: '59.90', needs: 'INDUCTION' });
+
+      expect(asked).toEqual([
+        { template: 'KITCHEN_STARTER', request: { budget: eur(5990), requirements: ['INDUCTION'] } },
+      ]);
+      expect([store.kit(), store.draft().budget, store.required()]).toEqual([built, '59.90', ['INDUCTION']]);
+      expect(events).toEqual([]);
+    });
+
+    it('asks for nothing with no budget, or one that is not one, and drops what this kit cannot be held to', async () => {
+      await opened('KITCHEN_STARTER', { needs: 'INDUCTION' });
+      TestBed.resetTestingModule();
+      await opened('KITCHEN_STARTER', { budget: 'mucho' });
+      TestBed.resetTestingModule();
+      const store = await opened('KITCHEN_STARTER', { budget: '210', needs: 'INDUCTION,GOLD' });
+
+      expect(asked.map((each) => each.request)).toEqual([{ budget: eur(21000), requirements: ['INDUCTION'] }]);
+      expect(store.required()).toEqual(['INDUCTION']);
+    });
+
+    it('does not ask again for the kit the page has just built and written there', async () => {
+      const store = await opened();
+      store.draft.set({ budget: '210' });
+
+      await store.build();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(asked).toHaveLength(1);
+      expect(events.filter(([name]) => name === 'kit_built')).toHaveLength(1);
+    });
   });
 });
