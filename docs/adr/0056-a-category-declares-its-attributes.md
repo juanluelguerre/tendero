@@ -132,3 +132,28 @@ day, on the proposed answers).
   runs gave 24, 24 and 25. Tino's suite, whose prompt did not change, did not
   move. Two cases now ask Steward for the new kind, and it chooses it six
   times of six.
+
+## Amended 2026-10-15 — an axis is the variants', never the product's
+
+*An axis counts as held while a variant still sold holds it* was a rule for
+reading. Nothing kept the product from holding a value of its own on an axis,
+and one did: the pannier was imported with *color: oliva* before its source told
+three colours apart (2026-10-08), and the import declared the axis and kept the
+colour. Its page then read *oliva* with navy chosen, Knowledge's spec sheet said
+the same, and the index wrote *oliva* on all four of its documents.
+
+- **The aggregate holds it.** `Product.SetAttribute` refuses a value on an axis
+  the product varies by, and `DefineAxes` takes the product's own value on its
+  axes off. `VariesBy(code)` says which.
+- **The import heals what came before.** A source's product-level value on an
+  axis is left to its variants, and a product that still holds one is declared
+  its axes again, unchanged, which takes the value off. One import of the seed
+  healed a catalogue imported before the rule.
+- **A claim on an axis is refused with a reason.** `SetProductAttribute` answers
+  `VariantAxis`, the claim records it, and the tracking plan's outcome lists it.
+- **Not done here:** a variant's colour reaches its search document as a facet
+  keyword (`AxisValues`), never as text (`AttributesText` renders the product's
+  attributes only). A colour typed into the search box therefore matches a
+  product sold in several colours only through its name or its description.
+  Writing each variant's colour into its own document is a search change, and
+  it waits for the golden set to say what it is worth.

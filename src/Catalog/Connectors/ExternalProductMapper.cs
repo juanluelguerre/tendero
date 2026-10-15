@@ -105,7 +105,11 @@ public static class ExternalProductMapper
             .ToList();
 
         string[] axes = [.. placed.SelectMany(variant => variant.Coordinates.Keys).Distinct(StringComparer.OrdinalIgnoreCase)];
-        if (!axes.SequenceEqual(product.VariantAxes, StringComparer.OrdinalIgnoreCase))
+        // Declared again, unchanged, when the product still holds a value of its
+        // own on an axis — a catalogue imported before an axis was the variants'
+        // alone: declaring the axes is what takes that value off.
+        if (!axes.SequenceEqual(product.VariantAxes, StringComparer.OrdinalIgnoreCase)
+            || axes.Any(axis => product.AttributeFor(axis) is not null))
             product.DefineAxes(clock, axes);
 
         foreach (var (sku, coordinates) in placed)
@@ -159,7 +163,13 @@ public static class ExternalProductMapper
         ExternalProduct external, Product product, TimeProvider clock, AttributeDefinitions? definitions)
     {
         foreach (var (name, value) in external.Attributes)
-            product.SetAttribute(clock, Resolve(name, value, definitions));
+        {
+            // A value the source says for the product on an axis it varies by is
+            // its variants' to say (the aggregate refuses it).
+            var resolved = Resolve(name, value, definitions);
+            if (!product.VariesBy(resolved.Code))
+                product.SetAttribute(clock, resolved);
+        }
     }
 
     internal static AttributeValue Resolve(string name, string value, AttributeDefinitions? definitions)

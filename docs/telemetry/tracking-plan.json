@@ -1626,7 +1626,8 @@
             "unchanged",
             "product_not_found",
             "unknown_attribute",
-            "value_rejected"
+            "value_rejected",
+            "variant_axis"
           ],
           "description": "SetAttributeOutcome, labelled by MetricLabels.",
           "from": "SetAttributeOutcome"

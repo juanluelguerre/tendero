@@ -173,4 +173,32 @@ public sealed class ProductTests
         Assert.Equal("COFFEE_MAKER", product.Category);
         Assert.Single(product.DomainEvents);
     }
+
+    /// <summary>
+    /// An axis is the variants' to say, never the product's. The pannier kept the
+    /// colour it had before it was sold in three, and its page read *oliva* with
+    /// navy chosen (2026-10-15): one value for the product, three for its
+    /// variants, and the product's won on the page.
+    /// </summary>
+    [Fact]
+    public void Declaring_an_axis_takes_the_products_own_value_on_it_away()
+    {
+        var product = AProduct();
+        product.SetAttribute(Clock, AttributeValue.Plain("COLOR", "oliva"));
+        product.SetAttribute(Clock, AttributeValue.Plain("MATERIAL", "ripstop"));
+
+        product.DefineAxes(Clock, ["COLOR"]);
+
+        Assert.Equal(((AttributeValue?)null, "ripstop"), (product.AttributeFor("COLOR"), product.AttributeFor("MATERIAL")?.RawText));
+    }
+
+    [Fact]
+    public void A_value_on_an_axis_is_refused_as_the_products()
+    {
+        var product = AProduct();
+        product.DefineAxes(Clock, ["COLOR"]);
+
+        Assert.Throws<InvalidOperationException>(() => product.SetAttribute(Clock, AttributeValue.Plain("color", "negro")));
+        Assert.Null(product.AttributeFor("COLOR"));
+    }
 }

@@ -145,12 +145,13 @@ public sealed class ProductPicturesReaderTests
     }
 
     /// <summary>
-    /// A product that said one colour before its source told two apart still
-    /// carries it. Its variants are who say the colour now: the cover is not held
-    /// to what the product once said of itself.
+    /// A product that said one colour before its source told two apart says it no
+    /// more: declaring the axis takes it off (2026-10-15; it used to stay, and the
+    /// pannier's page read *oliva* with navy chosen). Its variants say the colour
+    /// now, and the cover is not held to what the product once said of itself.
     /// </summary>
     [Fact]
-    public async Task A_colour_the_product_still_says_does_not_hold_the_cover_once_it_varies_by_colour()
+    public async Task A_colour_the_product_said_does_not_hold_the_cover_once_it_varies_by_colour()
     {
         var pack = AProduct("Mochila", null, ("cover", null));
         pack.SetAttribute(Clock, AttributeValue.Option("COLOR", "BLACK"));
@@ -158,7 +159,7 @@ public sealed class ProductPicturesReaderTests
         pack.AddVariant(Clock, "PACK-BLACK", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
         pack.AddVariant(Clock, "PACK-GREY", new Money(10m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "GREY" });
 
-        Assert.NotNull(pack.AttributeFor("COLOR"));
+        Assert.Null(pack.AttributeFor("COLOR"));
         Assert.Equal(new() { ["cover"] = null }, await ColoursOf(pack));
     }
 

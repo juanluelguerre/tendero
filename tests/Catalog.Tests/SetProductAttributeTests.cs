@@ -19,6 +19,7 @@ public sealed class SetProductAttributeTests
     private static readonly AttributeDefinitions Definitions = new(
     [
         Material(),
+        Colour(),
         AttributeDefinition.Define(Clock, "CAPACITY_L", LocalizedText.From("es", "capacidad").With("en", "capacity"), AttributeKind.Number, unit: "L"),
         AttributeDefinition.Define(Clock, "INDUCTION", LocalizedText.From("es", "inducción").With("en", "induction"), AttributeKind.Boolean),
         AttributeDefinition.Define(Clock, "LAPTOP_MAX_IN", LocalizedText.From("es", "portátil máximo").With("en", "laptop up to"), AttributeKind.Text),
@@ -141,6 +142,26 @@ public sealed class SetProductAttributeTests
         Assert.Equal(0, unitOfWork.SaveCount);
     }
 
+    /// <summary>
+    /// A claim that a product is navy, for a product sold in three colours, is
+    /// not the product's to hold: its variants say the colour. Refused with its
+    /// reason, so the claim's review shows why, and nothing is saved.
+    /// </summary>
+    [Fact]
+    public async Task A_value_on_an_axis_the_product_varies_by_is_refused()
+    {
+        var product = AProduct();
+        product.DefineAxes(Clock, ["COLOR"]);
+        var (handler, unitOfWork) = HandlerOver(product);
+
+        var result = await handler.HandleAsync(Command(product, "COLOR", "negro"), TestContext.Current.CancellationToken);
+
+        Assert.Equal((SetAttributeOutcome.VariantAxis, (string?)null), (result.Outcome, result.HeldAs));
+        Assert.Equal(AuditOutcome.Denied, ((IAuditedResult)result).AuditOutcome);
+        Assert.Null(product.AttributeFor("COLOR"));
+        Assert.Equal(0, unitOfWork.SaveCount);
+    }
+
     [Fact]
     public async Task An_unknown_product_is_refused()
     {
@@ -169,6 +190,13 @@ public sealed class SetProductAttributeTests
         var material = AttributeDefinition.Define(Clock, "MATERIAL", LocalizedText.From("es", "material").With("en", "material"), AttributeKind.Option);
         material.AddOption(Clock, "GLASS", LocalizedText.From("es", "vidrio").With("en", "glass"));
         return material;
+    }
+
+    private static AttributeDefinition Colour()
+    {
+        var colour = AttributeDefinition.Define(Clock, "COLOR", LocalizedText.From("es", "color").With("en", "colour"), AttributeKind.Option, isVariantAxis: true);
+        colour.AddOption(Clock, "BLACK", LocalizedText.From("es", "negro").With("en", "black"));
+        return colour;
     }
 
     private sealed class FixedDefinitions : IAttributeDefinitionReader

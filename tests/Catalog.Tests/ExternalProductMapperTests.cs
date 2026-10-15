@@ -201,4 +201,54 @@ public sealed class ExternalProductMapperTests
             [("B073WXYZ01-DEFAULT", VariantStatus.Discontinued), ("B073WXYZ01-OLIVE", VariantStatus.Available), ("B073WXYZ01-BLACK", VariantStatus.Available)],
             product.Variants.Select(variant => (variant.Sku, variant.Status)));
     }
+
+    /// <summary>
+    /// The pannier's own history: imported with a colour of its own, then sold
+    /// in three (2026-10-08). The colour the product said goes with the default
+    /// variant: from then on its variants say it.
+    /// </summary>
+    [Fact]
+    public void A_source_that_starts_telling_colours_apart_takes_the_colour_off_the_product()
+    {
+        var product = AnExternalProduct().ToNewProduct("seed", Clock, Colours.Defined());
+
+        InTwoColours().ApplyTo(product, Clock, Colours.Defined());
+
+        Assert.Null(product.AttributeFor("COLOR"));
+    }
+
+    /// <summary>
+    /// A catalogue imported before the rule still holds the product's colour
+    /// beside its variants', with its axes already declared. The next import
+    /// takes it off; nothing else moves.
+    /// </summary>
+    [Fact]
+    public void Reimporting_takes_off_a_colour_a_product_kept_from_before_the_rule()
+    {
+        var product = InTwoColours().ToNewProduct("seed", Clock, Colours.Defined());
+        LeftFromBeforeTheRule(product, AttributeValue.Plain("COLOR", "oliva"));
+
+        InTwoColours().ApplyTo(product, Clock, Colours.Defined());
+
+        Assert.Equal(((AttributeValue?)null, 2), (product.AttributeFor("COLOR"), product.Variants.Count));
+    }
+
+    /// <summary>A source that says a colour for the product and for each variant too: the variants' is the one kept.</summary>
+    [Fact]
+    public void A_colour_said_for_the_product_and_for_its_variants_stays_with_the_variants()
+    {
+        var both = InTwoColours() with { Attributes = new Dictionary<string, string> { ["color"] = "negro" } };
+        var product = both.ToNewProduct("seed", Clock, Colours.Defined());
+
+        both.ApplyTo(product, Clock, Colours.Defined());
+
+        Assert.Equal(((AttributeValue?)null, 2), (product.AttributeFor("COLOR"), product.Variants.Count));
+    }
+
+    /// <summary>The state the rule cannot produce any more, so it is written past the aggregate, as the database holds it.</summary>
+    private static void LeftFromBeforeTheRule(Product product, AttributeValue value)
+    {
+        var field = typeof(Product).GetField("attributes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        ((List<AttributeValue>)field.GetValue(product)!).Add(value);
+    }
 }
