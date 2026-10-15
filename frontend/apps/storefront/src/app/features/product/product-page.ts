@@ -8,6 +8,7 @@ import { Telemetry } from '@tendero/shared-telemetry';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { filter } from 'rxjs';
 import { Crumbs } from '../../crumbs/crumbs';
+import { dealWords } from '../../deals/deal-words';
 import { ProductImage } from '../../product-image/product-image';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { CanonicalLinks } from '../../seo/canonical-links';
@@ -178,6 +179,12 @@ export class ProductPage {
       fallback ? this.links.productIn(DEFAULT_CULTURE, fallback.slug, product.code) : canonical,
     );
   }
+
+  /** The promotion the chosen variant is in, as the card says it under its price (phase 13c's follow-ups). */
+  protected readonly deal = computed(() => {
+    const deal = this.store.deal();
+    return deal ? dealWords(deal, this.culture.active()) : null;
+  });
 
   /**
    * What the page charges for. A single price when the picker has resolved to a

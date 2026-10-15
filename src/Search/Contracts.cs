@@ -440,13 +440,6 @@ public sealed record SearchHit(
     public IReadOnlyList<ProductDeal> Deals { get; init; } = [];
 }
 
-/// <summary>
-/// A promotion a product is in, as data (ADR 0059): a card composes its own words
-/// from <see cref="Terms"/>, an agent reads the sentence the server writes from
-/// the same terms (<see cref="DealText"/>).
-/// </summary>
-/// <param name="Name">The promotion's name in the reader's language: "5 € en menaje".</param>
-public sealed record ProductDeal(string Code, string Name, DealTerms Terms);
 
 /// <param name="Answer">
 /// What kind of answer this page is. Null for a browse or a date order.

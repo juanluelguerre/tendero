@@ -15,6 +15,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { map } from 'rxjs';
 import { CartStore } from '../../cart/cart.store';
 import { statusOf } from '../../failure-status';
+import { ProductDealsService } from '../../data-access/product-deals.service';
 import { ProductService } from '../../data-access/product.service';
 import { SpecsService } from '../../data-access/specs.service';
 import { specLines, specStatements } from '../../specs/spec-lines';
@@ -173,6 +174,28 @@ export const ProductStore = signalStore(
       remaining: computed(() => chosen()?.remaining ?? null),
     };
   }),
+  // The promotion the chosen variant is in (phase 13c's follow-ups): Pricing's,
+  // asked by the SKU on screen and the language, again when either changes. The
+  // card has it from the search; the page reads the catalogue, which cannot.
+  withProps(({ chosen }) => {
+    const deals = inject(ProductDealsService);
+    const culture = inject(CultureStore);
+    return {
+      _deals: extendResource(
+        rxResource({
+          params: () => {
+            const sku = chosen()?.sku;
+            return sku ? { sku, culture: culture.active() } : undefined;
+          },
+          stream: ({ params }) => deals.get(params.sku, params.culture),
+        }),
+      ),
+    };
+  }),
+  withComputed(({ _deals }) => ({
+    /** The first promotion it is in, as the till weighs them; none when it is in none, or Pricing did not answer. */
+    deal: computed(() => (_deals.status() === 'resolved' ? (_deals.value()?.items[0] ?? null) : null)),
+  })),
   withMethods((store) => ({
     availability(axis: string, option: string): OptionAvailability {
       return availabilityOf(store.variants(), store.selection(), axis, option);

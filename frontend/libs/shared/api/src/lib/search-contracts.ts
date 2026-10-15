@@ -17,9 +17,6 @@ type Schemas = components['schemas'];
 
 export type SearchHit = Schemas['SearchHit'];
 
-/** A promotion a product is in, as data: a card composes its own words from `terms` (phase 13c). */
-export type ProductDeal = Schemas['ProductDeal'];
-
 /**
  * The orders `GET /api/search?sort=` keeps, as the contract declares them
  * (ADR 0043: a closed set a client SENDS is declared too). A query parameter's

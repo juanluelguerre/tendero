@@ -4790,6 +4790,43 @@
         ]
       }
     },
+    "/api/pricing/deals/{sku}": {
+      "get": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "ListProductDeals",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDealsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pricing/offers": {
       "get": {
         "tags": [
@@ -13607,6 +13644,20 @@
           },
           "terms": {
             "$ref": "#/components/schemas/DealTerms"
+          }
+        }
+      },
+      "ProductDealsResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductDeal"
+            }
           }
         }
       },

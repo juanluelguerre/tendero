@@ -10,7 +10,7 @@ import { CompareStore } from '../compare/compare.store';
 import type { ProductVia } from '../features/product/arrived-from';
 import { ProductImage } from '../product-image/product-image';
 import { ShopLinks } from '../shop-links';
-import { dealWords } from './deal-words';
+import { dealWords } from '../deals/deal-words';
 
 /** Why a card is in its row, in one line under the price: *Porque viste…*, *Sube esta semana* (R-8). */
 export interface CardReason {

@@ -91,6 +91,11 @@
             }
             <h1 class="mt-2 mb-3 text-3xl leading-tight max-md:text-2xl">{{ item.name }}</h1>
             <p class="numeric text-xl text-body">{{ price() }}</p>
+            @if (deal(); as words) {
+              <!-- The promotion the chosen variant is in, as the card says it: quiet,
+                   because its own price does not move. `data-deal` is the tests' hook. -->
+              <p class="mt-1 text-sm text-body" data-deal>{{ t(words.key, words.params) }}</p>
+            }
 
             <!-- Every option the CATALOGUE defines, not the ones that happen to
                  have a variant. A size that exists in navy and not in black
