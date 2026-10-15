@@ -60,6 +60,24 @@ public sealed class WarmHybridSearchTests
         Assert.Equal((4, 0), (layer.Checks, search.Asked.Count));
     }
 
+    /// <summary>
+    /// Between two checks it waits what it was told, and never after the last one:
+    /// a layer that answers at the third check is waited for twice, and one that
+    /// never answers in three attempts is waited for twice too (phase 13c's close,
+    /// written down: the tests ran with no wait at all).
+    /// </summary>
+    [Theory]
+    [InlineData(2, 24)] // answers at the third check
+    [InlineData(int.MaxValue, 3)] // never answers in three
+    public async Task It_waits_its_interval_between_checks_and_not_after_the_last(int unavailableFor, int attempts)
+    {
+        var (layer, search, waits) = (new Layer { UnavailableFor = unavailableFor }, new Search(), new Waits());
+
+        await RunAsync(layer, search, attempts, waits, every: TimeSpan.FromMilliseconds(20));
+
+        Assert.Equal([TimeSpan.FromMilliseconds(20), TimeSpan.FromMilliseconds(20)], waits.Asked);
+    }
+
     /// <summary>An exception out of a BackgroundService stops the host: a search that fails costs nothing but the warming.</summary>
     [Fact]
     public async Task A_search_that_fails_does_not_stop_the_host_nor_the_other_language()
@@ -71,7 +89,7 @@ public sealed class WarmHybridSearchTests
         Assert.Equal(["es", "en"], search.Asked.Select(query => query.Culture));
     }
 
-    private static async Task RunAsync(Layer layer, Search search, int attempts = 24)
+    private static async Task RunAsync(Layer layer, Search search, int attempts = 24, TimeProvider? clock = null, TimeSpan? every = null)
     {
         var services = new ServiceCollection();
         services.AddScoped<IVectorLayer>(_ => layer);
@@ -80,10 +98,23 @@ public sealed class WarmHybridSearchTests
 
         var worker = new WarmHybridSearchAtStartupWorker(
             provider.GetRequiredService<IServiceScopeFactory>(), NullLogger<WarmHybridSearchAtStartupWorker>.Instance,
-            TimeProvider.System, every: TimeSpan.Zero, attempts: attempts);
+            clock ?? TimeProvider.System, every: every ?? TimeSpan.Zero, attempts: attempts);
 
         await worker.StartAsync(Ct);
         await worker.ExecuteTask!.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+    }
+
+    /// <summary>The system's clock, writing down every wait it is asked for.</summary>
+    private sealed class Waits : TimeProvider
+    {
+        public List<TimeSpan> Asked { get; } = [];
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            lock (Asked)
+                Asked.Add(dueTime);
+            return System.CreateTimer(callback, state, dueTime, period);
+        }
     }
 
     private sealed class Layer : IVectorLayer

@@ -26,6 +26,9 @@ public sealed class UnderstandKitSentenceTests
     {
         public int Reads { get; private set; }
 
+        /// <summary>A requirement with no label: a read written wrong, the shop's own failure.</summary>
+        public bool BrokenLabel { get; init; }
+
         public ToolAudience Audience => ToolAudience.Page;
 
         public string Name => "list_kits";
@@ -46,7 +49,7 @@ public sealed class UnderstandKitSentenceTests
                     {
                         code = "KITCHEN_STARTER",
                         name = english ? "Kitchen starter kit" : "Kit de cocina",
-                        requirements = new[] { new { facet = "INDUCTION:true", label = english ? "Induction" : "Inducción" } },
+                        requirements = new[] { new { facet = "INDUCTION:true", label = BrokenLabel ? null : english ? "Induction" : "Inducción" } },
                     },
                     new { code = "COFFEE_CORNER", name = english ? "Coffee corner" : "Rincón del café", requirements = Array.Empty<object>() },
                 },
@@ -70,7 +73,7 @@ public sealed class UnderstandKitSentenceTests
     }
 
     /// <summary>The storefront's model is Tino's: one local model on the shopper's side.</summary>
-    private static Shop Compose(string? model = "scripted", bool enabled = true, bool withKits = true)
+    private static Shop Compose(string? model = "scripted", bool enabled = true, bool withKits = true, bool brokenLabel = false)
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
@@ -84,7 +87,7 @@ public sealed class UnderstandKitSentenceTests
             ["Steward:Models:broken:TimeoutSeconds"] = "2",
         }).Build();
 
-        var kits = new Kits();
+        var kits = new Kits { BrokenLabel = brokenLabel };
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddTenderoCqrs(typeof(UnderstandKitSentenceQuery).Assembly);
@@ -180,6 +183,20 @@ public sealed class UnderstandKitSentenceTests
 
         Assert.False(understood.Understood);
         Assert.Null(understood.Template);
+    }
+
+    /// <summary>
+    /// Only the model's failures are answered as "not understood". A failure of the
+    /// shop's own — here a kit read with a requirement that has no label — goes up,
+    /// where it is seen, rather than passing for a sentence nobody understood (phase
+    /// 13c's close, written down).
+    /// </summary>
+    [Fact]
+    public async Task A_failure_that_is_not_the_models_is_not_answered_as_not_understood()
+    {
+        await using var shop = Compose(brokenLabel: true);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => shop.Understand("Quiero un kit de cocina para inducción por menos de 200 euros"));
     }
 
     [Theory]

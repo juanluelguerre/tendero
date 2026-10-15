@@ -258,6 +258,35 @@ public sealed class CampaignSeedFileTests
         });
     }
 
+    /// <summary>
+    /// The seed fills an empty calendar once (phase 13c's close, written down: the
+    /// stack's start and the assistant suite's laboratory ran it, and no unit test).
+    /// A campaign whose window has closed is left out and said to be; one the seed
+    /// schedules is scheduled; and a calendar with anything in it is left alone.
+    /// </summary>
+    [Fact]
+    public async Task The_seed_fills_an_empty_calendar_once_and_leaves_out_what_has_closed()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var path = Path.Combine(SeedFolder, "campaigns.sample.json");
+        var calendar = new InMemoryCampaigns();
+        // 10 October 2026: Tendero Days ended on the 7th; autumn runs; Black Friday is to come.
+        var clock = new TestClock(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero));
+        List<string> skipped = [];
+
+        var seeded = await CampaignSeedFile.SeedAsync(path, calendar, calendar, clock, seed => skipped.Add(seed.Code.Value), ct);
+
+        Assert.Equal(2, seeded);
+        Assert.Equal(["TENDERO_DAYS"], skipped);
+        var all = await calendar.AllAsync(ct);
+        Assert.Equal(["OTONO_EN_TENDERO", "BLACK_FRIDAY"], all.Select(campaign => campaign.Code.Value));
+        Assert.All(all, campaign => Assert.Equal(CampaignStatus.Scheduled, campaign.Status));
+        Assert.Equal(1, calendar.Saves);
+
+        Assert.Equal(0, await CampaignSeedFile.SeedAsync(path, calendar, calendar, clock, cancellationToken: ct));
+        Assert.Equal(2, (await calendar.AllAsync(ct)).Count);
+    }
+
     /// <summary>On the day this was written the season runs and Tendero Days is two days away — and leads the moment it opens.</summary>
     /// <summary>A seed file that says <c>null</c> seeds nothing rather than failing the start.</summary>
     [Fact]
