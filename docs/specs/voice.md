@@ -1,6 +1,6 @@
 # Spec: Voice — speaking to Tino and to the search box
 
-**Status**: draft (2026-10-16), for the author's rulings below
+**Status**: accepted (2026-10-16), the seven rulings as proposed; building
 **Phase**: 14 · **Branch**: `feature/phase-14-voice` (to be cut from `develop`)
 **Slice(s)**: storefront (`tino/`, the search box), a speech port in the front end, `AI` or a slice of its own for the shop's transcriber, the AppHost (a whisper.cpp container behind a switch)
 **Article**: *"Talking to the shop"* (working title)
@@ -41,6 +41,20 @@ default with the numbers in front of them.
 - **One contract suite** (front end: both adapters against recorded audio
   replayed as a stream; back end: `ISpeechToText` against a fake and the real
   server, the real one skipped with a reason when it is not running).
+- **The model is swappable, by the author's ruling** (2026-10-16: *use
+  interfaces in case we change the voice model*). Nothing outside an adapter
+  names an engine or a model:
+  - the front end depends on the `SpeechToText` interface, and which adapter
+    answers is configuration;
+  - the API depends on `ISpeechToText`, whose adapters register as keyed
+    services (invariant 3); a new engine (another Whisper build, a hosted
+    service, a future model) is one class and one registration, and inherits the
+    contract suite before it is used;
+  - the model an engine loads (weights, revision, quantization, language hints)
+    is the adapter's options, never code, so trying another model is a
+    configuration change and a measurement, not a rewrite;
+  - the measurement of V-5 is a tool over the interface, so a new adapter is
+    measured the same way the first two were.
 
 ### V-2 · The transcript lands in the box, unsent
 
@@ -107,9 +121,12 @@ comparison an article can show.
 Neither carries the words or the audio, and both follow the storefront's
 consent.
 
-## Open questions — the author's rulings
+## The author's rulings (2026-10-16)
 
-| # | Question | Proposed |
+All seven as proposed ("la spec me parece correcta"), with one addition: every
+engine and model behind an interface, so the voice model can change (V-1).
+
+| # | Question | Ruled |
 |---|---|---|
 | 1 | Both adapters, compared, as `P12b-5` says? | **Yes**: the point of the phase is the comparison |
 | 2 | Which Whisper weights for `shop`: `large-v3-turbo` (809 M parameters, about 1.6 GB in f16, less quantized) or a smaller one (`small`, `base`)? | Measure **turbo quantized** and **small** on the same recordings; pin the revision and convert ourselves (ADR 0031), weights MIT, checked at the exact revision when added (tier 1) |
