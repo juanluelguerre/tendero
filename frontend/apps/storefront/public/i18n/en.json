@@ -170,6 +170,7 @@
     "addToCart": "Add to cart",
     "adding": "Adding...",
     "breadcrumb": "Where you are",
+    "gallery": { "previous": "Previous picture", "next": "Next picture" },
     "combinationNotSold": "That combination is not sold.",
     "failed": "We could not load the product. Try again in a moment.",
     "failedTitle": "Something went wrong",

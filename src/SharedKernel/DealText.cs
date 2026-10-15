@@ -36,6 +36,15 @@ public sealed record DealTerms(
     bool ReachesSome = false);
 
 /// <summary>
+/// A promotion a product is in, as data (ADR 0059): a card composes its own words
+/// from <see cref="Terms"/>, an agent reads the sentence the server writes from
+/// the same terms (<see cref="DealText"/>). The search carries it on every card it
+/// draws, and Pricing answers it for one SKU, for the product's page (phase 13c).
+/// </summary>
+/// <param name="Name">The promotion's name in the reader's language: "5 € en menaje".</param>
+public sealed record ProductDeal(string Code, string Name, DealTerms Terms);
+
+/// <summary>
 /// A promotion's terms as a sentence the server writes, es and en — what the
 /// shop's campaigns say (<c>list_campaigns</c>) and what a product found in one
 /// says (<c>search_products</c>), phase 13c. Read the way the till reads them

@@ -852,6 +852,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/deals/{sku}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListProductDeals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pricing/offers": {
         parameters: {
             query?: never;
@@ -2580,6 +2596,9 @@ export interface components {
             code: string;
             name: string;
             terms: components["schemas"]["DealTerms"];
+        };
+        ProductDealsResult: {
+            items: components["schemas"]["ProductDeal"][];
         };
         ProductDetail: {
             productId: string;
@@ -6125,6 +6144,30 @@ export interface operations {
                         /** @enum {string} */
                         code?: "Forbidden";
                     } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ListProductDeals: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                sku: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDealsResult"];
                 };
             };
         };

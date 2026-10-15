@@ -1157,6 +1157,24 @@ against the mutant made by hand and restored (27 hand mutations):
   hand mutations in the K-7 commit. `src/Api` changed only in registrations, and
   `src/AppHost` in one argument.
 
+**Closed the next day (2026-10-15)**: what the close wrote down, each with a test
+seen red against its mutant by hand (seven mutations):
+
+- **Search**: a slot whose category the tree does not have offers nothing and its
+  kit is still listed (`?? []` removed); the warming worker waits its interval
+  between checks and never after the last (`<` as `<=`, and the wait removed),
+  read through a clock that writes down every wait it is asked for.
+- **Assist**: a failure of the shop's own in the kit sentence's handler (a kit
+  read with a requirement that has no label) goes up and is not answered as
+  "not understood" (`&&` as `||` in the model's `catch`).
+- **Pricing**: `CampaignSeedFile.SeedAsync` fills an empty calendar from the
+  committed seed, leaves out a window that has closed, schedules what the seed
+  schedules, and leaves a calendar with anything in it alone (three mutants).
+- **Reclassified**: the solver's `return` once its node ceiling stopped it is
+  **equivalent**, not a gap. Every call after the stop returns at its first line,
+  because the node count is already at the ceiling, so going on with the loop
+  changes neither the kit nor the nodes counted.
+
 ## Property-based (CsCheck)
 
 Value objects carry the invariants worth generating inputs for:

@@ -58,12 +58,19 @@ out. This is the other half: **the promotions a product is in**.
   what matches and is in a promotion, each with its terms. "See all" then leads
   to that search. Code decides, not the model; with nothing in a promotion
   either, the shop's *nothing on offer* sentence stands.
+- **The product page** (2026-10-15, the follow-ups). It reads the catalogue
+  (`GET /api/catalog/products/{code}`), and Catalog does not reference Pricing, so
+  it asks Pricing by the SKU on screen: `GET /api/pricing/deals/{sku}`
+  (`ListProductDeals`). The branch is the one the till prices with
+  (`IPricedItemReader`), and the rule is `ProductDeals`, so the page, the card
+  and the basket agree. The product store reads it again when another variant
+  is chosen or the language changes, and a failure is no line at all
+  (invariant 8). The line uses the card's words (`deals/deal-words.ts`).
+  `ProductDeal` moved to the shared kernel, beside `DealTerms`, because the
+  search and Pricing both answer it.
 
 ## Non-goals
 
-- **The product page.** It reads the catalogue (`GET /api/catalog/products/{code}`),
-  and Catalog does not reference Pricing. Showing the deal there needs a read of
-  its own; noted on the board.
 - **The saving on a card.** What a promotion takes off a particular basket is
   the quote's to say, and a card says the terms, not a computed saving.
 - **More than one deal on a card.** The shop has one per branch today. A second
@@ -103,4 +110,4 @@ promotions applied to them. If that never moves, the line comes off the card.
 
 ## Open questions
 
-- Should the product page show it too? (Non-goals.)
+- None now. The product page shows it since 2026-10-15 (Behaviour).

@@ -485,6 +485,26 @@ public sealed class BuildKitTests
         Assert.Equal([new KitRequirementOption("INDUCTION:true", label)], kit.Requirements);
     }
 
+    /// <summary>
+    /// A slot whose category the tree does not have — a seed written before a
+    /// category was renamed — offers nothing to require, and the kit is still
+    /// listed with what its other slots offer (phase 13c's close, written down).
+    /// </summary>
+    [Fact]
+    public async Task A_slot_in_a_category_the_shop_does_not_have_offers_nothing_and_the_kit_is_still_listed()
+    {
+        var renamed = Kitchen with
+        {
+            Slots = [.. Kitchen.Slots, new KitTemplateSlot("pot", Text("Olla", "Pot"), "POTS_OLD", Text("olla", "pot"), Required: false)],
+        };
+        var handler = new ListKitsHandler(new Templates(renamed), new Tree(Categories()), new Definitions(ShopDefinitions()));
+
+        var kit = Assert.Single(await handler.HandleAsync(new ListKitsQuery("en"), TestContext.Current.CancellationToken));
+
+        Assert.Equal(4, kit.Slots.Count);
+        Assert.Equal(["INDUCTION:true"], kit.Requirements.Select(option => option.Facet));
+    }
+
     // ---------- what is not a request ----------
 
     private static readonly BuildKitValidator Validator = new();

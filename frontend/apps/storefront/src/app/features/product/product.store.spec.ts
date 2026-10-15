@@ -7,6 +7,7 @@ import { of, throwError, type Observable } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CartStore } from '../../cart/cart.store';
 import { ProductService } from '../../data-access/product.service';
+import { ProductDealsService } from '../../data-access/product-deals.service';
 import { SpecsService } from '../../data-access/specs.service';
 import { ProductStore } from './product.store';
 
@@ -56,11 +57,15 @@ const aShirt = (): ProductDetail =>
 describe('the product store', () => {
   let answer: () => Observable<ProductDetail>;
   let added: string[];
+  let dealsAsked: string[];
+  let deals: (sku: string) => Observable<{ items: unknown[] }>;
   const refusal = signal<string | null>(null);
 
   beforeEach(() => {
     answer = () => of(aShirt());
     added = [];
+    dealsAsked = [];
+    deals = () => of({ items: [] });
     refusal.set(null);
     TestBed.configureTestingModule({
       providers: [
@@ -73,6 +78,15 @@ describe('the product store', () => {
         { provide: ProductService, useValue: { get: () => answer() } },
         { provide: SpecsService, useValue: { get: () => throwError(() => new Error('Knowledge is down')) } },
         { provide: CartStore, useValue: { add: async (sku: string) => void added.push(sku), failed: refusal } },
+        {
+          provide: ProductDealsService,
+          useValue: {
+            get: (sku: string, culture: string) => {
+              dealsAsked.push(`${sku}:${culture}`);
+              return deals(sku);
+            },
+          },
+        },
       ],
     });
   });
@@ -108,6 +122,31 @@ describe('the product store', () => {
 
     TestBed.resetTestingModule();
     expect(malformed).toBe('notFound');
+  });
+
+  /**
+   * The promotion the chosen variant is in (phase 13c's follow-ups): asked of
+   * Pricing by its SKU, again when another variant is chosen, and nothing at all
+   * when Pricing does not answer: the page is the product's, the line is extra.
+   */
+  it('reads the promotion the chosen variant is in, and none when Pricing does not answer', () => {
+    const kitchenFive = {
+      code: 'KITCHEN5',
+      name: '5 € en menaje',
+      terms: { kind: 'AmountOffOrder', amountOff: { amount: 500, currency: 'EUR' }, reachesSome: true },
+    };
+    deals = (sku) =>
+      sku === 'BLACK-38' ? throwError(() => new Error('Pricing is down')) : of({ items: [kitchenFive] });
+    const store = opened();
+
+    expect(dealsAsked).toEqual(['NAVY-38:es']);
+    expect(store.deal()?.code).toBe('KITCHEN5');
+
+    store.choose('COLOR', 'BLACK');
+    TestBed.tick();
+
+    expect(dealsAsked).toEqual(['NAVY-38:es', 'BLACK-38:es']);
+    expect(store.deal()).toBeNull();
   });
 
   /** The specs are Knowledge's, beside the product: without them the lines fall back to the catalogue's (invariant 8). */
@@ -153,17 +192,38 @@ describe('the product store', () => {
     ]);
   });
 
-  it('puts a thumbnail pressed in front, and goes back to the colour when another is chosen', () => {
+  /**
+   * A thumbnail pressed is the picture in front, and the row does not move: it
+   * used to jump to the start of the row, which reordered the thumbnails under
+   * the shopper's finger (the author, 2026-10-15). Another colour starts again
+   * from its first picture.
+   */
+  it('puts a thumbnail pressed in front without moving the row, and goes back to the first when another colour is chosen', () => {
     const store = opened();
     store.choose('COLOR', 'BLACK');
     store.show('detail');
-    const pressed = gallery(store);
+    const pressed = [gallery(store), store.current()?.imageId];
     store.choose('COLOR', 'NAVY_BLUE');
 
-    expect([pressed, gallery(store)]).toEqual([
-      ['detail', 'black', 'black-back', 'cover'],
-      ['cover', 'detail'],
+    expect([pressed, [gallery(store), store.current()?.imageId]]).toEqual([
+      [['black', 'black-back', 'cover', 'detail'], 'detail'],
+      [['cover', 'detail'], 'cover'],
     ]);
+  });
+
+  /** The arrows: one picture on, one back, and round the ends (the gallery's mock-up, 2026-10-15). */
+  it('goes to the next and the previous picture, round the ends', () => {
+    const store = opened();
+    store.choose('COLOR', 'BLACK');
+
+    const seen: (string | undefined)[] = [store.current()?.imageId];
+    for (const step of ['next', 'next', 'next', 'next', 'previous', 'previous'] as const) {
+      store[step]();
+      seen.push(store.current()?.imageId);
+    }
+
+    expect(seen).toEqual(['black', 'black-back', 'cover', 'detail', 'black', 'detail', 'cover']);
+    expect(store.position()).toEqual({ index: 3, total: 4 });
   });
 
   /** Every picture is another colour's, or the combination is not sold: the product's own gallery, never an empty one. */

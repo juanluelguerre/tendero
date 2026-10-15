@@ -5,10 +5,11 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore, DEFAULT_CULTURE, PageTitles } from '@tendero/shared-i18n';
 import type { ProductDetail } from '@tendero/shared-api';
 import { Telemetry } from '@tendero/shared-telemetry';
-import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
+import { formatPrice } from '@tendero/shared-util';
 import { filter } from 'rxjs';
 import { Crumbs } from '../../crumbs/crumbs';
-import { ProductImage } from '../../product-image/product-image';
+import { dealWords } from '../../deals/deal-words';
+import { ProductGallery } from '../../product-gallery/product-gallery';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { CanonicalLinks } from '../../seo/canonical-links';
 import { ShopLinks } from '../../shop-links';
@@ -38,7 +39,7 @@ import { PageState } from '../../page-state/page-state';
  */
 @Component({
   selector: 'storefront-product-page',
-  imports: [TranslocoDirective, RouterLink, Crumbs, ProductImage, SpecValue, SpecSource, PageState],
+  imports: [TranslocoDirective, RouterLink, Crumbs, ProductGallery, SpecValue, SpecSource, PageState],
   providers: [ProductStore],
   templateUrl: './product-page.html',
 })
@@ -52,7 +53,6 @@ export class ProductPage {
   private readonly router = inject(Router);
   private readonly seo = inject(CanonicalLinks);
   private readonly titles = inject(PageTitles);
-  private readonly images = inject(ProductImageUrls);
   private readonly telemetry = inject(Telemetry);
   private readonly trail = inject(TrailStore);
 
@@ -179,6 +179,12 @@ export class ProductPage {
     );
   }
 
+  /** The promotion the chosen variant is in, as the card says it under its price (phase 13c's follow-ups). */
+  protected readonly deal = computed(() => {
+    const deal = this.store.deal();
+    return deal ? dealWords(deal, this.culture.active()) : null;
+  });
+
   /**
    * What the page charges for. A single price when the picker has resolved to a
    * variant, and the product's range before it has — which is the same thing the
@@ -197,10 +203,6 @@ export class ProductPage {
     }
     return formatPrice(product.priceFrom, culture);
   });
-
-  protected imageUrl(imageId: string): string {
-    return this.images.of(imageId);
-  }
 
   protected cartLink(): string[] {
     return ['/', this.culture.active(), 'cart'];

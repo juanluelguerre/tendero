@@ -22,6 +22,14 @@ type Schemas = components['schemas'];
 export type Money = Schemas['Money'];
 
 /**
+ * A promotion a product is in, as data (phase 13c): a card and the product's page
+ * compose their own words from `terms`. The search carries it on every card; the
+ * page asks `GET /api/pricing/deals/{sku}`.
+ */
+export type ProductDeal = Schemas['ProductDeal'];
+export type ProductDealsResult = Schemas['ProductDealsResult'];
+
+/**
  * A promotion as the shopkeeper sees it. The combination column is the reason
  * the screen exists: the question is not "how much is this worth" but "if I add
  * it, what stops applying".

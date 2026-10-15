@@ -924,6 +924,17 @@ picture; a picture says the colour it shows, and a colour's gallery is derived
   colour's pictures on the page, then the ones that are every colour's; another
   colour's are not there at all. A variant with none to show has the product's
   own gallery, never an empty one.
+- **The gallery is one component** (`product-gallery/`, phase 13c's follow-ups,
+  2026-10-15; mock-up `design/unpublished/mockups/storefront-product-gallery.pen`).
+  The thumbnails never move: a thumbnail pressed used to jump to the front of
+  the row, which reordered the row under the shopper's finger. The one in front
+  is now marked where it stands. Arrows either side of the picture show on
+  hover or keyboard focus, and always on a touch screen. A swipe and ← → do
+  the same, and they wrap round. A count (*3 / 4*) sits on the picture. A
+  single picture has no arrows, no count and no row. The component only shows
+  and asks: the page's store keeps the order and decides which picture is next,
+  and a colour change goes back to that colour's first picture. Its controls are
+  neutral, because *Añadir al carrito* is the page's one accent.
 - **The backoffice says it, with no model** (`SetImageShows`,
   `PUT /api/catalog/products/{id}/images/{imageId}/shows`). On a product's
   review, beside each picture and its alt text, one control an axis the product
@@ -1383,6 +1394,11 @@ book's map.
 | `image_alt_proposal_decided` (approved, edited, rejected) | Is the proposed alt text good enough to approve as written? | Below a share approved unedited, the job stops proposing in bulk and proposes on request |
 | `search_by_image_submitted` | Does anyone search with a picture? | If almost nobody does, the control leaves the search box for the search page |
 | `search_by_image_result_followed` | Did the picture find what they wanted? | Whether text against pictures is worth making a leg of the main search |
+
+**The product page's gallery has no event of its own, on purpose.** Moving
+between pictures is reading, not deciding. An event per arrow would be volume
+with no decision behind it, because no value would take the arrows away. The
+question it serves, whether the page sells, is answered by the orders.
 
 ## Licensing and dependencies (each needs the author's yes before it is added)
 
