@@ -85,6 +85,12 @@ public sealed class HybridSearchStrategyTests
 
         var result = await Hybrid(new Lexical("a", "b"), new Vectors(("b", 0.9)), reranker: new NoReranker())
             .SearchAsync(new ProductSearchQuery(text, "es"), Ct);
+        // Another search that degrades while this one listens, as a test running
+        // beside it does: it is not this test's to count (it failed now and then
+        // under load until the listener kept to its own search; seen red with
+        // this line before that).
+        await Hybrid(new Lexical("a"), new Vectors(("a", 0.9)) { Failure = new SearchUnavailableException(SearchDegradation.VectorStage, "down") })
+            .SearchAsync(new ProductSearchQuery("another test's search", "es"), Ct);
 
         Assert.Equal(["b", "a"], result.Hits.Select(hit => hit.ProductId));
         var span = Assert.Single(spans);
@@ -159,6 +165,13 @@ public sealed class HybridSearchStrategyTests
         };
         meters.SetMeasurementEventCallback<long>((_, _, tags, _) =>
         {
+            // The counter is the process's, and another test degrading at the same
+            // moment counted here: under load the "nothing is counted" test failed
+            // now and then. Only a measurement made inside this probe's search is
+            // this test's — the counter is recorded inside the search's own span.
+            if (!WithinProbe(Activity.Current, probeText))
+                return;
+
             foreach (var tag in tags)
                 if (tag.Key == "stage")
                     lock (counted) counted.Add((string)tag.Value!);
@@ -166,6 +179,14 @@ public sealed class HybridSearchStrategyTests
         meters.Start();
 
         return (spans, counted);
+    }
+
+    private static bool WithinProbe(Activity? activity, string probeText)
+    {
+        for (; activity is not null; activity = activity.Parent)
+            if ((string?)activity.GetTagItem("search.text") == probeText)
+                return true;
+        return false;
     }
 
     /// <summary>The caller giving up is not the vector layer failing: it is not counted and not answered.</summary>

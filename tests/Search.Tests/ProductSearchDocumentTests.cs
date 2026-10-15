@@ -113,13 +113,19 @@ public sealed class ProductSearchDocumentTests
     /// <summary>
     /// The reason this rendering exists. It used to write the raw data, so the
     /// English index said "azul marino" and "navy blue shoes" scored 0.000.
-    /// Each culture gets the definition's label AND the option's label.
+    /// Each culture gets the definition's label AND the option's label. A shirt
+    /// sold in one colour, because one sold in several says its colour on its
+    /// variants, never on itself (the aggregate refuses it).
     /// </summary>
     [Fact]
     public void Attributes_are_rendered_with_the_labels_of_the_documents_culture()
     {
-        var shirt = AShirt();
+        var shirt = Product.Create(
+            Clock, Text("Camisa de lino", "Linen shirt"), new Money(29.90m, "EUR"), category: "CLOTHING");
+        shirt.SetAttribute(Clock, AttributeValue.Localized("MATERIAL", Text("Lino", "Linen")));
         shirt.SetAttribute(Clock, AttributeValue.Option("COLOR", "NAVY_BLUE"));
+        shirt.AddVariant(Clock, "SHIRT-DEFAULT", new Money(29.90m, "EUR"));
+        shirt.Publish(Clock);
 
         var es = Documents(shirt, "es").First().AttributesText;
         var en = Documents(shirt, "en").First().AttributesText;

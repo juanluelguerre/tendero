@@ -768,7 +768,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `outcome` | string | `set`, `unchanged`, `product_not_found`, `unknown_attribute`, `value_rejected` | SetAttributeOutcome, labelled by MetricLabels. |
+| `outcome` | string | `set`, `unchanged`, `product_not_found`, `unknown_attribute`, `value_rejected`, `variant_axis` | SetAttributeOutcome, labelled by MetricLabels. |
 
 ### `tendero.ai.invocations.dropped`
 

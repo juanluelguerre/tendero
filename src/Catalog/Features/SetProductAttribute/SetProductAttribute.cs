@@ -33,6 +33,9 @@ public enum SetAttributeOutcome
 
     /// <summary>The definition does not accept the value — an option it does not have, a number that is not one.</summary>
     ValueRejected,
+
+    /// <summary>The product varies by this attribute: its variants say the value, and the product holds none of its own.</summary>
+    VariantAxis,
 }
 
 /// <param name="HeldAs">The value's <see cref="AttributeValue.Key"/> once set — what the product holds — or null when refused.</param>
@@ -85,6 +88,9 @@ public sealed class SetProductAttributeHandler(
         var definition = (await definitions.AllAsync(cancellationToken)).ByCode(command.AttributeCode);
         if (definition is null)
             return Result(SetAttributeOutcome.UnknownAttribute, command.AttributeCode);
+
+        if (product.VariesBy(definition.Code))
+            return Result(SetAttributeOutcome.VariantAxis, definition.Code);
 
         if (definition.Accept(command.Value) is not { } value)
             return Result(SetAttributeOutcome.ValueRejected, definition.Code);

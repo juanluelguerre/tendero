@@ -262,14 +262,26 @@ public sealed class Product : AggregateRoot
     /// Validating against the definition is the calling slice's job, not this
     /// one's: the aggregate does not know the definition catalogue, and making it
     /// know would turn every `SetAttribute` into a query.
+    ///
+    /// **An axis is the variants' to say, never the product's.** A product sold in
+    /// three colours holds no colour of its own: the pannier kept the one it had
+    /// before, and its page read *oliva* with navy chosen (2026-10-15).
     /// </summary>
     public void SetAttribute(TimeProvider clock, AttributeValue value)
     {
+        if (VariesBy(value.Code))
+            throw new InvalidOperationException(
+                $"The product varies by {value.Code}: its variants say it, and the product holds no value of its own.");
+
         this.attributes.RemoveAll(existing =>
             string.Equals(existing.Code, value.Code, StringComparison.OrdinalIgnoreCase));
         this.attributes.Add(value);
         Touch(clock);
     }
+
+    /// <summary>Whether the product's variants are told apart by this attribute.</summary>
+    public bool VariesBy(string code) =>
+        this.variantAxes.Contains(code, StringComparer.OrdinalIgnoreCase);
 
     public AttributeValue? AttributeFor(string code) =>
         this.attributes.FirstOrDefault(value =>
@@ -517,6 +529,10 @@ public sealed class Product : AggregateRoot
 
         this.variantAxes.Clear();
         this.variantAxes.AddRange(normalised);
+
+        // From here the variants say each axis: a value the product held on one
+        // of them would contradict every variant but one.
+        this.attributes.RemoveAll(existing => VariesBy(existing.Code));
 
         // The default variant is superseded by the matrix about to be generated:
         // "this product has exactly one purchasable thing" stops being true the
