@@ -192,17 +192,38 @@ describe('the product store', () => {
     ]);
   });
 
-  it('puts a thumbnail pressed in front, and goes back to the colour when another is chosen', () => {
+  /**
+   * A thumbnail pressed is the picture in front, and the row does not move: it
+   * used to jump to the start of the row, which reordered the thumbnails under
+   * the shopper's finger (the author, 2026-10-15). Another colour starts again
+   * from its first picture.
+   */
+  it('puts a thumbnail pressed in front without moving the row, and goes back to the first when another colour is chosen', () => {
     const store = opened();
     store.choose('COLOR', 'BLACK');
     store.show('detail');
-    const pressed = gallery(store);
+    const pressed = [gallery(store), store.current()?.imageId];
     store.choose('COLOR', 'NAVY_BLUE');
 
-    expect([pressed, gallery(store)]).toEqual([
-      ['detail', 'black', 'black-back', 'cover'],
-      ['cover', 'detail'],
+    expect([pressed, [gallery(store), store.current()?.imageId]]).toEqual([
+      [['black', 'black-back', 'cover', 'detail'], 'detail'],
+      [['cover', 'detail'], 'cover'],
     ]);
+  });
+
+  /** The arrows: one picture on, one back, and round the ends (the gallery's mock-up, 2026-10-15). */
+  it('goes to the next and the previous picture, round the ends', () => {
+    const store = opened();
+    store.choose('COLOR', 'BLACK');
+
+    const seen: (string | undefined)[] = [store.current()?.imageId];
+    for (const step of ['next', 'next', 'next', 'next', 'previous', 'previous'] as const) {
+      store[step]();
+      seen.push(store.current()?.imageId);
+    }
+
+    expect(seen).toEqual(['black', 'black-back', 'cover', 'detail', 'black', 'detail', 'cover']);
+    expect(store.position()).toEqual({ index: 3, total: 4 });
   });
 
   /** Every picture is another colour's, or the combination is not sold: the product's own gallery, never an empty one. */

@@ -1,0 +1,81 @@
+<ng-container *transloco="let t">
+  @let picture = current();
+  @let many = images().length > 1;
+  <!-- The picture in front. A phone's first screen (the redesign's R-5.1): a 4:3
+       image, contained rather than cropped so an illustration keeps its edges,
+       keeps Añadir al carrito in the first screen at 390×844. touch-pan-y leaves
+       the page's scroll to the browser and a sideways swipe to the gallery. With
+       more than one picture it takes the keyboard's focus itself, so ← → work
+       without first reaching an arrow (the carousel pattern, WAI-ARIA APG). -->
+  <div
+    data-stage
+    role="group"
+    class="group relative touch-pan-y rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+    [attr.aria-label]="name()"
+    [tabindex]="many ? 0 : -1"
+    (keydown)="key($event)"
+    (pointerdown)="down($event)"
+    (pointerup)="up($event)"
+    (pointercancel)="cancel()"
+  >
+    <storefront-product-image
+      class="aspect-square w-full rounded-lg border border-hairline bg-surface object-cover max-md:aspect-4/3 max-md:object-contain"
+      [src]="picture ? url(picture.imageId) : null"
+      [alt]="picture?.alt ?? name()"
+      [labelled]="true"
+      [priority]="true"
+    />
+
+    @if (many) {
+      <!-- On hover or with the keyboard inside; always where there is no hover. -->
+      <button
+        type="button"
+        class="absolute inset-y-0 start-3 my-auto inline-flex size-control items-center justify-center rounded-full border border-hairline bg-surface text-body opacity-0 shadow-pop transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:border-hairline-strong pointer-coarse:size-tap pointer-coarse:opacity-100"
+        [attr.aria-label]="t('product.gallery.previous')"
+        (click)="step.emit(-1)"
+      >
+        <lib-icon class="size-icon-md rotate-90" name="chevron" [stroke]="1.8" />
+      </button>
+      <button
+        type="button"
+        class="absolute inset-y-0 end-3 my-auto inline-flex size-control items-center justify-center rounded-full border border-hairline bg-surface text-body opacity-0 shadow-pop transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:border-hairline-strong pointer-coarse:size-tap pointer-coarse:opacity-100"
+        [attr.aria-label]="t('product.gallery.next')"
+        (click)="step.emit(1)"
+      >
+        <lib-icon class="size-icon-md -rotate-90" name="chevron" [stroke]="1.8" />
+      </button>
+      <p
+        data-count
+        class="absolute end-3 bottom-3 m-0 rounded-full bg-surface px-2 py-1 numeric text-sm text-body"
+        aria-hidden="true"
+      >
+        {{ position().index }} / {{ position().total }}
+      </p>
+    }
+  </div>
+
+  @if (many) {
+    <!-- The row never moves: the one in front is marked where it is. -->
+    <ul data-thumbs class="mt-3 flex gap-3 overflow-x-auto">
+      @for (image of images(); track image.imageId) {
+        @let chosen = image.imageId === picture?.imageId;
+        <li>
+          <button
+            type="button"
+            class="overflow-hidden rounded-md border bg-surface p-0 leading-[0]"
+            [class.border-hairline]="!chosen"
+            [class.border-body]="chosen"
+            [attr.aria-current]="chosen ? 'true' : null"
+            (click)="show.emit(image.imageId)"
+          >
+            <storefront-product-image
+              class="size-thumb-lg object-cover"
+              [src]="url(image.imageId)"
+              [alt]="image.alt ?? name()"
+            />
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</ng-container>

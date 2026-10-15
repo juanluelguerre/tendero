@@ -146,24 +146,35 @@ export const ProductStore = signalStore(
   })),
   withComputed(({ variants, selection, shown, product, added }) => {
     const chosen = computed(() => variantFor(variants(), selection()));
+    /**
+     * The gallery: the chosen variant's pictures — its colour's, then the ones
+     * that are every variant's, as the API orders them (ADR 0057). Another
+     * colour's pictures are not in it. A variant with none to show, or a
+     * combination that is not sold, has the product's own gallery: never an
+     * empty one. Its order never changes with the picture in front: the row of
+     * thumbnails stays where the shopper's finger is.
+     */
+    const gallery = computed(() => {
+      const current = product();
+      if (!current) return [];
+      const own = (chosen()?.imageIds ?? []).flatMap((id) => current.images.filter((image) => image.imageId === id));
+      return own.length > 0 ? own : [...current.images];
+    });
+    /** Where the picture in front is in the gallery: the one pressed, else the first. */
+    const index = computed(() =>
+      Math.max(
+        0,
+        gallery().findIndex((image) => image.imageId === shown()),
+      ),
+    );
     return {
       /** The one the picker is currently on, or null when the combination is not sold. */
       chosen,
-      /**
-       * The gallery: the chosen variant's pictures — its colour's, then the ones
-       * that are every variant's, as the API orders them (ADR 0057) — with the
-       * thumbnail pressed in front. Another colour's pictures are not in it. A
-       * variant with none to show, or a combination that is not sold, has the
-       * product's own gallery: never an empty one.
-       */
-      gallery: computed(() => {
-        const current = product();
-        if (!current) return [];
-        const own = (chosen()?.imageIds ?? []).flatMap((id) => current.images.filter((image) => image.imageId === id));
-        const images = own.length > 0 ? own : [...current.images];
-        const promoted = images.filter((image) => image.imageId === shown());
-        return promoted.length > 0 ? [...promoted, ...images.filter((image) => image.imageId !== shown())] : images;
-      }),
+      gallery,
+      /** The picture in front, or undefined when the product has none. */
+      current: computed(() => gallery()[index()]),
+      /** "3 / 4" under the picture: counted from one, for people. */
+      position: computed(() => ({ index: index() + 1, total: gallery().length })),
       /** The notice, if it is about the variant on screen. */
       notice: computed(() => {
         const last = added();
@@ -196,44 +207,61 @@ export const ProductStore = signalStore(
     /** The first promotion it is in, as the till weighs them; none when it is in none, or Pricing did not answer. */
     deal: computed(() => (_deals.status() === 'resolved' ? (_deals.value()?.items[0] ?? null) : null)),
   })),
-  withMethods((store) => ({
-    availability(axis: string, option: string): OptionAvailability {
-      return availabilityOf(store.variants(), store.selection(), axis, option);
-    },
-    isChosen(axis: string, option: string): boolean {
-      return store.selection()[axis] === option;
-    },
-    choose(axis: string, option: string): void {
-      patchState(store, { selection: select(store.variants(), store.selection(), axis, option) });
-      // A colour has its own pictures; a size does not. The gallery is the
-      // chosen variant's, so going back to its first is forgetting the
-      // thumbnail pressed — which is what makes the picker feel connected to it.
-      patchState(store, { shown: null });
-    },
-    /** A thumbnail pressed: its image goes in front. */
-    show(imageId: string): void {
-      patchState(store, { shown: imageId });
-    },
-    /**
-     * Adds the chosen variant. The button is disabled without one, so a shopper
-     * cannot buy a combination the shop does not sell — which is the whole
-     * reason the picker distinguishes "not sold" from "sold out".
-     */
-    async addToCart(): Promise<void> {
-      const variant = store.chosen();
-      if (!variant || !variant.inStock) return;
+  withMethods((store) => {
+    /** One picture on or back, round the ends. */
+    const step = (by: 1 | -1) => {
+      const images = store.gallery();
+      if (images.length === 0) return;
+      const to = (store.position().index - 1 + by + images.length) % images.length;
+      patchState(store, { shown: images[to].imageId });
+    };
+    return {
+      availability(axis: string, option: string): OptionAvailability {
+        return availabilityOf(store.variants(), store.selection(), axis, option);
+      },
+      isChosen(axis: string, option: string): boolean {
+        return store.selection()[axis] === option;
+      },
+      choose(axis: string, option: string): void {
+        patchState(store, { selection: select(store.variants(), store.selection(), axis, option) });
+        // A colour has its own pictures; a size does not. The gallery is the
+        // chosen variant's, so going back to its first is forgetting the
+        // thumbnail pressed — which is what makes the picker feel connected to it.
+        patchState(store, { shown: null });
+      },
+      /** A thumbnail pressed: its image goes in front, and the row stays as it is. */
+      show(imageId: string): void {
+        patchState(store, { shown: imageId });
+      },
+      /** The arrow on the right, a swipe to the left or →: the next picture, the first after the last. */
+      next(): void {
+        step(1);
+      },
+      /** The arrow on the left, a swipe to the right or ←: the previous picture, the last before the first. */
+      previous(): void {
+        step(-1);
+      },
+      /**
+       * Adds the chosen variant. The button is disabled without one, so a shopper
+       * cannot buy a combination the shop does not sell — which is the whole
+       * reason the picker distinguishes "not sold" from "sold out".
+       */
+      async addToCart(): Promise<void> {
+        const variant = store.chosen();
+        if (!variant || !variant.inStock) return;
 
-      patchState(store, { adding: true, added: null });
-      try {
-        await store._cart.add(variant.sku);
-      } finally {
-        patchState(store, { adding: false });
-      }
-      // The cart keeps a refusal rather than throwing it; its absence is success.
-      patchState(store, { added: { sku: variant.sku, ok: store._cart.failed() === null } });
-    },
-    variantOf(sku: string): VariantView | undefined {
-      return store.variants().find((variant) => variant.sku === sku);
-    },
-  })),
+        patchState(store, { adding: true, added: null });
+        try {
+          await store._cart.add(variant.sku);
+        } finally {
+          patchState(store, { adding: false });
+        }
+        // The cart keeps a refusal rather than throwing it; its absence is success.
+        patchState(store, { added: { sku: variant.sku, ok: store._cart.failed() === null } });
+      },
+      variantOf(sku: string): VariantView | undefined {
+        return store.variants().find((variant) => variant.sku === sku);
+      },
+    };
+  }),
 );
