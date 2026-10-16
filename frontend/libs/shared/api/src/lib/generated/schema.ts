@@ -52,6 +52,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/speech/transcriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TranscribeSpeech"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/speech/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetSpeechAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/config": {
         parameters: {
             query?: never;
@@ -3288,6 +3320,9 @@ export interface components {
             text: string;
             evidence: components["schemas"]["SpecEvidence"];
         };
+        SpeechAvailability: {
+            available: boolean;
+        };
         /** @enum {unknown} */
         StageState: "Up" | "Down" | "Off";
         StageStatus: {
@@ -3429,6 +3464,11 @@ export interface components {
             /** Format: int32 */
             total: null | number;
             tables?: null | components["schemas"]["ResultTable"][];
+        };
+        TranscriptionView: {
+            words: string;
+            heard: boolean;
+            engine: string;
         };
         /** @enum {unknown} */
         TranslationOutcome: "Translated" | "Unchanged" | "Archived" | "NotFound";
@@ -3669,6 +3709,90 @@ export interface operations {
                         /** @enum {string} */
                         code?: "Forbidden";
                     } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    TranscribeSpeech: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "audio/wav": string;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscriptionView"];
+                };
+            };
+            /** @description The audio is not a WAV. · The audio is not in the format listened to. · The question is too long. · Nothing was recorded. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AudioEmpty" | "AudioNotWav" | "AudioTooLong" | "AudioWrongFormat";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests in a row: wait a moment. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before asking again. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Speaking to the shop is not available here. · Speech recognition is not answering right now. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "SpeechNotAnswering" | "SpeechNotAvailable";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    GetSpeechAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpeechAvailability"];
                 };
             };
         };

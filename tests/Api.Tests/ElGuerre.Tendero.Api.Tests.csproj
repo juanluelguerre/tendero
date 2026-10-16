@@ -45,6 +45,7 @@
   <ItemGroup>
     <!-- Listens to metrics (../InstrumentRecorder.cs), shared like TestClock. -->
     <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
+    <Compile Include="../AI.Tests/Speech/Wav.cs" Link="Wav.cs" />
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
     <Compile Include="../IdempotencyStoreContract.cs" Link="IdempotencyStoreContract.cs" />
   </ItemGroup>

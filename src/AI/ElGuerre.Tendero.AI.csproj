@@ -23,6 +23,9 @@
          Directory.Packages.props gives: without them CI throws on the first call. -->
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <!-- The transcription slice's endpoint (phase 14), as every context's: the
+         package the solution already pins, not a new dependency. -->
+    <PackageReference Include="Carter" />
   </ItemGroup>
 
   <ItemGroup>

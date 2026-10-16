@@ -281,6 +281,145 @@
         ]
       }
     },
+    "/api/speech/transcriptions": {
+      "post": {
+        "tags": [
+          "Speech"
+        ],
+        "operationId": "TranscribeSpeech",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "audio/wav": {
+              "schema": {
+                "type": "string",
+                "format": "byte"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The audio is not a WAV. \u00B7 The audio is not in the format listened to. \u00B7 The question is too long. \u00B7 Nothing was recorded.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "AudioEmpty",
+                        "AudioNotWav",
+                        "AudioTooLong",
+                        "AudioWrongFormat"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Speaking to the shop is not available here. \u00B7 Speech recognition is not answering right now.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "SpeechNotAnswering",
+                        "SpeechNotAvailable"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests in a row: wait a moment.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before asking again.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            },
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "TooManyRequests"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/speech/status": {
+      "get": {
+        "tags": [
+          "Speech"
+        ],
+        "operationId": "GetSpeechAvailability",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpeechAvailability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/config": {
       "get": {
         "tags": [
@@ -16404,6 +16543,17 @@
           }
         }
       },
+      "SpeechAvailability": {
+        "required": [
+          "available"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          }
+        }
+      },
       "StageState": {
         "enum": [
           "Up",
@@ -17014,6 +17164,25 @@
           }
         }
       },
+      "TranscriptionView": {
+        "required": [
+          "words",
+          "heard",
+          "engine"
+        ],
+        "type": "object",
+        "properties": {
+          "words": {
+            "type": "string"
+          },
+          "heard": {
+            "type": "boolean"
+          },
+          "engine": {
+            "type": "string"
+          }
+        }
+      },
       "TranslationOutcome": {
         "enum": [
           "Translated",
@@ -17418,6 +17587,9 @@
     },
     {
       "name": "Search"
+    },
+    {
+      "name": "Speech"
     },
     {
       "name": "Steward"
