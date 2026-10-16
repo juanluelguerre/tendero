@@ -17,7 +17,7 @@ const { chromium } = createRequire(join(root, "frontend", "package.json"))(
   "playwright",
 );
 const from = resolve(
-  process.argv[2] ?? join(root, "tools", "voice-eval", "recordings"),
+  process.argv[2] ?? join(root, "design", "unpublished", "voice-recordings"),
 );
 const to = resolve(process.argv[3] ?? join(root, "artifacts", "voice-eval"));
 const RATE = 16_000;

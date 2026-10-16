@@ -10,12 +10,14 @@ also what the word error rate is counted against, once normalised (below).
 in a quiet room, one file per line, named by its id (`es-01.m4a`, `en-07.wav`…).
 The format does not matter: the measurement redraws each one as the 16 kHz mono
 WAV the shop listens to, with the same browser code the storefront uses. Then
-put the files in `tools/voice-eval/recordings/`.
+put the files in `design/unpublished/voice-recordings/`.
 
-**They go in the public repository with the tool**, as the golden sets do: a
-measurement a reader cannot repeat proves nothing. If the author would rather
-not publish their voice, the recordings stay private under
-`design/unpublished/`, and the article shows the table without them.
+**They are kept in the repository, private for now** (the author, 2026-10-16):
+under `design/unpublished/`, which the publication filter removes, so they are
+at hand for further measurements and for the article and the book, and reach the
+public repository only if somebody moves them out on purpose. A measurement a
+reader cannot repeat proves less; until then, the article shows the table and
+these lines without the voice.
 
 ## Español
 
