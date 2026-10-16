@@ -18,7 +18,12 @@
       "products": [
         {
           "code": "{asked:PRODUCTS \\(code = name\\):\\r?\\n(\\S+) = }",
-          "reasons": [{ "says": "Es lo que la tienda tiene anotado de ella.", "cites": "f1" }]
+          "reasons": [
+            {
+              "says": "Es lo que la tienda tiene anotado de ella.",
+              "cites": "{asked:(f\\d+) \\| \\S+ \\| (?:DataSheet|Claim) \\|}"
+            }
+          ]
         }
       ]
     }

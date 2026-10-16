@@ -71,7 +71,7 @@ test.describe('Tino', () => {
     await ask(page, '¿cuántos días tengo para devolver algo?');
     const policy = panel(page).locator('[data-kind="Shop"]').first();
     await expect(policy.getByText('Tienes 14 días desde la entrega.')).toBeVisible({ timeout: 30_000 });
-    await expect(policy.locator('storefront-tino-source summary')).toHaveText(/política de devoluciones/i);
+    await expect(policy.locator('storefront-tino-source summary')).toHaveText(/normas de la tienda/i);
 
     // Nobody signed in and no order on the screen: the shop's notice, word for word, and no chip.
     await ask(page, '¿dónde está mi pedido?');
