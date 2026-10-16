@@ -1,1 +1,10 @@
-<div class="h-[var(--chart-block-size,12.5rem)] w-full" aria-hidden="true" [backofficeEcharts]="options()"></div>
+<!-- contain-inline-size: the drawing never says how wide it is. ECharts writes its
+     SVG at the width it was drawn at, and a grid or flex track is never narrower
+     than its content, so a chart drawn wide (a widget kept from a tab where it is L)
+     held its cell open when the cell narrowed, its resize observer never saw it
+     shrink, and it spilled over its neighbours (the author's screenshot, 2026-10-16). -->
+<div
+  class="h-[var(--chart-block-size,12.5rem)] w-full contain-inline-size"
+  aria-hidden="true"
+  [backofficeEcharts]="options()"
+></div>
