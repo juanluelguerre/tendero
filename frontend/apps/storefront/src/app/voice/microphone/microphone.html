@@ -1,0 +1,17 @@
+<ng-container *transloco="let t">
+  @if (available()) {
+    <!-- Neutral, never clay: the page's one accent action stays the page's. Pressed is
+         said three ways — aria-pressed, the label, and the stone behind the icon — so
+         it never rests on colour alone. -->
+    <button
+      type="button"
+      class="grid size-tap flex-none place-items-center rounded-md bg-transparent text-muted hover:text-body aria-pressed:bg-hairline aria-pressed:text-body"
+      data-microphone
+      [attr.aria-pressed]="store.listening()"
+      [attr.aria-label]="t(store.listening() ? 'voice.stop' : 'voice.start')"
+      (click)="press()"
+    >
+      <lib-icon class="size-icon" name="microphone" />
+    </button>
+  }
+</ng-container>

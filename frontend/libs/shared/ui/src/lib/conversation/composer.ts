@@ -64,6 +64,19 @@ export class Composer {
     this.asked.emit(text);
   }
 
+  /**
+   * Writes words into the box and sends nothing (phase 14): what a microphone
+   * heard, for the person to read, fix and send. After what they had typed, with a
+   * space, and with the focus at its end so they can go on typing.
+   */
+  write(words: string): void {
+    const before = this.box.value.trimEnd();
+    this.box.value = before.length > 0 ? `${before} ${words}` : words;
+    this.draft.set(this.box.value);
+    this.box.focus();
+    this.box.setSelectionRange(this.box.value.length, this.box.value.length);
+  }
+
   protected typed(): void {
     this.draft.set(this.box.value);
   }

@@ -1,3 +1,4 @@
+import { Microphone } from '../../voice/microphone/microphone';
 import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
@@ -51,6 +52,7 @@ interface Drawn {
     TurnWait,
     ProductCard,
     TinoSource,
+    Microphone,
   ],
   templateUrl: './tino-panel.html',
   // A product followed is a click on a link inside one of an answer's products: heard

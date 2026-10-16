@@ -24,6 +24,13 @@ export interface SpeechToText {
   listen(culture: string): Listening;
 }
 
+/** No adapter at all: it can never listen, so no microphone is drawn. What a test gets unless it asks for one. */
+export const NOTHING_LISTENS: SpeechToText = {
+  name: 'shop',
+  available: async () => false,
+  listen: () => ({ stop: () => undefined, heard: Promise.resolve({ kind: 'failed' }) }),
+};
+
 /** The adapter the storefront listens with; which one is configuration (`app.config.ts`). */
 export const SPEECH_TO_TEXT = new InjectionToken<SpeechToText>('SpeechToText');
 

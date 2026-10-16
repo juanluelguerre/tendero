@@ -504,6 +504,14 @@
     },
     "composerLabel": "Pregunta por un producto o por un pedido tuyo"
   },
+  "voice": {
+    "start": "Hablar",
+    "stop": "Dejar de escuchar",
+    "listening": "Escuchando…",
+    "endHint": "Pulsa el micrófono para terminar",
+    "landed": "Revísalo y envíalo cuando quieras",
+    "failed": "No te he entendido. Prueba otra vez o escríbelo."
+  },
   "visualSearch": {
     "door": "Buscar con una imagen",
     "title": "Buscar con una imagen",

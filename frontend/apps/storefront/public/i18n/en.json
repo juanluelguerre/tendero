@@ -504,6 +504,14 @@
     },
     "composerLabel": "Ask about a product or an order of yours"
   },
+  "voice": {
+    "start": "Speak",
+    "stop": "Stop listening",
+    "listening": "Listening…",
+    "endHint": "Press the microphone to finish",
+    "landed": "Check it and send it when you are ready",
+    "failed": "I did not catch that. Try again or type it."
+  },
   "visualSearch": {
     "door": "Search with a picture",
     "title": "Search with a picture",

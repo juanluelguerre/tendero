@@ -28,6 +28,8 @@ const Paths = {
   search: 'M4 16a8 8 0 1 1 16 0 M12 16l4-5',
   /** A picture to search with: a camera, its lens a circle written as two arcs. */
   camera: 'M4 8h3.5l1.5-2h6l1.5 2H20v11H4z M12 10.5a3 3 0 1 0 0 6a3 3 0 1 0 0-6',
+  /** A question spoken instead of typed (phase 14): a capsule on its stand. */
+  microphone: 'M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z M6 11a6 6 0 0 0 12 0 M12 17v3 M9 20h6',
   /** What Steward proposed: a list with its ticks. */
   proposals: 'M4 7l1.5 1.5L8 6 M4 13l1.5 1.5L8 12 M11 7h9 M11 13h9 M11 19h9 M4 19h4',
 

@@ -7,6 +7,8 @@ import { provideTenderoI18n, provideTranslatedTitles, tenderoCultureInterceptor 
 import { provideTelemetry } from '@tendero/shared-telemetry';
 import { appRoutes } from './app.routes';
 import { provideReadableResources } from '@tendero/shared-util';
+import { ShopSpeechToText } from './voice/shop-speech';
+import { SPEECH_TO_TEXT } from './voice/speech-to-text';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -36,5 +38,10 @@ export const appConfig: ApplicationConfig = {
     // Browser telemetry (ADR 0036), loaded after the page is up and never
     // waited for: whatever fails, the shop is the shop it was.
     provideTelemetry({ service: 'storefront' }),
+
+    // Who hears the shopper (phase 14, ADR 0061). The shop's own engine until the
+    // measurement (V-5) is in front of the author, who chooses the default; the
+    // browser's on-device one is the other adapter, and swapping is this line.
+    { provide: SPEECH_TO_TEXT, useExisting: ShopSpeechToText },
   ],
 };

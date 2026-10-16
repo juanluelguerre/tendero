@@ -28,6 +28,7 @@ import { ShopLinks } from '../shop-links';
 import { TinoDock } from '../tino/tino-dock/tino-dock';
 import { TinoDoorStore } from '../tino/tino-door.store';
 import { VisualSearchPanel } from '../visual-search/visual-search-panel/visual-search-panel';
+import { Microphone } from '../voice/microphone/microphone';
 import { VisualSearchStore } from '../visual-search/visual-search.store';
 import { CompareTray } from '../compare/compare-tray/compare-tray';
 import { ConsentBanner } from './consent-banner/consent-banner';
@@ -59,6 +60,7 @@ import { AccountMenu } from './account-menu/account-menu';
     AccountMenu,
     TinoDock,
     VisualSearchPanel,
+    Microphone,
     Icon,
     NgOptimizedImage,
   ],
@@ -218,6 +220,17 @@ export class Shell {
   protected sendSearch(event: SubmitEvent, text: string): void {
     event.preventDefault();
     if (!answerAgent(event, text, (query) => this.find(query))) void this.find(text);
+  }
+
+  /**
+   * What the phone's microphone heard (phase 14): written into the box, with the
+   * focus at its end, and **not searched** — the shopper presses the magnifier,
+   * as with words they typed. The box holds its own value: nothing binds it.
+   */
+  protected heardInto(box: HTMLInputElement, words: string): void {
+    box.value = words;
+    box.focus();
+    box.setSelectionRange(words.length, words.length);
   }
 
   /** WebMCP's declarative proposal, on the header's form only: the phone's row is the same form twice. */
