@@ -12,9 +12,11 @@
     </aside>
   } @else {
     <!-- The sheet: a modal dialog, full screen. Esc closes it through its own close
-         event, which closes the door too. -->
+         event, which closes the door too. data-full-width: while it is open the
+         page reserves no scrollbar gutter, which the viewport paints over everything. -->
     <dialog
       class="m-0 h-dvh max-h-none w-full max-w-none border-0 bg-surface p-0 text-body"
+      data-full-width
       [libModalSheet]="door.isOpen()"
       (close)="door.close()"
       [attr.aria-label]="name()"

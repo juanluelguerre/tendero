@@ -64,6 +64,13 @@
     }
   }
 
+  /* A sheet as wide as the window (a phone's Tino, Steward or filters): the viewport paints
+     the reserved gutter over everything, a modal dialog included, so while one is open
+     there is none — the page behind cannot scroll anyway, and nothing shifts that shows. */
+  html:has(dialog[data-full-width]:modal) {
+    scrollbar-gutter: auto;
+  }
+
   body {
     margin: 0;
     background: var(--color-page);
