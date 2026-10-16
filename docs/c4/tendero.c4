@@ -85,6 +85,11 @@ model {
       technology 'llama.cpp'
       description 'The same Qwen3.5-4B as the extractor, in a slot of its own of 8,192 tokens; answers Steward; only with Tendero__Steward'
     }
+    speech-model = service 'speech-model' {
+      #optional
+      technology 'whisper.cpp'
+      description 'Whisper large-v3-turbo behind Silero VAD, converted from their revisions; hears a spoken question; only with Tendero__Voice'
+    }
     support = service 'support' {
       #optional
       technology 'Text Embeddings Inference'
@@ -125,6 +130,7 @@ model {
   tendero.workers -> tendero.embeddings 'embeds products'
   tendero.workers -> tendero.extractor 'proposes claims'
   tendero.api -> tendero.steward-model 'asks the questions Steward is given'
+  tendero.api -> tendero.speech-model 'asks what a shopper said'
   tendero.workers -> tendero.support 'scores their support'
   tendero.api -> identity 'validates tokens (JWKS)'
   tendero.api -> payments 'authorises, captures, refunds'

@@ -763,6 +763,41 @@ if (builder.Configuration["Tendero:TinoScript"] is { Length: > 0 } tinoScript)
         .WithEnvironment("Support__Scripted", "0.95");
 }
 
+// THE SHOP'S EAR (phase 14, ADR 0061), by its own switch:
+//
+//   Tendero__Voice=true dotnet run --project src/AppHost
+//
+// whisper.cpp's server (v1.9.5, its own image pinned by commit) with Whisper
+// large-v3-turbo and Silero VAD, both converted by us into `models/whisper`
+// outside git (`scripts/prepare-whisper.sh`, 1.6 GB). The VAD is not optional:
+// without it the model writes "Gracias." for silence. **The folder is the opt-in**
+// as SigLIP's is: with the switch and both files, the API is told the engine and
+// its address; with either missing it is told nothing, and the shop has no
+// microphone and says nothing about one (invariant 8). Measured on 2026-10-16:
+// 1.73 GiB after a question on the CPU; the limit is 3 GB for a thirty-second one.
+// On the GPU when there is one, by the same switch as the rest of the inference.
+var voiceModels = Path.Combine(repositoryRoot, "models", "whisper");
+var voice = string.Equals(builder.Configuration["Tendero:Voice"], "true", StringComparison.OrdinalIgnoreCase)
+    && new[] { "ggml-large-v3-turbo-f16.bin", "ggml-silero-v6.2.0.bin" }.All(file => File.Exists(Path.Combine(voiceModels, file)));
+const string whisperCppCommit = "d1be6fde11ac6e0407606b4e42fe72d34add8037";
+if (voice)
+{
+    var speechModel = builder.AddContainer("speech-model", "ghcr.io/ggml-org/whisper.cpp",
+            (inference.UsesGpu ? "main-cuda-" : "main-") + whisperCppCommit)
+        .WithArgs("whisper-server --model /models/ggml-large-v3-turbo-f16.bin --vad --vad-model /models/ggml-silero-v6.2.0.bin"
+            + " --host 0.0.0.0 --port 8080 --threads 8")
+        .WithHttpEndpoint(targetPort: 8080, port: 38090, name: "http")
+        .WithHttpHealthCheck("/", endpointName: "http")
+        .WithBindMount(voiceModels, "/models", isReadOnly: true)
+        .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", Cpus(8));
+    if (inference.UsesGpu)
+        speechModel.WithContainerRuntimeArgs("--gpus", "all");
+
+    api.WithEnvironment("Speech__Engine", "whisper-cpp")
+        .WithEnvironment("Speech__WhisperCpp__Url", speechModel.GetEndpoint("http"))
+        .WaitFor(speechModel);
+}
+
 // A scripted ear (phase 14), for the storefront's browser spec in CI as Tino's is:
 // `Tendero__SpeechScript=<file>`. No speech model fits a runner, so the scripted
 // engine answers every question from the script; what the spec proves is the
