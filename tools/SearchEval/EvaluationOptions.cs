@@ -45,7 +45,11 @@ public sealed record EvaluationOptions(
     int? Take = null,
     string? Format = null,
     string? Vocabulary = null,
-    string? Siglip = null)
+    string? Siglip = null,
+    string? Recordings = null,
+    string? Whisper = null,
+    string? Parakeet = null,
+    string? Lines = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -76,6 +80,10 @@ public sealed record EvaluationOptions(
           --script <file>         copilot: a Scripted model instead, for a dry run of the suite itself
           --context <tokens>      copilot: the profile's window (default 8192)
           --only <ids>            assistant: only the cases whose id contains one of these, comma separated
+          --recordings <dir>      voice: the WAVs tools/voice-eval/prepare.mjs wrote (default artifacts/voice-eval)
+          --whisper <url>         voice: a whisper.cpp server to measure (whisper-server, with its VAD)
+          --parakeet <dir>        voice: a Parakeet export to measure in this process (models/parakeet)
+          --lines <file>          voice: what was said (default docs/analysis/voice-recordings.md)
 
         The scope suite (--suite scope) needs only --embeddings, and reads:
           --scope <dir>           Scope query directory (default tools/SearchEval/scope)
@@ -204,6 +212,10 @@ public sealed record EvaluationOptions(
             int.TryParse(values.GetValueOrDefault("take"), out var take) ? take : null,
             values.GetValueOrDefault("format"),
             values.GetValueOrDefault("vocabulary"),
-            siglip);
+            siglip,
+            values.GetValueOrDefault("recordings", Path.Combine("artifacts", "voice-eval")),
+            values.GetValueOrDefault("whisper"),
+            values.GetValueOrDefault("parakeet"),
+            values.GetValueOrDefault("lines", Path.Combine("docs", "analysis", "voice-recordings.md")));
     }
 }
