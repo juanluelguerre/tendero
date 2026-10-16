@@ -107,7 +107,7 @@ public sealed class ParakeetOnnxSpeechToTextContractTests : SpeechToTextContract
 /// </summary>
 public sealed class WhisperCppSpeechToTextContractTests : SpeechToTextContractTests
 {
-    private static readonly Uri Server = new("http://localhost:38090/");
+    private static readonly Uri Server = new("http://localhost:38086/");
 
     private static readonly Lazy<bool> IsRunning = new(() =>
     {

@@ -28,7 +28,7 @@ public sealed class SpeechRegistrationTests
     [Fact]
     public void Whisper_cpp_with_its_address_is_the_shops_own()
     {
-        var engine = Resolved(("Speech:Engine", "whisper-cpp"), ("Speech:WhisperCpp:Url", "http://localhost:38090/"));
+        var engine = Resolved(("Speech:Engine", "whisper-cpp"), ("Speech:WhisperCpp:Url", "http://localhost:38086/"));
 
         Assert.Equal((WhisperCppSpeechToText.Key, true), (engine.Name, engine.IsConfigured));
     }

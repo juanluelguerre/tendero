@@ -59,6 +59,7 @@ const int rerankerPort = 38082;
 const int extractorPort = 38083;
 const int supportPort = 38084;
 const int stewardModelPort = 38085;
+const int speechModelPort = 38086;
 const int grafanaPort = 33000;
 const int collectorGrpcPort = 34317;
 const int collectorHttpPort = 34318;
@@ -786,7 +787,7 @@ if (voice)
             (inference.UsesGpu ? "main-cuda-" : "main-") + whisperCppCommit)
         .WithArgs("whisper-server --model /models/ggml-large-v3-turbo-f16.bin --vad --vad-model /models/ggml-silero-v6.2.0.bin"
             + " --host 0.0.0.0 --port 8080 --threads 8")
-        .WithHttpEndpoint(targetPort: 8080, port: 38090, name: "http")
+        .WithHttpEndpoint(targetPort: 8080, port: speechModelPort, name: "http")
         .WithHttpHealthCheck("/", endpointName: "http")
         .WithBindMount(voiceModels, "/models", isReadOnly: true)
         .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", Cpus(8));

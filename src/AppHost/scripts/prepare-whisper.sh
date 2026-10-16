@@ -22,15 +22,32 @@
 # at those revisions on 2026-10-16).
 set -eu
 
-MODEL=openai/whisper-large-v3-turbo
-REVISION=41f01f3fe87f28c78e2fbf8b568835947dd65ed9
+#
+# Another size is measured the same way (docs/analysis/voice-models.md), named in
+# the environment with its own hash, or EXPECTED= (empty) the first time:
+#
+#   -e MODEL=openai/whisper-small -e REVISION=973afd24965f72e36ca33b3055d56a652f456b4d \
+#   -e OUT=models/whisper/ggml-small-f16.bin \
+#   -e EXPECTED=cfd85d74dc730828cef4e13ae65898d9dc6f695fd00394f4399f7310e73cf505
+#
+# (whisper-small: Apache-2.0 at that revision, tier 1.) A quantized copy is made
+# from the f16 by the server image's own quantizer, with no Python:
+#
+#   docker run --rm -v "$PWD/models/whisper:/models" --entrypoint /app/build/bin/whisper-quantize \
+#     ghcr.io/ggml-org/whisper.cpp:main-d1be6fde11ac6e0407606b4e42fe72d34add8037 \
+#     /models/ggml-large-v3-turbo-f16.bin /models/ggml-large-v3-turbo-q5_0.bin q5_0
+#
+# which wrote 02d3bb2596d839fb9bc78f30df95929571c6cc22ac887ff50ca133891364cd49 (q5_0)
+# and 31f27efd4672bbaeb845f5f0e626b4e29f9068248acd7fc82cd71cbfca73a8ff (q8_0) on 2026-10-16.
+MODEL="${MODEL:-openai/whisper-large-v3-turbo}"
+REVISION="${REVISION:-41f01f3fe87f28c78e2fbf8b568835947dd65ed9}"
 WHISPER_CPP=d1be6fde11ac6e0407606b4e42fe72d34add8037   # v1.9.5, the server image's commit
 OPENAI_WHISPER=86098128c0b4f24f0e2aa2994de830614b474227
 SILERO=6.2.0                                           # whisper.cpp's own reference at that commit
-OUT=models/whisper/ggml-large-v3-turbo-f16.bin
+OUT="${OUT:-models/whisper/ggml-large-v3-turbo-f16.bin}"
 VAD=models/whisper/ggml-silero-v6.2.0.bin
-EXPECTED="${EXPECTED:-0dc8bab01bd6b0ab68e8ebb607bf3c960ff1bc136644a23b3ad59f7c00e78d09}"   # measured on 2026-10-16
-EXPECTED_VAD="${EXPECTED_VAD:-2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987}"   # measured on 2026-10-16
+EXPECTED="${EXPECTED-0dc8bab01bd6b0ab68e8ebb607bf3c960ff1bc136644a23b3ad59f7c00e78d09}"   # measured on 2026-10-16
+EXPECTED_VAD="${EXPECTED_VAD-2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987}"   # measured on 2026-10-16
 WORK=/tmp/whisper
 RAW=https://raw.githubusercontent.com
 
@@ -66,7 +83,9 @@ urllib.request.urlretrieve(f"{raw}/openai/whisper/{openai_whisper}/whisper/asset
                            f"{work}/openai/whisper/assets/mel_filters.npz")
 PY
     python3 "$WORK/convert.py" "$WORK/source" "$WORK/openai" "$WORK/out"
-    echo "Whisper: $(held "$WORK/out/ggml-model.bin" "$EXPECTED")"
+    # Assigned, not echoed: only an assignment carries the refusal out to set -e.
+    hash=$(held "$WORK/out/ggml-model.bin" "$EXPECTED")
+    echo "Whisper: $hash"
     mv "$WORK/out/ggml-model.bin" "$OUT"
 fi
 
@@ -75,7 +94,8 @@ if ! ready "$VAD" "$EXPECTED_VAD"; then
     python3 -c "import urllib.request; urllib.request.urlretrieve('$RAW/ggml-org/whisper.cpp/$WHISPER_CPP/models/convert-silero-vad-to-ggml.py', '$WORK/convert-vad.py')"
     # The converter names its output itself: <name>-v<version>-ggml.bin.
     python3 "$WORK/convert-vad.py" --output "$WORK/out/silero.bin"
-    echo "Silero VAD: $(held "$WORK/out/silero-v$SILERO-ggml.bin" "$EXPECTED_VAD")"
+    hash=$(held "$WORK/out/silero-v$SILERO-ggml.bin" "$EXPECTED_VAD")
+    echo "Silero VAD: $hash"
     mv "$WORK/out/silero-v$SILERO-ggml.bin" "$VAD"
 fi
 
