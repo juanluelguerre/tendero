@@ -209,10 +209,10 @@
             #box="libComposer"
             [placeholder]="mic.listening() ? t('voice.listening') : t('tino.placeholder')"
             [busy]="store.busy()"
-            (asked)="ask($event); mic.clear()"
+            (asked)="ask($event); mic.sent($event)"
           ></textarea>
           <!-- A question spoken instead of typed: written into the box above and never sent. -->
-          <storefront-microphone #mic="microphone" (heard)="box.write($event)" />
+          <storefront-microphone #mic="microphone" place="tino" (heard)="box.write($event)" />
           @if (store.busy()) {
             <!-- While a turn is out, sending gives its place to stopping it: one control,
                  where the hand already is, and in the same clay — the panel still has one

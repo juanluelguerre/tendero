@@ -2,7 +2,8 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { Telemetry } from '@tendero/shared-telemetry';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SPEECH_TO_TEXT, type Heard, type SpeechToText } from '../speech-to-text';
 import { Microphone } from './microphone';
 
@@ -31,7 +32,7 @@ class FakeSpeech implements SpeechToText {
 
 @Component({
   imports: [Microphone],
-  template: `<storefront-microphone #mic="microphone" [offered]="offered()" (heard)="heard.push($event)" />
+  template: `<storefront-microphone #mic="microphone" place="tino" [offered]="offered()" (heard)="heard.push($event)" />
     <p data-status>{{ mic.status() }}</p>`,
 })
 class Host {
@@ -46,9 +47,11 @@ class Host {
  */
 describe('the microphone', () => {
   let speech: FakeSpeech;
+  const telemetry = { trackEvent: vi.fn() };
 
   beforeEach(() => {
     speech = new FakeSpeech();
+    telemetry.trackEvent.mockClear();
     TestBed.configureTestingModule({
       imports: [
         TranslocoTestingModule.forRoot({
@@ -59,6 +62,7 @@ describe('the microphone', () => {
       providers: [
         { provide: SPEECH_TO_TEXT, useValue: speech },
         { provide: CultureStore, useValue: { active: signal('es') } },
+        { provide: Telemetry, useValue: telemetry },
       ],
     });
   });
@@ -151,5 +155,80 @@ describe('the microphone', () => {
     await settle();
 
     expect([speech.stops, fixture.componentInstance.heard, status()]).toEqual([1, [], '']);
+  });
+
+  // ---------- the evidence of use (ADR 0036; the tracking plan's "Speak to the shop") ----------
+
+  const microphoneOf = (fixture: { debugElement: import('@angular/core').DebugElement }) =>
+    fixture.debugElement.query((node) => node.componentInstance instanceof Microphone).componentInstance as Microphone;
+
+  /** One event each time listening ends, with what it came to, and never the words. */
+  it.each([
+    [{ kind: 'words', words: 'zapatillas' } as Heard, 'words'],
+    [{ kind: 'nothing' } as Heard, 'nothing'],
+    [{ kind: 'failed' } as Heard, 'failed'],
+  ])('says listening ended in %o as %s', async (heard, outcome) => {
+    const { button, settle } = await drawn();
+
+    button()!.click();
+    await settle();
+    speech.hears(heard);
+    await settle();
+
+    expect(telemetry.trackEvent.mock.calls).toEqual([
+      ['voice_input_heard', { where: 'tino', adapter: 'shop', outcome }],
+    ]);
+  });
+
+  it('says a cancel as cancelled', async () => {
+    const { button, settle } = await drawn();
+
+    button()!.click();
+    await settle();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    speech.hears({ kind: 'words', words: 'no' });
+    await settle();
+
+    expect(telemetry.trackEvent.mock.calls).toEqual([
+      ['voice_input_heard', { where: 'tino', adapter: 'shop', outcome: 'cancelled' }],
+    ]);
+  });
+
+  /** What became of the words: sent as heard, sent changed, or never sent — the measurement repeated in the wild. */
+  it.each([
+    ['zapatillas para correr', 'as_heard'],
+    ['  zapatillas para correr  ', 'as_heard'],
+    ['zapatillas para correr de montaña', 'edited'],
+  ])('says words sent as %j were used %s', async (sent, how) => {
+    const { fixture, button, settle } = await drawn();
+    button()!.click();
+    await settle();
+    speech.hears({ kind: 'words', words: 'zapatillas para correr' });
+    await settle();
+    telemetry.trackEvent.mockClear();
+
+    microphoneOf(fixture).sent(sent);
+    microphoneOf(fixture).sent('another question');
+
+    expect(telemetry.trackEvent.mock.calls).toEqual([
+      ['voice_transcript_used', { where: 'tino', adapter: 'shop', how }],
+    ]);
+  });
+
+  it('says the words were discarded when the shopper speaks again, or leaves, without sending them', async () => {
+    const { fixture, button, settle } = await drawn();
+    for (const words of ['primera', 'segunda']) {
+      button()!.click();
+      await settle();
+      speech.hears({ kind: 'words', words });
+      await settle();
+    }
+    fixture.destroy();
+
+    const used = telemetry.trackEvent.mock.calls.filter(([name]) => name === 'voice_transcript_used');
+    expect(used).toEqual([
+      ['voice_transcript_used', { where: 'tino', adapter: 'shop', how: 'discarded' }],
+      ['voice_transcript_used', { where: 'tino', adapter: 'shop', how: 'discarded' }],
+    ]);
   });
 });

@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Icon } from '@tendero/shared-ui';
-import { MicrophoneStore } from './microphone.store';
+import { MicrophoneStore, type MicrophonePlace } from './microphone.store';
 
 /**
  * A question spoken instead of typed (phase 14; the sketch of 2026-10-16): a
@@ -24,6 +24,9 @@ import { MicrophoneStore } from './microphone.store';
 export class Microphone {
   protected readonly store = inject(MicrophoneStore);
 
+  /** Which box it writes into, for the evidence of use: Tino's composer or the search box. */
+  readonly place = input.required<MicrophonePlace>();
+
   /** Whether its place offers one: the header's box on a desktop does not, a keyboard is there already. */
   readonly offered = input(true);
 
@@ -37,13 +40,18 @@ export class Microphone {
   /** Whether it is listening: for the box's own "Escuchando…". */
   readonly listening = this.store.listening;
 
-  /** The box's question was sent: the line beside it goes. */
+  /** The box changed: the line beside it goes. */
   clear(): void {
     this.store.clear();
   }
 
+  /** The box's question was sent: the line goes, and the words it held count as used, as heard or edited. */
+  sent(question: string): void {
+    this.store.sent(question);
+  }
+
   protected async press(): Promise<void> {
-    const words = await this.store.press();
+    const words = await this.store.press(this.place());
     if (words) this.heard.emit(words);
   }
 }

@@ -276,7 +276,7 @@
       [attr.toolname]="variant === 'row' ? searchTool.name : null"
       [attr.tooldescription]="variant === 'row' ? searchTool.description : null"
       [attr.toolautosubmit]="variant === 'row' ? '' : null"
-      (submit)="sendSearch($event, box.value)"
+      (submit)="sendSearch($event, box.value); mic.sent(box.value)"
     >
       <!-- EXPERIMENTAL: the three `tool…` attributes above, and `name` and
            `toolparamdescription` on the box, are WebMCP's *declarative*
@@ -310,7 +310,12 @@
         [class.end-tap]="!visual.available()"
         [class.end-tap-2]="visual.available()"
       >
-        <storefront-microphone #mic="microphone" [offered]="variant !== 'row'" (heard)="heardInto(box, $event)" />
+        <storefront-microphone
+          #mic="microphone"
+          place="search"
+          [offered]="variant !== 'row'"
+          (heard)="heardInto(box, $event)"
+        />
       </div>
       @if (mic.status() === 'failed') {
         <p class="absolute inset-x-0 top-full z-10 m-0 mt-1 text-xs text-body" role="status">{{ t('voice.failed') }}</p>

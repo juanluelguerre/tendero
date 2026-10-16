@@ -115,11 +115,13 @@ comparison an article can show.
 
 | Event | The question it answers | The decision its value would change |
 |---|---|---|
-| `voice_input_started` (where: tino, search; adapter) | Does anyone speak to the shop at all? | Almost nobody, after a month of traffic: the microphone leaves the search box and stays only in Tino |
+| `voice_input_heard` (where: tino, search; adapter; outcome: words, nothing, failed, cancelled) | Does anyone speak to the shop, and does it understand them? | Almost nobody, after a month of traffic: the microphone leaves the search box and stays only in Tino. Most questions not heard: the engine or its model is wrong for this shop |
 | `voice_transcript_used` (sent as heard, edited, discarded; adapter) | Is what was heard good enough to send? | A high share edited or discarded for one adapter is the measurement repeated in the wild, and moves the default |
 
 Neither carries the words or the audio, and both follow the storefront's
-consent.
+consent. The first was proposed as `voice_input_started`; it is sent when
+listening ends instead, because only then is there an outcome to count, and a
+start without one answers half the question.
 
 ## The author's rulings (2026-10-16)
 

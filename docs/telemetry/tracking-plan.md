@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-47 features: **42** answered by a signal emitted today,
+48 features: **43** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -37,6 +37,7 @@ everything here that is not *planned* is emitted.
 | Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
 | Tino | Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? | Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. | `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`, `tendero.tino.turns` | emitted |
 | Search with a picture | Does anyone search with a picture, and does the picture find what they wanted? | If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. | `search_by_image_submitted`, `search_by_image_result_followed` | emitted |
+| Speak to the shop | Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send? | If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop. | `voice_input_heard`, `voice_transcript_used` | emitted |
 | Kits | Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit? | A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant. | `kit_built`, `kit_added_to_cart`, `kit_sentence_read` | emitted |
 
 ### Backoffice
@@ -446,6 +447,34 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `position` | number | — | Its place in the answer, from 1. |
+
+### `voice_input_heard`
+
+browser event, behavioural. A shopper spoke a question and listening ended (phase 14). Only with analytics consent; never the audio or the words.
+
+Answers:
+
+- **Speak to the shop** — Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `where` | string | `tino`, `search` | Which box: Tino's composer, or the phone's search box. |
+| `adapter` | string | `shop`, `web-speech` | Which adapter listened: the shop's own engine, or the browser's on the device. |
+| `outcome` | string | `words`, `nothing`, `failed`, `cancelled` | What listening came to: words for the box, nothing heard, a failure, or Escape. |
+
+### `voice_transcript_used`
+
+browser event, behavioural. What became of the words a microphone wrote into a box (phase 14). Only with analytics consent; never the words.
+
+Answers:
+
+- **Speak to the shop** — Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `where` | string | `tino`, `search` | Which box: Tino's composer, or the phone's search box. |
+| `adapter` | string | `shop`, `web-speech` | Which adapter listened: the shop's own engine, or the browser's on the device. |
+| `how` | string | `as_heard`, `edited`, `discarded` | Sent as they were heard, sent after the shopper changed them, or never sent. |
 
 ### `kit_built`
 
