@@ -13,15 +13,15 @@
 # only where Silero hears speech.
 #
 # This is the evaluation side of the repository, the one place Python is allowed.
-# It runs once, in a throwaway container sized for it, from the repository root:
+# The AppHost runs it under Tendero__Voice (the `speech-weights` resource), and
+# quantize-whisper.sh after it; by hand it runs once, in a throwaway container
+# sized for it (it peaked at 4.99 GiB on 2026-10-16), from the repository root:
 #
-#   docker run --rm --memory 10g --cpus 8 -v "$PWD:/repo" -w /repo python:3.12-slim \
+#   docker run --rm --memory 6g --cpus 8 -v "$PWD:/repo" -w /repo python:3.12.14-slim \
 #     sh src/AppHost/scripts/prepare-whisper.sh
 #
 # Weights: Whisper MIT and Silero VAD MIT, at the revisions below (tier 1, checked
 # at those revisions on 2026-10-16).
-set -eu
-
 #
 # Another size is measured the same way (docs/analysis/voice-models.md), named in
 # the environment with its own hash, or EXPECTED= (empty) the first time:
@@ -30,15 +30,10 @@ set -eu
 #   -e OUT=models/whisper/ggml-small-f16.bin \
 #   -e EXPECTED=cfd85d74dc730828cef4e13ae65898d9dc6f695fd00394f4399f7310e73cf505
 #
-# (whisper-small: Apache-2.0 at that revision, tier 1.) A quantized copy is made
-# from the f16 by the server image's own quantizer, with no Python:
-#
-#   docker run --rm -v "$PWD/models/whisper:/models" --entrypoint /app/build/bin/whisper-quantize \
-#     ghcr.io/ggml-org/whisper.cpp:main-d1be6fde11ac6e0407606b4e42fe72d34add8037 \
-#     /models/ggml-large-v3-turbo-f16.bin /models/ggml-large-v3-turbo-q5_0.bin q5_0
-#
-# which wrote 02d3bb2596d839fb9bc78f30df95929571c6cc22ac887ff50ca133891364cd49 (q5_0)
-# and 31f27efd4672bbaeb845f5f0e626b4e29f9068248acd7fc82cd71cbfca73a8ff (q8_0) on 2026-10-16.
+# (whisper-small: Apache-2.0 at that revision, tier 1.) q5_0, measured beside
+# q8_0 and not chosen, hashed 02d3bb2596d839fb9bc78f30df95929571c6cc22ac887ff50ca133891364cd49.
+set -eu
+
 MODEL="${MODEL:-openai/whisper-large-v3-turbo}"
 REVISION="${REVISION:-41f01f3fe87f28c78e2fbf8b568835947dd65ed9}"
 WHISPER_CPP=d1be6fde11ac6e0407606b4e42fe72d34add8037   # v1.9.5, the server image's commit

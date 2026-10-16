@@ -11,7 +11,7 @@ front end's `package.json`.
 | Weights | Revision | Licence | What we changed |
 |---|---|---|---|
 | [NVIDIA Parakeet-TDT-0.6B-v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3), © NVIDIA | `541d1f99c6b0c3cd0b11a95167540bb8edefd82b` | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Exported to ONNX as three networks (encoder, predictor, joint), unchanged in their weights (`src/AppHost/scripts/prepare-parakeet.py`) |
-| [OpenAI Whisper large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo), © OpenAI | `41f01f3fe87f28c78e2fbf8b568835947dd65ed9` | MIT | Converted to GGML f16 with whisper.cpp's converter (`src/AppHost/scripts/prepare-whisper.sh`) |
+| [OpenAI Whisper large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo), © OpenAI | `41f01f3fe87f28c78e2fbf8b568835947dd65ed9` | MIT | Converted to GGML f16 with whisper.cpp's converter (`src/AppHost/scripts/prepare-whisper.sh`), then quantized to q8_0 with its `whisper-quantize` (`quantize-whisper.sh`) |
 | [Silero VAD](https://github.com/snakers4/silero-vad) 6.2.0, © Silero Team | the `silero-vad` 6.2.0 package | MIT | Converted to GGML with whisper.cpp's converter (`src/AppHost/scripts/prepare-whisper.sh`) |
 
 The test fixture `tests/AI.Tests/Speech/parakeet-fixture.json` holds two

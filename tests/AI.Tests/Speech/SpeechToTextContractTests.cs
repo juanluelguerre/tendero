@@ -32,6 +32,10 @@ public abstract class SpeechToTextContractTests
         Assert.True(engine.IsConfigured);
     }
 
+    /// <summary>A running engine says it is ready: the shop draws its microphone from this.</summary>
+    [Fact]
+    public async Task A_running_engine_is_ready() => Assert.True(await Running().IsReadyAsync(Ct));
+
     [Theory]
     [InlineData("es")]
     [InlineData("en")]
@@ -126,4 +130,19 @@ public sealed class WhisperCppSpeechToTextContractTests : SpeechToTextContractTe
         IsRunning.Value
             ? new WhisperCppSpeechToText(new HttpClient { BaseAddress = Server, Timeout = TimeSpan.FromSeconds(30) })
             : null;
+
+    /// <summary>
+    /// Configured is not ready: the AppHost prepares the model before the server
+    /// starts (minutes on a first start) and the API does not wait for it, so until
+    /// the server answers the microphone is not drawn. Runs everywhere: nothing
+    /// listens on the port it asks.
+    /// </summary>
+    [Fact]
+    public async Task A_server_that_does_not_answer_is_not_ready()
+    {
+        ISpeechToText engine = new WhisperCppSpeechToText(new HttpClient { BaseAddress = new Uri("http://127.0.0.1:9/") });
+
+        Assert.True(engine.IsConfigured);
+        Assert.False(await engine.IsReadyAsync(TestContext.Current.CancellationToken));
+    }
 }

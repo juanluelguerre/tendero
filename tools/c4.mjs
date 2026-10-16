@@ -33,6 +33,8 @@ const NOT_CONTAINERS = {
   keycloak: 'drawn as the external identity provider it is in production (decided 2026-09-23)',
   'extractor-model': 'a job that prepares the model of the extractor into a volume once and exits, not a process of the system',
   'vision-projector': 'a job that prepares the vision half of the same model into the same volume once and exits (phase 13a), not a process of the system',
+  'speech-weights': "a job that converts Whisper and its VAD into models/whisper once and exits (phase 14), not a process of the system",
+  'speech-quantized': "a job that quantizes that Whisper to q8_0 once and exits (phase 14), not a process of the system",
 };
 
 function likec4(...args) {

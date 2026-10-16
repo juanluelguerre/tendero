@@ -19,6 +19,23 @@ public sealed partial class WhisperCppSpeechToText(HttpClient http) : ISpeechToT
 
     public bool IsConfigured => true;
 
+    /// <summary>The server's own page answers once its model is loaded; two seconds, so a page that asks never waits on it.</summary>
+    public async Task<bool> IsReadyAsync(CancellationToken cancellationToken = default)
+    {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(TimeSpan.FromSeconds(2));
+        try
+        {
+            using var response = await http.GetAsync(string.Empty, deadline.Token);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception unreachable) when (unreachable is HttpRequestException
+                                            || (unreachable is TaskCanceledException && !cancellationToken.IsCancellationRequested))
+        {
+            return false;
+        }
+    }
+
     public async Task<Heard> TranscribeAsync(SpokenAudio audio, string culture, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

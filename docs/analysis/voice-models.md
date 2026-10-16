@@ -78,6 +78,44 @@ process); the slower one is the one the shop would see on a busy machine.
    es-15 or a corrected line lowers every Spanish WER by 1.8 points (turbo from
    4.5 % to 2.7 %: two of its five Spanish errors are this line).
 
+## On one card with the rest of the shop
+
+The table above measured the speech model on an empty card. The shop puts more
+on it: Steward's and Tino's model (Qwen3.5-4B q8_0 on llama.cpp `server-cuda-v0.5.0`,
+the AppHost's arguments), its vision projector when `Tendero__Vision` is on, and
+search's embedder (bge-m3) and reranker (bge-reranker-v2-m3) on TEI. Measured on
+the same 8,151 MiB card the same evening, each configuration loaded fresh. *Busy*
+means the LLM writing 400-token answers back to back while the forty questions
+are heard, and, where said, the embedder and the reranker answering batches of
+sixteen texts without a pause, which is far more than a shopper causes.
+
+| on the card | speech model | card used | voice, LLM idle (median) | voice, all busy (median · p90) | LLM alone → beside the voice |
+|---|---|---:|---:|---:|---|
+| LLM + speech | q5_0 | 5,779 MiB | 0.15–0.16 s | 0.31–0.35 s · 0.34–0.39 s | 51–63 → 40–45 tok/s |
+| LLM + speech | q8_0 | 6,065 MiB | 0.16–0.17 s | 0.31–0.34 s · 0.35–0.37 s | 51–63 → 41–44 tok/s |
+| LLM + vision + speech | q8_0 | 6,931 MiB | 0.15–0.17 s | 0.31–0.35 s · 0.33–0.38 s | 51–63 → 40–45 tok/s |
+| all of it, search idle | q5_0 | 7,858 MiB | 0.16–0.17 s | 0.72–0.82 s · 0.85–1.0 s | 50–63 → 12 tok/s, 42 once the voice stops |
+| all of it, search idle | q8_0 | 7,806 MiB | 0.16–0.17 s | 0.73–0.89 s · 0.88–0.95 s | 50–63 → 11 tok/s, 62 once the voice stops |
+| all of it, search busy | q5_0 | 7,867 MiB | 0.15–0.17 s | 0.23–0.24 s · 1.3–1.8 s | 51–64 → 13 tok/s |
+| all of it, search busy | q8_0 | 7,847 MiB | 0.16–0.17 s | 1.3–1.5 s · 1.6–2.9 s | 51–64 → 7–48 tok/s |
+
+What it says:
+
+1. **q5_0 against q8_0 is not the question.** Beside the LLM they differ by
+   286 MiB and answer alike. With everything loaded, both reach the same ceiling
+   (7.8–7.9 GB of the card's 8.15), where the driver stops giving more and the
+   models slow down, whichever file is loaded. The 286 MiB does not move that line.
+2. **LLM, vision and speech fit with a gigabyte to spare** (6.9 GB), and the voice
+   stays at a third of a second while the LLM writes. That is Tino's real case.
+3. **The whole shop on one 8 GB card is full.** The search models alone hold 2.7 GB,
+   and with them nothing fails, but everything slows down. The voice still answers
+   in under a second with search idle. The LLM falls from about 55 tok/s to about
+   12 for as long as the voice is being heard, and recovers after. Under the busy
+   search's artificial load, p90 reaches 1.3–2.9 s.
+4. **The first table's 0.44 s on the GPU was the card waking up.** With the LLM
+   loaded, the same questions came back in 0.15–0.17 s. A card with nothing on it
+   drops its clocks between questions; one that holds a model does not.
+
 ## The browser's engine, and why it has no row
 
 Chrome 155 has on-device recognition (`SpeechRecognition.available({ langs,
@@ -102,9 +140,15 @@ shopper would use it; its share of words heard in the wild is what
 
 ## What is left to the author
 
-- **The default adapter** (`P12b-5`'s own words). The numbers point at **turbo
-  q8_0 on the GPU** for `shop`, with Parakeet configured beside it as the
-  comparison and the CPU's answer.
+- ~~The default model~~ **Ruled 2026-10-16: turbo q8_0** ("q8_0, me parece
+  correcto tu razonamiento"). It hears what f16 hears, and q5_0's 286 MiB moved
+  nothing on the shared card. The AppHost loads it, quantized by
+  `src/AppHost/scripts/quantize-whisper.sh` and held to its hash. Parakeet stays
+  configured beside it as the comparison and the CPU's answer.
+- **The whole shop on one 8 GB card** is at its ceiling. It works, slower. The way
+  out, if it matters, is placement, not quantization: speech on the CPU with
+  Parakeet (3–3.7 s), or search's models on the CPU, for which there is no switch
+  today (`Tendero:Inference:Device` moves every model at once).
 - **Ruling 4 against what was measured.** As written, no GPU means no `shop`
   engine. The alternatives the table offers: Parakeet on the CPU at ~3.5 s, or a
   bar of four seconds instead of two.

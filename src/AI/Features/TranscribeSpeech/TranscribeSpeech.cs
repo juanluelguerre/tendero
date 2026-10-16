@@ -126,9 +126,12 @@ public sealed class TranscribeSpeechEndpoint : ICarterModule
             .WithTags("Speech")
             .WithName("TranscribeSpeech");
 
-        // GET /api/speech/status — whether a microphone may be drawn here.
+        // GET /api/speech/status — whether a microphone may be drawn here: an engine
+        // that answers now, not one merely configured (a first start may still be
+        // preparing its model, and the API does not wait for it).
         app.MapGet("/api/speech/status",
-                Ok<SpeechAvailability> (ISpeechToText engine) => TypedResults.Ok(new SpeechAvailability(engine.IsConfigured)))
+                async Task<Ok<SpeechAvailability>> (ISpeechToText engine, CancellationToken ct) =>
+                    TypedResults.Ok(new SpeechAvailability(await engine.IsReadyAsync(ct))))
             .AllowAnonymous()
             .WithTags("Speech")
             .WithName("GetSpeechAvailability");

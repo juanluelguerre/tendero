@@ -154,6 +154,11 @@ compared, and ruled:
 - **No Python container to serve a model** (vLLM), so **no Voxtral**.
 - **`small` is dropped**: Parakeet takes the place of the small and fast engine.
 
+- **The Whisper model is large-v3-turbo in q8_0** (ruled after the measurement,
+  `docs/analysis/voice-models.md`): the same words as f16 on all forty
+  recordings in 64 % of the card's memory. q5_0 was measured beside it and saved
+  nothing measurable on a card the rest of the shop shares.
+
 So the measurement (V-5) compares **Whisper large-v3-turbo** (whisper.cpp),
 **Parakeet-TDT-0.6B-v3** (ONNX, in process) and **`web-speech`** (the browser, on
 the device), on the author's recordings.

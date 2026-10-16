@@ -52,6 +52,25 @@ public sealed class SpeechEndpointTests : IDisposable
         Assert.Equal((HttpStatusCode.ServiceUnavailable, "SpeechNotAvailable"), (response.StatusCode, problem["code"]!.GetValue<string>()));
     }
 
+    /// <summary>
+    /// An engine configured whose server does not answer yet — a first start still
+    /// preparing the model — offers no microphone: one drawn then would fail on the
+    /// first word.
+    /// </summary>
+    [Fact]
+    public async Task With_an_engine_that_does_not_answer_the_microphone_is_not_offered()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = factory.WithWebHostBuilder(host => host
+                .UseSetting("Speech:Engine", "whisper-cpp")
+                .UseSetting("Speech:WhisperCpp:Url", "http://127.0.0.1:9/"))
+            .CreateClient();
+
+        var status = JsonNode.Parse(await client.GetStringAsync("/api/speech/status", Ct))!;
+
+        Assert.False(status["available"]!.GetValue<bool>());
+    }
+
     [Fact]
     public async Task With_an_engine_the_words_come_back_in_the_language_asked()
     {
