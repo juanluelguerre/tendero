@@ -212,3 +212,50 @@ converter registers this architecture for projectors).
 The script holds the file to that hash and refuses any other, as the extractor's
 does. Nothing was added to the licence check: no new model entered, only a
 second file of one already in.
+
+## For an article: when converting the weights ourselves is worth it (2026-10-16)
+
+**Not a convention.** Most people download the GGUF or GGML the community
+publishes on Hugging Face; rule 5 above makes Tendero convert from the maker's
+revision instead. The author asked for this to be argued in an article of its own,
+because it is the decision a reader is most likely to question. What the
+article has to answer, and what is already measured:
+
+- **Do we gain anything?** Provenance: every byte the shop loads comes from the
+  maker's pinned revision through a converter pinned at the server's own commit,
+  and anyone can rebuild it and get the same hash (Whisper's f16 and q8_0 came out
+  identical from a fresh download, 2026-10-16). Control: the quantization is
+  chosen, not taken from what a third party chose to publish. Independence: a new
+  revision does not wait for someone else's upload. And a GGUF carries more than
+  weights: its chat template is code the server runs, which a re-packaged file
+  can change without anyone reading it.
+- **Are the published files better, or the same?** whisper.cpp's own files on
+  Hugging Face (`ggerganov/whisper.cpp`, October 2024) have **exactly our sizes**
+  for f16, q8_0 and q5_0 (1,624,555,275, 874,188,075 and 574,041,195 bytes) and
+  **different hashes**. They are the same tensors written by an older converter.
+  Whether they hear the forty recordings differently is a measurement the
+  article can make; we have not made it. For an LLM at four or five bits, a
+  community quantization calibrated with an importance matrix can be **better**
+  than a plain one of ours. There, converting ourselves costs quality unless
+  we calibrate too.
+- **Do they depend on the machine?** The file does not: quantizing is
+  deterministic, the same bytes on any machine. What depends on the machine is
+  which file runs best on it. On this laptop's CPU q8_0 was faster than q5_0
+  (7.4 s against 9.6 s). On its GPU the two were equal, and the card's memory
+  decided instead. On another CPU (AVX-512, Arm) or another host the order may
+  change.
+- **So can measuring get better results for my computer, platform or host?** Yes,
+  and that is the strongest argument. It is not that our conversion is better. It
+  is that converting ourselves lets us **produce the variants nobody publishes**:
+  another quantization, or a calibration on the shop's own text. Then **measure
+  each on the hardware it will run on** and choose, as
+  `docs/analysis/voice-models.md` did. A downloaded file offers only the
+  variants its publisher chose.
+- **When it applies, and when it does not.** It applies when provenance is
+  audited (a regulated shop, a supply-chain policy), when the maker publishes no
+  file in the format the server reads, or when the variant that suits the
+  hardware is not published. It does not apply to a prototype, or when the maker
+  itself publishes the format (rule 5 then takes the maker's file). The grey zone
+  is a file published by the runtime's own project (ggml-org): no longer a
+  stranger, but still not the maker.
+
