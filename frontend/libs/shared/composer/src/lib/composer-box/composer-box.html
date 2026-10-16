@@ -1,0 +1,109 @@
+<ng-container *transloco="let t">
+  <!-- What the microphone came to, above the box it wrote into (the voice sketch,
+       2026-10-16): said in words, in the page's language, never by colour alone. -->
+  @if (mic()?.status(); as said) {
+    <p class="m-0 text-xs" role="status" [class.text-muted]="said !== 'failed'" [class.text-body]="said === 'failed'">
+      {{ t(said === 'listening' ? 'voice.endHint' : said === 'landed' ? 'voice.landed' : 'voice.failed') }}
+    </p>
+  }
+  <form
+    class="relative flex items-end gap-1 rounded-lg border border-hairline-strong bg-surface p-1 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
+    (submit)="$event.preventDefault(); box.send()"
+  >
+    @if (single(); as kind) {
+      <button
+        type="button"
+        class="grid flex-none place-items-center rounded-md text-muted hover:text-body"
+        [class]="size() === 'tap' ? 'size-tap' : 'size-control'"
+        [attr.data-attach]="kind"
+        [attr.aria-label]="t('composer.attach.' + kind)"
+        (click)="choose(kind)"
+      >
+        <lib-icon class="size-icon" [name]="kind === 'file' ? 'attach' : kind" />
+      </button>
+    } @else if (several()) {
+      <button
+        type="button"
+        class="grid flex-none place-items-center rounded-md text-muted hover:text-body aria-expanded:bg-hairline aria-expanded:text-body"
+        [class]="size() === 'tap' ? 'size-tap' : 'size-control'"
+        data-attach-more
+        aria-haspopup="menu"
+        [attr.aria-expanded]="menuOpen()"
+        [attr.aria-label]="t('composer.attach.more')"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <lib-icon class="size-icon" name="add" />
+      </button>
+      @if (menuOpen()) {
+        <ul
+          class="absolute start-0 bottom-full z-10 m-0 mb-2 grid list-none gap-1 rounded-md border border-hairline bg-surface p-1 shadow-pop"
+          role="menu"
+        >
+          @for (kind of attach(); track kind) {
+            <li role="none">
+              <button
+                type="button"
+                class="flex min-h-tap w-full items-center gap-3 rounded-md px-3 text-start text-body hover:bg-raised"
+                role="menuitem"
+                [attr.data-attach]="kind"
+                (click)="choose(kind)"
+              >
+                <lib-icon class="size-icon text-muted" [name]="kind === 'file' ? 'attach' : kind" />
+                {{ t('composer.attach.' + kind) }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    }
+    <label class="sr-only" [for]="inputId()">{{ label() }}</label>
+    <textarea
+      class="flex-1 resize-none border-0 bg-transparent px-2 py-2 text-body outline-none"
+      [class]="size() === 'tap' ? 'min-h-tap' : 'min-h-control'"
+      rows="1"
+      [id]="inputId()"
+      libComposer
+      #box="libComposer"
+      [placeholder]="mic()?.listening() ? t('voice.listening') : placeholder()"
+      [busy]="busy()"
+      (asked)="sent($event)"
+    ></textarea>
+    @if (voice(); as place) {
+      <!-- Kept while the box holds words, so what it heard is still counted once sent;
+           its button is drawn only while the box is empty. -->
+      <lib-microphone
+        #mic="microphone"
+        [place]="place"
+        [offered]="!box.hasText() && !busy()"
+        (heard)="box.write($event)"
+      />
+    }
+    @if (busy()) {
+      <!-- While a turn is out, sending gives its place to stopping it: one control, where
+           the hand already is, in the same clay (the author, 2026-10-05). -->
+      <button
+        type="button"
+        class="button flex-none rounded-full px-0"
+        [class]="size() === 'tap' ? 'size-tap min-h-tap' : 'size-control min-h-control'"
+        data-stop
+        [attr.aria-label]="stopLabel()"
+        (click)="stopped.emit()"
+      >
+        <lib-icon name="stop" />
+      </button>
+    } @else if (!listens()) {
+      <!-- The box's one clay action. With nothing written and a microphone to offer, the
+           microphone has its place instead (the sketch, 03). -->
+      <button
+        type="submit"
+        class="button flex-none rounded-full px-0"
+        [class]="size() === 'tap' ? 'size-tap min-h-tap' : 'size-control min-h-control'"
+        data-send
+        [attr.aria-label]="sendLabel()"
+        [disabled]="!box.ready()"
+      >
+        <lib-icon name="send" />
+      </button>
+    }
+  </form>
+</ng-container>

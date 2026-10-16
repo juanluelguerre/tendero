@@ -1,4 +1,4 @@
-import { Microphone } from '../../voice/microphone/microphone';
+import { ComposerBox } from '@tendero/shared-composer';
 import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
@@ -6,7 +6,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { AnsweredProduct, SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
-import { Composer, ConversationScroll, Icon, Notice, TurnWait } from '@tendero/shared-ui';
+import { ConversationScroll, Icon, Notice, TurnWait } from '@tendero/shared-ui';
 import { filter, map } from 'rxjs';
 import { ProductCard } from '../../product-card/product-card';
 import { ShopLinks } from '../../shop-links';
@@ -47,12 +47,11 @@ interface Drawn {
     RouterLink,
     Icon,
     Notice,
-    Composer,
     ConversationScroll,
     TurnWait,
     ProductCard,
     TinoSource,
-    Microphone,
+    ComposerBox,
   ],
   templateUrl: './tino-panel.html',
   // A product followed is a click on a link inside one of an answer's products: heard

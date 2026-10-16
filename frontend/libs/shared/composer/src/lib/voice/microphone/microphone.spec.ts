@@ -5,7 +5,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SPEECH_TO_TEXT, type Heard, type SpeechToText } from '../speech-to-text';
-import { Microphone } from './microphone';
+import { MicrophoneButton } from './microphone';
 
 /** An adapter the test drives: whether it can listen, and what listening comes to. */
 class FakeSpeech implements SpeechToText {
@@ -31,8 +31,8 @@ class FakeSpeech implements SpeechToText {
 }
 
 @Component({
-  imports: [Microphone],
-  template: `<storefront-microphone #mic="microphone" place="tino" [offered]="offered()" (heard)="heard.push($event)" />
+  imports: [MicrophoneButton],
+  template: `<lib-microphone #mic="microphone" place="tino" [offered]="offered()" (heard)="heard.push($event)" />
     <p data-status>{{ mic.status() }}</p>`,
 })
 class Host {
@@ -75,7 +75,7 @@ describe('the microphone', () => {
     const element = fixture.nativeElement as HTMLElement;
     return {
       fixture,
-      button: () => element.querySelector<HTMLButtonElement>('storefront-microphone button'),
+      button: () => element.querySelector<HTMLButtonElement>('lib-microphone button'),
       status: () => element.querySelector('[data-status]')?.textContent?.trim(),
       settle: async () => {
         await fixture.whenStable();
@@ -92,7 +92,7 @@ describe('the microphone', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('storefront-microphone button')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('lib-microphone button')).toBeNull();
   });
 
   it('is not drawn where nothing can listen (invariant 8)', async () => {
@@ -160,7 +160,8 @@ describe('the microphone', () => {
   // ---------- the evidence of use (ADR 0036; the tracking plan's "Speak to the shop") ----------
 
   const microphoneOf = (fixture: { debugElement: import('@angular/core').DebugElement }) =>
-    fixture.debugElement.query((node) => node.componentInstance instanceof Microphone).componentInstance as Microphone;
+    fixture.debugElement.query((node) => node.componentInstance instanceof MicrophoneButton)
+      .componentInstance as MicrophoneButton;
 
   /** One event each time listening ends, with what it came to, and never the words. */
   it.each([

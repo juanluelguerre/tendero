@@ -41,8 +41,11 @@ export class Composer {
 
   private readonly draft = signal('');
 
+  /** Whether the box holds words, sent or not: the microphone gives its place to the arrow then. */
+  readonly hasText = computed(() => this.draft().trim().length > 0);
+
   /** Whether there is something to send and nothing on its way: the send button's state. */
-  readonly ready = computed(() => !this.busy() && this.draft().trim().length > 0);
+  readonly ready = computed(() => !this.busy() && this.hasText());
 
   constructor() {
     afterNextRender(() => this.box.focus());

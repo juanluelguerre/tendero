@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TinoDoorStore } from '../tino-door.store';
 import { answer, hit, reason, unavailable } from '../tino-fixtures';
 import { TinoStore } from '../tino.store';
-import { NOTHING_LISTENS, SPEECH_TO_TEXT, type Heard, type SpeechToText } from '../../voice/speech-to-text';
+import { NOTHING_LISTENS, SPEECH_TO_TEXT, type Heard, type SpeechToText } from '@tendero/shared-composer';
 import { TinoPanel } from './tino-panel';
 
 const Turns = 'http://api/api/assistant/turns';

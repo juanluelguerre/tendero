@@ -389,8 +389,8 @@ export interface TrackedEvents {
    * Decides: If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop.
    */
   readonly voice_input_heard: {
-    /** Which box: Tino's composer, or the phone's search box. */
-    readonly where: 'tino' | 'search';
+    /** Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice. */
+    readonly where: 'tino' | 'search' | 'steward';
     /** Which adapter listened: the shop's own engine, or the browser's on the device. */
     readonly adapter: 'shop' | 'web-speech';
     /** What listening came to: words for the box, nothing heard, a failure, or Escape. */
@@ -404,8 +404,8 @@ export interface TrackedEvents {
    * Decides: If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop.
    */
   readonly voice_transcript_used: {
-    /** Which box: Tino's composer, or the phone's search box. */
-    readonly where: 'tino' | 'search';
+    /** Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice. */
+    readonly where: 'tino' | 'search' | 'steward';
     /** Which adapter listened: the shop's own engine, or the browser's on the device. */
     readonly adapter: 'shop' | 'web-speech';
     /** Sent as they were heard, sent after the shopper changed them, or never sent. */

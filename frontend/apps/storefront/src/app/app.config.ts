@@ -7,8 +7,7 @@ import { provideTenderoI18n, provideTranslatedTitles, tenderoCultureInterceptor 
 import { provideTelemetry } from '@tendero/shared-telemetry';
 import { appRoutes } from './app.routes';
 import { provideReadableResources } from '@tendero/shared-util';
-import { ShopSpeechToText } from './voice/shop-speech';
-import { SPEECH_TO_TEXT } from './voice/speech-to-text';
+import { ShopSpeechToText, SPEECH_TO_TEXT } from '@tendero/shared-composer';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,9 +38,10 @@ export const appConfig: ApplicationConfig = {
     // waited for: whatever fails, the shop is the shop it was.
     provideTelemetry({ service: 'storefront' }),
 
-    // Who hears the shopper (phase 14, ADR 0061). The shop's own engine until the
-    // measurement (V-5) is in front of the author, who chooses the default; the
-    // browser's on-device one is the other adapter, and swapping is this line.
+    // Who hears the shopper (phase 14, ADR 0061): the shop's own engine, Whisper
+    // large-v3-turbo q8_0 by the author's ruling after the measurement
+    // (docs/analysis/voice-models.md); the browser's on-device one is the other
+    // adapter, and swapping is this line.
     { provide: SPEECH_TO_TEXT, useExisting: ShopSpeechToText },
   ],
 };

@@ -32,7 +32,7 @@
    The scan above never reads TS, so those utilities are named here, and
    design-host-classes.spec.ts fails when a component uses one this list lacks. */
 @source inline(
-  'block relative contents flex inline-flex grid flex-col flex-1 gap-4 min-h-0 min-h-dvh min-w-0 mt-4 overflow-hidden fixed sticky inset-x-0 bottom-0 bottom-5 z-5 z-10 justify-center pointer-events-none text-body [--chart-block-size:2.5rem]'
+  'block relative contents flex inline-flex grid flex-col flex-1 gap-2 gap-4 min-h-0 min-h-dvh min-w-0 mt-4 overflow-hidden fixed sticky inset-x-0 bottom-0 bottom-5 z-5 z-10 justify-center pointer-events-none text-body [--chart-block-size:2.5rem]'
 );
 
 /* No `dark:` variant: dark mode is the tokens' own `[data-theme='dark']` override,

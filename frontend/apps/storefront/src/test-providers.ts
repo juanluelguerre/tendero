@@ -1,5 +1,5 @@
 import { provideReadableResources } from '@tendero/shared-util';
-import { NOTHING_LISTENS, SPEECH_TO_TEXT } from './app/voice/speech-to-text';
+import { NOTHING_LISTENS, SPEECH_TO_TEXT } from '@tendero/shared-composer/testing';
 
 /**
  * What every unit test gets, as the app does (app.config.ts): a failed resource

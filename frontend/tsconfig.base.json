@@ -19,6 +19,8 @@
       "@tendero/shared-api": ["./libs/shared/api/src/index.ts"],
       "@tendero/shared-auth": ["./libs/shared/auth/src/index.ts"],
       "@tendero/shared-i18n": ["./libs/shared/i18n/src/index.ts"],
+      "@tendero/shared-composer": ["./libs/shared/composer/src/index.ts"],
+      "@tendero/shared-composer/testing": ["./libs/shared/composer/src/testing.ts"],
       "@tendero/shared-telemetry": ["./libs/shared/telemetry/src/index.ts"],
       "@tendero/shared-ui": ["./libs/shared/ui/src/index.ts"],
       "@tendero/shared-util": ["./libs/shared/util/src/index.ts"]

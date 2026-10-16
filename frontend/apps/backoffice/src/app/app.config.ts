@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { AuthStore, tenderoAuthInterceptor } from '@tendero/shared-auth';
 import { provideTenderoI18n, provideTranslatedTitles, tenderoCultureInterceptor } from '@tendero/shared-i18n';
+import { ShopSpeechToText, SPEECH_TO_TEXT } from '@tendero/shared-composer';
 import { provideTelemetry } from '@tendero/shared-telemetry';
 import { appRoutes } from './app.routes';
 import { provideReadableResources } from '@tendero/shared-util';
@@ -33,5 +34,9 @@ export const appConfig: ApplicationConfig = {
     // Browser telemetry (ADR 0036), loaded after the page is up and never
     // waited for: whatever fails, the shop is the shop it was.
     provideTelemetry({ service: 'backoffice' }),
+
+    // Who hears the shopkeeper speaking to Steward (phase 14, ADR 0061): the shop's own
+    // engine, as in the storefront. Without one the box has no microphone (invariant 8).
+    { provide: SPEECH_TO_TEXT, useExisting: ShopSpeechToText },
   ],
 };

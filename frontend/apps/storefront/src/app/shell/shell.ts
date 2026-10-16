@@ -28,7 +28,7 @@ import { ShopLinks } from '../shop-links';
 import { TinoDock } from '../tino/tino-dock/tino-dock';
 import { TinoDoorStore } from '../tino/tino-door.store';
 import { VisualSearchPanel } from '../visual-search/visual-search-panel/visual-search-panel';
-import { Microphone } from '../voice/microphone/microphone';
+import { MicrophoneButton } from '@tendero/shared-composer';
 import { VisualSearchStore } from '../visual-search/visual-search.store';
 import { CompareTray } from '../compare/compare-tray/compare-tray';
 import { ConsentBanner } from './consent-banner/consent-banner';
@@ -60,7 +60,7 @@ import { AccountMenu } from './account-menu/account-menu';
     AccountMenu,
     TinoDock,
     VisualSearchPanel,
-    Microphone,
+    MicrophoneButton,
     Icon,
     NgOptimizedImage,
   ],

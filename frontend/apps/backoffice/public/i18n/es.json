@@ -1312,5 +1312,21 @@
     "tallyOne": "{{together}} de {{count}} pueden ir juntas · 1 se abre aparte",
     "approveFailed": "La aprobación no se completó. Lo decidido aparece en su fila; vuelve a intentar el resto.",
     "done": "{{approved}} aprobadas."
+  },
+  "composer": {
+    "attach": {
+      "photo": "Foto o galería",
+      "camera": "Cámara",
+      "file": "Archivo",
+      "more": "Añadir"
+    }
+  },
+  "voice": {
+    "start": "Hablar",
+    "stop": "Dejar de escuchar",
+    "listening": "Escuchando…",
+    "endHint": "Pulsa el micrófono para terminar",
+    "landed": "Revísalo y envíalo cuando quieras",
+    "failed": "No te he entendido. Prueba otra vez o escríbelo."
   }
 }

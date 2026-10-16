@@ -458,7 +458,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `where` | string | `tino`, `search` | Which box: Tino's composer, or the phone's search box. |
+| `where` | string | `tino`, `search`, `steward` | Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice. |
 | `adapter` | string | `shop`, `web-speech` | Which adapter listened: the shop's own engine, or the browser's on the device. |
 | `outcome` | string | `words`, `nothing`, `failed`, `cancelled` | What listening came to: words for the box, nothing heard, a failure, or Escape. |
 
@@ -472,7 +472,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `where` | string | `tino`, `search` | Which box: Tino's composer, or the phone's search box. |
+| `where` | string | `tino`, `search`, `steward` | Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice. |
 | `adapter` | string | `shop`, `web-speech` | Which adapter listened: the shop's own engine, or the browser's on the device. |
 | `how` | string | `as_heard`, `edited`, `discarded` | Sent as they were heard, sent after the shopper changed them, or never sent. |
 

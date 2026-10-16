@@ -3,7 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { Composer, ConversationScroll, Icon, Notice, TurnWait } from '@tendero/shared-ui';
+import { ComposerBox } from '@tendero/shared-composer';
+import { ConversationScroll, Icon, Notice, TurnWait } from '@tendero/shared-ui';
 import { filter } from 'rxjs';
 import { WaitingStore } from '../../../shell/waiting.store';
 import { ProposalCard } from '../proposal-card/proposal-card';
@@ -32,7 +33,7 @@ import { StewardTable } from './steward-table/steward-table';
     RouterLink,
     Icon,
     Notice,
-    Composer,
+    ComposerBox,
     ConversationScroll,
     ProposalCard,
     ProposalReview,

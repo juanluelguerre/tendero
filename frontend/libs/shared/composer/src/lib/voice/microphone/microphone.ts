@@ -14,14 +14,14 @@ import { MicrophoneStore, type MicrophonePlace } from './microphone.store';
  * reads `status` through `#mic="microphone"`.
  */
 @Component({
-  selector: 'storefront-microphone',
+  selector: 'lib-microphone',
   exportAs: 'microphone',
   imports: [TranslocoDirective, Icon],
   templateUrl: './microphone.html',
   providers: [MicrophoneStore],
   host: { class: 'contents', '(document:keydown.escape)': 'store.cancel()' },
 })
-export class Microphone {
+export class MicrophoneButton {
   protected readonly store = inject(MicrophoneStore);
 
   /** Which box it writes into, for the evidence of use: Tino's composer or the search box. */

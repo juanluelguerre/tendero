@@ -170,7 +170,10 @@
     "addToCart": "Añadir al carrito",
     "adding": "Añadiendo...",
     "breadcrumb": "Dónde estás",
-    "gallery": { "previous": "Foto anterior", "next": "Foto siguiente" },
+    "gallery": {
+      "previous": "Foto anterior",
+      "next": "Foto siguiente"
+    },
     "combinationNotSold": "Esa combinación no se vende.",
     "failed": "No hemos podido cargar el producto. Inténtalo dentro de un momento.",
     "failedTitle": "Algo ha fallado",
@@ -583,6 +586,14 @@
       "buyXGetY": "{{take}}x{{pay}}",
       "freeShipping": "Envío gratis",
       "freeShippingFrom": "Envío gratis desde {{minimum}}"
+    }
+  },
+  "composer": {
+    "attach": {
+      "photo": "Foto o galería",
+      "camera": "Cámara",
+      "file": "Archivo",
+      "more": "Añadir"
     }
   }
 }

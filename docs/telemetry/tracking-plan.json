@@ -1126,9 +1126,10 @@
           "type": "string",
           "values": [
             "tino",
-            "search"
+            "search",
+            "steward"
           ],
-          "description": "Which box: Tino's composer, or the phone's search box."
+          "description": "Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice."
         },
         "adapter": {
           "type": "string",
@@ -1159,9 +1160,10 @@
           "type": "string",
           "values": [
             "tino",
-            "search"
+            "search",
+            "steward"
           ],
-          "description": "Which box: Tino's composer, or the phone's search box."
+          "description": "Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice."
         },
         "adapter": {
           "type": "string",
