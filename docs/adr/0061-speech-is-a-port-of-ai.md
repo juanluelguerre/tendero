@@ -50,3 +50,25 @@ is what "the model can change" means in code.
 - The OpenAPI document declares the body as `audio/wav` with a `byte` string
   schema. That is the framework's spelling for a byte array, and the front end
   sends a `Blob` either way.
+
+## Amended 2026-10-16 — three engines, and a licence that is not OSI
+
+- **The engines measured are three** (the author, the same day): Whisper
+  large-v3-turbo on whisper.cpp in its own container, NVIDIA Parakeet-TDT-0.6B-v3
+  **inside the process** on ONNX Runtime, and the browser's own on the device.
+  No Python serves a model: no vLLM, so no Voxtral.
+- **CC-BY-4.0 weights are accepted for tier 1**, by the author's ruling for
+  Parakeet. The licensing policy names OSI licences (MIT, Apache-2.0, BSD); CC BY
+  4.0 is not one, but it is permissive and allows commercial use, asking only for
+  attribution and a note of what changed. Both are in `THIRD-PARTY-NOTICES.md`.
+  This is a ruling for this model at this revision, not a widening of the policy
+  for everything: the next CC-BY weights are asked about again.
+- **Parakeet's features and its greedy TDT loop are C#**, and only its three
+  networks are ONNX: `ParakeetFeatures` reproduces transformers 5.9.0's extractor
+  and `TdtGreedy` its generation, behind an `ITdtNetworks` interface the loop is
+  tested through with fakes. The fixture of two LibriSpeech utterances holds both
+  to the maker's numbers.
+- **whisper.cpp listens through Silero VAD.** Without it, silence was heard as
+  "Gracias.", and its no-speech probability cannot be trusted with turbo. The
+  contract every engine inherits now says, with proof, that silence and a tone are
+  nothing heard.
