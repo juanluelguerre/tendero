@@ -763,6 +763,16 @@ if (builder.Configuration["Tendero:TinoScript"] is { Length: > 0 } tinoScript)
         .WithEnvironment("Support__Scripted", "0.95");
 }
 
+// A scripted ear (phase 14), for the storefront's browser spec in CI as Tino's is:
+// `Tendero__SpeechScript=<file>`. No speech model fits a runner, so the scripted
+// engine answers every question from the script; what the spec proves is the
+// wiring — the microphone, the WAV, the words landing unsent — on any machine.
+if (builder.Configuration["Tendero:SpeechScript"] is { Length: > 0 } speechScript)
+{
+    api.WithEnvironment("Speech__Engine", "scripted")
+        .WithEnvironment("Speech__Script", Path.GetFullPath(speechScript, repositoryRoot));
+}
+
 if (useKeycloak)
 {
     api.WithReference(keycloak).WaitFor(keycloak)
