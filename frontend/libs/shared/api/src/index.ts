@@ -8,6 +8,7 @@ export * from './lib/knowledge-contracts';
 export * from './lib/ordering-contracts';
 export * from './lib/pricing-contracts';
 export * from './lib/search-contracts';
+export * from './lib/speech-contracts';
 export * from './lib/telemetry-contracts';
 export * from './lib/steward-contracts';
 export * from './lib/tino-contracts';
