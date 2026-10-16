@@ -80,6 +80,28 @@ public sealed class ScriptedSpeechToTextContractTests : SpeechToTextContractTest
 }
 
 /// <summary>
+/// Parakeet in this process, on our own ONNX export (`models/parakeet`, outside
+/// git). With no export on this machine the tests skip; with one, it also has to
+/// hear the fixture's two utterances as the maker's model did, word for word.
+/// </summary>
+public sealed class ParakeetOnnxSpeechToTextContractTests : SpeechToTextContractTests
+{
+    private static readonly Lazy<ISpeechToText?> Loaded = new(() =>
+        ParakeetFixture.ExportDirectory is { } directory ? new ElGuerre.Tendero.AI.Speech.Parakeet.ParakeetOnnxSpeechToText(directory) : null);
+
+    protected override ISpeechToText? Engine() => Loaded.Value;
+
+    [Fact]
+    public async Task It_hears_what_the_makers_model_heard()
+    {
+        Assert.SkipWhen(Loaded.Value is null, "No Parakeet export on this machine (scripts/prepare-parakeet.py).");
+
+        foreach (var (audio, _, words) in ParakeetFixture.Utterances)
+            Assert.Equal(words, (await Loaded.Value!.TranscribeAsync(audio, "en", TestContext.Current.CancellationToken)).Words);
+    }
+}
+
+/// <summary>
 /// The shop's own whisper.cpp server on its pinned port (Tendero__Voice=true). A
 /// CI runner holds no model, so with nothing answering the tests skip.
 /// </summary>

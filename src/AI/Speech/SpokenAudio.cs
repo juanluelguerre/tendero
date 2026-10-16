@@ -41,6 +41,16 @@ public sealed class SpokenAudio
     /// <summary>What a scripted engine knows this audio by: the hash of its bytes, never the bytes.</summary>
     public string Fingerprint => Convert.ToHexStringLower(SHA256.HashData(Wav.Span));
 
+    /// <summary>The samples as floats in [-1, 1], for an engine in this process that reads them rather than the file.</summary>
+    public float[] Samples()
+    {
+        TryFind(Wav.Span, "data"u8, out var data);
+        var samples = new float[data.Length / 2];
+        for (var i = 0; i < samples.Length; i++)
+            samples[i] = BinaryPrimitives.ReadInt16LittleEndian(data[(i * 2)..]) / 32768f;
+        return samples;
+    }
+
     /// <summary>The audio, or why it is refused: a reason the slice says in each language.</summary>
     public static (SpokenAudio? Audio, AudioRefusal? Refusal) Read(ReadOnlyMemory<byte> bytes)
     {

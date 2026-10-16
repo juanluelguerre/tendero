@@ -57,6 +57,21 @@ public sealed class SpeechRegistrationTests
         }
     }
 
+    /// <summary>The folder is the opt-in, as SigLIP's: an export half written would be an engine that fails on its first question.</summary>
+    [Fact]
+    public void Parakeet_with_a_folder_that_holds_no_export_is_no_engine()
+    {
+        var empty = Directory.CreateTempSubdirectory("parakeet-");
+        try
+        {
+            Assert.False(Resolved(("Speech:Engine", "parakeet-onnx"), ("Speech:Parakeet:Directory", empty.FullName)).IsConfigured);
+        }
+        finally
+        {
+            empty.Delete(recursive: true);
+        }
+    }
+
     [Fact]
     public void An_engine_nobody_wrote_is_refused_at_start() =>
         Assert.Throws<InvalidOperationException>(() => Resolved(("Speech:Engine", "deep-ears")));

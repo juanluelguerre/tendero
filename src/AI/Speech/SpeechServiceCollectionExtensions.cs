@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.AI.Speech.Parakeet;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,9 +31,16 @@ public static class SpeechServiceCollectionExtensions
         if (speech["Script"] is { Length: > 0 } script)
             services.AddKeyedSingleton<ISpeechToText>(ScriptedSpeechToText.Key, (_, _) => ScriptedSpeechToText.FromFile(script));
 
-        if (engine.Length > 0 && engine is not (WhisperCppSpeechToText.Key or ScriptedSpeechToText.Key))
+        // Parakeet runs in this process: the folder of our export is the opt-in, and
+        // one half written is no engine (as SigLIP's, ADR 0058).
+        if (speech["Parakeet:Directory"] is { Length: > 0 } parakeet
+            && new[] { "encoder.onnx", "decoder.onnx", "joint.onnx", "vocab.json" }.All(file => File.Exists(Path.Combine(parakeet, file))))
+            services.AddKeyedSingleton<ISpeechToText>(ParakeetOnnxSpeechToText.Key, (_, _) => new ParakeetOnnxSpeechToText(parakeet));
+
+        string[] engines = [WhisperCppSpeechToText.Key, ParakeetOnnxSpeechToText.Key, ScriptedSpeechToText.Key];
+        if (engine.Length > 0 && !engines.Contains(engine))
             throw new InvalidOperationException(
-                $"Speech:Engine '{engine}' is no engine this shop has: {WhisperCppSpeechToText.Key} or {ScriptedSpeechToText.Key}.");
+                $"Speech:Engine '{engine}' is no engine this shop has: {string.Join(", ", engines)}.");
 
         services.AddSingleton<ISpeechToText>(provider =>
             engine.Length > 0 && provider.GetKeyedService<ISpeechToText>(engine) is { } chosen ? chosen : new NoSpeechToText());
