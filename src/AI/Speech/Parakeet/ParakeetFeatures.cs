@@ -21,13 +21,11 @@ public static class ParakeetFeatures
     private const double Epsilon = 1e-5;
 
     // The Slaney scale: linear to 1 kHz, logarithmic above (librosa's hz_to_mel, htk=False).
-    // Above the mel bank, which is built from it: static fields start in the order written.
+    // Before the mel bank uses it: static fields start in the order written.
     private const double LinearStep = 200.0 / 3;
     private const double LogStart = 1000.0 / LinearStep;
     private static readonly double LogStep = Math.Log(6.4) / 27;
 
-    private static readonly double[] Window = HannSymmetric();
-    private static readonly float[,] MelBank = SlaneyMelBank();
 
     /// <summary>The mel bank's sum, for the fixture's check that it is librosa's.</summary>
     public static double MelBankSum
@@ -35,7 +33,7 @@ public static class ParakeetFeatures
         get
         {
             var sum = 0.0;
-            foreach (var weight in MelBank)
+            foreach (var weight in SlaneyMelBank())
                 sum += weight;
             return sum;
         }
@@ -59,6 +57,11 @@ public static class ParakeetFeatures
         var real = new double[FftSize];
         var imaginary = new double[FftSize];
         var power = new double[Bins];
+        // Built for each call, not held in static fields: microseconds beside the encoder,
+        // and a static initialiser runs once, out of a mutation tool's reach (phase 14's
+        // close found 64 of this file's survivors there, every one held by the fixture).
+        var window = HannSymmetric();
+        var melBank = SlaneyMelBank();
 
         for (var frame = 0; frame < frames; frame++)
         {
@@ -68,7 +71,7 @@ public static class ParakeetFeatures
             for (var n = 0; n < FftSize; n++)
             {
                 var at = start + n;
-                real[n] = at >= 0 && at < length ? emphasised[at] * Window[n] : 0;
+                real[n] = at >= 0 && at < length ? emphasised[at] * window[n] : 0;
                 imaginary[n] = 0;
             }
 
@@ -80,7 +83,7 @@ public static class ParakeetFeatures
             {
                 var energy = 0.0;
                 for (var k = 0; k < Bins; k++)
-                    energy += MelBank[mel, k] * power[k];
+                    energy += melBank[mel, k] * power[k];
                 values[frame * Mels + mel] = (float)Math.Log(energy + LogGuard);
             }
         }

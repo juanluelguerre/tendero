@@ -45,6 +45,30 @@ public sealed class TdtGreedyTests
         }
     }
 
+    /// <summary>A joint network whose best token and best duration are each tied between two.</summary>
+    private sealed class TiedNetworks : ITdtNetworks
+    {
+        public int VocabularySize => 5;
+        public TdtState Start() => new([0f], [0f], [0f]);
+        public TdtState Predict(int token, TdtState state) => state;
+
+        public float[] Joint(TdtState state, int frame)
+        {
+            var logits = new float[VocabularySize + Durations.Length];
+            logits[1] = logits[2] = 1;
+            logits[VocabularySize + 2] = logits[VocabularySize + 3] = 1;
+            return logits;
+        }
+    }
+
+    /// <summary>
+    /// A tie goes to the first, as <c>torch.argmax</c> breaks it: token 1 and not 2,
+    /// a duration of 2 frames and not 3 (phase 14's close found the tie unheld).
+    /// </summary>
+    [Fact]
+    public void A_tie_goes_to_the_first_token_and_the_first_duration() =>
+        Assert.Equal([1, 1, 1], TdtGreedy.Decode(new TiedNetworks(), 6, Blank, Durations, 10));
+
     private static int[] Decode(ScriptedNetworks networks, int frames, int maxSymbolsPerStep = 10) =>
         TdtGreedy.Decode(networks, frames, Blank, Durations, maxSymbolsPerStep);
 

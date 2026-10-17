@@ -34,6 +34,23 @@ public sealed class ParakeetFeaturesTests
         Assert.True(worst < 2e-3, $"The worst feature is {worst:G4} away from the maker's.");
     }
 
+    /// <summary>
+    /// The frame past the audio is padding: zero, as the attention mask says, and
+    /// left out of each band's mean and deviation. Silence could not show it, since
+    /// there every frame is zero anyway (phase 14's close).
+    /// </summary>
+    [Fact]
+    public void The_frames_past_the_audio_are_zero()
+    {
+        var (values, frames, valid) = ParakeetFeatures.Of(ParakeetFixture.Utterances[0].Samples);
+
+        Assert.True(frames > valid, $"{frames} frames, {valid} valid: no padding to look at.");
+        for (var frame = valid; frame < frames; frame++)
+            for (var mel = 0; mel < ParakeetFeatures.Mels; mel++)
+                Assert.Equal(0f, values[frame * ParakeetFeatures.Mels + mel]);
+        Assert.Contains(values.Take(valid * ParakeetFeatures.Mels), value => value != 0f);
+    }
+
     [Fact]
     public void Silence_normalises_to_zeros_rather_than_to_noise()
     {
