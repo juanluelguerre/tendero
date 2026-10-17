@@ -107,7 +107,10 @@ public static partial class Transcripts
         numbers.Values.ContainsKey(word) || numbers.Hundreds.Contains(word) || numbers.Thousands.Contains(word)
         || (word.Length > 0 && word.All(char.IsAsciiDigit));
 
-    private static readonly NumberWords Spanish = new(
+    // Properties, not static fields: a static initialiser runs once, so a mutation
+    // tool cannot switch a word of these tables on and off (phase 13c's lesson,
+    // met again at phase 14's close). Built for each line read; this is a tool.
+    private static NumberWords Spanish => new(
         new Dictionary<string, int>
         {
             ["cero"] = 0,
@@ -170,7 +173,7 @@ public static partial class Transcripts
         new HashSet<string> { "mil" },
         "y");
 
-    private static readonly NumberWords English = new(
+    private static NumberWords English => new(
         new Dictionary<string, int>
         {
             ["zero"] = 0,
