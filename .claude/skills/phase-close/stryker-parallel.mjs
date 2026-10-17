@@ -84,25 +84,34 @@ const started = Date.now();
 const runs = bins.map((bin, i) => {
   const tree = join(work, `shard-${i}`);
   git('worktree', 'add', '--detach', '--quiet', tree, head);
+  // coverage-analysis all: which mutants a test reaches at all (so "no coverage"
+  // still counts), then the whole suite against each one. Per test, the MTP
+  // runner mixed xUnit v3's parallel collections up and reported mutants as
+  // survivors that a hand mutation showed killed (TdtGreedy, phase 14's close).
+  // It is a configuration key, not an option, so the worktree's copy says it.
+  const configPath = join(tree, project, 'stryker-config.json');
+  const tuned = JSON.parse(readFileSync(configPath, 'utf8'));
+  tuned['stryker-config']['coverage-analysis'] = 'all';
+  writeFileSync(configPath, JSON.stringify(tuned, null, 2));
   const cwd = join(tree, project);
   const log = join(work, `shard-${i}.log`);
   const mutate = bin.files.flatMap((file) => ['-m', file]);
   return new Promise((done) => {
     const child = spawn(
       'dotnet',
-      // coverage-analysis all: which mutants a test reaches at all (so "no coverage"
-      // still counts), then the whole suite against each one. Per test, the MTP
-      // runner mixed xUnit v3's parallel collections up and reported mutants as
-      // survivors that a hand mutation showed killed (TdtGreedy, phase 14's close).
       ['tool', 'run', 'dotnet-stryker', '--config-file', 'stryker-config.json', '--skip-version-check', '--concurrency', '1',
-        '--coverage-analysis', 'all',
         '-r', 'json', '-r', 'html', ...units, ...mutate],
       { cwd, shell: false },
     );
     const out = [];
     child.stdout.on('data', (d) => out.push(d));
     child.stderr.on('data', (d) => out.push(d));
-    const timer = setTimeout(() => child.kill('SIGKILL'), minutes * 60_000);
+    // The ceiling stops the whole tree: on Windows, killing dotnet leaves Stryker and its
+    // test hosts running (phase 14's Api run went on for eleven hours past its 90 minutes).
+    const timer = setTimeout(() => {
+      if (process.platform === 'win32') spawn('taskkill', ['/pid', String(child.pid), '/T', '/F']);
+      else child.kill('SIGKILL');
+    }, minutes * 60_000);
     child.on('close', (code) => {
       clearTimeout(timer);
       writeFileSync(log, Buffer.concat(out));
