@@ -90,7 +90,12 @@ const runs = bins.map((bin, i) => {
   return new Promise((done) => {
     const child = spawn(
       'dotnet',
+      // coverage-analysis all: which mutants a test reaches at all (so "no coverage"
+      // still counts), then the whole suite against each one. Per test, the MTP
+      // runner mixed xUnit v3's parallel collections up and reported mutants as
+      // survivors that a hand mutation showed killed (TdtGreedy, phase 14's close).
       ['tool', 'run', 'dotnet-stryker', '--config-file', 'stryker-config.json', '--skip-version-check', '--concurrency', '1',
+        '--coverage-analysis', 'all',
         '-r', 'json', '-r', 'html', ...units, ...mutate],
       { cwd, shell: false },
     );

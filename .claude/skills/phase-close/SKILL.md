@@ -45,15 +45,45 @@ STRYKER_DRY=1 bash .claude/skills/phase-close/stryker-run.sh <plan> <scratchpad>
 
 ## 2. Run it
 
+**In parallel, since phase 14's close** (commit what the run must see first: each
+share runs from `HEAD`):
+
+```bash
+node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 8            # whole
+node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 2 --mutate "A.cs,Features/B/B.cs"   # scoped
+```
+
+The project's files are dealt into N shares by lines; each share is a Stryker
+process with `concurrency: 1` in its own git worktree (Stryker builds in place,
+and eight builds in one tree overwrite each other), and the reports are merged
+into one under the project's `StrykerOutput`, where `stryker-read.mjs` reads
+it. Why processes and not `--concurrency`: the MTP runner is the only one whose
+per-test coverage works with xUnit v3, and it under-reports kills above
+concurrency 1 (#3832); vstest runs eight at once but sees no coverage, because
+v3 runs tests inside the test executable. A worktree has no `models/`, so the
+tests that need a model skip by themselves (mark new ones `Category=Model`).
+Phase 14's numbers: SearchEval's voice files in 4–6 minutes; a whole run of
+`AI` (962 mutants) took as long as its slowest share, the numeric code of
+`ParakeetFeatures`, whose loops make mutants time out. Put such a file in a share
+of its own, or more than one, with `--mutate` spans.
+
+The serial runner stays for a plan of many scoped projects:
+
 ```bash
 bash .claude/skills/phase-close/stryker-run.sh <plan> <scratchpad>/stryker   # in the background
 ```
 
 One project at a time, `concurrency: 1`. A configuration that names
-`Integration.Tests` is run with its unit suites only. With the Postgres suite
-in the run, Testcontainers starts a database a mutant, and 13b's Ordering run
-hung for eight hours. Each project stops at `STRYKER_MINUTES` (120 by default).
-If the log stops moving long before that, look at it: do not wait on it.
+`Integration.Tests` is run with its unit suites only (both runners do this).
+With the Postgres suite in the run, Testcontainers starts a database a mutant,
+and 13b's Ordering run hung for eight hours. Each project stops at
+`STRYKER_MINUTES` (120 by default; `--minutes` for the parallel one). If the
+log stops moving long before that, look at it: do not wait on it.
+
+**A static field is out of Stryker's reach**: a `static readonly` table is
+initialised once, so a mutant inside it cannot be switched on and off and
+survives whatever the tests say (13c's price cues, 14's number words: 89 of
+103 survivors). Make it a property before reading those survivors as gaps.
 
 ## 3. Read and classify
 
