@@ -168,6 +168,9 @@ public sealed class VoiceScoringTests
     [InlineData("Y cinco más", "es", "y 5 mas")]
     [InlineData("Cable usb3 de 2 metros", "es", "cable usb3 de 2 metros")]
     [InlineData("Women’s running shoes", "en", "womens running shoes")]
+    [InlineData("Cero y cinco", "es", "0 y 5")]
+    [InlineData("Mil 500 euros", "es", "1500 euros")]
+    [InlineData("Two hundred and five", "en", "205")]
     public void A_run_of_number_words_ends_where_the_numbers_do(string text, string culture, string normalised) =>
         Assert.Equal(normalised, Transcripts.Normalise(text, culture));
 
