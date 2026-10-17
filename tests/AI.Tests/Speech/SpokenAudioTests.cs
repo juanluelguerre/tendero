@@ -92,6 +92,17 @@ public sealed class SpokenAudioTests
         Assert.Equal(AudioRefusal.NotWav, SpokenAudio.Read(bytes).Refusal);
     }
 
+    [Fact]
+    public void A_data_chunk_that_claims_more_than_the_file_is_no_wav()
+    {
+        var wav = Wav.Silence(1);
+        var bytes = Chunks(("fmt ", wav.AsSpan(20, 16).ToArray()), ("data", wav.AsSpan(44).ToArray()));
+        // The data chunk now says it holds a megabyte more than the file has.
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(12 + 8 + 16 + 4), 1 << 20);
+
+        Assert.Equal(AudioRefusal.NotWav, SpokenAudio.Read(bytes).Refusal);
+    }
+
     /// <summary>A RIFF/WAVE file of these chunks, each padded to an even length as the format says.</summary>
     private static byte[] Chunks(params (string Id, byte[] Body)[] chunks)
     {
