@@ -32,6 +32,7 @@ const scope = option('mutate', '')
   .map((file) => file.trim())
   .filter(Boolean);
 const keep = args.includes('--keep');
+const coverage = option('coverage', 'perTest'); // perTest | all
 
 if (!project || !existsSync(join(root, project, 'stryker-config.json'))) {
   console.error('Give the folder of a project that has a stryker-config.json: src/AI, tools/SearchEval.');
@@ -96,7 +97,7 @@ const runs = bins.map((bin, i) => {
   // It is a configuration key, not an option, so the worktree's copy says it.
   const configPath = join(tree, project, 'stryker-config.json');
   const tuned = JSON.parse(readFileSync(configPath, 'utf8'));
-  tuned['stryker-config']['coverage-analysis'] = 'all';
+  tuned['stryker-config']['coverage-analysis'] = coverage;
   writeFileSync(configPath, JSON.stringify(tuned, null, 2));
   const cwd = join(tree, project);
   const log = join(work, `shard-${i}.log`);
