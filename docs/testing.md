@@ -96,7 +96,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `src/Accounts` | `Accounts.Tests` | 80.08 % | 58.31 % | 2026-09-29 · R-7/R-8 close, first run 75.52 % |
 | `src/Pricing` | `Pricing.Tests` | 86.25 % | 66.67 % | 2026-10-14 · phase 13c's close, one run; 83.23 % since 2026-10-13 |
 | `src/Assist` | `Assist.Tests` | 87.13 % | 79.92 % | 2026-10-14 · phase 13c's close, third run (83.63 %, then 85.33 % with the kit reader's tests, then its static fields made properties); 86.31 % since 2026-10-09 |
-| `src/AI` | `AI.Tests` | 75.00 % | 58.54 % | 2026-10-09 · phase 13a's close; first run 71.88 %, under phase 12's 72.02 % |
+| `src/AI` | `AI.Tests` | 89.10 % | 71.93 % | 2026-10-17 · phase 14's close, the parallel method with coverage per mutant (75.00 % since 2026-10-09, measured per test) |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -1174,6 +1174,87 @@ seen red against its mutant by hand (seven mutations):
   **equivalent**, not a gap. Every call after the stop returns at its first line,
   because the node count is already at the ceiling, so going on with the loop
   changes neither the kit nor the nodes counted.
+
+**Phase 14's close (2026-10-17)**: voice — the speech port and its two engines
+(whisper.cpp in a container, Parakeet in process on our own ONNX export), the
+transcription slice, the voice suite in `tools/SearchEval`, and the composer Tino
+and Steward share. **The run's method changed during it** (below, and the skill
+`phase-close`): Stryker in parallel shares, one process each at concurrency 1 in its
+own git worktree with its own TEMP, coverage per mutant. Reports are in
+`docs/blog/reports/2026-10-17-phase-14-voice/stryker/`.
+
+| project | mutated with | run 1 | last run | survivors |
+|---|---|---:|---:|---:|
+| `src/AI`, whole (12 shares, 41 min) | `AI.Tests`, the model-held contracts skipped | 89.10 % (baseline 75.00 %) | — | 63 |
+| `src/AI`, scoped (`SpokenAudio`) after one more gap | `AI.Tests` | 96.43 % | — | 2 |
+| `tools/SearchEval`, scoped (the voice suite: `Transcripts`, `VoiceLines`, `VoiceSuite`) | `SearchEval.Tests` | 39.77 % | **99.43 %** (run 4) | 103 → 1 |
+
+**The method, and why it changed in the middle of the close.** The first run, serial
+as before, measured the AI suite at 55 s a mutant: 50 s were Parakeet's contract
+loading a 2.4 GB model, and the MTP runner timed out test after test while it
+captured coverage. The model-held contracts became `Category=Model` (a worktree has
+no `models/`, so they skip). The vstest runner was tried and dropped the same hour:
+it runs eight mutants at once and sees no coverage at all with xUnit v3, whose tests
+run inside the test executable. Then `stryker-parallel.mjs`: shares in worktrees,
+one process each. Its first results were wrong, and a hand mutation showed it —
+`tokens.Add` removed in `TdtGreedy` fails three of its four tests, and Stryker called
+it a survivor (AI read 47 %). Two causes, each fixed and each proven: per-test
+coverage ran mutants against tests that never reach them (now `coverage-analysis:
+all`, set in the worktree's config), and shares sharing `%TEMP%` read each other's
+runner files (13 false survivors on SearchEval, among them an endless loop; one, the
+equivalent, with a TEMP per share). A ceiling that killed `dotnet` and not its tree
+let the Api share run eleven hours; `taskkill /T` stops the tree. **The previous
+baselines were measured per test under the same runner and may understate**: the
+new figures replace them as runs come, and are not compared one to one.
+
+**What Stryker found, and what closed it.**
+
+- **SearchEval** (103 → 1): 89 survivors were the number-word tables, `static
+  readonly` fields a mutation tool cannot switch; made properties, they died. The
+  tables' words, the joiner, a number at the end of a line, a word with digits that
+  is no number and the typographic apostrophe became cases; three more after the
+  next run, each seen red against its mutant by hand (`current >= 0` with "Cero y
+  cinco", `Length < 0` with "Mil 500 euros", English's joiner emptied with "Two
+  hundred and five").
+- **AI** (305 → 63 across the method's fixes, then the gaps): 64 of
+  `ParakeetFeatures`' survivors were its Hann window and Slaney mel bank in static
+  fields, now built per call; the padding frame past the audio is held zero (it was
+  not: silence is zero everywhere); `SpokenAudio`'s chunk walk — a header with no
+  samples, a format chunk too short, the shortest question, an odd-sized chunk's
+  padding byte, a chunk and a data chunk that claim more than the file; a tie in the
+  TDT loop goes to the first token and duration (as `torch.argmax`).
+
+**Left, and what each is** (the phase's files; the 30 older ones are counted, not
+classified: `ScriptedChatClient` 13, `AIServiceCollectionExtensions` 6,
+`ClosedQuestion` 3, `AIInvocationLog` 3, `SupportScoring` 2, `AIInvocationsWorker` 2,
+three of one each).
+
+- **Equivalent**: the FFT's bit reversal (`>>>` for `>>` on a positive size, `|=` for
+  `^=` where the bit is clear, a swap tested from either side or with itself) and
+  its angle's sign (a real signal's power spectrum is the same conjugated); the
+  Slaney scale below 1 kHz and at its boundary (it is only ever asked 8 kHz, and
+  both branches meet at 1 kHz); `Heard("")` for `Heard.Nothing`; an empty engine
+  name looked up as a key (none is found either way); `SpokenAudio`'s loop guard
+  past the end (the size guard breaks first).
+- **Noise, below the fixture's tolerance**: the normalisation's `deviation − ε` for
+  `+ ε` (ε = 10⁻⁵) and one window sample past 400 (≈ 0.0002), against a 2·10⁻³
+  tolerance to the maker's features.
+- **Held by a suite this configuration leaves out**: the transcription slice's
+  refusal codes (5) and its endpoint (25 uncovered), held by `Api.Tests`; the
+  Parakeet export's file names (4), which only a positive registration can kill and
+  that needs a loadable model — the `Category=Model` contract, run where the export
+  is.
+- **Noise**: configuration keys and the registration's error sentence (4).
+- **Written down**: a vocabulary piece that starts with `<` and does not end with
+  `>` is read as text (`&&` as `||`); no test has such a piece.
+- **Not run**: `src/Api` changed only in registrations (the speech engines and the
+  rate limit), held by the endpoint and registration tests; its share hung eleven
+  hours under the old ceiling and was stopped. `src/Search` whole, 13c's debt, was
+  started in 12 shares and stopped after 30 minutes with none finished, at the
+  author's word ("estos test no pueden volver a tardar tanto"): it stays owed, and
+  the method is reviewed before it runs again. `src/AppHost` has no configuration;
+  its readiness change is held by the endpoint test, whose hand mutation (status back
+  to `IsConfigured`) failed it.
 
 ## Property-based (CsCheck)
 

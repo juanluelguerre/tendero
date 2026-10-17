@@ -55,17 +55,29 @@ node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 2 --
 
 The project's files are dealt into N shares by lines; each share is a Stryker
 process with `concurrency: 1` in its own git worktree (Stryker builds in place,
-and eight builds in one tree overwrite each other), and the reports are merged
-into one under the project's `StrykerOutput`, where `stryker-read.mjs` reads
-it. Why processes and not `--concurrency`: the MTP runner is the only one whose
-per-test coverage works with xUnit v3, and it under-reports kills above
-concurrency 1 (#3832); vstest runs eight at once but sees no coverage, because
-v3 runs tests inside the test executable. A worktree has no `models/`, so the
-tests that need a model skip by themselves (mark new ones `Category=Model`).
-Phase 14's numbers: SearchEval's voice files in 4–6 minutes; a whole run of
-`AI` (962 mutants) took as long as its slowest share, the numeric code of
-`ParakeetFeatures`, whose loops make mutants time out. Put such a file in a share
-of its own, or more than one, with `--mutate` spans.
+and eight builds in one tree overwrite each other), with **its own TEMP folder**,
+and `coverage-analysis: all` written into the worktree's copy of the config. The
+reports are merged into one under the project's `StrykerOutput`, where
+`stryker-read.mjs` reads it. Each of those settings is a bug met on phase 14's
+close (`docs/testing.md`, *Phase 14's close*):
+
+- **Processes, not `--concurrency`**: the MTP runner is the only one whose
+  coverage works with xUnit v3 (vstest's collector cannot see tests that run
+  inside the test executable), and it under-reports kills above concurrency 1
+  (#3832).
+- **A TEMP per share**: shares sharing `%TEMP%` read each other's runner files —
+  mutants killed by hand came back as survivors, an endless loop as one.
+- **Coverage per mutant, not per test**: per test, a mutant was run against tests
+  that never reach it (`tokens.Add` removed in TdtGreedy, "survived").
+- **A ceiling that stops the tree** (`taskkill /T`): killing `dotnet` left a share
+  running eleven hours past its 90 minutes.
+
+**Control every run with one hand mutation** of a line its tests obviously
+cover: if Stryker calls that mutant a survivor, the run is wrong, not the
+tests. A worktree has no `models/`, so the tests that need a model skip by
+themselves (mark new ones `Category=Model`). Numeric code with loops (Parakeet's
+features) makes mutants time out: it sets the run's wall time, so give it a
+share of its own.
 
 The serial runner stays for a plan of many scoped projects:
 
