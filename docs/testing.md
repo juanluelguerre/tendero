@@ -1207,6 +1207,31 @@ let the Api share run eleven hours; `taskkill /T` stops the tree. **The previous
 baselines were measured per test under the same runner and may understate**: the
 new figures replace them as runs come, and are not compared one to one.
 
+**Per test was tried once more, with TEMP isolated, and stays off** (same day). With
+the crosstalk gone it held on one file (`TdtGreedy`, 25 of 25 killed in 2 min), so
+AI whole ran again with `--coverage perTest`: eleven shares finished in 4 to 9
+minutes, but the capture saw 159 tests, 137 mutants came out with no coverage, the
+score fell to 78.95 % of covered (58.03 % of total, against 71.93 %), and one share
+hung until its 30-minute ceiling. Faster where it works and wrong where it does not,
+so `all` is the runner's default and `perTest` an option to try again on a later
+Stryker or MTP runner.
+
+**A budget, because under `all` a mutant costs the whole suite.** Search whole did
+not finish in eight shares at 40 minutes: about 100 mutants a share, each running
+Search's suite of 107 s. Timed test by test (xUnit's XML), 68 s of it were three
+classes that captured an Elasticsearch request body by sending it to `127.0.0.1:9`,
+which Windows refuses in about four seconds a call; an in-memory transport that
+fails at once (`ElasticsearchBodies`) asserts the same body in 1.2 s. SigLIP's 28 s
+load a model and are now `Category=Model`. Every suite was timed the same way:
+eleven run under 4 s, Assist 12 s, Architecture 7 s — and `Api.Tests` 170 s, which
+SharedKernel's and Ucp's configurations carried for mutants their own suites kill
+in under a second; they leave it. So `stryker-parallel.mjs` first runs the
+configured suites without `Model` and `Integration`, prints the cost of a mutant,
+and **stops when a test takes over 1 s or the suites over 15 s**, naming them. The
+fix is the test's — fast, or marked for what it needs — and `--over-budget` runs
+anyway and says so. `src/Api` is the one project over it today, owed: its tests
+start a host per class.
+
 **What Stryker found, and what closed it.**
 
 - **SearchEval** (103 → 1): 89 survivors were the number-word tables, `static

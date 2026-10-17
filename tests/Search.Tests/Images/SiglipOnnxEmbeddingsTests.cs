@@ -19,6 +19,7 @@ namespace ElGuerre.Tendero.Search.Tests.Images;
 /// It needs the export, 1.5 GB that are not the repository's: where it is
 /// missing these say how to make it and skip.
 /// </summary>
+[Trait("Category", "Model")]
 public sealed class SiglipOnnxEmbeddingsTests
 {
     private const string Variable = "TENDERO_SIGLIP_MODELS";

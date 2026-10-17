@@ -1,9 +1,8 @@
-using System.Text;
-using Elastic.Clients.Elasticsearch;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Offers;
 using Xunit;
+using static ElGuerre.Tendero.Search.Tests.ElasticsearchBodies;
 
 namespace ElGuerre.Tendero.Search.Tests;
 
@@ -245,20 +244,5 @@ public sealed class ElasticsearchRequestBodyTests
         var body = System.Text.Json.Nodes.JsonNode.Parse(Assert.Single(bodies))!.AsObject();
         body.Remove("aggregations");
         return body.ToJsonString();
-    }
-
-    private static (ElasticsearchClient Client, List<string> Bodies) Capturing()
-    {
-        var bodies = new List<string>();
-
-        var settings = new ElasticsearchClientSettings(new Uri("http://127.0.0.1:9"))
-            .DisableDirectStreaming()
-            .OnRequestCompleted(call =>
-            {
-                if (call.RequestBodyInBytes is { Length: > 0 } body)
-                    bodies.Add(Encoding.UTF8.GetString(body));
-            });
-
-        return (new ElasticsearchClient(settings), bodies);
     }
 }

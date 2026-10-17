@@ -2,6 +2,7 @@
 //
 //   node .claude/skills/phase-close/stryker-parallel.mjs <project> [--shards 8] [--minutes 90]
 //        [--mutate "Speech/WhisperCppSpeechToText.cs,Features/X/X.cs"] [--keep]
+//        [--coverage all|perTest] [--test-seconds 1] [--suite-seconds 15] [--over-budget]
 //
 // <project> is the folder that holds its stryker-config.json: src/AI, tools/SearchEval.
 //
@@ -32,7 +33,9 @@ const scope = option('mutate', '')
   .map((file) => file.trim())
   .filter(Boolean);
 const keep = args.includes('--keep');
-const coverage = option('coverage', 'perTest'); // perTest | all
+// all by default: perTest on AI whole (2026-10-17) left 137 mutants uncovered that `all` kills or
+// classifies, fell from 89.10 % to 78.95 % of covered, and hung one share for its 30 minutes.
+const coverage = option('coverage', 'all'); // all | perTest
 
 if (!project || !existsSync(join(root, project, 'stryker-config.json'))) {
   console.error('Give the folder of a project that has a stryker-config.json: src/AI, tools/SearchEval.');
@@ -79,6 +82,43 @@ const name = project.split('/').pop();
 const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15);
 const work = join(root, 'artifacts', 'stryker-shards', `${name}-${stamp}`);
 mkdirSync(work, { recursive: true });
+
+// The budget, before anything is mutated. Under coverage `all` every mutant runs the
+// whole suite again, so a mutant costs the suite plus the runner's start: Search's
+// 107 s suite (68 s of it Elasticsearch calls waiting on a port nothing listens on)
+// was ~110 s a mutant and hours a share, and SharedKernel and Ucp carried Api.Tests'
+// 170 s for mutants their own suites kill in under a second. A unit test over
+// --test-seconds or suites over --suite-seconds stop the run with their names: make
+// them fast, or mark them Category=Model (a model on disk) or Category=Integration
+// (infrastructure). --over-budget runs anyway, and says so.
+const testSeconds = Number(option('test-seconds', 1));
+const suiteSeconds = Number(option('suite-seconds', 15));
+const suites = [...config.matchAll(/"([^"]*\.Tests\.csproj)"/g)].map((m) => m[1]).filter((p) => !p.includes('Integration.Tests'));
+let suiteWall = 0;
+const slow = [];
+for (const suite of suites) {
+  const csproj = resolve(projectDir, suite);
+  execFileSync('dotnet', ['build', csproj, '--no-restore', '-v', 'q', '-nologo'], { cwd: root, stdio: 'ignore' });
+  const assembly = csproj.split(sep).pop().replace(/\.csproj$/, '');
+  const bin = join(csproj, '..', 'bin', 'Debug');
+  const exe = readdirSync(bin).map((tfm) => join(bin, tfm, `${assembly}.exe`)).find(existsSync);
+  const xml = join(work, `${assembly}.budget.xml`);
+  const at = Date.now();
+  execFileSync(exe, ['-xml', xml, '-trait-', 'Category=Model', '-trait-', 'Category=Integration'], { stdio: 'ignore' });
+  suiteWall += (Date.now() - at) / 1000;
+  for (const m of readFileSync(xml, 'utf8').matchAll(/<test [^>]*name="([^"]*)"[^>]*time="([\d.]+)"/g))
+    if (Number(m[2]) > testSeconds) slow.push(`${Number(m[2]).toFixed(1).padStart(6)} s  ${m[1].replaceAll('&quot;', '"')}`);
+}
+console.log(`${name}: its suites run in ${suiteWall.toFixed(1)} s, so about ${Math.round(suiteWall + 4)} s a mutant`);
+if (slow.length || suiteWall > suiteSeconds) {
+  console.log(`  over budget (${testSeconds} s a test, ${suiteSeconds} s the suites):`);
+  for (const line of slow.sort().reverse()) console.log(`  ${line}`);
+  if (!args.includes('--over-budget')) {
+    console.error('  Make them fast or mark them Model / Integration, or pass --over-budget to run anyway.');
+    rmSync(work, { recursive: true, force: true });
+    process.exit(3);
+  }
+}
 console.log(`${name}: ${files.length} files in ${bins.length} shards, ${minutes} minutes each at most, from ${head.slice(0, 8)}`);
 
 const temp = (tree) => {

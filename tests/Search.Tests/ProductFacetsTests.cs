@@ -1,6 +1,4 @@
-using System.Text;
 using System.Text.Json.Nodes;
-using Elastic.Clients.Elasticsearch;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Search.Contracts;
@@ -9,6 +7,7 @@ using ElGuerre.Tendero.Search.Offers;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
+using static ElGuerre.Tendero.Search.Tests.ElasticsearchBodies;
 
 namespace ElGuerre.Tendero.Search.Tests;
 
@@ -520,20 +519,5 @@ public sealed class ProductFacetsTests
         await Assert.ThrowsAnyAsync<Exception>(() => Adapters.Lexical(client, offers).SearchAsync(query, Ct));
 
         return JsonNode.Parse(Assert.Single(bodies))!;
-    }
-
-    private static (ElasticsearchClient Client, List<string> Bodies) Capturing()
-    {
-        var bodies = new List<string>();
-
-        var settings = new ElasticsearchClientSettings(new Uri("http://127.0.0.1:9"))
-            .DisableDirectStreaming()
-            .OnRequestCompleted(call =>
-            {
-                if (call.RequestBodyInBytes is { Length: > 0 } body)
-                    bodies.Add(Encoding.UTF8.GetString(body));
-            });
-
-        return (new ElasticsearchClient(settings), bodies);
     }
 }

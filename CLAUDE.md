@@ -499,7 +499,9 @@ name.
 - **Mutation testing, two levels** (`docs/testing.md`): a test written for code
   that already exists earns its place by failing against a hand-made mutation,
   listed in the commit message. **At every phase close**, Stryker.NET runs over
-  each project the phase touched, with every test project that exercises it: its
+  each project the phase touched, with the unit suites that exercise it inside the
+  budget — a test over 1 s or suites over 15 s stop the run with their names
+  (`stryker-parallel.mjs`): make them fast or mark them `Model`/`Integration`; its
   `of covered` score may not fall below that project's recorded baseline, and
   every survivor is classified — a real gap is closed with a test or written
   down, an equivalent mutant or noise is said to be one. Never per pull request
