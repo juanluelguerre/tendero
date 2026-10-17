@@ -80,6 +80,11 @@ const work = join(root, 'artifacts', 'stryker-shards', `${name}-${stamp}`);
 mkdirSync(work, { recursive: true });
 console.log(`${name}: ${files.length} files in ${bins.length} shards, ${minutes} minutes each at most, from ${head.slice(0, 8)}`);
 
+const temp = (tree) => {
+  const dir = join(tree, '.tmp');
+  mkdirSync(dir, { recursive: true });
+  return dir;
+};
 const started = Date.now();
 const runs = bins.map((bin, i) => {
   const tree = join(work, `shard-${i}`);
@@ -101,7 +106,10 @@ const runs = bins.map((bin, i) => {
       'dotnet',
       ['tool', 'run', 'dotnet-stryker', '--config-file', 'stryker-config.json', '--skip-version-check', '--concurrency', '1',
         '-r', 'json', '-r', 'html', ...units, ...mutate],
-      { cwd, shell: false },
+      // Each share its own temporary folder: the MTP runner leaves files there, and
+      // shares that shared %TEMP% read each other's (known-killed mutants came back
+      // as survivors, and an endless loop as one, when shares ran side by side).
+      { cwd, shell: false, env: { ...process.env, TEMP: temp(tree), TMP: temp(tree) } },
     );
     const out = [];
     child.stdout.on('data', (d) => out.push(d));
