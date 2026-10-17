@@ -88,6 +88,7 @@ public sealed class ScriptedSpeechToTextContractTests : SpeechToTextContractTest
 /// git). With no export on this machine the tests skip; with one, it also has to
 /// hear the fixture's two utterances as the maker's model did, word for word.
 /// </summary>
+[Trait("Category", "Model")]
 public sealed class ParakeetOnnxSpeechToTextContractTests : SpeechToTextContractTests
 {
     private static readonly Lazy<ISpeechToText?> Loaded = new(() =>
@@ -109,6 +110,7 @@ public sealed class ParakeetOnnxSpeechToTextContractTests : SpeechToTextContract
 /// The shop's own whisper.cpp server on its pinned port (Tendero__Voice=true). A
 /// CI runner holds no model, so with nothing answering the tests skip.
 /// </summary>
+[Trait("Category", "Model")]
 public sealed class WhisperCppSpeechToTextContractTests : SpeechToTextContractTests
 {
     private static readonly Uri Server = new("http://localhost:38086/");
@@ -130,19 +132,4 @@ public sealed class WhisperCppSpeechToTextContractTests : SpeechToTextContractTe
         IsRunning.Value
             ? new WhisperCppSpeechToText(new HttpClient { BaseAddress = Server, Timeout = TimeSpan.FromSeconds(30) })
             : null;
-
-    /// <summary>
-    /// Configured is not ready: the AppHost prepares the model before the server
-    /// starts (minutes on a first start) and the API does not wait for it, so until
-    /// the server answers the microphone is not drawn. Runs everywhere: nothing
-    /// listens on the port it asks.
-    /// </summary>
-    [Fact]
-    public async Task A_server_that_does_not_answer_is_not_ready()
-    {
-        ISpeechToText engine = new WhisperCppSpeechToText(new HttpClient { BaseAddress = new Uri("http://127.0.0.1:9/") });
-
-        Assert.True(engine.IsConfigured);
-        Assert.False(await engine.IsReadyAsync(TestContext.Current.CancellationToken));
-    }
 }

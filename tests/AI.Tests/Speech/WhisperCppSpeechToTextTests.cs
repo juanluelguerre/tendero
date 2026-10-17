@@ -58,6 +58,24 @@ public sealed class WhisperCppSpeechToTextTests
         await Assert.ThrowsAsync<SpeechUnavailableException>(
             () => Engine(new Server(unreachable: true)).TranscribeAsync(Audio(), "es", Ct));
 
+    /// <summary>
+    /// Configured is not ready: the AppHost prepares the model before the server
+    /// starts and the API does not wait for it, so until the server's own page
+    /// answers, no microphone is drawn.
+    /// </summary>
+    [Theory]
+    [InlineData(HttpStatusCode.OK, false, true)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, false, false)]
+    [InlineData(HttpStatusCode.OK, true, false)]
+    public async Task It_is_ready_only_when_its_server_answers(HttpStatusCode status, bool unreachable, bool ready)
+    {
+        var server = new Server(status, unreachable: unreachable);
+        ISpeechToText engine = Engine(server);
+
+        Assert.True(engine.IsConfigured);
+        Assert.Equal(ready, await engine.IsReadyAsync(Ct));
+    }
+
     private static WhisperCppSpeechToText Engine(Server server) =>
         new(new HttpClient(server) { BaseAddress = new Uri("http://whisper.test/") });
 
@@ -72,7 +90,8 @@ public sealed class WhisperCppSpeechToTextTests
                 throw new HttpRequestException("No connection could be made.");
 
             Path = request.RequestUri?.AbsolutePath;
-            Body = Encoding.Latin1.GetString(await request.Content!.ReadAsByteArrayAsync(cancellationToken));
+            if (request.Content is not null)
+                Body = Encoding.Latin1.GetString(await request.Content.ReadAsByteArrayAsync(cancellationToken));
             return new HttpResponseMessage(status) { Content = new StringContent(answer, Encoding.UTF8, "application/json") };
         }
     }
