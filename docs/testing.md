@@ -1296,11 +1296,17 @@ scoped, so it sets no baseline (whole: 83.38 %).
 - **Noise** (2): `SearchUnavailableException`'s stage wording.
 - **Equivalent** (2): `First` for `FirstOrDefault` on a product's variants (a
   product has at least one), the start-up worker's `Task.Yield`.
-- **Written down, real** (4): `Contracts.cs:643` (the variant-axis condition
-  negated), `DealBook.cs:18` (an empty branch reaching `""` instead of null),
-  `Elasticsearch.cs:635` (`Fuzziness("AUTO")` unasserted in a request body),
-  `Elasticsearch.cs:770` (no chosen filter still filtering). Each wants a test
-  proved by its hand mutation.
+- **Written down as real, then closed the same day** (3 of 4), each test red
+  against its mutant by hand: `DealBook.cs:18` (`DealBookTests`: a card with no
+  branch asks with no path, `false ? null : …` failed it), `Elasticsearch.cs:635`
+  (`A_words_search_forgives_typos_in_one_clause`: `"AUTO"` emptied failed it),
+  `Elasticsearch.cs:770` (`With_no_filters_chosen_the_card_reader_sends_no_filter_clause_for_them`:
+  `false ? [] : …` sent an empty bool clause and failed it).
+- **Equivalent, on a second look** (1): `Contracts.cs:643`, the variant-axis
+  condition negated, survives by hand too — the two versions differ only for a
+  product that holds a value along an axis its variants vary by, and Catalog
+  refuses exactly that (`Product.SetAttribute`, ADR 0056 amended: an axis is the
+  variants', never the product's).
 
 ## Property-based (CsCheck)
 
