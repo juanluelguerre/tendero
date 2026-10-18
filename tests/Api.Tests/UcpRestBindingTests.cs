@@ -23,7 +23,7 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// formed. `get_product` is the exception, and by construction: its response
 /// schema requires a `product`, so there is no valid 200 shape for a miss.
 /// </summary>
-public sealed class UcpRestBindingTests
+public sealed class UcpRestBindingTests(TenderoApiFactory factory) : IClassFixture<TenderoApiFactory>
 {
     private const string LookupResponse = "https://ucp.dev/schemas/shopping/catalog_lookup.json#/$defs/lookup_response";
 
@@ -31,8 +31,6 @@ public sealed class UcpRestBindingTests
     public async Task A_lookup_answers_200_and_a_conformant_body()
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync(
@@ -58,8 +56,6 @@ public sealed class UcpRestBindingTests
     public async Task The_specifications_paths_are_the_ones_served(string path)
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync(path, new { ids = Array.Empty<string>(), id = "ZZZZZZZZZZ" }, ct);
@@ -78,8 +74,6 @@ public sealed class UcpRestBindingTests
     public async Task Malformed_agent_metadata_is_a_400_naming_the_member()
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/ucp/catalog/lookup", new
@@ -101,8 +95,6 @@ public sealed class UcpRestBindingTests
     public async Task A_batch_beyond_the_limit_is_a_400_with_the_number()
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/ucp/catalog/lookup", new
@@ -118,8 +110,6 @@ public sealed class UcpRestBindingTests
     public async Task A_product_request_with_no_id_is_a_400()
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/ucp/catalog/product", new { }, ct);
@@ -136,8 +126,6 @@ public sealed class UcpRestBindingTests
     public async Task It_is_reachable_without_a_token()
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync(

@@ -21,7 +21,7 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// found by a person rather than by a test, and every one of them looked exactly
 /// like this: registered, compiled, green, absent.
 /// </summary>
-public sealed class McpTransportTests
+public sealed class McpTransportTests(TenderoApiFactory factory) : IClassFixture<TenderoApiFactory>
 {
     /// <summary>
     /// Streamable HTTP: the client posts JSON-RPC and must accept either a JSON
@@ -51,7 +51,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task It_answers_initialize_with_the_shop_as_the_server()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var response = await client.PostAsJsonAsync("/mcp", Initialize, TestContext.Current.CancellationToken);
@@ -76,7 +75,6 @@ public sealed class McpTransportTests
     [Fact]
     public void Its_route_is_anonymous_on_purpose()
     {
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var mcp = factory.Services
@@ -103,7 +101,6 @@ public sealed class McpTransportTests
     [Fact]
     public void Its_route_stays_out_of_the_openapi_document()
     {
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var mcp = factory.Services
@@ -130,7 +127,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task It_offers_exactly_these_tools()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var tools = await Call(client, new { jsonrpc = "2.0", id = 2, method = "tools/list" });
@@ -167,7 +163,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task Every_tool_says_whether_it_only_reads_and_whether_it_can_be_taken_back()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var tools = await ListToolsAs(client, "2026-07-28");
@@ -212,7 +207,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task Every_tool_declares_the_shape_of_its_answer_and_answers_in_it_twice()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var tools = await ListToolsAs(client, "2026-07-28");
@@ -246,7 +240,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task Every_output_schema_is_an_object_schema()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var tools = await ListToolsAs(client, "2026-07-28");
@@ -306,7 +299,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task Calling_a_tool_reaches_the_dispatcher_and_answers()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var answer = await Call(client, new
@@ -335,7 +327,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task A_query_the_shop_refuses_comes_back_as_a_readable_error()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var answer = await Call(client, new
@@ -376,7 +367,6 @@ public sealed class McpTransportTests
     [InlineData("get_product", "id")]
     public async Task A_call_that_leaves_out_an_argument_is_told_which(string tool, string missing)
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var answer = await Call(client, new
@@ -413,7 +403,6 @@ public sealed class McpTransportTests
     [InlineData("fr-FR", "es")]
     public async Task The_accept_language_header_reaches_the_tools(string header, string expected)
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
         client.DefaultRequestHeaders.Add("Accept-Language", header);
 
@@ -443,7 +432,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task It_answers_discover_and_says_how_long_its_tool_list_keeps()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var discovered = (await Modern(client, "server/discover")).GetProperty("result");
@@ -460,7 +448,6 @@ public sealed class McpTransportTests
     [Fact]
     public async Task It_refuses_a_version_it_does_not_speak_and_names_the_ones_it_does()
     {
-        using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
 
         var error = (await Modern(client, "tools/list", version: "1900-01-01", expected: HttpStatusCode.BadRequest)).GetProperty("error");

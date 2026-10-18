@@ -23,7 +23,7 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// "derived" is a claim about the mechanism, and the diff is what makes a change
 /// to the SHAPE visible to a person before an agent reads it.
 /// </summary>
-public sealed class UcpProfileDocumentTests
+public sealed class UcpProfileDocumentTests(TenderoApiFactory factory) : IClassFixture<TenderoApiFactory>
 {
     private const string UpdateVariable = "UPDATE_UCP";
 
@@ -125,7 +125,6 @@ public sealed class UcpProfileDocumentTests
     public async Task The_schema_of_our_own_extension_is_served_where_the_profile_says()
     {
         var ct = TestContext.Current.CancellationToken;
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var profile = await FetchProfileAsync(ct);
@@ -146,7 +145,6 @@ public sealed class UcpProfileDocumentTests
     [Fact]
     public async Task It_is_readable_without_a_token()
     {
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/.well-known/ucp", TestContext.Current.CancellationToken);
@@ -154,9 +152,8 @@ public sealed class UcpProfileDocumentTests
         response.EnsureSuccessStatusCode();
     }
 
-    private static async Task<JsonNode?> FetchProfileAsync(CancellationToken ct)
+    private async Task<JsonNode?> FetchProfileAsync(CancellationToken ct)
     {
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/.well-known/ucp", ct);

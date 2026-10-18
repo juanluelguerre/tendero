@@ -1229,8 +1229,14 @@ in under a second; they leave it. So `stryker-parallel.mjs` first runs the
 configured suites without `Model` and `Integration`, prints the cost of a mutant,
 and **stops when a test takes over 1 s or the suites over 15 s**, naming them. The
 fix is the test's — fast, or marked for what it needs — and `--over-budget` runs
-anyway and says so. `src/Api` is the one project over it today, owed: its tests
-start a host per class.
+anyway and says so. `src/Api` is the one project over it today. Its suite started
+the whole API in nearly every test (93 hosts, 77 s); the classes that only ask the
+API share one host per class now (`IClassFixture<TenderoApiFactory>`: 24 s → 8 s
+for those eight, the suite 77 s → 47 s), and the rest keep a host per test because
+each swaps a fake in (`WithWebHostBuilder`) — and `McpServerGuardsTests` because
+its rate limit is the host's state, which a shared host let one test spend for
+the next. Still over the budget, so `src/Api` is mutated scoped, with
+`--over-budget`, on the files a phase changes.
 
 **What Stryker found, and what closed it.**
 

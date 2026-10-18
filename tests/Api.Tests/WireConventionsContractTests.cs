@@ -21,7 +21,7 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// Held two ways, as the rest of the contract is: on the committed document,
 /// which is what a client generates from, and on the running API.
 /// </summary>
-public sealed partial class WireConventionsContractTests
+public sealed partial class WireConventionsContractTests(TenderoApiFactory factory) : IClassFixture<TenderoApiFactory>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -47,8 +47,6 @@ public sealed partial class WireConventionsContractTests
         using var document = Committed();
         var version = document.RootElement.GetProperty("info").GetProperty("version").GetString()!;
         Assert.Matches(ADate(), version);
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var answered = await client.GetAsync("/api/kits", Ct);
@@ -70,7 +68,6 @@ public sealed partial class WireConventionsContractTests
     public void An_operation_says_who_may_call_it_and_the_document_agrees_with_the_endpoint()
     {
         using var document = Committed();
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var endpoints = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
@@ -233,7 +230,6 @@ public sealed partial class WireConventionsContractTests
     public void A_rate_limited_operation_declares_the_refusal_and_when_to_come_back()
     {
         using var document = Committed();
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var limited = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
@@ -267,7 +263,6 @@ public sealed partial class WireConventionsContractTests
     [InlineData("/api/nothing-is-here", null, 404, "NotFound")]
     public async Task A_refusal_the_pipeline_answers_is_a_problem_with_a_code(string path, string? person, int status, string code)
     {
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         async Task<(HttpResponseMessage Response, JsonNode Body)> AskAsync(string language)
@@ -299,7 +294,6 @@ public sealed partial class WireConventionsContractTests
     [Fact]
     public async Task Past_a_limit_the_answer_is_a_problem_that_says_when_to_come_back()
     {
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         HttpResponseMessage? refused = null;

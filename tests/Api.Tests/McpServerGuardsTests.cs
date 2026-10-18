@@ -12,6 +12,10 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// *Servers MUST rate limit tool invocations*. Neither had a test, because the
 /// transport tests were written from the SDK's behaviour and the SDK does not
 /// do either for you.
+///
+/// Each test starts its own host, unlike the classes that share one: the rate
+/// limit is the host's state, and a shared host let one test spend the next
+/// one's allowance (four failures, 2026-10-18).
 /// </summary>
 public sealed class McpServerGuardsTests
 {

@@ -23,7 +23,7 @@ namespace ElGuerre.Tendero.Api.Tests;
 ///
 /// So: read the profile, follow it, and check what is there.
 /// </summary>
-public sealed class UcpDiscoveryReachesTheBindingTests
+public sealed class UcpDiscoveryReachesTheBindingTests(TenderoApiFactory factory) : IClassFixture<TenderoApiFactory>
 {
     /// <summary>The three tool names the catalogue's MCP binding fixes.</summary>
     private static readonly string[] BindingTools = ["get_product", "lookup_catalog", "search_catalog"];
@@ -45,7 +45,6 @@ public sealed class UcpDiscoveryReachesTheBindingTests
     [InlineData("/ucp/schemas/com.elguerre.tendero.knowledge.json")]
     public async Task What_the_shop_publishes_for_platforms_may_be_cached_as_the_specification_requires(string artifact)
     {
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync(artifact, TestContext.Current.CancellationToken);
@@ -61,8 +60,6 @@ public sealed class UcpDiscoveryReachesTheBindingTests
     public async Task Every_binding_the_profile_advertises_is_really_served()
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var profile = JsonDocument.Parse(
@@ -97,8 +94,6 @@ public sealed class UcpDiscoveryReachesTheBindingTests
     public async Task The_endpoint_the_profile_advertises_serves_the_binding_it_claims()
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         // 1 — discovery. No MCP involved: it is an ordinary public GET.
@@ -160,8 +155,6 @@ public sealed class UcpDiscoveryReachesTheBindingTests
     public async Task The_two_contracts_are_distinguishable_on_the_endpoint_they_share()
     {
         var ct = TestContext.Current.CancellationToken;
-
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

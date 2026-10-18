@@ -64,7 +64,7 @@ public abstract class IdentityProviderContractTests : IDisposable
 
     protected IdentityProviderContractTests()
     {
-        this.factory = new TenderoApiFactory(Authority);
+        this.factory = new TenderoApiFactory { ExternalAuthority = Authority };
         Client = this.factory.CreateClient();
         this.external = Authority is null ? null : new HttpClient();
     }
