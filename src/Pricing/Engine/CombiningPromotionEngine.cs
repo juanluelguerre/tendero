@@ -199,30 +199,25 @@ public sealed class CombiningPromotionEngine : IPromotionEngine
         var reached = Reached(promotion.Condition, cart);
         var currency = cart.Currency;
 
-        switch (promotion.Effect)
+        // Every effect is named, and none is silently worth zero (a zero looks
+        // exactly like a promotion that did not apply): PromotionEffect is
+        // closed, so an effect added without its branch here does not compile.
+        // It used to throw at run time, on the first quote that carried it.
+        return promotion.Effect switch
         {
-            case PercentOffLine(var percent):
-                return ChargePerLine(cart, reached, (line, _) => line.Net.Percent(percent).Round(Policy));
+            PercentOffLine(var percent) =>
+                ChargePerLine(cart, reached, (line, _) => line.Net.Percent(percent).Round(Policy)),
 
-            case BuyXGetY(var buy, var free):
-                return ChargePerLine(cart, reached, (line, _) =>
-                    (line.UnitPrice * (line.Quantity / (buy + free) * free)).Round(Policy));
+            BuyXGetY(var buy, var free) =>
+                ChargePerLine(cart, reached, (line, _) =>
+                    (line.UnitPrice * (line.Quantity / (buy + free) * free)).Round(Policy)),
 
-            case AmountOffOrder(var requested):
-                return ChargeOrderAmount(cart, reached, requested);
+            AmountOffOrder(var requested) => ChargeOrderAmount(cart, reached, requested),
 
-            case FreeShipping:
-                return cart.Shipping.IsZero
-                    ? (cart, Money.Zero(currency))
-                    : (cart with { Shipping = Money.Zero(currency) }, cart.Shipping);
-
-            default:
-                // An effect the engine does not know is not silently worth
-                // zero: a zero looks exactly like a promotion that simply did
-                // not apply.
-                throw new NotSupportedException(
-                    $"Promotion '{promotion.Code}' carries effect '{promotion.Effect.Kind}', which the engine does not know.");
-        }
+            FreeShipping => cart.Shipping.IsZero
+                ? (cart, Money.Zero(currency))
+                : (cart with { Shipping = Money.Zero(currency) }, cart.Shipping),
+        };
     }
 
     /// <summary>

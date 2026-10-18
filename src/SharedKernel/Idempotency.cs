@@ -7,7 +7,7 @@ namespace ElGuerre.Tendero.SharedKernel;
 /// What a caller's idempotency key turned out to be when a request arrived
 /// with it.
 /// </summary>
-public abstract record IdempotencyClaim
+public closed record IdempotencyClaim
 {
     private IdempotencyClaim()
     {
