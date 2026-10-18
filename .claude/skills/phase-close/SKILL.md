@@ -49,9 +49,25 @@ STRYKER_DRY=1 bash .claude/skills/phase-close/stryker-run.sh <plan> <scratchpad>
 share runs from `HEAD`):
 
 ```bash
-node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 8            # whole
-node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 2 --mutate "A.cs,Features/B/B.cs"   # scoped
+node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --since phase/<previous> --shards 4   # the default
+node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 2 --mutate "A.cs,Features/B/B.cs"   # by hand
+node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 4                             # whole
 ```
+
+**Mutate what the phase changed, not the project** (`--since` the previous phase's
+tag). The cost is mutants × the suite: Search whole is 1,437 mutants at about
+15 s each, six hours of CPU, and phase 14 had changed one of its files. A whole
+run is for a new project or a baseline set on purpose, never what blocks a close.
+
+**The machine is the run's alone.** A video model, a Docker build or the stack
+beside it stretched every mutant five to seven times (2026-10-17), and more
+shares than the cores can carry make it slower, not faster: **four shares**.
+Before mutating, the runner times the suites without `Model` and `Integration`
+and **stops on a test over 1 s or suites over 15 s**, naming them
+(`--over-budget` runs anyway). Each mutant gets its initial run plus **30 s**
+before it is a Timeout (`--timeout-ms`): Stryker's 5 s let a slower share call
+140 mutants Timeouts — counted as kills, 63 of them real survivors. A share's log
+is written as it runs (`artifacts/stryker-shards/<run>/shard-N.log`).
 
 The project's files are dealt into N shares by lines; each share is a Stryker
 process with `concurrency: 1` in its own git worktree (Stryker builds in place,

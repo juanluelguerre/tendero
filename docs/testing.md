@@ -1274,12 +1274,33 @@ three of one each).
   `>` is read as text (`&&` as `||`); no test has such a piece.
 - **Not run**: `src/Api` changed only in registrations (the speech engines and the
   rate limit), held by the endpoint and registration tests; its share hung eleven
-  hours under the old ceiling and was stopped. `src/Search` whole, 13c's debt, was
-  started in 12 shares and stopped after 30 minutes with none finished, at the
-  author's word ("estos test no pueden volver a tardar tanto"): it stays owed, and
-  the method is reviewed before it runs again. `src/AppHost` has no configuration;
+  hours under the old ceiling and was stopped. `src/AppHost` has no configuration;
   its readiness change is held by the endpoint test, whose hand mutation (status back
   to `IsConfigured`) failed it.
+
+**13c's debt, paid scoped (2026-10-18).** `src/Search` whole was started three
+times and never finished: twelve and eight shares on a machine also running a
+video model (a mutant ran its suite in minutes instead of seconds), then four
+shares alone that came back "100 %" — 140 Timeouts counted as kills, 63 of them
+13a's survivors, and a share past its ceiling. What 13c owed was never the
+project: it was **the 11 files 13c changed** (`--since phase/13b-wire`, 2,541
+lines). Run in four shares with a 30 s timeout margin, 51 minutes:
+**91.50 % of covered** (254 killed, 15 timeouts, 25 survived, 83 no coverage),
+scoped, so it sets no baseline (whole: 83.38 %).
+
+- **Static initialisers** (12): `Contracts.Supported`, the analysers by culture,
+  the field boosts, the warm-up words — `static readonly`, out of the runner's
+  reach; made properties they would die, as SearchEval's and Parakeet's did.
+- **Held by a suite out of the configuration** (5): the DI registrations in
+  `HybridSearchServiceCollectionExtensions`, held by `Api.Tests`.
+- **Noise** (2): `SearchUnavailableException`'s stage wording.
+- **Equivalent** (2): `First` for `FirstOrDefault` on a product's variants (a
+  product has at least one), the start-up worker's `Task.Yield`.
+- **Written down, real** (4): `Contracts.cs:643` (the variant-axis condition
+  negated), `DealBook.cs:18` (an empty branch reaching `""` instead of null),
+  `Elasticsearch.cs:635` (`Fuzziness("AUTO")` unasserted in a request body),
+  `Elasticsearch.cs:770` (no chosen filter still filtering). Each wants a test
+  proved by its hand mutation.
 
 ## Property-based (CsCheck)
 

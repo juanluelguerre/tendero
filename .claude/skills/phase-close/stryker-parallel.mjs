@@ -1,8 +1,8 @@
 // Stryker over one project in N processes at once (docs/testing.md, Level 2, since 2026-10-17).
 //
 //   node .claude/skills/phase-close/stryker-parallel.mjs <project> [--shards 8] [--minutes 90]
-//        [--mutate "Speech/WhisperCppSpeechToText.cs,Features/X/X.cs"] [--keep]
-//        [--coverage all|perTest] [--test-seconds 1] [--suite-seconds 15] [--over-budget]
+//        [--mutate "Speech/WhisperCppSpeechToText.cs,Features/X/X.cs" | --since phase/13c] [--keep]
+//        [--coverage all|perTest] [--timeout-ms 30000] [--test-seconds 1] [--suite-seconds 15] [--over-budget]
 //
 // <project> is the folder that holds its stryker-config.json: src/AI, tools/SearchEval.
 //
@@ -16,7 +16,7 @@
 // themselves. The shards' JSON reports are merged into one under the project's
 // StrykerOutput, where stryker-read.mjs finds it, with an HTML report beside it.
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..', '..', '..');
@@ -28,10 +28,25 @@ const option = (name, fallback) => {
 };
 const shards = Number(option('shards', 8));
 const minutes = Number(option('minutes', 90));
-const scope = option('mutate', '')
-  .split(',')
+// --since <ref>: only the files the phase changed (git diff ref...HEAD), so a close
+// costs what the phase touched and not the project's size — Search whole is 1,437
+// mutants at ~15 s each, six hours of CPU, for a phase that changed none of it.
+const since = option('since', '');
+const changedSince = (ref) =>
+  execFileSync('git', ['diff', '--name-only', '--diff-filter=AM', `${ref}...HEAD`, '--', `${project}/*.cs`], {
+    cwd: resolve(import.meta.dirname, '..', '..', '..'),
+    encoding: 'utf8',
+  })
+    .split('\n')
+    .filter(Boolean)
+    .map((path) => path.slice(project.replace(/\/$/, '').length + 1));
+const scope = (since ? changedSince(since) : option('mutate', '').split(','))
   .map((file) => file.trim())
   .filter(Boolean);
+if (since && scope.length === 0) {
+  console.log(`${project}: no file changed since ${since}, nothing to mutate.`);
+  process.exit(0);
+}
 const keep = args.includes('--keep');
 // all by default: perTest on AI whole (2026-10-17) left 137 mutants uncovered that `all` kills or
 // classifies, fell from 89.10 % to 78.95 % of covered, and hung one share for its 30 minutes.
@@ -138,6 +153,10 @@ const runs = bins.map((bin, i) => {
   const configPath = join(tree, project, 'stryker-config.json');
   const tuned = JSON.parse(readFileSync(configPath, 'utf8'));
   tuned['stryker-config']['coverage-analysis'] = coverage;
+  // A mutant is a Timeout, counted as killed, past its initial run plus this. Stryker's
+  // 5 s let a share that ran a little slower call 140 of Search's mutants Timeouts
+  // (2026-10-18), 63 of them 13a's survivors: a margin that wide hides survivors.
+  tuned['stryker-config']['additional-timeout'] = Number(option('timeout-ms', 30_000));
   writeFileSync(configPath, JSON.stringify(tuned, null, 2));
   const cwd = join(tree, project);
   const log = join(work, `shard-${i}.log`);
@@ -152,9 +171,10 @@ const runs = bins.map((bin, i) => {
       // as survivors, and an endless loop as one, when shares ran side by side).
       { cwd, shell: false, env: { ...process.env, TEMP: temp(tree), TMP: temp(tree) } },
     );
-    const out = [];
-    child.stdout.on('data', (d) => out.push(d));
-    child.stderr.on('data', (d) => out.push(d));
+    // Written as it comes, so a share's progress can be read while it runs.
+    const out = createWriteStream(log);
+    child.stdout.pipe(out, { end: false });
+    child.stderr.pipe(out, { end: false });
     // The ceiling stops the whole tree: on Windows, killing dotnet leaves Stryker and its
     // test hosts running (phase 14's Api run went on for eleven hours past its 90 minutes).
     const timer = setTimeout(() => {
@@ -163,7 +183,7 @@ const runs = bins.map((bin, i) => {
     }, minutes * 60_000);
     child.on('close', (code) => {
       clearTimeout(timer);
-      writeFileSync(log, Buffer.concat(out));
+      out.end();
       const seconds = Math.round((Date.now() - started) / 1000);
       console.log(`  shard ${i}: ${bin.files.length} files, ${bin.lines} lines, exit ${code} after ${seconds} s`);
       done({ i, tree, cwd, code });
