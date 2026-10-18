@@ -17,7 +17,7 @@ namespace ElGuerre.Tendero.Api.Tests;
 ///
 /// This test is what stops the next slice from forgetting.
 /// </summary>
-public sealed class EndpointAuthorizationTests
+public sealed class EndpointAuthorizationTests(TenderoApiFactory factory) : IClassFixture<TenderoApiFactory>
 {
     /// <summary>
     /// ASP.NET Core's and the development issuer's own infrastructure is not
@@ -29,7 +29,6 @@ public sealed class EndpointAuthorizationTests
     [Fact]
     public void Every_endpoint_states_who_may_call_it()
     {
-        using var factory = new TenderoApiFactory();
 
         // Force the host to be built before reading the routes.
         _ = factory.CreateClient();
@@ -109,7 +108,6 @@ public sealed class EndpointAuthorizationTests
     [InlineData("/api/catalog/products")]
     public void Writes_to_the_catalogue_require_the_shopkeeper(string route)
     {
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var endpoint = factory.Services
@@ -142,7 +140,6 @@ public sealed class EndpointAuthorizationTests
     [InlineData("/api/pricing/campaign-images", 1)]
     public void Campaigns_are_managed_by_the_shopkeeper_only(string route, int endpoints)
     {
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var matching = factory.Services
@@ -165,7 +162,6 @@ public sealed class EndpointAuthorizationTests
     [Fact]
     public async Task Anybody_reads_the_campaigns_near_now()
     {
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var endpoint = factory.Services
@@ -193,7 +189,6 @@ public sealed class EndpointAuthorizationTests
     [InlineData("/api/search/cards")]
     public void The_homes_rows_are_public_by_decision(string route)
     {
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var endpoint = factory.Services
@@ -220,7 +215,6 @@ public sealed class EndpointAuthorizationTests
     [InlineData("/api/accounts/me/history/settings", 1)]
     public void The_trail_is_the_shoppers_own(string route, int endpoints)
     {
-        using var factory = new TenderoApiFactory();
         _ = factory.CreateClient();
 
         var matching = factory.Services
@@ -242,7 +236,6 @@ public sealed class EndpointAuthorizationTests
     [Fact]
     public async Task A_stranger_cannot_read_anybodys_trail()
     {
-        using var factory = new TenderoApiFactory();
 
         var response = await factory.CreateClient().GetAsync("/api/accounts/me/history", TestContext.Current.CancellationToken);
 
@@ -261,7 +254,6 @@ public sealed class EndpointAuthorizationTests
     [Fact]
     public async Task A_stranger_cannot_read_the_catalogue_under_review()
     {
-        using var factory = new TenderoApiFactory();
         var client = factory.CreateClient();
 
         var response = await client.GetAsync(

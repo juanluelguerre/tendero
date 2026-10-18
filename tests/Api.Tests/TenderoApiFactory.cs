@@ -14,8 +14,7 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// are enough to bring it up and ask it things that need no data — its OpenAPI
 /// document, its policies, its development issuer.
 /// </summary>
-public sealed class TenderoApiFactory(string? externalAuthority = null)
-    : WebApplicationFactory<Program>
+public sealed class TenderoApiFactory : WebApplicationFactory<Program>
 {
     /// <summary>
     /// The test server listens on no port, so the issuer signing the tokens is
@@ -32,8 +31,13 @@ public sealed class TenderoApiFactory(string? externalAuthority = null)
     /// through the test server's own channel, and an external one over real HTTP.
     /// Handing the in-memory handler to a token validator that needs to call a
     /// container would fail with a message about the issuer being invalid.
+    ///
+    /// A property, not a constructor argument: a class fixture is built with no
+    /// arguments, and most classes share one host (`IClassFixture`).
     /// </summary>
-    private bool IsExternal => externalAuthority is not null;
+    public string? ExternalAuthority { get; init; }
+
+    private bool IsExternal => ExternalAuthority is not null;
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
@@ -49,7 +53,7 @@ public sealed class TenderoApiFactory(string? externalAuthority = null)
                 // them. Refused on a dead port is the honest failure.
                 ["ConnectionStrings:tendero-db"] = "Host=127.0.0.1;Port=1;Database=api-tests;Timeout=1",
                 ["ConnectionStrings:elasticsearch"] = "http://127.0.0.1:1",
-                ["Authentication:Authority"] = externalAuthority ?? TestAuthority,
+                ["Authentication:Authority"] = ExternalAuthority ?? TestAuthority,
                 ["Authentication:AllowHttpMetadata"] = "true"
             }));
 

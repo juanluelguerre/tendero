@@ -11,14 +11,13 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// is not drawn, and a sentence sent anyway is answered "not understood", never
 /// refused (invariant 8).
 /// </summary>
-public sealed class KitSentenceEndpointTests
+public sealed class KitSentenceEndpointTests(TenderoApiFactory factory) : IClassFixture<TenderoApiFactory>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
     public async Task With_no_model_the_box_is_not_offered_and_a_sentence_is_not_understood()
     {
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var status = JsonNode.Parse(await client.GetStringAsync("/api/kits/understand/status", Ct))!;
@@ -34,7 +33,6 @@ public sealed class KitSentenceEndpointTests
     [Fact]
     public async Task An_empty_sentence_is_refused_as_invalid_naming_the_field()
     {
-        using var factory = new TenderoApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/api/kits/understand?culture=en", new { sentence = "  " }, Ct);
