@@ -216,7 +216,12 @@ node tools/api-map.mjs --schema CartView
   (invariant 6), and Spanish still appears inside comments as *data being
   discussed* (`"azul marino"`, `"menaje de cocina"`); that is the example, not
   the prose.
-- C# 14, file-scoped namespaces, primary constructors, collection expressions.
+- C# 15 (the .NET 11 SDK's default), file-scoped namespaces, primary constructors,
+  collection expressions. **A record hierarchy whose cases are all known is
+  `closed`**, and a switch over it names every case with no fallback, so a new
+  case does not compile until each switch handles it (`PromotionEffect`,
+  `IdempotencyClaim`). A collection built with elements and a comparer takes
+  `[with(comparer), …]`; an empty one keeps `new(comparer)`.
 - Strongly-typed ids (`ProductId`, `OrderId`) — never raw Guids in signatures.
 - A closed set is an enum everywhere it crosses the wire (ADR 0043): in a body
 - **Money on the wire is a `Money`** (ADR 0059): a view carries `Money`, never a

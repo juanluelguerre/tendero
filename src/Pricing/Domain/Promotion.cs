@@ -24,8 +24,10 @@ public enum CombinationPolicy
 
 /// <summary>What a promotion does. It is DATA: the arithmetic lives in the
 /// engine, in four branches visible at once, rather than spread over four
-/// classes.</summary>
-public abstract record PromotionEffect
+/// classes. Closed (C# 15): the four below are all there are, so a switch that
+/// names them needs no fallback, and a fifth added without its branch does not
+/// compile — where a fallback used to read it as free shipping.</summary>
+public closed record PromotionEffect
 {
     /// <summary>A stable name, for the backoffice and for the UCP manifest.</summary>
     public abstract string Kind { get; }
@@ -163,7 +165,7 @@ public sealed record Promotion(
         PercentOffLine percent => Needing(new DealTerms(DealKind.PercentOffLine, Percent: percent.Percent)),
         AmountOffOrder amount => Needing(new DealTerms(DealKind.AmountOffOrder, AmountOff: amount.Amount)),
         BuyXGetY deal => Needing(new DealTerms(DealKind.BuyXGetY, Buy: deal.Buy, Free: deal.Free)),
-        _ => Needing(new DealTerms(DealKind.FreeShipping)),
+        FreeShipping => Needing(new DealTerms(DealKind.FreeShipping)),
     };
 
     private DealTerms Needing(DealTerms terms) => terms with

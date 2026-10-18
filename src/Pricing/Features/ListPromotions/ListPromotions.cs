@@ -108,6 +108,5 @@ public sealed class ListPromotionsHandler(IPromotionReader promotions, TimeProvi
         AmountOffOrder(var amount) => amount.ToString(),
         BuyXGetY(var buy, var free) => $"{buy}+{free}",
         FreeShipping => "-",
-        _ => effect.Kind
     };
 }
