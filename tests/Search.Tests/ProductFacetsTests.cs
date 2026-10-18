@@ -201,6 +201,23 @@ public sealed class ProductFacetsTests
         Assert.DoesNotContain("brand.raw", bodies[1]);
     }
 
+    /// <summary>
+    /// No filters chosen is no clause at all, not an empty one: the card reader's
+    /// bool holds the ids and the branch, and nothing else (13c's scoped Stryker
+    /// run found an empty filter clause unheld).
+    /// </summary>
+    [Fact]
+    public async Task With_no_filters_chosen_the_card_reader_sends_no_filter_clause_for_them()
+    {
+        var (client, bodies) = Capturing();
+
+        await Assert.ThrowsAnyAsync<Exception>(() => Adapters.HitReader(client)
+            .FindAsync(["p1"], "es", null, SearchFilters.None, Ct));
+
+        var filters = JsonNode.Parse(Assert.Single(bodies))!["query"]!["bool"]!["filter"]!.AsArray();
+        Assert.DoesNotContain(filters, clause => clause!.AsObject().ContainsKey("bool"));
+    }
+
     // ---------- Whether a facet shows ----------
 
     [Theory]

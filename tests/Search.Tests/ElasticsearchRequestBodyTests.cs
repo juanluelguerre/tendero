@@ -219,6 +219,20 @@ public sealed class ElasticsearchRequestBodyTests
         Assert.DoesNotContain("\"match_all\"", search);
     }
 
+    /// <summary>
+    /// "zapatilas" finds the shoes: one clause of the words search forgives a typo,
+    /// and only that one — cross_fields cannot (13c's scoped Stryker run found the
+    /// tolerance unasserted).
+    /// </summary>
+    [Fact]
+    public async Task A_words_search_forgives_typos_in_one_clause()
+    {
+        var body = await LexicalBody(new ProductSearchQuery("zapatilas", "es"));
+
+        Assert.Contains("\"fuzziness\":\"AUTO\"", body);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(body, "\"fuzziness\""));
+    }
+
     [Fact]
     public async Task Without_a_category_no_branch_filter_is_sent()
     {
