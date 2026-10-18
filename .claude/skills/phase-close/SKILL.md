@@ -45,15 +45,73 @@ STRYKER_DRY=1 bash .claude/skills/phase-close/stryker-run.sh <plan> <scratchpad>
 
 ## 2. Run it
 
+**In parallel, since phase 14's close** (commit what the run must see first: each
+share runs from `HEAD`):
+
+```bash
+node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --since phase/<previous> --shards 4   # the default
+node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 2 --mutate "A.cs,Features/B/B.cs"   # by hand
+node .claude/skills/phase-close/stryker-parallel.mjs src/<Project> --shards 4                             # whole
+```
+
+**Mutate what the phase changed, not the project** (`--since` the previous phase's
+tag). The cost is mutants × the suite: Search whole is 1,437 mutants at about
+15 s each, six hours of CPU, and phase 14 had changed one of its files. A whole
+run is for a new project or a baseline set on purpose, never what blocks a close.
+
+**The machine is the run's alone.** A video model, a Docker build or the stack
+beside it stretched every mutant five to seven times (2026-10-17), and more
+shares than the cores can carry make it slower, not faster: **four shares**.
+Before mutating, the runner times the suites without `Model` and `Integration`
+and **stops on a test over 1 s or suites over 15 s**, naming them
+(`--over-budget` runs anyway). Each mutant gets its initial run plus **30 s**
+before it is a Timeout (`--timeout-ms`): Stryker's 5 s let a slower share call
+140 mutants Timeouts — counted as kills, 63 of them real survivors. A share's log
+is written as it runs (`artifacts/stryker-shards/<run>/shard-N.log`).
+
+The project's files are dealt into N shares by lines; each share is a Stryker
+process with `concurrency: 1` in its own git worktree (Stryker builds in place,
+and eight builds in one tree overwrite each other), with **its own TEMP folder**,
+and `coverage-analysis: all` written into the worktree's copy of the config. The
+reports are merged into one under the project's `StrykerOutput`, where
+`stryker-read.mjs` reads it. Each of those settings is a bug met on phase 14's
+close (`docs/testing.md`, *Phase 14's close*):
+
+- **Processes, not `--concurrency`**: the MTP runner is the only one whose
+  coverage works with xUnit v3 (vstest's collector cannot see tests that run
+  inside the test executable), and it under-reports kills above concurrency 1
+  (#3832).
+- **A TEMP per share**: shares sharing `%TEMP%` read each other's runner files —
+  mutants killed by hand came back as survivors, an endless loop as one.
+- **Coverage per mutant, not per test**: per test, a mutant was run against tests
+  that never reach it (`tokens.Add` removed in TdtGreedy, "survived").
+- **A ceiling that stops the tree** (`taskkill /T`): killing `dotnet` left a share
+  running eleven hours past its 90 minutes.
+
+**Control every run with one hand mutation** of a line its tests obviously
+cover: if Stryker calls that mutant a survivor, the run is wrong, not the
+tests. A worktree has no `models/`, so the tests that need a model skip by
+themselves (mark new ones `Category=Model`). Numeric code with loops (Parakeet's
+features) makes mutants time out: it sets the run's wall time, so give it a
+share of its own.
+
+The serial runner stays for a plan of many scoped projects:
+
 ```bash
 bash .claude/skills/phase-close/stryker-run.sh <plan> <scratchpad>/stryker   # in the background
 ```
 
 One project at a time, `concurrency: 1`. A configuration that names
-`Integration.Tests` is run with its unit suites only. With the Postgres suite
-in the run, Testcontainers starts a database a mutant, and 13b's Ordering run
-hung for eight hours. Each project stops at `STRYKER_MINUTES` (120 by default).
-If the log stops moving long before that, look at it: do not wait on it.
+`Integration.Tests` is run with its unit suites only (both runners do this).
+With the Postgres suite in the run, Testcontainers starts a database a mutant,
+and 13b's Ordering run hung for eight hours. Each project stops at
+`STRYKER_MINUTES` (120 by default; `--minutes` for the parallel one). If the
+log stops moving long before that, look at it: do not wait on it.
+
+**A static field is out of Stryker's reach**: a `static readonly` table is
+initialised once, so a mutant inside it cannot be switched on and off and
+survives whatever the tests say (13c's price cues, 14's number words: 89 of
+103 survivors). Make it a property before reading those survivors as gaps.
 
 ## 3. Read and classify
 

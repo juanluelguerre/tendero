@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <None Include="scripts/*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Speech/parakeet-fixture.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

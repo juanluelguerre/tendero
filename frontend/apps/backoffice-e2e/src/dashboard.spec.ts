@@ -99,4 +99,34 @@ test.describe('the dashboard', () => {
       .evaluate((nav) => [nav.scrollWidth > nav.clientWidth, getComputedStyle(nav).overflowX]);
     expect(tabs).toEqual([true, 'auto']);
   });
+
+  /**
+   * The author's screenshot of 2026-10-16: Sales by day drawn under Waiting for
+   * you and Health. ECharts writes its SVG at the width it was drawn at, and a grid
+   * track is never narrower than its content, so a cell that narrowed while the
+   * window stayed the same — Steward's panel docked beside the page — kept the old
+   * width, the chart's resize observer never saw it shrink, and the drawing spilled
+   * 193 px over its neighbours. A wider or narrower window did not show it.
+   */
+  test('a chart narrows with its cell when Steward docks beside the page', async ({ page }) => {
+    const spills = () =>
+      page
+        .locator('[data-widget]')
+        .evaluateAll((cells) =>
+          cells.flatMap((cell) =>
+            [...cell.querySelectorAll('figure [aria-hidden="true"] svg')]
+              .filter((svg) => svg.getBoundingClientRect().right > cell.getBoundingClientRect().right + 1)
+              .map(() => cell.getAttribute('data-widget')),
+          ),
+        );
+    await page.setViewportSize({ width: 1780, height: 1100 });
+    await page.goto('/dashboard');
+    await expect(page.locator('[data-widget="salesByDay"] figure [aria-hidden="true"] svg')).toBeVisible();
+
+    await page
+      .getByRole('button', { name: /steward/i })
+      .first()
+      .click();
+    await expect.poll(spills).toEqual([]);
+  });
 });

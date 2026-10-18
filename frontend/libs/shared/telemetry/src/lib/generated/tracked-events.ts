@@ -383,6 +383,36 @@ export interface TrackedEvents {
   };
 
   /**
+   * A shopper spoke a question and listening ended (phase 14). Only with analytics consent; never the audio or the words.
+   *
+   * Speak to the shop: Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send?
+   * Decides: If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop.
+   */
+  readonly voice_input_heard: {
+    /** Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice. */
+    readonly where: 'tino' | 'search' | 'steward';
+    /** Which adapter listened: the shop's own engine, or the browser's on the device. */
+    readonly adapter: 'shop' | 'web-speech';
+    /** What listening came to: words for the box, nothing heard, a failure, or Escape. */
+    readonly outcome: 'words' | 'nothing' | 'failed' | 'cancelled';
+  };
+
+  /**
+   * What became of the words a microphone wrote into a box (phase 14). Only with analytics consent; never the words.
+   *
+   * Speak to the shop: Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send?
+   * Decides: If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop.
+   */
+  readonly voice_transcript_used: {
+    /** Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice. */
+    readonly where: 'tino' | 'search' | 'steward';
+    /** Which adapter listened: the shop's own engine, or the browser's on the device. */
+    readonly adapter: 'shop' | 'web-speech';
+    /** Sent as they were heard, sent after the shopper changed them, or never sent. */
+    readonly how: 'as_heard' | 'edited' | 'discarded';
+  };
+
+  /**
    * A shopper asked the shop to build a kit and got an answer (phase 13c, K-5): once per kit built, complete or not. Only with analytics consent.
    *
    * Kits: Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?
@@ -466,6 +496,8 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   image_alt_proposal_decided: 'staff',
   search_by_image_submitted: 'behavioural',
   search_by_image_result_followed: 'behavioural',
+  voice_input_heard: 'behavioural',
+  voice_transcript_used: 'behavioural',
   kit_built: 'behavioural',
   kit_added_to_cart: 'behavioural',
   kit_sentence_read: 'behavioural',

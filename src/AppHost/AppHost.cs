@@ -59,6 +59,7 @@ const int rerankerPort = 38082;
 const int extractorPort = 38083;
 const int supportPort = 38084;
 const int stewardModelPort = 38085;
+const int speechModelPort = 38086;
 const int grafanaPort = 33000;
 const int collectorGrpcPort = 34317;
 const int collectorHttpPort = 34318;
@@ -761,6 +762,88 @@ if (builder.Configuration["Tendero:TinoScript"] is { Length: > 0 } tinoScript)
         .WithEnvironment("Steward__Models__tino__Model", "scripted")
         .WithEnvironment("Steward__Models__tino__Script", Path.GetFullPath(tinoScript, repositoryRoot))
         .WithEnvironment("Support__Scripted", "0.95");
+}
+
+// THE SHOP'S EAR (phase 14, ADR 0061), by its own switch:
+//
+//   Tendero__Voice=true dotnet run --project src/AppHost
+//
+// whisper.cpp's server (v1.9.5, its own image pinned by commit) with Whisper
+// large-v3-turbo in q8_0 and Silero VAD. q8_0 by the author's ruling of
+// 2026-10-16 (docs/analysis/voice-models.md): it heard every recording exactly as
+// f16 did, in 64 % of the card's memory, and beside the rest of the shop q5_0
+// saved nothing measurable. The VAD is not optional: without it the model writes
+// "Gracias." for silence.
+//
+// **Prepared by the AppHost, as the LLM is** (the author, 2026-10-16): two steps
+// before the server, each a container that leaves early when its file is already
+// there and hashes right — `prepare-whisper.sh` converts the maker's weights and
+// the VAD in a throwaway Python, `quantize-whisper.sh` makes the q8_0 with the
+// server image's own quantizer. Into `models/whisper` outside git, where the
+// scripts can also be run by hand (README, *Models*). The first start downloads
+// 1.6 GB and takes a few minutes; every later one, seconds. Measured on
+// 2026-10-16 from an empty folder: the conversion peaked at 4.99 GiB, the page
+// cache of its download included, and the quantization at 656 MiB; each limit is
+// the peak and a gigabyte. A fresh download gave the same two hashes again.
+//
+// The API does not wait for any of it, as it does not wait for Steward's model: a
+// first start's preparation, or one that fails, must not hold the shop. Until the
+// server answers, the API says speech is not available and the shop has no
+// microphone, saying nothing about one (invariant 8). Measured on 2026-10-16:
+// 1,014 MiB at its peak on the CPU and 683 MiB of RAM beside 1,266 MiB of the card
+// on the GPU; the limit stays 3 GB for a thirty-second question. On the GPU when
+// there is one, by the same switch as the rest of the inference.
+var voiceModels = Path.Combine(repositoryRoot, "models", "whisper");
+const string speechModelFile = "ggml-large-v3-turbo-q8_0.bin";
+const string speechVadFile = "ggml-silero-v6.2.0.bin";
+var voice = string.Equals(builder.Configuration["Tendero:Voice"], "true", StringComparison.OrdinalIgnoreCase);
+const string whisperCppCommit = "d1be6fde11ac6e0407606b4e42fe72d34add8037";
+if (voice)
+{
+    Directory.CreateDirectory(voiceModels);
+    var scripts = Path.Combine(builder.AppHostDirectory, "scripts");
+
+    // The scripts' paths are the repository's (`models/whisper/…`), so each step
+    // runs in a /repo that holds only that folder and reads its script beside it.
+    var speechWeights = builder.AddContainer("speech-weights", "python", "3.12.14-slim")
+        .WithEntrypoint("sh")
+        .WithArgs("/scripts/prepare-whisper.sh")
+        .WithBindMount(scripts, "/scripts", isReadOnly: true)
+        .WithBindMount(voiceModels, "/repo/models/whisper")
+        .WithContainerRuntimeArgs("-w", "/repo", "--memory=6g", "--memory-swap=6g", Cpus(8));
+
+    var speechQuantized = builder.AddContainer("speech-quantized", "ghcr.io/ggml-org/whisper.cpp", "main-" + whisperCppCommit)
+        .WithEntrypoint("sh")
+        .WithArgs("/scripts/quantize-whisper.sh")
+        .WithBindMount(scripts, "/scripts", isReadOnly: true)
+        .WithBindMount(voiceModels, "/repo/models/whisper")
+        .WithContainerRuntimeArgs("-w", "/repo", "--memory=2g", "--memory-swap=2g", Cpus(8))
+        .WaitForCompletion(speechWeights);
+
+    var speechModel = builder.AddContainer("speech-model", "ghcr.io/ggml-org/whisper.cpp",
+            (inference.UsesGpu ? "main-cuda-" : "main-") + whisperCppCommit)
+        .WithArgs($"whisper-server --model /models/{speechModelFile} --vad --vad-model /models/{speechVadFile}"
+            + " --host 0.0.0.0 --port 8080 --threads 8")
+        .WithHttpEndpoint(targetPort: 8080, port: speechModelPort, name: "http")
+        .WithHttpHealthCheck("/", endpointName: "http")
+        .WithBindMount(voiceModels, "/models", isReadOnly: true)
+        .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", Cpus(8))
+        .WaitForCompletion(speechQuantized);
+    if (inference.UsesGpu)
+        speechModel.WithContainerRuntimeArgs("--gpus", "all");
+
+    api.WithEnvironment("Speech__Engine", "whisper-cpp")
+        .WithEnvironment("Speech__WhisperCpp__Url", speechModel.GetEndpoint("http"));
+}
+
+// A scripted ear (phase 14), for the storefront's browser spec in CI as Tino's is:
+// `Tendero__SpeechScript=<file>`. No speech model fits a runner, so the scripted
+// engine answers every question from the script; what the spec proves is the
+// wiring — the microphone, the WAV, the words landing unsent — on any machine.
+if (builder.Configuration["Tendero:SpeechScript"] is { Length: > 0 } speechScript)
+{
+    api.WithEnvironment("Speech__Engine", "scripted")
+        .WithEnvironment("Speech__Script", Path.GetFullPath(speechScript, repositoryRoot));
 }
 
 if (useKeycloak)

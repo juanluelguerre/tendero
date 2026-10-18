@@ -110,6 +110,25 @@ and catalogue text, and — once orders are read — a signed-in shopper's order
 status; that is a decision the author takes with this page in front of them, not
 a default.
 
+## A question a shopper speaks
+
+Speaking to the shop (phase 14, `docs/specs/voice.md`) takes a short spoken
+question from anyone, signed in or not, for Tino's composer and the search box on
+a phone. **It is never kept**, and the words are written into the box unsent: the
+shopper sees them before anything is asked.
+
+| What | Where it goes |
+|---|---|
+| The audio | memory, for the length of one request: read, sent to the shop's own whisper.cpp server, transcribed, discarded. Never a store, a file, a log or a trace |
+| What the request leaves behind | a span with four facts: the engine, the language, how many seconds the question lasted, and whether anything was heard. No audio, no words, no hash of the audio |
+| The words | the response to the browser, and nothing else. They are a question only once the shopper sends them |
+
+**The engine is the shop's own**: whisper.cpp runs beside the API, and the audio
+does not leave the machine. The browser's own speech recognition is used only
+where it recognises on the device (`processLocally`). Where it would send the
+audio to the browser maker's servers, it is not offered (the author's ruling of
+2026-10-16).
+
 ## A picture a shopper searches with
 
 Searching by picture (phase 13a, `docs/specs/images.md`, *I-6*) takes a

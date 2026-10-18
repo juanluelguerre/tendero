@@ -170,7 +170,10 @@
     "addToCart": "Add to cart",
     "adding": "Adding...",
     "breadcrumb": "Where you are",
-    "gallery": { "previous": "Previous picture", "next": "Next picture" },
+    "gallery": {
+      "previous": "Previous picture",
+      "next": "Next picture"
+    },
     "combinationNotSold": "That combination is not sold.",
     "failed": "We could not load the product. Try again in a moment.",
     "failedTitle": "Something went wrong",
@@ -504,6 +507,14 @@
     },
     "composerLabel": "Ask about a product or an order of yours"
   },
+  "voice": {
+    "start": "Speak",
+    "stop": "Stop listening",
+    "listening": "Listening…",
+    "endHint": "Press the microphone to finish",
+    "landed": "Check it and send it when you are ready",
+    "failed": "I did not catch that. Try again or type it."
+  },
   "visualSearch": {
     "door": "Search with a picture",
     "title": "Search with a picture",
@@ -575,6 +586,14 @@
       "buyXGetY": "{{take}} for {{pay}}",
       "freeShipping": "Free shipping",
       "freeShippingFrom": "Free shipping from {{minimum}}"
+    }
+  },
+  "composer": {
+    "attach": {
+      "photo": "Photo or gallery",
+      "camera": "Camera",
+      "file": "File",
+      "more": "Add"
     }
   }
 }

@@ -28,6 +28,14 @@ const Paths = {
   search: 'M4 16a8 8 0 1 1 16 0 M12 16l4-5',
   /** A picture to search with: a camera, its lens a circle written as two arcs. */
   camera: 'M4 8h3.5l1.5-2h6l1.5 2H20v11H4z M12 10.5a3 3 0 1 0 0 6a3 3 0 1 0 0-6',
+  /** A question spoken instead of typed (phase 14): a capsule on its stand. */
+  microphone: 'M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z M6 11a6 6 0 0 0 12 0 M12 17v3 M9 20h6',
+  /** A picture from the gallery, to add to a question: a frame, a hill and a sun. */
+  photo: 'M4 5h16v14H4z M4 16l5-5 4 4 2-2 5 5 M15.5 8a1.5 1.5 0 1 0 0 3a1.5 1.5 0 1 0 0-3',
+  /** A file to add to a question: a paper clip. */
+  attach: 'M15 7l-6.5 6.5a2 2 0 0 0 3 3L18 10a4 4 0 0 0-6-6l-6.5 6.5a6 6 0 0 0 8.5 8.5L19 14',
+  /** More than one way to add something: a plus that opens them. */
+  add: 'M12 5v14 M5 12h14',
   /** What Steward proposed: a list with its ticks. */
   proposals: 'M4 7l1.5 1.5L8 6 M4 13l1.5 1.5L8 12 M11 7h9 M11 13h9 M11 19h9 M4 19h4',
 

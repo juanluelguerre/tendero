@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { describe, expect, it } from 'vitest';
 import { Composer } from './composer';
 
@@ -88,6 +89,30 @@ describe('the composer', () => {
     await fixture.whenStable();
 
     expect(document.activeElement).toBe((fixture.nativeElement as HTMLElement).querySelector('textarea'));
+    (fixture.nativeElement as HTMLElement).remove();
+  });
+
+  /**
+   * What was heard (phase 14, the voice spec V-2): written into the box and
+   * never sent — the person reads it, fixes it, and sends it. After what they had
+   * typed, with a space, and with the focus at its end.
+   */
+  it('writes words into the box unsent, after what was typed, with the focus at the end', () => {
+    const { fixture, host, box, button, type } = drawn();
+    document.body.append(fixture.nativeElement as HTMLElement);
+    type('busco');
+
+    const composer = fixture.debugElement.query(By.directive(Composer)).injector.get(Composer);
+    composer.write('zapatillas para correr');
+    fixture.detectChanges();
+
+    expect([box.value, host.asked, button.disabled, document.activeElement === box, box.selectionStart]).toEqual([
+      'busco zapatillas para correr',
+      [],
+      false,
+      true,
+      'busco zapatillas para correr'.length,
+    ]);
     (fixture.nativeElement as HTMLElement).remove();
   });
 });

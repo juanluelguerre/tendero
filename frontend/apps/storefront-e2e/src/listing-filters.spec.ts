@@ -190,6 +190,30 @@ test('on a phone, the products behind the open sheet do not scroll', async ({ pa
   expect(await page.evaluate(() => window.scrollY)).toBe(before);
 });
 
+/**
+ * A full-width sheet reaches both edges of the window (the author's capture of
+ * 2026-10-16, Tino's sheet): the root keeps the scrollbar's gutter reserved so a
+ * centred dialog does not shift the page, and the viewport paints that gutter
+ * over everything, a modal dialog included, leaving a strip of the page at the
+ * sheet's right. Measured as it is seen: what is under the window's last pixels,
+ * not the sheet's box, which was the full width all along.
+ */
+test('on a phone, the sheet reaches both edges of the window', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(Category);
+  await listed(page);
+  await page.getByRole('button', { name: /^Filtros/ }).click();
+  const sheet = page.getByRole('dialog', { name: 'Filtros' });
+  await expect(sheet).toBeVisible();
+
+  const edges = await sheet.evaluate((dialog) => {
+    const y = dialog.getBoundingClientRect().top + 40;
+    const inside = (x: number) => dialog.contains(document.elementFromPoint(x, y));
+    return [inside(1), inside(window.innerWidth - 2)];
+  });
+  expect(edges).toEqual([true, true]);
+});
+
 test('Ofertas in the departments row lists everything on offer', async ({ page }) => {
   await desktop(page);
   await page.goto('/es/cart');

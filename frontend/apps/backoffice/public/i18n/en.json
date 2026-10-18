@@ -1312,5 +1312,21 @@
     "tallyOne": "{{together}} of {{count}} can go together · 1 to open on its own",
     "approveFailed": "The approval did not go through. What was decided shows on its row; try the rest again.",
     "done": "{{approved}} approved."
+  },
+  "composer": {
+    "attach": {
+      "photo": "Photo or gallery",
+      "camera": "Camera",
+      "file": "File",
+      "more": "Add"
+    }
+  },
+  "voice": {
+    "start": "Speak",
+    "stop": "Stop listening",
+    "listening": "Listening…",
+    "endHint": "Press the microphone to finish",
+    "landed": "Check it and send it when you are ready",
+    "failed": "I did not catch that. Try again or type it."
   }
 }

@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TinoDoorStore } from '../tino-door.store';
 import { answer, hit, reason, unavailable } from '../tino-fixtures';
 import { TinoStore } from '../tino.store';
+import { NOTHING_LISTENS, SPEECH_TO_TEXT, type Heard, type SpeechToText } from '@tendero/shared-composer';
 import { TinoPanel } from './tino-panel';
 
 const Turns = 'http://api/api/assistant/turns';
@@ -21,9 +22,12 @@ const Status = 'http://api/api/assistant/status';
 describe('the tino panel', () => {
   let http: HttpTestingController;
   const telemetry = { trackEvent: vi.fn() };
+  // Who listens, read when the panel is drawn: nothing, unless a test says otherwise.
+  let speech: SpeechToText = NOTHING_LISTENS;
 
   beforeEach(() => {
     telemetry.trackEvent.mockClear();
+    speech = NOTHING_LISTENS;
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -32,6 +36,7 @@ describe('the tino panel', () => {
         provideTenderoI18n(),
         { provide: API_BASE_URL, useValue: 'http://api' },
         { provide: Telemetry, useValue: telemetry },
+        { provide: SPEECH_TO_TEXT, useFactory: () => speech },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -341,5 +346,43 @@ describe('the tino panel', () => {
 
     expect(TestBed.inject(Router).url).toBe('/es?q=sart%C3%A9n');
     expect(telemetry.trackEvent).toHaveBeenCalledWith('tino_result_followed', { action: 'search_opened', position: 0 });
+  });
+
+  // ---------- speaking to Tino (phase 14, the voice spec V-2 and V-3) ----------
+
+  it('has no microphone where nothing can listen, and the composer is as it always was', async () => {
+    const element = (await drawn()).nativeElement as HTMLElement;
+
+    expect(element.querySelector('footer [data-microphone]')).toBeNull();
+  });
+
+  /** The sketch of 2026-10-16, screens 2 and 3: listening said in words, then the words in the box and nothing sent. */
+  it('writes what was heard into the box and sends nothing, saying to check it', async () => {
+    let finish: (heard: Heard) => void = () => undefined;
+    speech = {
+      name: 'shop',
+      available: async () => true,
+      listen: () => ({
+        stop: () => finish({ kind: 'words', words: 'unas zapatillas para correr' }),
+        heard: new Promise((r) => (finish = r)),
+      }),
+    };
+    const fixture = await drawn();
+    const element = fixture.nativeElement as HTMLElement;
+    const microphone = () => element.querySelector<HTMLButtonElement>('footer [data-microphone]')!;
+
+    microphone().click();
+    fixture.detectChanges();
+    const listening = [element.querySelector('textarea')!.placeholder, element.querySelector('footer')!.textContent];
+    microphone().click();
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+
+    expect(listening[0]).toBe('voice.listening');
+    expect(listening[1]).toContain('voice.endHint');
+    expect(element.querySelector('textarea')!.value).toBe('unas zapatillas para correr');
+    expect(element.querySelector('footer')!.textContent).toContain('voice.landed');
+    expect(http.match((req) => req.url === Turns)).toEqual([]);
+    expect(element.querySelector<HTMLButtonElement>('footer button[type="submit"]')!.disabled).toBe(false);
   });
 });

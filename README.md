@@ -370,6 +370,69 @@ search indexes at start; when the API is healthy, open:
 In Visual Studio or Rider, start **`ElGuerre.Tendero.AppHost`** with the `https`
 profile; the others are in [Which switches for which job](#which-switches-for-which-job).
 
+### Models: what prepares itself, and what you prepare by hand
+
+**The default stack needs no model at all**: every AI feature has a non-AI path
+(invariant 8), so a fresh clone runs the shop on lexical search and rules. Each
+model arrives with its switch, and **none is ever committed**: weights live in
+Docker volumes or in `models/`, which git ignores. Each one is downloaded at a
+pinned revision from its maker and converted by us (ADR 0031), and the result is
+held to a hash or to the maker's own outputs before it is used.
+
+| Model | For | Switch | Prepared by | First start |
+|---|---|---|---|---|
+| bge-m3, bge-reranker-v2-m3 | search by meaning, ranking | `Tendero:Vectors` | itself: TEI downloads them into the `tendero-tei-models` volume | 2.2 GB |
+| Qwen3.5-4B (GGUF q8_0) | claims, Steward, Tino | `Tendero:Knowledge`, `Steward`, `Tino` | itself: `extractor-model` runs `prepare-extractor.sh` into a volume | ~9 GB, once |
+| Qwen3.5-4B's vision projector | the local model reading pictures | `Tendero:Vision` (GPU only) | itself: `vision-projector` runs `prepare-vision.sh` | 8.8 GB of download for a 672 MB file |
+| **Whisper large-v3-turbo q8_0** + Silero VAD | speaking to the shop | `Tendero:Voice` | **itself**: `speech-weights` converts, `speech-quantized` quantizes, then `speech-model` serves | 1.6 GB and a few minutes; seconds after |
+| SigLIP 2 | search by picture (the camera) | `Tendero:Vectors` **and** `models/siglip2` | **by hand** (below) | 1.5 GB |
+| Parakeet-TDT-0.6B-v3 | speech, the measured alternative | `Speech:Parakeet:Directory` | **by hand** (below) | 2.4 GB, 12 GB of RAM to export |
+
+**Nothing waits for a model.** A first start's preparation runs in the background
+and the shop works meanwhile: until the speech server answers, the API says
+speech is not available and no microphone is drawn; once it answers, the next page
+offers it. The same holds for every layer: a model that is missing, slow or failed
+is a feature that is not offered, never a service that refuses to start.
+
+**Preparing a model by hand.** Each script's header carries its exact command; all
+run once, from the repository root, in a throwaway container sized for them, and
+leave early when their file is already there and hashes right. On Linux and macOS:
+
+```bash
+# SigLIP 2, for search by picture
+docker run --rm --memory 10g --cpus 8 -v "$PWD:/repo" -w /repo python:3.12-slim sh -c \
+  "pip install -q torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu && \
+   pip install -q transformers==4.49.0 sentencepiece==0.2.0 protobuf==5.29.3 pillow==11.1.0 onnx==1.17.0 onnxruntime==1.20.1 && \
+   python src/AppHost/scripts/prepare-siglip.py"
+
+# Whisper, if you want it without starting the AppHost: convert, then quantize
+docker run --rm --memory 6g --cpus 8 -v "$PWD:/repo" -w /repo python:3.12.14-slim \
+  sh src/AppHost/scripts/prepare-whisper.sh
+docker run --rm --memory 2g --cpus 8 -v "$PWD:/repo" -w /repo --entrypoint sh \
+  ghcr.io/ggml-org/whisper.cpp:main-d1be6fde11ac6e0407606b4e42fe72d34add8037 \
+  src/AppHost/scripts/quantize-whisper.sh
+
+# Parakeet: the full command, with its pinned packages, is in the header of
+# src/AppHost/scripts/prepare-parakeet.py
+```
+
+On **Windows**, from PowerShell replace `"$PWD:/repo"` with `"${PWD}:/repo"`. From
+Git Bash, use `"$(pwd -W):/repo"` and put `MSYS_NO_PATHCONV=1` before `docker`,
+or Git Bash rewrites `/repo` into a Windows path.
+
+### Which systems it runs on
+
+| | Windows | Linux | macOS |
+|---|---|---|---|
+| The shop, the backoffice, the API | ✅ the author's machine | ✅ CI runs on it | should, untried |
+| A GPU for the models | ✅ NVIDIA through Docker Desktop (WSL2) | ✅ NVIDIA with the container toolkit | ❌ Docker on a Mac reaches no GPU |
+| Tino and the local model's vision | on a GPU | on a GPU | off, by design: they need a GPU and say so |
+| Voice | GPU: 0.16–0.44 s a question | the same | CPU: ~7 s a question (`docs/analysis/voice-models.md`) |
+
+Nothing in the code assumes a platform, but **macOS is untried**: whether every
+pinned image publishes an Arm build for Apple silicon has not been checked, and
+the measurements were taken on Windows with an RTX 5070 Laptop.
+
 ### First steps in the shop
 
 A fresh database has no products. Import the sample catalogue and publish it:
@@ -463,6 +526,12 @@ flowchart TB
         support["support · NLI<br/>:38084"]
     end
 
+    subgraph voice ["Voice · Tendero__Voice"]
+        speechWeights["speech-weights<br/>converts Whisper once"]
+        speechQuantized["speech-quantized<br/>quantizes it once"]
+        speechModel["speech-model · whisper.cpp<br/>:38086"]
+    end
+
     subgraph tools ["Browsing tools · Tendero__Tools"]
         pgweb["pgweb · :35433"]
         elasticvue["elasticvue · :39201"]
@@ -477,6 +546,8 @@ flowchart TB
     services -.-> vectors
     workers -.-> knowledge
     extractorModel -.-> extractor
+    speechWeights -.-> speechQuantized -.-> speechModel
+    api -.-> speechModel
     api -.-> keycloak
     services -.->|OTLP| observability
     tools -.-> stores
@@ -502,6 +573,9 @@ service that refuses to start.
 | **extractor-model** | `llama.cpp:full` | `Tendero__Knowledge` | Runs once: downloads Qwen3.5-4B at its checked revision, converts and quantizes it into a volume, and verifies its SHA-256. About 9 GB downloaded the first time. |
 | **extractor** | `llama.cpp:server` | `Tendero__Knowledge` | Reads each product's description and proposes claims, each quoting its evidence. About 30 s a product on a CPU — a worker's pace. |
 | **support** | TEI, an NLI model | `Tendero__Knowledge` | Scores how well the quoted evidence supports each claim, in 0.07 s. |
+| **speech-weights** | `python:3.12.14-slim` | `Tendero__Voice` | Runs once: converts Whisper large-v3-turbo and Silero VAD at their pinned revisions into `models/whisper`, held to their hashes (`prepare-whisper.sh`). 1.6 GB the first time; it peaked at 4.99 GiB. |
+| **speech-quantized** | `whisper.cpp` | `Tendero__Voice` | Runs once after it: Whisper to q8_0 with the server image's own quantizer, held to its hash (`quantize-whisper.sh`). |
+| **speech-model** | `whisper.cpp` server | `Tendero__Voice` | Turns a spoken question into words for Tino's box and the phone's search box, unsent. On the GPU when there is one (1.3 GB of the card). The API does not wait for it: until it answers there is no microphone. |
 | **keycloak** | `keycloak:26.6` | `Tendero__Issuer=keycloak` | The real identity provider, with the committed realm in `keycloak/` imported. With the switch the API trusts it instead of the development issuer — one configuration value, no code path (ADR 0017). Admin console: `admin` / `admin`. |
 | **observability** | `grafana/otel-lgtm` | `Tendero__Observability` | Grafana, Tempo, Prometheus and Loki behind one collector, which forwards everything to the Aspire dashboard too: the full mode adds, never takes away (ADR 0036). Grafana without sign-in at http://localhost:33000. About 0.9 GB. |
 | **pgweb** | `sosedoff/pgweb` | `Tendero__Tools` | A SQL box over the database, already connected. |
@@ -521,6 +595,8 @@ a measurement, and a Compose label so Docker Desktop groups them under
 | work on the shop, the backoffice or the API | nothing | ~2.5 GB of images |
 | work on search by meaning, similar products or ranking | `Tendero:Vectors=true` | 2.2 GB of weights; a GPU for the reranker |
 | work on product claims (phase 10) | `Tendero:Knowledge=true` | ~9 GB to prepare the model, 6 GB of RAM to serve it |
+| speak to the shop: Tino's box, the phone's search box | `Tendero:Voice=true` | 1.6 GB and a few minutes to prepare Whisper, in the background |
+| let the local model read pictures (GPU only) | `Tendero:Vision=true` | 8.8 GB of download, once |
 | see traces, metrics and logs across a flow | `Tendero:Observability=true` | ~0.9 GB |
 | try the real identity provider, or edit the realm | `Tendero:Issuer=keycloak` | ~0.5 GB; the API waits for Keycloak, about a minute |
 | look inside the database or the indexes | `Tendero:Tools=true`, or press *Start* on `pgweb` / `elasticvue` | small |
@@ -565,9 +641,10 @@ database a new password its volume does not know.
 | `https-vectors` | plus the vector layer: search by meaning, similar products, the reranker on a GPU |
 | `https-knowledge` | plus the claims models: the extractor and the support scorer |
 | `https-advanced` | plus both: every AI stage on — their containers' memory limits add up to about 14 GB on a CPU |
-| `https-all` | every AI piece at once: the vector layer, the claims models, Steward's model and Tino on it — not the Grafana stack. Memory and VRAM added up have not been measured on one machine; on a GPU it is the embeddings, the reranker and Steward's model (about 4.8 GB) sharing the card |
+| `https-all` | every AI piece at once: the vector layer, the claims models, Steward's model and Tino on it, its vision and voice — not the Grafana stack. Measured on an 8 GB card on 2026-10-16: the embeddings, the reranker, the local model with its vision and Whisper fill it (7.8 GB); nothing fails, but the model writes about four times slower while a question is being heard (`docs/analysis/voice-models.md`) |
 | `https-steward` | plus Steward's local model (6 GB): without it the panel opens and answers that no model is available |
-| `https-tino` | plus Tino, the storefront's assistant: the same local model as Steward's and the support scorer. Only on a GPU — without one the door stays in the header and says *not available* |
+| `https-tino` | plus Tino, the storefront's assistant, with its voice and its vision: the same local model as Steward's, the support scorer, the vision projector and Whisper. Only on a GPU — without one the door stays in the header and says *not available*; the local model, its vision and Whisper share the card in 6.9 GB |
+| `https-voice` | plus voice alone: Whisper prepared and served, the microphone in the phone's search box (and in Tino's, when Tino runs) |
 | `https-observability` | plus the Grafana stack |
 | `http` | the default stack, with the dashboard over plain HTTP |
 

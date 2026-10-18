@@ -47,6 +47,8 @@ libs/shared/
   auth/             the OIDC redirect sign-in, the token interceptor, the route guard
   agent/            the WebMCP registration mechanism, feature-detected (the tools stay per app)
   telemetry/        browser telemetry behind a port: OpenTelemetry, later Faro, or none (ADR 0036)
+  composer/         the box Tino and Steward share, and voice behind a port: the microphone, the
+                    browser's and the shop's engines (ADR 0061); `/testing` for the apps' test providers
 ```
 
 Inside each app: `layout/` (its own shell, which is **not** shared),

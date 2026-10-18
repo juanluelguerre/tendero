@@ -441,6 +441,16 @@
       ]
     },
     {
+      "name": "Speak to the shop",
+      "area": "storefront",
+      "question": "Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send?",
+      "decision": "If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop.",
+      "signals": [
+        "voice_input_heard",
+        "voice_transcript_used"
+      ]
+    },
+    {
       "name": "Kits",
       "area": "storefront",
       "question": "Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit?",
@@ -1104,6 +1114,73 @@
         "position": {
           "type": "number",
           "description": "Its place in the answer, from 1."
+        }
+      }
+    },
+    {
+      "name": "voice_input_heard",
+      "description": "A shopper spoke a question and listening ended (phase 14). Only with analytics consent; never the audio or the words.",
+      "consent": "behavioural",
+      "attributes": {
+        "where": {
+          "type": "string",
+          "values": [
+            "tino",
+            "search",
+            "steward"
+          ],
+          "description": "Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice."
+        },
+        "adapter": {
+          "type": "string",
+          "values": [
+            "shop",
+            "web-speech"
+          ],
+          "description": "Which adapter listened: the shop's own engine, or the browser's on the device."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "words",
+            "nothing",
+            "failed",
+            "cancelled"
+          ],
+          "description": "What listening came to: words for the box, nothing heard, a failure, or Escape."
+        }
+      }
+    },
+    {
+      "name": "voice_transcript_used",
+      "description": "What became of the words a microphone wrote into a box (phase 14). Only with analytics consent; never the words.",
+      "consent": "behavioural",
+      "attributes": {
+        "where": {
+          "type": "string",
+          "values": [
+            "tino",
+            "search",
+            "steward"
+          ],
+          "description": "Which box: Tino's composer, the phone's search box, or Steward's composer in the backoffice."
+        },
+        "adapter": {
+          "type": "string",
+          "values": [
+            "shop",
+            "web-speech"
+          ],
+          "description": "Which adapter listened: the shop's own engine, or the browser's on the device."
+        },
+        "how": {
+          "type": "string",
+          "values": [
+            "as_heard",
+            "edited",
+            "discarded"
+          ],
+          "description": "Sent as they were heard, sent after the shopper changed them, or never sent."
         }
       }
     },

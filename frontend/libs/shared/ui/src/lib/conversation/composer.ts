@@ -41,8 +41,11 @@ export class Composer {
 
   private readonly draft = signal('');
 
+  /** Whether the box holds words, sent or not: the microphone gives its place to the arrow then. */
+  readonly hasText = computed(() => this.draft().trim().length > 0);
+
   /** Whether there is something to send and nothing on its way: the send button's state. */
-  readonly ready = computed(() => !this.busy() && this.draft().trim().length > 0);
+  readonly ready = computed(() => !this.busy() && this.hasText());
 
   constructor() {
     afterNextRender(() => this.box.focus());
@@ -62,6 +65,19 @@ export class Composer {
     this.box.value = '';
     this.draft.set('');
     this.asked.emit(text);
+  }
+
+  /**
+   * Writes words into the box and sends nothing (phase 14): what a microphone
+   * heard, for the person to read, fix and send. After what they had typed, with a
+   * space, and with the focus at its end so they can go on typing.
+   */
+  write(words: string): void {
+    const before = this.box.value.trimEnd();
+    this.box.value = before.length > 0 ? `${before} ${words}` : words;
+    this.draft.set(this.box.value);
+    this.box.focus();
+    this.box.setSelectionRange(this.box.value.length, this.box.value.length);
   }
 
   protected typed(): void {

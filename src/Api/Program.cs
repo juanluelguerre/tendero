@@ -3,6 +3,8 @@ using Carter;
 using ElGuerre.Tendero.Accounts;
 using ElGuerre.Tendero.Accounts.Features.LinkIdentity;
 using ElGuerre.Tendero.AI;
+using ElGuerre.Tendero.AI.Features.TranscribeSpeech;
+using ElGuerre.Tendero.AI.Speech;
 using ElGuerre.Tendero.Api;
 using ElGuerre.Tendero.Assist;
 using ElGuerre.Tendero.Assist.Features.DecideProposals;
@@ -48,7 +50,8 @@ builder.Services.AddTenderoCqrs(
     typeof(PlaceOrderCommand).Assembly,
     typeof(LinkIdentityCommand).Assembly,
     typeof(ReviewClaimsEndpoints).Assembly,
-    typeof(ApproveProposalsCommand).Assembly);
+    typeof(ApproveProposalsCommand).Assembly,
+    typeof(TranscribeSpeechQuery).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -179,6 +182,12 @@ builder.Services.AddRateLimiter(limiter =>
         ClientOf(http),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 120, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 
+    // And twelve spoken questions a minute (phase 14): each is an engine's run
+    // for anyone who asks, on its own budget, as pictures are.
+    limiter.AddPolicy(TranscribeSpeechEndpoint.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
     static string ClientOf(HttpContext http) =>
         http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject is { Length: > 0 } subject
             ? "person:" + subject
@@ -191,6 +200,12 @@ builder.Services.AddRateLimiter(limiter =>
 // call to a container nobody started — while a hosted one with its key is still
 // a client.
 builder.Services.AddModelProfiles(builder.Configuration);
+
+// Speaking to the shop (phase 14): the engine Speech:Engine names, by its key,
+// and none when nothing is said or its server was not started — the microphone
+// is then not drawn (invariant 8). The AppHost hands whisper.cpp's address only
+// when its container runs (Tendero__Voice=true).
+builder.Services.AddSpeechToText(builder.Configuration);
 
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 

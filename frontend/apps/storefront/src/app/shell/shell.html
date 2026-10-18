@@ -276,7 +276,7 @@
       [attr.toolname]="variant === 'row' ? searchTool.name : null"
       [attr.tooldescription]="variant === 'row' ? searchTool.description : null"
       [attr.toolautosubmit]="variant === 'row' ? '' : null"
-      (submit)="sendSearch($event, box.value)"
+      (submit)="sendSearch($event, box.value); mic.sent(box.value)"
     >
       <!-- EXPERIMENTAL: the three `tool…` attributes above, and `name` and
            `toolparamdescription` on the box, are WebMCP's *declarative*
@@ -291,15 +291,35 @@
       <input
         #box
         class="min-h-tap w-full rounded-md border border-hairline-strong bg-surface ps-3 text-body"
-        [class.pe-tap]="!visual.available()"
-        [class.pe-tap-2]="visual.available()"
+        [class.pe-tap]="!visual.available() && !mic.available()"
+        [class.pe-tap-2]="visual.available() !== mic.available()"
+        [class.pe-tap-3]="visual.available() && mic.available()"
         type="search"
         name="q"
         [attr.toolparamdescription]="variant === 'row' ? searchTool.query : null"
         [id]="'find-' + variant"
-        [placeholder]="t('nav.search')"
+        [placeholder]="mic.listening() ? t('voice.listening') : t('nav.search')"
         [value]="query()"
+        (input)="mic.clear()"
       />
+      <!-- A question spoken instead of typed (phase 14), on a phone only: left of the
+           camera, written into the box and never searched — the shopper presses the
+           magnifier. Where nothing can listen it is not drawn (invariant 8). -->
+      <div
+        class="absolute inset-y-0 grid place-items-center"
+        [class.end-tap]="!visual.available()"
+        [class.end-tap-2]="visual.available()"
+      >
+        <lib-microphone
+          #mic="microphone"
+          place="search"
+          [offered]="variant !== 'row'"
+          (heard)="heardInto(box, $event)"
+        />
+      </div>
+      @if (mic.status() === 'failed') {
+        <p class="absolute inset-x-0 top-full z-10 m-0 mt-1 text-xs text-body" role="status">{{ t('voice.failed') }}</p>
+      }
       <!-- The magnifier sends it, inside the box's right end, as the large shops
            draw it: Enter is not the only way, and on a phone there may be no
            Enter key in sight. Quiet, not clay: the page's one accent action is

@@ -1,6 +1,4 @@
-using System.Text;
 using System.Text.Json.Nodes;
-using Elastic.Clients.Elasticsearch;
 using ElGuerre.Tendero.Pricing.Domain;
 using ElGuerre.Tendero.Pricing.Ports;
 using ElGuerre.Tendero.Search.Contracts;
@@ -143,17 +141,9 @@ public sealed class CampaignListingTests
 
     private static async Task<JsonNode> LexicalBody(ProductSearchQuery query, OfferScope? campaign = null)
     {
-        var bodies = new List<string>();
-        var settings = new ElasticsearchClientSettings(new Uri("http://127.0.0.1:9"))
-            .DisableDirectStreaming()
-            .OnRequestCompleted(call =>
-            {
-                if (call.RequestBodyInBytes is { Length: > 0 } body)
-                    bodies.Add(Encoding.UTF8.GetString(body));
-            });
+        var (client, bodies) = ElasticsearchBodies.Capturing();
 
-        await Assert.ThrowsAnyAsync<Exception>(() =>
-            Adapters.Lexical(new ElasticsearchClient(settings), campaign: campaign).SearchAsync(query, Ct));
+        await Assert.ThrowsAnyAsync<Exception>(() => Adapters.Lexical(client, campaign: campaign).SearchAsync(query, Ct));
 
         return JsonNode.Parse(Assert.Single(bodies))!;
     }
