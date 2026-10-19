@@ -129,12 +129,12 @@ internal sealed class QdrantPictureVectors(
             !await client.CollectionExistsAsync(Collection, ct)
             || await client.CountAsync(Collection, exact: true, cancellationToken: ct) == 0);
 
-    public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, CancellationToken ct = default) =>
+    public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default) =>
         GuardAsync<IReadOnlyList<PictureMatch>>("picture search", async () =>
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
 
-            if (!await client.CollectionExistsAsync(Collection, ct))
+            if (among is { Count: 0 } || !await client.CollectionExistsAsync(Collection, ct))
                 return [];
 
             // A product with four pictures can take four of the nearest places: more
@@ -142,6 +142,9 @@ internal sealed class QdrantPictureVectors(
             var points = await client.QueryAsync(
                 Collection,
                 query: Checked(vector).ToArray(),
+                // Narrowed by the products a point names, the one field every write already
+                // filters by and so the one indexed: no other payload is needed for it.
+                filter: among is null ? null : (Filter)Conditions.Match(PictureFields.Products, [.. among]),
                 limit: (ulong)(limit * PicturesAProduct),
                 payloadSelector: true,
                 cancellationToken: ct);
@@ -151,7 +154,8 @@ internal sealed class QdrantPictureVectors(
             foreach (var point in points)
             {
                 AssertWrittenByThisModel(point.Payload);
-                foreach (var product in ProductsOf(point.Payload).Where(seen.Add))
+                // A shared picture names products outside the narrowing too; only those inside are answered.
+                foreach (var product in ProductsOf(point.Payload).Where(product => among is null || among.Contains(product)).Where(seen.Add))
                     nearest.Add(new PictureMatch(product, point.Payload[PictureFields.ImageId].StringValue, point.Score));
             }
 

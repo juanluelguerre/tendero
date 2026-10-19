@@ -222,7 +222,7 @@ internal sealed class HybridSearchStrategy(
             budget.CancelAfter(settings.PictureBudget);
 
             var vector = await pictureModel.EmbedTextAsync(query.Text, budget.Token);
-            var near = await pictures.NearestAsync(vector, settings.PictureDepth, budget.Token);
+            var near = await pictures.NearestAsync(vector, settings.PictureDepth, ct: budget.Token);
             return [.. near.Select(match => match.ProductId)];
         }
         catch (SearchStageNotConfiguredException)

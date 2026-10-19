@@ -11,7 +11,12 @@ public sealed record VisualMatch(SearchHit Product, string Picture, double Simil
 public sealed record VisualSearchResult(IReadOnlyList<VisualMatch> Items);
 
 /// <summary>Whether this shop can be searched by picture at all: configured, not probed.</summary>
-public sealed record VisualSearchAvailability(bool Available);
+/// <param name="Objects">
+/// Whether the objects of a photograph can be found (the camera search, CS-2):
+/// a detector is configured. Without one a photograph is searched whole, as one
+/// object (CS-9).
+/// </param>
+public sealed record VisualSearchAvailability(bool Available, bool Objects);
 
 public sealed class VisualSearchOptions
 {
@@ -40,7 +45,7 @@ public sealed class VisualSearchOptions
 /// It lives here and not in a slice because two slices ask it, and a slice never
 /// references another.
 /// </summary>
-public sealed class VisualSearch(IPictureSearch pictures, IProductProfileReader profiles)
+public sealed class VisualSearch(IPictureSearch pictures, IProductProfileReader profiles, ILexicalProductSearch? words = null)
 {
     /// <summary>
     /// One policy for both questions: each runs a model on this process's CPU for
@@ -52,10 +57,35 @@ public sealed class VisualSearch(IPictureSearch pictures, IProductProfileReader 
 
     public const int MaxLimit = 24;
 
-    public async Task<VisualSearchResult> NearestAsync(
-        ReadOnlyMemory<float> vector, double floor, string culture, int limit, CancellationToken ct = default)
+    /// <summary>
+    /// The most products a category and words narrow a picture to: the lexical
+    /// index's first page this deep. The catalogue's largest branch is under a
+    /// hundred; a shop with a branch past this would see its picture answered among
+    /// the words' best five hundred, which is the cost written down rather than paid
+    /// for (the scale rule).
+    /// </summary>
+    public const int NarrowingDepth = 500;
+
+    /// <summary>
+    /// The products a picture is to be answered among (the camera search, CS-4): those
+    /// of the category, branch and all, that the lexical search matches for the words.
+    /// Null when neither is given — every product. The picture leads; the words narrow.
+    /// </summary>
+    public async Task<IReadOnlyCollection<string>?> AmongAsync(string? text, string? category, string culture, CancellationToken ct = default)
     {
-        var near = (await pictures.NearestAsync(vector, limit, ct)).Where(match => match.Similarity >= floor).ToList();
+        if (string.IsNullOrWhiteSpace(text) && string.IsNullOrWhiteSpace(category))
+            return null;
+        if (words is null)
+            throw new InvalidOperationException("Narrowing a picture by words needs the lexical search, and none was given.");
+
+        var page = await words.SearchAsync(new ProductSearchQuery(text?.Trim() ?? string.Empty, culture, Page: 1, PageSize: NarrowingDepth, Category: category), ct);
+        return page.Hits.Select(hit => hit.ProductId).ToHashSet(StringComparer.Ordinal);
+    }
+
+    public async Task<VisualSearchResult> NearestAsync(
+        ReadOnlyMemory<float> vector, double floor, string culture, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default)
+    {
+        var near = (await pictures.NearestAsync(vector, limit, among, ct)).Where(match => match.Similarity >= floor).ToList();
         if (near.Count == 0)
             return new VisualSearchResult([]);
 

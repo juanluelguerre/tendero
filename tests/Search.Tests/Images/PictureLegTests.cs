@@ -169,7 +169,7 @@ public sealed class PictureLegTests
         public int Asked { get; private set; }
         public int Limit { get; private set; }
 
-        public async Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, CancellationToken ct = default)
+        public async Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default)
         {
             Asked++;
             Limit = limit;

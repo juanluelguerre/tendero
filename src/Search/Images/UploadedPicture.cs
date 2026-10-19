@@ -33,13 +33,38 @@ public sealed record UploadedPicture(int Width, int Height, string Format)
     /// </summary>
     public const int MaxSide = 4096;
 
+    /// <summary>Why a picture heavier than <see cref="MaxBytes"/> is not taken, said before its bytes are read.</summary>
+    public static LocalizedText TooHeavy { get; } = LocalizedText.Both(
+        $"A picture to search with is at most {MaxBytes / (1024 * 1024)} MB.",
+        $"Una foto para buscar pesa como mucho {MaxBytes / (1024 * 1024)} MB.");
+
+    /// <summary>
+    /// Whether the picture is stored on its side: its orientation turns it a
+    /// quarter, so it is shown — and its objects are placed — with width and
+    /// height swapped.
+    /// </summary>
+    public bool Turned { get; init; }
+
+    /// <summary>The width as the picture is seen, after its orientation: the coordinates a box in it is given in.</summary>
+    public int UprightWidth => this.Turned ? this.Height : this.Width;
+
+    /// <summary>The height as the picture is seen, after its orientation.</summary>
+    public int UprightHeight => this.Turned ? this.Width : this.Height;
+
     /// <returns>The picture's facts, or why it is not taken — a sentence for the caller, in the API's own language.</returns>
     public static (UploadedPicture? Picture, string? Refusal) Read(ReadOnlySpan<byte> bytes)
     {
+        var (picture, refusal) = Check(bytes);
+        return (picture, refusal?.In("en"));
+    }
+
+    /// <returns>The picture's facts, or why it is not taken in both of the shop's languages (invariant 6), for an endpoint that answers with a coded problem (ADR 0059).</returns>
+    public static (UploadedPicture? Picture, LocalizedText? Refusal) Check(ReadOnlySpan<byte> bytes)
+    {
         if (bytes.IsEmpty)
-            return (null, "The picture is empty.");
+            return (null, LocalizedText.Both("The picture is empty.", "La foto está vacía."));
         if (bytes.Length > MaxBytes)
-            return (null, $"A picture to search with is at most {MaxBytes / (1024 * 1024)} MB.");
+            return (null, TooHeavy);
 
         using var data = SKData.CreateCopy(bytes);
         using var codec = SKCodec.Create(data);
@@ -53,10 +78,17 @@ public sealed record UploadedPicture(int Width, int Height, string Format)
         };
 
         if (codec is null || format is null)
-            return (null, "A picture to search with is a JPEG, a PNG or a WebP.");
+            return (null, LocalizedText.Both(
+                "A picture to search with is a JPEG, a PNG or a WebP.",
+                "Una foto para buscar es un JPEG, un PNG o un WebP."));
         if (codec.Info.Width > MaxSide || codec.Info.Height > MaxSide)
-            return (null, $"The picture is {codec.Info.Width} by {codec.Info.Height}; the largest taken is {MaxSide} a side.");
+            return (null, LocalizedText.Both(
+                $"The picture is {codec.Info.Width} by {codec.Info.Height}; the largest taken is {MaxSide} a side.",
+                $"La foto mide {codec.Info.Width} por {codec.Info.Height}; se acepta como mucho {MaxSide} de lado."));
 
-        return (new UploadedPicture(codec.Info.Width, codec.Info.Height, format), null);
+        return (new UploadedPicture(codec.Info.Width, codec.Info.Height, format)
+        {
+            Turned = codec.EncodedOrigin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom,
+        }, null);
     }
 }

@@ -26,6 +26,15 @@ public sealed class PicturesDiagnosticTests
         Assert.Contains("--strategy hybrid", alone.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>The objects suite asks SigLIP about parts of a photograph, with no vector store at all.</summary>
+    [Fact]
+    public void The_objects_suite_takes_the_export_without_the_vector_store()
+    {
+        var options = EvaluationOptions.Parse(["--suite", "objects", "--siglip", "models/siglip2"]);
+
+        Assert.Equal(("models/siglip2", Path.Combine("artifacts", "picture-eval")), (options.Siglip, options.Pictures));
+    }
+
     /// <summary>
     /// The ruler grades a ranking, so the ranking is the pictures': nearest
     /// first, with the similarity as the score, and a product the culture's index
@@ -97,7 +106,7 @@ public sealed class PicturesDiagnosticTests
     {
         public int AskedFor { get; private set; }
 
-        public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, CancellationToken ct = default)
+        public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default)
         {
             AskedFor = limit;
             return Task.FromResult<IReadOnlyList<PictureMatch>>(near);

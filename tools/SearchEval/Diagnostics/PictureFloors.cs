@@ -46,7 +46,7 @@ internal static class PictureFloors
             var vector = await model.EmbedPictureAsync(bytes, ct);
             embedding.Stop();
 
-            var near = await pictures.NearestAsync(vector, 2, ct);
+            var near = await pictures.NearestAsync(vector, 2, ct: ct);
             if (near.Count > 1)
                 others.Add(near[1].Similarity);
         }
@@ -56,7 +56,7 @@ internal static class PictureFloors
 
         List<double> nothing = [];
         foreach (var shape in Shapes())
-            if (await pictures.NearestAsync(await model.EmbedPictureAsync(shape, ct), 1, ct) is [var nearest, ..])
+            if (await pictures.NearestAsync(await model.EmbedPictureAsync(shape, ct), 1, ct: ct) is [var nearest, ..])
                 nothing.Add(nearest.Similarity);
 
         report.AppendLine(Row("a drawn shape that is no product (blank, noise, gradient, text)", nothing));
@@ -74,7 +74,7 @@ internal static class PictureFloors
                 asking.Stop();
                 texts++;
 
-                if (await pictures.NearestAsync(asked, 1, ct) is not [var first, ..])
+                if (await pictures.NearestAsync(asked, 1, ct: ct) is not [var first, ..])
                     continue;
 
                 var grade = corpus.TryGetValue(first.ProductId, out var externalId)

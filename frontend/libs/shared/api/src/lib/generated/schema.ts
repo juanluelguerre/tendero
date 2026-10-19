@@ -1060,6 +1060,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search/by-image/objects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FindObjectsInPicture"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search/evaluation": {
         parameters: {
             query?: never;
@@ -2535,6 +2551,16 @@ export interface components {
         };
         /** @enum {unknown} */
         PerformanceRanking: "Best" | "Worst";
+        PictureBox: {
+            /** Format: int32 */
+            left?: number;
+            /** Format: int32 */
+            top?: number;
+            /** Format: int32 */
+            width?: number;
+            /** Format: int32 */
+            height?: number;
+        };
         /** @enum {unknown} */
         PictureDoubtDecision: "PictureIsFine" | "ReplaceThePicture" | "BelongsToAnotherVariant";
         PictureDoubtView: {
@@ -2566,6 +2592,23 @@ export interface components {
             imageId: string;
             readBy: string;
             promptVersion: string;
+        };
+        PictureObjectView: {
+            /** Format: int32 */
+            number: number;
+            kind: string;
+            sold: boolean;
+            name: string;
+            box: components["schemas"]["PictureBox"];
+            /** Format: double */
+            score: number;
+        };
+        PictureObjectsView: {
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            objects: components["schemas"]["PictureObjectView"][];
         };
         /** @enum {unknown} */
         PictureReadingStatus: "Ran" | "NothingToRead" | "NoModel";
@@ -3546,6 +3589,7 @@ export interface components {
         };
         VisualSearchAvailability: {
             available: boolean;
+            objects: boolean;
         };
         VisualSearchResult: {
             items: components["schemas"]["VisualMatch"][];
@@ -6489,6 +6533,8 @@ export interface operations {
             query?: {
                 culture?: string;
                 limit?: number;
+                q?: string;
+                category?: string;
             };
             header?: never;
             path?: never;
@@ -6626,6 +6672,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductCardsResult"];
+                };
+            };
+        };
+    };
+    FindObjectsInPicture: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    picture: components["schemas"]["IFormFile"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PictureObjectsView"];
+                };
+            };
+            /** @description The picture cannot be used. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "PictureNotTaken";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests in a row: wait a moment. */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before asking again. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Finding the objects in a picture is not available here. · Finding the objects in a picture is not answering right now. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "ObjectsNotAnswering" | "ObjectsNotAvailable";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };

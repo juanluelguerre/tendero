@@ -103,7 +103,7 @@ public sealed class SearchPicturesByTextHandler(
             throw new SearchUnavailableException("embedding a text for the pictures", $"{exception.GetType().Name}: {exception.Message}");
         }
 
-        var result = await search.NearestAsync(vector, options.Value.MinTextSimilarity, query.Culture, query.Limit, ct);
+        var result = await search.NearestAsync(vector, options.Value.MinTextSimilarity, query.Culture, query.Limit, ct: ct);
 
         activity?.SetTag("search.pictures_by_text.found", result.Items.Count);
         if (result.Items is [var nearest, ..])

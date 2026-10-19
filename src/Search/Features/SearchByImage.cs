@@ -19,7 +19,9 @@ namespace ElGuerre.Tendero.Search.Features.SearchByImage;
 /// else: never written to the image store, a log or a trace (the images spec,
 /// *The uploaded picture*; <c>docs/privacy.md</c>).
 /// </param>
-public sealed record SearchByImageQuery(ReadOnlyMemory<byte> Picture, string Culture, int Limit) : IQuery<VisualSearchResult>;
+/// <param name="Words">What the shopper typed after the picture, to narrow it (the camera search, CS-4): matched by the lexical search, never embedded.</param>
+/// <param name="Category">The category the answer stays within, branch and all: the object's kind, when a photograph was split into its objects.</param>
+public sealed record SearchByImageQuery(ReadOnlyMemory<byte> Picture, string Culture, int Limit, string? Words = null, string? Category = null) : IQuery<VisualSearchResult>;
 
 public sealed class SearchByImageValidator : AbstractValidator<SearchByImageQuery>
 {
@@ -36,6 +38,8 @@ public sealed class SearchByImageValidator : AbstractValidator<SearchByImageQuer
 
         RuleFor(query => query.Culture).Must(culture => culture is "es" or "en").WithMessage("Supported cultures: es, en.");
         RuleFor(query => query.Limit).InclusiveBetween(1, VisualSearch.MaxLimit).OverridePropertyName("limit");
+        RuleFor(query => query.Words).MaximumLength(200).OverridePropertyName("q");
+        RuleFor(query => query.Category).MaximumLength(64).OverridePropertyName("category");
     }
 }
 
@@ -56,10 +60,10 @@ public sealed class SearchByImageEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // POST /api/search/by-image?culture=es&limit=12 — multipart, one file: picture
+        // POST /api/search/by-image?culture=es&limit=12&category=SHIRT&q=negra — multipart, one file: picture
         app.MapPost("/api/search/by-image",
                 async Task<Results<Ok<VisualSearchResult>, ValidationProblem, ProblemHttpResult>> (
-                    IFormFile picture, string? culture, int? limit,
+                    IFormFile picture, string? culture, int? limit, string? q, string? category,
                     HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
                 {
                     // Before a byte is buffered: the declared length is the caller's
@@ -79,7 +83,7 @@ public sealed class SearchByImageEndpoint : ICarterModule
                     try
                     {
                         var result = await dispatcher.SendAsync(
-                            new SearchByImageQuery(buffer.GetBuffer().AsMemory(0, (int)buffer.Length), resolved, limit ?? VisualSearch.DefaultLimit), ct);
+                            new SearchByImageQuery(buffer.GetBuffer().AsMemory(0, (int)buffer.Length), resolved, limit ?? VisualSearch.DefaultLimit, q, category), ct);
 
                         http.Response.Headers.ContentLanguage = resolved;
                         http.Response.Headers.Vary = "Accept-Language";
@@ -106,8 +110,8 @@ public sealed class SearchByImageEndpoint : ICarterModule
         // GET /api/search/by-image/status — whether a picture can be searched with
         // here. Configured, not probed: no model is run to answer it.
         app.MapGet("/api/search/by-image/status",
-                Ok<VisualSearchAvailability> (IImageEmbeddingGenerator model, IPictureVectorIndexer pictures) =>
-                    TypedResults.Ok(new VisualSearchAvailability(model.IsConfigured && pictures.IsConfigured)))
+                Ok<VisualSearchAvailability> (IImageEmbeddingGenerator model, IPictureVectorIndexer pictures, IObjectDetector detector) =>
+                    TypedResults.Ok(new VisualSearchAvailability(model.IsConfigured && pictures.IsConfigured, detector.IsConfigured)))
             .AllowAnonymous()
             .WithTags("Search")
             .WithName("GetVisualSearchAvailability");
@@ -167,7 +171,11 @@ public sealed class SearchByImageHandler(
             throw new SearchUnavailableException("embedding a picture", $"{exception.GetType().Name}: {exception.Message}");
         }
 
-        var result = await search.NearestAsync(vector, options.Value.MinPictureSimilarity, query.Culture, query.Limit, ct);
+        // The words and the category narrow what the picture is answered among; they never move its order.
+        var among = await search.AmongAsync(query.Words, query.Category, query.Culture, ct);
+        activity?.SetTag("search.by_image.narrowed", among is not null);
+
+        var result = await search.NearestAsync(vector, options.Value.MinPictureSimilarity, query.Culture, query.Limit, among, ct);
 
         activity?.SetTag("search.by_image.found", result.Items.Count);
         if (result.Items is [var nearest, ..])

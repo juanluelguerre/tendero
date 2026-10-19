@@ -142,7 +142,7 @@ public sealed class PictureProjectionTests
 
         Assert.False(((IPictureVectorIndexer)none).IsConfigured);
         Assert.False(await none.IsEmptyAsync(Ct));
-        var refusal = await Assert.ThrowsAsync<SearchStageNotConfiguredException>(() => none.NearestAsync(new float[4], 5, Ct));
+        var refusal = await Assert.ThrowsAsync<SearchStageNotConfiguredException>(() => none.NearestAsync(new float[4], 5, ct: Ct));
         Assert.Contains(NoPictureVectors.Stage, refusal.Message, StringComparison.Ordinal);
     }
 
