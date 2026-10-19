@@ -1,0 +1,68 @@
+<ng-container *transloco="let t; prefix: 'pictureSheet'">
+  <!-- Full screen and modal: the platform holds the focus, Esc closes it, the page behind is inert.
+       Light on ink is the camera's convention, as every phone's camera draws it. -->
+  <dialog
+    #dialog
+    data-full-width
+    class="m-0 h-dvh max-h-dvh w-full max-w-full flex-col bg-ink-900 text-surface open:flex"
+    aria-labelledby="viewfinder-title"
+    (close)="closed.emit()"
+  >
+    <div class="flex min-h-bar items-center justify-between ps-2 pe-4">
+      <button
+        type="button"
+        class="inline-grid size-tap cursor-pointer place-items-center bg-transparent text-surface"
+        [attr.aria-label]="t('closeCamera')"
+        (click)="dialog.close()"
+      >
+        <lib-icon class="size-icon-lg" name="close" />
+      </button>
+      <h2 id="viewfinder-title" class="m-0 text-md font-semibold">
+        {{ frozen() ? t('thisPhoto') : t('camera') }}
+      </h2>
+    </div>
+
+    <div class="relative grid flex-1 place-items-center overflow-hidden">
+      <!-- The live frame; hidden, not removed, while a frozen one is shown, so retaking reuses it. -->
+      <video #video class="size-full object-cover" [class.hidden]="frozen()" playsinline muted></video>
+      @if (frozen(); as still) {
+        <img class="size-full object-contain" [src]="still.url" [alt]="t('thisPhoto')" />
+      }
+    </div>
+
+    <div class="flex flex-col items-center gap-4 px-4 pt-3 pb-6">
+      @if (frozen()) {
+        <p class="m-0 text-sm">{{ t('nextMark') }}</p>
+        <div class="flex w-full gap-3">
+          <button
+            type="button"
+            class="button flex-1 border-surface bg-transparent text-surface hover:bg-transparent"
+            (click)="retake()"
+          >
+            {{ t('retake') }}
+          </button>
+          <button
+            type="button"
+            class="button flex-1 bg-surface text-body hover:bg-raised"
+            data-viewfinder-use
+            (click)="use()"
+          >
+            {{ t('usePhoto') }}
+          </button>
+        </div>
+      } @else {
+        <p class="m-0 text-sm">{{ t('pointAt') }}</p>
+        <!-- The shutter: a ring and its disc, named for what it does. -->
+        <button
+          type="button"
+          class="grid size-avatar cursor-pointer place-items-center rounded-full border-4 border-surface bg-transparent p-1"
+          data-viewfinder-shutter
+          [attr.aria-label]="t('shutter')"
+          (click)="shoot()"
+        >
+          <span class="size-full rounded-full bg-surface"></span>
+        </button>
+      }
+    </div>
+  </dialog>
+</ng-container>

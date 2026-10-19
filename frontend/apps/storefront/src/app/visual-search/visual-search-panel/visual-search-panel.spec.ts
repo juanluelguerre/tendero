@@ -1,8 +1,8 @@
-import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { type VisualSearchPhase, VisualSearchStore } from '../visual-search.store';
+import { PictureSheetStore } from '../picture-sheet/picture-sheet.store';
+import { VisualSearchStore } from '../visual-search.store';
 import { VisualSearchPanel } from './visual-search-panel';
 
 const words = {
@@ -13,29 +13,19 @@ const words = {
     orPaste: 'or paste one',
     choose: 'Choose a picture',
     takePhoto: 'Take a photo',
-    looking: 'Looking for things like it',
     promise: 'Your picture is not kept.',
-    refused: 'That file is not a picture we can read.',
-    tooMany: 'Too many pictures in a minute.',
-    down: 'Searching by picture is not answering.',
   },
 };
 
-/** The panel where a picture is given: every way of giving one, and what it says when the shop does not take it. */
+/** The panel where a picture is given: every way of giving one, each handed to the picture sheet. */
 describe('the panel to search with a picture', () => {
   let fixture: ComponentFixture<VisualSearchPanel>;
-  const phase = signal<VisualSearchPhase>('idle');
-  const store = {
-    phase,
-    looking: () => phase() === 'looking',
-    give: vi.fn(),
-    close: vi.fn(),
-  };
+  const store = { close: vi.fn() };
+  const sheet = { start: vi.fn() };
   const picture = new File(['a picture'], 'lamp.png', { type: 'image/png' });
 
   beforeEach(async () => {
-    phase.set('idle');
-    store.give.mockClear();
+    sheet.start.mockClear();
     store.close.mockClear();
     TestBed.configureTestingModule({
       imports: [
@@ -45,7 +35,10 @@ describe('the panel to search with a picture', () => {
           preloadLangs: true,
         }),
       ],
-      providers: [{ provide: VisualSearchStore, useValue: store }],
+      providers: [
+        { provide: VisualSearchStore, useValue: store },
+        { provide: PictureSheetStore, useValue: sheet },
+      ],
     });
     fixture = TestBed.createComponent(VisualSearchPanel);
     await fixture.whenStable();
@@ -58,20 +51,16 @@ describe('the panel to search with a picture', () => {
   /** The one sentence that is always there. */
   it('always says the picture is not kept', async () => {
     expect(text()).toContain('Your picture is not kept.');
-
-    phase.set('looking');
-    await fixture.whenStable();
-
-    expect(text()).toContain('Your picture is not kept.');
   });
 
-  it('gives the store a picture that was chosen, and empties the picker so the same file can be chosen again', () => {
+  it('hands the sheet a picture that was chosen, and empties the picker so the same file can be chosen again', () => {
     const input = find<HTMLInputElement>('[data-visual-search-file]');
     Object.defineProperty(input, 'files', { value: [picture], configurable: true });
 
     input.dispatchEvent(new Event('change'));
 
-    expect(store.give).toHaveBeenCalledWith({ picture, how: 'chosen' });
+    expect(sheet.start).toHaveBeenCalledWith(picture, 'chosen');
+    expect(store.close).toHaveBeenCalled();
     expect(input.value).toBe('');
   });
 
@@ -79,13 +68,14 @@ describe('the panel to search with a picture', () => {
     expect(find<HTMLInputElement>('[data-visual-search-file]').accept).toBe('image/jpeg,image/png,image/webp');
   });
 
-  it('gives the store a picture that was dropped', () => {
+  it('hands the sheet a picture that was dropped', () => {
     const drop = new Event('drop') as DragEvent;
     Object.defineProperty(drop, 'dataTransfer', { value: { files: [picture] } });
 
     find('[data-visual-search-drop]').dispatchEvent(drop);
 
-    expect(store.give).toHaveBeenCalledWith({ picture, how: 'dropped' });
+    expect(sheet.start).toHaveBeenCalledWith(picture, 'dropped');
+    expect(store.close).toHaveBeenCalled();
   });
 
   /** Without this the browser opens the file it was handed, and the shop is gone from the tab. */
@@ -100,43 +90,37 @@ describe('the panel to search with a picture', () => {
     expect([over.defaultPrevented, drop.defaultPrevented]).toEqual([true, true]);
   });
 
-  it('gives the store a picture that was pasted, and leaves pasted words alone', () => {
+  it('hands the sheet a picture that was pasted, and leaves pasted words alone', () => {
     const words = new Event('paste') as ClipboardEvent;
     Object.defineProperty(words, 'clipboardData', {
       value: { files: [new File(['x'], 'note.txt', { type: 'text/plain' })] },
     });
     document.dispatchEvent(words);
-    expect(store.give).not.toHaveBeenCalled();
+    expect(sheet.start).not.toHaveBeenCalled();
 
     const pasted = new Event('paste') as ClipboardEvent;
     Object.defineProperty(pasted, 'clipboardData', { value: { files: [picture] } });
     document.dispatchEvent(pasted);
 
-    expect(store.give).toHaveBeenCalledWith({ picture, how: 'pasted' });
+    expect(sheet.start).toHaveBeenCalledWith(picture, 'pasted');
+    expect(store.close).toHaveBeenCalled();
   });
 
-  it('shows that it is looking instead of the ways to give a picture', async () => {
-    phase.set('looking');
-    await fixture.whenStable();
+  it('opens the phone’s own camera app where the page cannot show the camera', () => {
+    const app = find<HTMLInputElement>('input[capture]');
+    const click = vi.spyOn(app, 'click').mockImplementation(() => undefined);
+    const devices = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
+    Object.defineProperty(navigator, 'mediaDevices', { value: undefined, configurable: true });
+    try {
+      find('[data-visual-search-camera]').click();
+    } finally {
+      if (devices) Object.defineProperty(navigator, 'mediaDevices', devices);
+      else delete (navigator as { mediaDevices?: unknown }).mediaDevices;
+    }
 
-    expect(text()).toContain('Looking for things like it');
-    expect(find('[data-visual-search-choose]')).toBeNull();
+    expect(click).toHaveBeenCalled();
+    expect(find('storefront-viewfinder')).toBeNull();
   });
-
-  it.each([
-    ['refused', 'That file is not a picture we can read.'],
-    ['tooMany', 'Too many pictures in a minute.'],
-    ['down', 'Searching by picture is not answering.'],
-  ] as const)(
-    'says why when the shop does not answer (%s), with the way to try another still there',
-    async (state, said) => {
-      phase.set(state);
-      await fixture.whenStable();
-
-      expect(text()).toContain(said);
-      expect(find('[data-visual-search-choose]')).not.toBeNull();
-    },
-  );
 
   it('closes on Escape and on a press outside it, and not on a press inside or on the camera that opened it', () => {
     find('section').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));

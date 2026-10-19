@@ -1,8 +1,9 @@
 import { ApplicationRef, signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting, type TestRequest } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import type { VisualMatch } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { API_BASE_URL } from '@tendero/shared-util';
@@ -10,11 +11,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VisualSearchStore } from './visual-search.store';
 
 const Status = 'http://api/api/search/by-image/status';
-const Ask = (request: { url: string }) => request.url === 'http://api/api/search/by-image';
 
-const lamp = { product: { productId: 'p-1', code: 'LAMP' }, picture: 'img-lamp-brass', similarity: 0.9 };
+// Only what the store passes on: the rest of a card is the card's.
+const lamp = {
+  product: { productId: 'p-1', code: 'LAMP' },
+  picture: 'img-lamp-brass',
+  similarity: 0.9,
+} as unknown as VisualMatch;
 
-/** Searching the shop with a picture: whether it can be, the picture given, and the three ways it is not answered. */
+/** Searching the shop with a picture: whether it can be, and the page of one list. */
 describe('searching with a picture', () => {
   let http: HttpTestingController;
   const telemetry = { trackEvent: vi.fn() };
@@ -51,16 +56,6 @@ describe('searching with a picture', () => {
     await TestBed.inject(ApplicationRef).whenStable();
   }
 
-  /** The request for a picture, once the browser has had its turn at making it smaller. */
-  async function asked() {
-    let found: TestRequest[] = [];
-    await vi.waitFor(() => {
-      found = http.match(Ask);
-      expect(found.length).toBe(1);
-    });
-    return found[0];
-  }
-
   /** Only a yes draws the camera: the box must be the one it always was everywhere else (invariant 8). */
   it('is available only once the server has said yes', async () => {
     expect(store.available()).toBe(false);
@@ -81,78 +76,29 @@ describe('searching with a picture', () => {
     expect(store.available()).toBe(false);
   });
 
-  it('sends the picture as the form’s one file, in the page’s language, and shows the answer on its own page', async () => {
+  it('can find a picture’s objects only when the server says so', async () => {
+    await says({ available: true, objects: false });
+    expect([store.available(), store.objects()]).toEqual([true, false]);
+  });
+
+  it('puts one block’s whole list on the page of its own, with the crop it answers', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     store.open();
 
-    store.give({ picture, how: 'dropped' });
-    expect([store.phase(), store.preview()]).toEqual(['looking', 'blob:mine']);
+    store.show([lamp], picture, 2);
 
-    const request = await asked();
-    expect(request.request.method).toBe('POST');
-    expect(request.request.params.get('culture')).toBe('es');
-    expect((request.request.body as FormData).get('picture')).toBeInstanceOf(Blob);
-    request.flush({ items: [lamp] });
-
-    expect([store.phase(), store.isOpen(), store.matches()]).toEqual(['idle', false, [lamp]]);
+    expect([store.isOpen(), store.matches(), store.preview(), store.block()]).toEqual([false, [lamp], 'blob:mine', 2]);
     expect(navigate).toHaveBeenCalledWith(['/', 'es', 'search', 'picture']);
-    expect(telemetry.trackEvent).toHaveBeenCalledWith('search_by_image_submitted', {
-      how: 'dropped',
-      outcome: 'answered',
-      results: 1,
-    });
-  });
 
-  it.each([
-    [400, 'refused', 'refused'],
-    [413, 'refused', 'refused'],
-    [429, 'tooMany', 'too_many'],
-    [503, 'down', 'down'],
-    [500, 'down', 'down'],
-  ] as const)(
-    'a %i says %s beside the picture, keeps the panel open and goes nowhere',
-    async (status, phase, outcome) => {
-      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-      store.open();
-
-      store.give({ picture, how: 'chosen' });
-      (await asked()).flush('no', { status, statusText: 'No' });
-
-      expect([store.phase(), store.isOpen(), store.matches()]).toEqual([phase, true, null]);
-      expect(navigate).not.toHaveBeenCalled();
-      expect(telemetry.trackEvent).toHaveBeenCalledWith('search_by_image_submitted', {
-        how: 'chosen',
-        outcome,
-        results: 0,
-      });
-    },
-  );
-
-  /** One picture refused must not be the last picture that can be given. */
-  it('takes another picture after one was refused, and lets go of the first one’s address', async () => {
-    store.give({ picture, how: 'chosen' });
-    (await asked()).flush({ code: 'Refused', status: 400, title: 'no' }, { status: 400, statusText: 'Bad Request' });
-
-    store.give({ picture, how: 'pasted' });
-    (await asked()).flush({ items: [] });
-
+    // A second list lets go of the first one's address.
+    store.show([], picture, 1);
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mine');
-    expect([store.phase(), store.matches()]).toEqual(['idle', []]);
   });
 
-  it('opening the panel again clears what the last picture was told', async () => {
-    store.give({ picture, how: 'chosen' });
-    (await asked()).flush({ code: 'Refused', status: 429, title: 'no' }, { status: 429, statusText: 'Too Many' });
-    store.close();
-
-    store.toggle();
-
-    expect([store.isOpen(), store.phase()]).toEqual([true, 'idle']);
-  });
-
-  it('counts a product followed from the answer by its place in it', () => {
+  it('counts a product followed from the answer by its place in it and the object it answered', () => {
+    store.show([lamp], picture, 2);
     store.followed(3);
 
-    expect(telemetry.trackEvent).toHaveBeenCalledWith('search_by_image_result_followed', { position: 3 });
+    expect(telemetry.trackEvent).toHaveBeenCalledWith('search_by_image_result_followed', { position: 3, block: 2 });
   });
 });

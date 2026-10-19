@@ -36,7 +36,7 @@ everything here that is not *planned* is emitted.
 | Browsing trail | Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it? | If many clear it, the trail is felt as surveillance; show less, or ask first. | `trail_cleared` | emitted |
 | Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
 | Tino | Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? | Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. | `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`, `tendero.tino.turns` | emitted |
-| Search with a picture | Does anyone search with a picture, and does the picture find what they wanted? | If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. | `search_by_image_submitted`, `search_by_image_result_followed` | emitted |
+| Search with a picture | Does anyone search with a picture, from where, do they mark a part, how much of what they photograph does the shop sell, and does the picture find what they wanted? | If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. If most are marked, the detector matters less than the box and its cost is questioned; many objects not sold is the catalogue's gap, measured; and whether Tino gets pictures (the camera search's stage 2) is decided on these. | `search_by_image_submitted`, `search_by_image_result_followed` | emitted |
 | Speak to the shop | Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send? | If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop. | `voice_input_heard`, `voice_transcript_used` | emitted |
 | Kits | Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit? | A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant. | `kit_built`, `kit_added_to_cart`, `kit_sentence_read` | emitted |
 
@@ -428,13 +428,17 @@ browser event, behavioural. A shopper gave the shop a picture to search with (ph
 
 Answers:
 
-- **Search with a picture** — Does anyone search with a picture, and does the picture find what they wanted?
+- **Search with a picture** — Does anyone search with a picture, from where, do they mark a part, how much of what they photograph does the shop sell, and does the picture find what they wanted?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `how` | string | `chosen`, `dropped`, `pasted`, `camera` | How the picture was given. |
+| `how` | string | `chosen`, `dropped`, `pasted`, `camera`, `viewfinder` | How the picture was given: chosen, dropped or pasted from the device, taken with the phone's own camera app, or with the shop's viewfinder in the page (the camera search, CS-6). |
 | `outcome` | string | `answered`, `refused`, `too_many`, `down` | What the shop did with it: an answer, a refusal of the file, the minute's limit, or not answering. |
-| `results` | number | — | How many products came back; 0 when none did or it was not answered. |
+| `results` | number | — | How many products came back, every block's together; 0 when none did or it was not answered. |
+| `marked` | boolean | — | The shopper marked a part, so only that part was sent (the camera search, CS-1.2). Mostly marked means the detector matters less than the box. |
+| `objects` | number | — | How many objects were found in what was sent, sold or not; 1 when the shop could not look for objects and searched it whole. |
+| `not_sold` | number | — | How many of those are of a kind the shop does not sell: the catalogue's gap, counted. Never which kinds. |
+| `words` | boolean | — | Words were added to narrow the blocks (CS-4). Never the words. |
 
 ### `search_by_image_result_followed`
 
@@ -442,11 +446,12 @@ browser event, behavioural. A shopper opened a product from the answer to a pict
 
 Answers:
 
-- **Search with a picture** — Does anyone search with a picture, and does the picture find what they wanted?
+- **Search with a picture** — Does anyone search with a picture, from where, do they mark a part, how much of what they photograph does the shop sell, and does the picture find what they wanted?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `position` | number | — | Its place in the answer, from 1. |
+| `block` | number | — | The object's number in the picture whose block it was opened from, from 1 (the camera search, CS-3); 0 from a list of its own. Whether a picture leads to a product from the first block only. |
 
 ### `voice_input_heard`
 

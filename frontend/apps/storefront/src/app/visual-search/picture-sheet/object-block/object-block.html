@@ -1,0 +1,69 @@
+<ng-container *transloco="let t; prefix: 'pictureSheet'">
+  <section class="flex flex-col gap-3" [attr.aria-labelledby]="'picture-block-' + object().number">
+    <header class="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <h3 class="m-0 flex items-center gap-2 text-lg" [id]="'picture-block-' + object().number">
+        @if (object().kind !== null) {
+          <!-- The heading outlines its object on the picture (CS-3). -->
+          <button
+            type="button"
+            class="inline-flex min-h-target cursor-pointer items-center gap-2 bg-transparent p-0 font-semibold text-body"
+            [attr.data-picture-block]="object().number"
+            (click)="named.emit(object().number)"
+          >
+            <span class="rounded-md bg-body px-2 text-sm font-bold text-surface">{{ object().number }}</span>
+            {{ object().name }}
+          </button>
+        } @else {
+          <span [attr.data-picture-block]="object().number">{{ t('yourPicture') }}</span>
+        }
+      </h3>
+      <span class="text-sm text-muted">{{ words() ? t('similarIn', { words: words() }) : t('similar') }}</span>
+      @if (block()?.phase === 'answered' && (block()?.matches?.length ?? 0) > 0) {
+        <button
+          type="button"
+          class="quiet ms-auto cursor-pointer bg-transparent font-semibold text-body underline"
+          [attr.data-picture-see-all]="object().number"
+          (click)="seeAll.emit(object().number)"
+        >
+          {{ t('seeAll') }}
+        </button>
+      }
+    </header>
+
+    @switch (block()?.phase) {
+      @case ('answered') {
+        @if (cards().length > 0) {
+          <ul class="grid list-none grid-cols-4 gap-4 p-0 max-md:flex max-md:snap-x max-md:overflow-x-auto max-md:pb-2">
+            @for (hit of cards(); track hit.productId; let index = $index) {
+              <li class="flex max-md:w-col max-md:flex-none max-md:snap-start" [attr.data-position]="index + 1">
+                <storefront-product-card class="flex-1" [hit]="hit" [actions]="false" />
+              </li>
+            }
+          </ul>
+        } @else if (words()) {
+          <div class="flex flex-wrap items-center gap-3 rounded-md border border-hairline-strong p-4">
+            <lib-icon class="size-icon text-muted" name="search" />
+            <span class="flex-1">{{ t('nothingIn', { words: words() }) }}</span>
+            <button type="button" class="button button--quiet" (click)="unnarrow.emit()">
+              {{ t('withoutWords', { words: words() }) }}
+            </button>
+          </div>
+        }
+      }
+      @case ('failed') {
+        <div class="flex flex-wrap items-center gap-3 rounded-md bg-danger-tint p-4 text-danger" role="alert">
+          <span class="flex-1">{{ t('blockFailed') }}</span>
+          <button type="button" class="button button--quiet" (click)="retry.emit(object().number)">
+            {{ t('tryAgain') }}
+          </button>
+        </div>
+      }
+      @default {
+        <p class="m-0 flex min-h-tap items-center gap-2 rounded-md bg-raised p-4 text-muted" role="status">
+          <lib-icon class="size-icon" name="search" />
+          {{ t('blockLooking') }}
+        </p>
+      }
+    }
+  </section>
+</ng-container>

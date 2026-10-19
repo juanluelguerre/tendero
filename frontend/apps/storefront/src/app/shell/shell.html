@@ -361,6 +361,14 @@
     </form>
   </ng-template>
 
+  <!-- The picture sheet (the camera search): one for the page, whichever box the picture
+       came from; loaded when a picture is first given. -->
+  @if (sheet.isOpen()) {
+    @defer (on immediate) {
+      <storefront-picture-sheet />
+    }
+  }
+
   <!-- Tino's panel: beside the page from 64 rem, a sheet below; the dock decides. -->
   <storefront-tino-dock />
 

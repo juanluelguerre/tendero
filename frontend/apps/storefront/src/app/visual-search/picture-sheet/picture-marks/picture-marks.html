@@ -1,0 +1,87 @@
+<ng-container *transloco="let t; prefix: 'pictureSheet'">
+  <!-- The frame is exactly the picture's size, so a share of it is a share of the picture. -->
+  <div
+    #frame
+    class="relative overflow-hidden rounded-md border border-hairline-strong bg-raised select-none"
+    [class.touch-none]="marking()"
+    [class.cursor-crosshair]="marking()"
+    (pointerdown)="pressed($event, 'draw')"
+    (pointermove)="moved($event)"
+    (pointerup)="released()"
+    (pointercancel)="released()"
+  >
+    @if (store.preview(); as preview) {
+      <!-- The shopper's own picture, from this page's memory: never from the shop.
+           A plain img on purpose: the optimised one refuses a blob: address, and this picture has no other. -->
+      <img
+        #image
+        class="block h-auto w-full"
+        draggable="false"
+        [src]="preview"
+        [alt]="t('yourPicture')"
+        (load)="loaded(image)"
+      />
+    }
+
+    @if (marking() && markShare(); as at) {
+      <!-- The part to send: everything outside it dimmed, as the mock-up draws it. -->
+      <div
+        class="picture-part absolute cursor-move border-2 border-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-body"
+        role="group"
+        tabindex="0"
+        data-picture-part
+        [attr.aria-label]="t('partLabel')"
+        [attr.aria-describedby]="'picture-part-keys'"
+        [style.left.%]="at.left"
+        [style.top.%]="at.top"
+        [style.width.%]="at.width"
+        [style.height.%]="at.height"
+        (pointerdown)="pressed($event, 'move')"
+        (keydown)="keyed($event)"
+      >
+        <span
+          class="absolute -end-2 -bottom-2 size-target cursor-nwse-resize rounded-xs border border-body bg-surface"
+          aria-hidden="true"
+          data-picture-part-corner
+          (pointerdown)="pressed($event, 'resize')"
+        ></span>
+      </div>
+    }
+
+    @for (mark of marks(); track mark.object.number) {
+      <!-- A mark is a button named by its number and kind (CS-8); one of a kind the
+           shop does not sell is light and says only its number: it has no block. -->
+      <button
+        type="button"
+        class="absolute rounded-md border-2 bg-transparent p-0 text-start"
+        [class.border-body]="mark.object.sold"
+        [class.border-surface]="!mark.object.sold"
+        [class.ring-2]="outlined() === mark.object.number"
+        [class.ring-surface]="outlined() === mark.object.number"
+        [attr.aria-label]="
+          mark.object.sold
+            ? label(mark.object)
+            : t('notSoldMark', { number: mark.object.number, name: mark.object.name })
+        "
+        [attr.aria-pressed]="outlined() === mark.object.number"
+        [attr.data-picture-mark]="mark.object.number"
+        [style.left.%]="mark.at.left"
+        [style.top.%]="mark.at.top"
+        [style.width.%]="mark.at.width"
+        [style.height.%]="mark.at.height"
+        (click)="picked.emit(mark.object.number)"
+      >
+        <span
+          class="absolute -start-px -top-px rounded-ss-md rounded-ee-md px-2 py-px text-xs font-semibold"
+          [class.bg-body]="mark.object.sold"
+          [class.text-surface]="mark.object.sold"
+          [class.bg-surface]="!mark.object.sold"
+          [class.text-body]="!mark.object.sold"
+          aria-hidden="true"
+        >
+          {{ mark.object.sold ? label(mark.object) : mark.object.number }}
+        </span>
+      </button>
+    }
+  </div>
+</ng-container>

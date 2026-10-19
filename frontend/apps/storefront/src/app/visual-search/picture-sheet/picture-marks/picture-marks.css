@@ -1,0 +1,5 @@
+/* What a utility cannot say: everything outside the marked part dimmed, by a
+   shadow the part throws over the whole picture (the frame clips it). */
+.picture-part {
+  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--color-ink-900) 50%, transparent);
+}
