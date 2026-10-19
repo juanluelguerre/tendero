@@ -6526,6 +6526,18 @@ export interface operations {
                     } & components["schemas"]["Problem"];
                 };
             };
+            /** @description Searching by picture is not available here. · Searching by picture is not answering right now. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "VisualSearchNotAnswering" | "VisualSearchNotAvailable";
+                    } & components["schemas"]["Problem"];
+                };
+            };
         };
     };
     SearchByImage: {
@@ -6557,7 +6569,7 @@ export interface operations {
                     "application/json": components["schemas"]["VisualSearchResult"];
                 };
             };
-            /** @description The request is not valid. */
+            /** @description The picture cannot be used. */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -6565,8 +6577,8 @@ export interface operations {
                 content: {
                     "application/problem+json": {
                         /** @enum {string} */
-                        code?: "Invalid";
-                    } & (components["schemas"]["Problem"] & components["schemas"]["HttpValidationProblemDetails"]);
+                        code?: "PictureNotTaken";
+                    } & components["schemas"]["Problem"];
                 };
             };
             /** @description Too many requests in a row: wait a moment. */
@@ -6580,6 +6592,18 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Searching by picture is not available here. · Searching by picture is not answering right now. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "VisualSearchNotAnswering" | "VisualSearchNotAvailable";
                     } & components["schemas"]["Problem"];
                 };
             };

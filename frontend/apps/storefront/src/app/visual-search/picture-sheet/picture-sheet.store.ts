@@ -229,8 +229,13 @@ export const PictureSheetStore = signalStore(
                   block(object.number, { phase: 'answered', matches: answer.items });
                   settle();
                 }),
-                catchError(() => {
-                  block(object.number, { phase: 'failed', matches: [] });
+                catchError((failure: unknown) => {
+                  const status = failure instanceof HttpErrorResponse ? failure.status : 0;
+                  // The picture itself, sent whole because nothing found objects in it: the
+                  // sheet says it is refused (`PictureNotTaken`), not that one block failed.
+                  if (object.kind === null && (status === 400 || status === 413 || status === 415))
+                    patchState(store, { step: 'refused' });
+                  else block(object.number, { phase: 'failed', matches: [] });
                   return EMPTY;
                 }),
                 takeUntil(store._restart),

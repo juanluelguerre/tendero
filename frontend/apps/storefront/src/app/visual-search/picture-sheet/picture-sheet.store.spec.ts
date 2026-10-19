@@ -222,6 +222,21 @@ describe('the picture sheet', () => {
       expect(block(1).matches.length).toBe(1);
     });
 
+    it('without the detector, a picture the search refuses is refused, not a block that failed', async () => {
+      await shopCan(false);
+      given();
+
+      store.search();
+      (await asked(ByImage))[0].flush({ code: 'PictureNotTaken' }, { status: 400, statusText: 'Bad Request' });
+
+      expect(store.step()).toBe('refused');
+      store.close();
+      expect(telemetry.trackEvent).toHaveBeenCalledWith(
+        'search_by_image_submitted',
+        expect.objectContaining({ outcome: 'refused' }),
+      );
+    });
+
     it('a detector that does not answer is the same: one object, searched whole', async () => {
       await shopCan(true);
       given();

@@ -5331,6 +5331,29 @@
               }
             }
           },
+          "503": {
+            "description": "Searching by picture is not available here. \u00B7 Searching by picture is not answering right now.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "VisualSearchNotAnswering",
+                        "VisualSearchNotAvailable"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "429": {
             "description": "Too many requests in a row: wait a moment.",
             "headers": {
@@ -5432,22 +5455,42 @@
             }
           },
           "400": {
-            "description": "The request is not valid.",
+            "description": "The picture cannot be used.",
             "content": {
               "application/problem\u002Bjson": {
                 "schema": {
                   "allOf": [
                     {
                       "$ref": "#/components/schemas/Problem"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
                     }
                   ],
                   "properties": {
                     "code": {
                       "enum": [
-                        "Invalid"
+                        "PictureNotTaken"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Searching by picture is not available here. \u00B7 Searching by picture is not answering right now.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "VisualSearchNotAnswering",
+                        "VisualSearchNotAvailable"
                       ],
                       "type": "string"
                     }

@@ -59,8 +59,11 @@ public sealed class VisualSearchEndpointTests
 
         Assert.False(status!.Available);
         Assert.Equal(HttpStatusCode.ServiceUnavailable, byPicture.StatusCode);
-        Assert.Contains("not available here", (await byPicture.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("title").GetString(), StringComparison.Ordinal);
+        var problem = await byPicture.Content.ReadFromJsonAsync<JsonElement>(Ct);
+        Assert.Equal("VisualSearchNotAvailable", problem.GetProperty("code").GetString());
+        Assert.Contains("no se busca con imágenes", problem.GetProperty("title").GetString(), StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.ServiceUnavailable, byWords.StatusCode);
+        Assert.Equal("VisualSearchNotAvailable", (await byWords.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("code").GetString());
     }
 
     [Fact]
@@ -124,10 +127,11 @@ public sealed class VisualSearchEndpointTests
         var (client, _, owner) = Compose(failure: new SearchUnavailableException("picture search", "RpcException: failed to connect to 10.0.0.7:6334"));
         using var _ = owner;
 
-        var response = await client.SendAsync(WithPicture(APicture()), Ct);
+        var response = await client.SendAsync(WithPicture(APicture(), "/api/search/by-image?culture=en"), Ct);
         var body = await response.Content.ReadAsStringAsync(Ct);
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal("VisualSearchNotAnswering", JsonDocument.Parse(body).RootElement.GetProperty("code").GetString());
         Assert.Contains("not answering right now", body, StringComparison.Ordinal);
         Assert.DoesNotContain("6334", body, StringComparison.Ordinal);
     }
@@ -138,10 +142,13 @@ public sealed class VisualSearchEndpointTests
         var (client, model, owner) = Compose();
         using var _ = owner;
 
-        var response = await client.SendAsync(WithPicture("<svg onload='alert(1)'/>"u8.ToArray(), contentType: "image/png"), Ct);
+        var response = await client.SendAsync(WithPicture("<svg onload='alert(1)'/>"u8.ToArray(), "/api/search/by-image?culture=es", contentType: "image/png"), Ct);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("JPEG, a PNG or a WebP", await response.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
+        // The same code its sibling answers for the same picture, said in the language asked (ADR 0059).
+        Assert.Equal("PictureNotTaken", problem.GetProperty("code").GetString());
+        Assert.Contains("un JPEG, un PNG o un WebP", problem.GetProperty("detail").GetString(), StringComparison.Ordinal);
         Assert.Equal(0, model.Pictures);
     }
 

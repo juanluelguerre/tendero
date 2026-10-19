@@ -65,15 +65,13 @@ public sealed class SearchPicturesByTextEndpoint : ICarterModule
                     }
                     catch (Exception exception) when (exception is SearchStageNotConfiguredException or SearchUnavailableException)
                     {
-                        return TypedResults.Problem(
-                            title: "Searching the pictures is not available right now.",
-                            detail: "Searching by words works as always.",
-                            statusCode: StatusCodes.Status503ServiceUnavailable);
+                        return PictureRefusals.NotAnsweringFor(exception);
                     }
                 })
             // By explicit decision, as the search it sits beside.
             .AllowAnonymous()
             .RequireRateLimiting(VisualSearch.PerClient)
+            .WithMetadata(new Refuses(PictureRefusals.NotAvailable, PictureRefusals.NotAnswering))
             .WithTags("Search")
             .WithName("SearchPicturesByText");
     }

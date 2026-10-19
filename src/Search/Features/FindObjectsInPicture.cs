@@ -31,8 +31,8 @@ public sealed record PictureObjectView(int Number, string Kind, bool Sold, strin
 /// <summary>The ways the shop says no to a photograph's objects, each with its code (ADR 0059).</summary>
 public static class ObjectsRefusals
 {
-    public static readonly Refusal PictureNotTaken = new(
-        "PictureNotTaken", 400, "La foto no se puede usar.", "The picture cannot be used.");
+    /// <summary>The picture itself refused: one code and one sentence wherever a picture is asked (<see cref="PictureRefusals"/>).</summary>
+    public static readonly Refusal PictureNotTaken = PictureRefusals.PictureNotTaken;
 
     public static readonly Refusal NotAvailable = new(
         "ObjectsNotAvailable", 503, "Aquí no se buscan los objetos de una foto.", "Finding the objects in a picture is not available here.");
@@ -40,8 +40,7 @@ public static class ObjectsRefusals
     public static readonly Refusal NotAnswering = new(
         "ObjectsNotAnswering", 503, "La búsqueda de objetos no responde ahora.", "Finding the objects in a picture is not answering right now.");
 
-    public static ProblemHttpResult Problem(Refusal refusal, string es, string en) =>
-        TypedResults.Problem(statusCode: refusal.Status, extensions: refusal.Said(es: es, en: en));
+    public static ProblemHttpResult Problem(Refusal refusal, string es, string en) => PictureRefusals.Problem(refusal, es, en);
 }
 
 /// <summary>
@@ -121,8 +120,7 @@ public sealed class FindObjectsInPictureEndpoint : ICarterModule
             .WithName("FindObjectsInPicture");
     }
 
-    private static ProblemHttpResult NotTaken(LocalizedText why) =>
-        ObjectsRefusals.Problem(ObjectsRefusals.PictureNotTaken, why.In("es"), why.In("en"));
+    private static ProblemHttpResult NotTaken(LocalizedText why) => PictureRefusals.NotTaken(why);
 }
 
 /// <summary>The detector failed for a reason of its own — its export, its runtime — and not because of the picture.</summary>

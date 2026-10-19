@@ -121,14 +121,14 @@ public sealed class VisualSearchTests
         Assert.NotNull(UploadedPicture.Read(APicture(2, UploadedPicture.MaxSide, SKEncodedImageFormat.Png)).Picture);
     }
 
+    /// <summary>The picture itself is refused at the endpoint, with its code (ADR 0059); the validator holds the rest of the question.</summary>
     [Fact]
-    public void The_door_names_the_picture_the_limit_and_the_culture()
+    public void The_door_names_the_limit_and_the_culture()
     {
         var validator = new SearchByImageValidator();
         var picture = APicture(40, 40, SKEncodedImageFormat.Png);
 
         Assert.True(validator.Validate(new SearchByImageQuery(picture, "es", 12)).IsValid);
-        Assert.Equal("picture", Assert.Single(validator.Validate(new SearchByImageQuery("not a picture"u8.ToArray(), "es", 12)).Errors).PropertyName);
         Assert.Equal("limit", Assert.Single(validator.Validate(new SearchByImageQuery(picture, "es", VisualSearch.MaxLimit + 1)).Errors).PropertyName);
         Assert.Equal("limit", Assert.Single(validator.Validate(new SearchByImageQuery(picture, "es", 0)).Errors).PropertyName);
         Assert.False(validator.Validate(new SearchByImageQuery(picture, "fr", 12)).IsValid);
@@ -275,16 +275,16 @@ public sealed class VisualSearchTests
         Assert.Equal("lámpara de latón", model.LastText);
     }
 
-    /// <summary>A header that reads as a picture over a body that does not decode: the caller's mistake, said as one.</summary>
+    /// <summary>A header that reads as a picture over a body that does not decode: the caller's mistake, refused as the picture (PictureNotTaken), never a store that is down.</summary>
     [Fact]
-    public async Task A_picture_the_model_cannot_decode_is_the_callers_mistake_and_names_the_picture()
+    public async Task A_picture_the_model_cannot_decode_is_the_callers_mistake_and_says_so()
     {
         var handler = new SearchByImageHandler(new Model { Failure = new ArgumentException("truncated") }, Search(), Floors());
 
-        var refusal = await Assert.ThrowsAsync<ValidationException>(() =>
+        var refusal = await Assert.ThrowsAsync<UnreadablePictureException>(() =>
             handler.HandleAsync(new SearchByImageQuery(APicture(40, 40, SKEncodedImageFormat.Png), "es", 12), Ct));
 
-        Assert.Equal("picture", Assert.Single(refusal.Errors).PropertyName);
+        Assert.Equal("truncated", refusal.InnerException?.Message);
     }
 
     /// <summary>The model's own failure — a file missing from its folder — is the stage being down, not a 500.</summary>

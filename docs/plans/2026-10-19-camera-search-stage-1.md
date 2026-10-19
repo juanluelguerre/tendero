@@ -114,4 +114,12 @@ Next, in order:
     still answers `ValidationProblem` and an uncoded problem in English, while its
     sibling for the objects answers coded problems in es and en. `UploadedPicture.Check`
     already says both; the change moves the storefront's handling of those errors with it.
+    **Done 2026-10-19.** `PictureRefusals` (`Search/Images`, down from the slices, as a
+    port is): `PictureNotTaken` shared by by-image and its objects sibling, so one picture is
+    refused with one code; `VisualSearchNotAvailable` and `VisualSearchNotAnswering` for
+    by-image and words against the pictures, both declared with `Refuses`. The picture is
+    checked at the endpoint, before dispatch, and a body that does not decode is
+    `UnreadablePictureException`, refused as the picture. The validator keeps the question's
+    other fields. The storefront: with no detector, a picture by-image refuses is the sheet's
+    *refused*, not a block that failed. Tests first, red, then green.
 12. Stryker scoped over `Search`, and the notebook.
