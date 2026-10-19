@@ -37,17 +37,7 @@ public static class SiglipPicture
     /// <exception cref="ArgumentException">The bytes are not a picture, or are one too large to take.</exception>
     public static float[] ToTensor(ReadOnlySpan<byte> encoded)
     {
-        using var data = SKData.CreateCopy(encoded);
-        using var codec = SKCodec.Create(data) ?? throw new ArgumentException("The bytes are not a picture this can decode.", nameof(encoded));
-        if (codec.Info.Width > MaxSide || codec.Info.Height > MaxSide)
-            throw new ArgumentException($"The picture is {codec.Info.Width} by {codec.Info.Height}: larger than {MaxSide} a side.", nameof(encoded));
-
-        var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
-        using var decoded = new SKBitmap(info);
-        if (codec.GetPixels(info, decoded.GetPixels()) is not (SKCodecResult.Success or SKCodecResult.IncompleteInput))
-            throw new ArgumentException("The bytes are not a picture this can decode.", nameof(encoded));
-
-        var (pixels, width, height) = Upright(OverWhite(decoded.GetPixelSpan(), info.Width, info.Height), info.Width, info.Height, codec.EncodedOrigin);
+        var (pixels, width, height) = Upright(encoded);
         var square = Vertically(Horizontally(pixels, width, height), height);
 
         var tensor = new float[Length];
@@ -60,6 +50,28 @@ public static class SiglipPicture
         }
 
         return tensor;
+    }
+
+    /// <summary>
+    /// The picture decoded, laid over white and turned the way up a person sees
+    /// it: three bytes a pixel, row by row. Shared with whoever has to cut a
+    /// picture into parts before the model reads them (the grid detector), so a
+    /// photograph's orientation is read in one place.
+    /// </summary>
+    /// <exception cref="ArgumentException">The bytes are not a picture, or are one too large to take.</exception>
+    internal static (byte[] Rgb, int Width, int Height) Upright(ReadOnlySpan<byte> encoded)
+    {
+        using var data = SKData.CreateCopy(encoded);
+        using var codec = SKCodec.Create(data) ?? throw new ArgumentException("The bytes are not a picture this can decode.", nameof(encoded));
+        if (codec.Info.Width > MaxSide || codec.Info.Height > MaxSide)
+            throw new ArgumentException($"The picture is {codec.Info.Width} by {codec.Info.Height}: larger than {MaxSide} a side.", nameof(encoded));
+
+        var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        using var decoded = new SKBitmap(info);
+        if (codec.GetPixels(info, decoded.GetPixels()) is not (SKCodecResult.Success or SKCodecResult.IncompleteInput))
+            throw new ArgumentException("The bytes are not a picture this can decode.", nameof(encoded));
+
+        return Upright(OverWhite(decoded.GetPixelSpan(), info.Width, info.Height), info.Width, info.Height, codec.EncodedOrigin);
     }
 
     /// <summary>A byte as the model's value: 0 is −1, 255 is 1.</summary>

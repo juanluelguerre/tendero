@@ -39,6 +39,13 @@
                       LogicalName="ElGuerre.Tendero.Search.Evaluation.eval.thresholds.json" />
   </ItemGroup>
 
+  <!-- What a photograph is searched for (ADR 0062): one file, read by the shop
+       and by the suite that measured it. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Images/object-kinds.json"
+                      LogicalName="ElGuerre.Tendero.Search.Images.object-kinds.json" />
+  </ItemGroup>
+
   <!-- The adapters stay internal (an architecture rule), so the tests that drive
        them — in memory, and against a real Qdrant — are named here. -->
   <ItemGroup>

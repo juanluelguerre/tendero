@@ -93,6 +93,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 dotnet run --project tools/SearchEval         # golden set NDCG report
 dotnet run --project tools/SearchEval -- --suite copilot --database <disposable pg> --chat <url> --model <id>  # Steward's golden set (README)
 dotnet run --project tools/SearchEval -- --suite assistant --database <disposable pg> --elasticsearch <throwaway es> --tei <scorer> --chat <url> --model <id>  # Tino's golden set (README)
+dotnet run --project tools/SearchEval -- --suite objects --owl models/owlv2 [--siglip models/siglip2] [--vision <url>]  # the detectors on ABO's photographs and the author's scenes (node tools/picture-eval/prepare.mjs abo first; ADR 0062)
 dotnet run --project tools/TrafficSim -- --TrafficSim:Seed=42  # simulated shoppers and agents (ADR 0037); also a resource in Aspire
 npx nx serve storefront|backoffice            # from frontend/
 npm run format                                # from frontend/: Prettier, Tailwind classes sorted; CI runs format:check

@@ -123,7 +123,7 @@ public sealed class SiglipPictureTests
     /// only how it is to be turned — written by hand, because nothing here writes
     /// EXIF and thirty-four bytes are easier to read than a dependency.
     /// </summary>
-    private static byte[] QuadrantsSaying(int orientation)
+    internal static byte[] QuadrantsSaying(int orientation)
     {
         using var bitmap = new SKBitmap(new SKImageInfo(200, 100, SKColorType.Rgba8888, SKAlphaType.Opaque));
         using (var canvas = new SKCanvas(bitmap))

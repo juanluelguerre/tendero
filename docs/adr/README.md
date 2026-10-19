@@ -63,6 +63,7 @@
 | [0059](0059-the-wire-has-two-readers.md) | The wire has two readers: money is a whole number of minor units with its currency, a refusal is an RFC 9457 problem with a code declared for its operation, a message is a code and a sentence; the contract names its version and who may call each operation. A refusal is data in the kernel, written and declared by the host, so the kernel stays free of HTTP | accepted |
 | [0060](0060-a-recommendation-is-solved-not-generated.md) | A recommendation is solved, not generated: parse, retrieve, solve, explain, with a model at the two ends only; a pure solver held by properties, coverage before relevance, exact under a ceiling it declares; the trace is the explanation's only source; the same ask gives the same kit | accepted |
 | [0061](0061-speech-is-a-port-of-ai.md) | Speech is a port of AI: `ISpeechToText` beside the chat profiles, AI's first slice for the transcription, each engine a keyed adapter and the model its options; a fixed 16 kHz mono WAV refused by its bytes; no engine, no microphone | accepted |
+| [0062](0062-objects-in-a-photograph-are-found-by-a-detector.md) | The objects in a photograph are found by a detector, and the detector is OWLv2: `IObjectDetector` in `Search/Images`, measured against SigLIP's grid and the local Qwen before it was chosen; our export, tier 1, with the text tower and CLIP's tokenizer ours so the kinds stay configuration; no export, the photograph is one object | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

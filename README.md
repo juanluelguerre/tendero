@@ -124,6 +124,14 @@ catalogue and **buy** over MCP or UCP:
   *kind* of product, above the fused search
   ([docs/search-evaluation.md](docs/search-evaluation.md)). Without the model's
   folder the shop has no visual search, says so, and is otherwise unchanged.
+- **The objects in a photograph** (the camera search, in progress): a desk
+  photographed whole is a laptop, a lamp and a bottle, not one blur of likeness.
+  OWLv2, an open-vocabulary detector exported by us and run in the process on the
+  CPU, finds each object of the kinds it is asked for — the shop's categories and
+  common objects it does not sell — and SigLIP 2 finds the products like each one.
+  It was chosen over SigLIP over a grid and the local Qwen's boxes after measuring
+  all three on 130 product photographs and the author's own scenes (ADR 0062,
+  [docs/analysis/object-detectors.md](docs/analysis/object-detectors.md)).
 - **The redesign.** The backoffice is organised by job — a side rail, one
   index-and-pane pattern for every list, a command palette — and its home is a
   dashboard of the whole shop at a glance: tabs per area, a full-screen wall,
@@ -386,6 +394,7 @@ held to a hash or to the maker's own outputs before it is used.
 | Qwen3.5-4B's vision projector | the local model reading pictures | `Tendero:Vision` (GPU only) | itself: `vision-projector` runs `prepare-vision.sh` | 8.8 GB of download for a 672 MB file |
 | **Whisper large-v3-turbo q8_0** + Silero VAD | speaking to the shop | `Tendero:Voice` | **itself**: `speech-weights` converts, `speech-quantized` quantizes, then `speech-model` serves | 1.6 GB and a few minutes; seconds after |
 | SigLIP 2 | search by picture (the camera) | `Tendero:Vectors` **and** `models/siglip2` | **by hand** (below) | 1.5 GB |
+| OWLv2 base | the objects in a photograph | SigLIP's **and** `models/owlv2` | **by hand** (below) | 615 MB |
 | Parakeet-TDT-0.6B-v3 | speech, the measured alternative | `Speech:Parakeet:Directory` | **by hand** (below) | 2.4 GB, 12 GB of RAM to export |
 
 **Nothing waits for a model.** A first start's preparation runs in the background
@@ -404,6 +413,12 @@ docker run --rm --memory 10g --cpus 8 -v "$PWD:/repo" -w /repo python:3.12-slim 
   "pip install -q torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu && \
    pip install -q transformers==4.49.0 sentencepiece==0.2.0 protobuf==5.29.3 pillow==11.1.0 onnx==1.17.0 onnxruntime==1.20.1 && \
    python src/AppHost/scripts/prepare-siglip.py"
+
+# OWLv2, for the objects in a photograph
+docker run --rm --memory 8g --cpus 6 -v "$PWD:/repo" -w /repo python:3.12-slim sh -c \
+  "pip install -q torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu && \
+   pip install -q transformers==4.49.0 scipy==1.15.1 pillow==11.1.0 onnx==1.17.0 onnxruntime==1.20.1 && \
+   python src/AppHost/scripts/prepare-owlv2.py"
 
 # Whisper, if you want it without starting the AppHost: convert, then quantize
 docker run --rm --memory 6g --cpus 8 -v "$PWD:/repo" -w /repo python:3.12.14-slim \

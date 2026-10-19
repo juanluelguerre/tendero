@@ -1,0 +1,62 @@
+[
+  {
+    "file": "Desktop.jpg",
+    "expected": [
+      "television",
+      "laptop",
+      "keyboard",
+      "computer mouse",
+      "speaker",
+      "bottle"
+    ],
+    "notes": "The author's desk: nothing the shop sells, six kinds it does not. The monitors count as 'television' (ABO's MONITOR maps there too). Left out: the pencil pot, the desk itself (only its edge shows), the webcam and the microphone arm, which no kind names."
+  },
+  {
+    "file": "Shelf.jpg",
+    "expected": [
+      "book",
+      "STORAGE",
+      "LIGHTING"
+    ],
+    "notes": "Books, wicker magazine files, a wooden crate, a yellow box and a drawer unit (all STORAGE), and a black lamp half hidden behind the books. Left out: the scissors and the eucalyptus sprig (no pot), which no kind names."
+  },
+  {
+    "file": "Anime-figures.jpg",
+    "expected": [
+      "toy",
+      "DECOR",
+      "BEDROOM"
+    ],
+    "notes": "Figures on a white chest of drawers, a framed print (DECOR; its words said vase or mirror until picture frame was added, 2026-10-19), and an e-reader in an orange cover, which no kind names."
+  },
+  {
+    "file": "Weights.jpg",
+    "expected": [],
+    "notes": "Dumbbells, resistance bands, a foam floor mat, a case and a ring binder: nothing the shop sells and nothing on the list of kinds it does not. Every object kept here is invented."
+  },
+  {
+    "file": "Me.jpg",
+    "expected": [
+      "SHIRT",
+      "watch"
+    ],
+    "notes": "The author in a printed t-shirt, a wristwatch on the left arm: the photograph a shopper marks the t-shirt in."
+  },
+  {
+    "file": "Me_and_backpack.jpg",
+    "expected": [
+      "BACKPACK",
+      "SHIRT",
+      "watch"
+    ],
+    "notes": "The same, with a grey backpack on one shoulder: the accessory to mark. The trousers show at the very edge and are left out."
+  },
+  {
+    "file": "Me-book.jpg",
+    "expected": [
+      "SHIRT",
+      "book"
+    ],
+    "notes": "The author holding a book in front of a white wall, in a printed t-shirt, wearing glasses: the photograph the whole-picture search answered with bulbs and packing cubes (2026-10-19, design/unpublished/camera-search/). The glasses are left out: no kind names glasses, and sunglasses are not what is worn."
+  }
+]

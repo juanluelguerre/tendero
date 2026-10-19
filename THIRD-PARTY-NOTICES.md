@@ -19,3 +19,9 @@ utterances of [LibriSpeech](https://www.openslr.org/12) (V. Panayotov, G. Chen,
 D. Povey and S. Khudanpur), from `hf-internal-testing/librispeech_asr_dummy`,
 under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), unchanged but for
 their encoding as 16-bit PCM.
+
+## Objects in a photograph (the camera search, ADR 0062)
+
+| Weights | Revision | Licence | What we changed |
+|---|---|---|---|
+| [Google OWLv2 base, patch 16, ensemble](https://huggingface.co/google/owlv2-base-patch16-ensemble), © Google | `cfd3195ba4ea9592eec887ded089f4c08eff231d` | Apache-2.0 | Exported to ONNX as two networks (the text tower; the vision tower with its class and box heads), unchanged in their weights; the tokenizer's vocabulary and merges copied as they are (`src/AppHost/scripts/prepare-owlv2.py`) |
