@@ -114,9 +114,11 @@
           @case ('answered') {
             <form class="relative" role="search" (submit)="narrow($event)">
               <label class="sr-only" for="picture-words">{{ t('narrowLabel') }}</label>
+              <!-- Its own clear button below calls the store; Chromium's cross in a search
+                   field would draw a second one beside it (the author, 2026-10-20). -->
               <input
                 id="picture-words"
-                class="field pe-tap"
+                class="field pe-tap [&::-webkit-search-cancel-button]:hidden"
                 type="search"
                 autocomplete="off"
                 [formField]="store.narrowForm.words"

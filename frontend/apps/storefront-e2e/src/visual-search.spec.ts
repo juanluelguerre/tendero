@@ -105,6 +105,23 @@ test.describe('searching with a picture', () => {
     await expect(sheet(page)).toBeVisible();
   }
 
+  /** Run in the page: whether a rule, in any layer, hides this search field's own cancel button. */
+  function hidesItsOwnCancel(input: HTMLInputElement): boolean {
+    const pseudo = '::-webkit-search-cancel-button';
+    // A layer holds rules, and so does a style rule now that CSS nests: each rule and what it holds.
+    const rules = (list: CSSRuleList): CSSRule[] =>
+      [...list].flatMap((rule) => [rule, ...('cssRules' in rule ? rules((rule as CSSGroupingRule).cssRules) : [])]);
+    return [...document.styleSheets]
+      .flatMap((sheet) => rules(sheet.cssRules))
+      .some(
+        (rule) =>
+          rule instanceof CSSStyleRule &&
+          rule.selectorText.endsWith(pseudo) &&
+          input.matches(rule.selectorText.slice(0, -pseudo.length)) &&
+          rule.style.display === 'none',
+      );
+  }
+
   test('a shop without visual search has the search box it always had, and searches by words', async ({ page }) => {
     // Said by the test, as `shopCan` says the opposite: a stack started with
     // its eyes on answers available, and this is about one that does not.
@@ -189,6 +206,10 @@ test.describe('searching with a picture', () => {
 
     const words = sheet(page).getByRole('searchbox');
     await words.fill('gris');
+    // One way to clear the words, the sheet's own: Chromium draws a cross of its own in a
+    // search field, beside it. getComputedStyle cannot reach that pseudo-element, so the rule
+    // that hides it is looked for in the style sheets.
+    expect(await words.evaluate(hidesItsOwnCancel)).toBe(true);
     await words.press('Enter');
 
     await expect(sheet(page)).toContainText(/nada de esto con «gris»/i);
