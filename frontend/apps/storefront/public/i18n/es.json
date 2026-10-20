@@ -10,7 +10,41 @@
     "signOut": "Salir",
     "title": "Tu cuenta",
     "signIn": "Identifícate",
-    "requestReturn": "Pedir devolución"
+    "requestReturn": "Pedir devolución",
+    "addresses": "Tus direcciones"
+  },
+  "addresses": {
+    "title": "Direcciones",
+    "addTitle": "Añadir una dirección",
+    "editTitle": "Editar una dirección",
+    "editHeading": "Editar {{label}}",
+    "count": "{{count}} de {{max}} · se ofrecen en el pago y se guardan hasta que las quites",
+    "add": "Añadir una dirección",
+    "loading": "Cargando tus direcciones...",
+    "failed": "No se han podido leer ni cambiar tus direcciones. Inténtalo de nuevo en un momento.",
+    "full": "Tu libreta está llena: {{max}} direcciones. Quita una para guardar otra.",
+    "empty": "Todavía no has guardado ninguna dirección.",
+    "emptyHint": "Guarda una aquí y el pago te la ofrecerá, para que no tengas que escribirla otra vez.",
+    "deliveryDefault": "Envío por defecto",
+    "billingDefault": "Facturación por defecto",
+    "edit": "Editar",
+    "remove": "Quitar",
+    "useForDelivery": "Usar para el envío",
+    "useForBilling": "Usar para la factura",
+    "removeTitle": "¿Quitar {{label}}?",
+    "removeDefault": "Es una dirección por defecto y ninguna otra ocupa su lugar: tu próximo pago te preguntará.",
+    "removeKeepsOrders": "Los pedidos ya hechos conservan su dirección.",
+    "keep": "Conservarla",
+    "unknown": "Esa dirección no está en tu libreta.",
+    "label": "Nombre",
+    "labelHint": "Cómo la llamas tú: Casa, Trabajo, Casa de mi madre…",
+    "phone": "Teléfono (opcional)",
+    "deliverHere": "Enviar aquí por defecto",
+    "billHere": "Facturar aquí por defecto",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "editKeepsOrders": "Los pedidos ya hechos conservan la dirección a la que se enviaron.",
+    "signedOut": "Entra para guardar direcciones. Como invitado la escribes en el pago, como siempre."
   },
   "brand": {
     "area": "Tienda",
@@ -298,7 +332,8 @@
   },
   "accountMenu": {
     "open": "Tu cuenta y tus preferencias ({{name}})",
-    "guest": "Invitado"
+    "guest": "Invitado",
+    "profile": "Perfil"
   },
   "listing": {
     "filters": "Filtros",

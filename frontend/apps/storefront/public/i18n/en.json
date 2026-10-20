@@ -10,7 +10,41 @@
     "signOut": "Sign out",
     "title": "Your account",
     "signIn": "Sign in",
-    "requestReturn": "Request a return"
+    "requestReturn": "Request a return",
+    "addresses": "Your addresses"
+  },
+  "addresses": {
+    "title": "Addresses",
+    "addTitle": "Add an address",
+    "editTitle": "Edit an address",
+    "editHeading": "Edit {{label}}",
+    "count": "{{count}} of {{max}} · offered at checkout, kept until you remove them",
+    "add": "Add an address",
+    "loading": "Loading your addresses...",
+    "failed": "Your addresses could not be read or changed. Try again in a moment.",
+    "full": "Your address book is full: {{max}} addresses. Remove one to keep another.",
+    "empty": "No addresses kept yet.",
+    "emptyHint": "Keep one here and checkout will offer it, so you do not type it again.",
+    "deliveryDefault": "Delivery default",
+    "billingDefault": "Billing default",
+    "edit": "Edit",
+    "remove": "Remove",
+    "useForDelivery": "Use for delivery",
+    "useForBilling": "Use for billing",
+    "removeTitle": "Remove {{label}}?",
+    "removeDefault": "It is a default, and no other address takes its place: your next checkout will ask.",
+    "removeKeepsOrders": "Orders already placed keep their address.",
+    "keep": "Keep it",
+    "unknown": "That address is not in your address book.",
+    "label": "Label",
+    "labelHint": "Your name for it: Home, Work, Mum's…",
+    "phone": "Phone (optional)",
+    "deliverHere": "Deliver here by default",
+    "billHere": "Bill here by default",
+    "save": "Save",
+    "cancel": "Cancel",
+    "editKeepsOrders": "Orders already placed keep the address they were sent to.",
+    "signedOut": "Sign in to keep addresses. As a guest you type one at checkout, as always."
   },
   "brand": {
     "area": "Shop",
@@ -298,7 +332,8 @@
   },
   "accountMenu": {
     "open": "Your account and preferences ({{name}})",
-    "guest": "Guest"
+    "guest": "Guest",
+    "profile": "Profile"
   },
   "listing": {
     "filters": "Filters",

@@ -21,6 +21,9 @@ export class ShopLinks {
   readonly cart = computed(() => ['/', this.culture(), 'cart']);
   readonly checkout = computed(() => ['/', this.culture(), 'checkout']);
   readonly account = computed(() => ['/', this.culture(), 'account']);
+  /** The account's address book, and a new entry in it (P15-2). */
+  readonly addresses = computed(() => ['/', this.culture(), 'account', 'addresses']);
+  readonly newAddress = computed(() => ['/', this.culture(), 'account', 'addresses', 'new']);
   /** The comparison; the products travel in `?codes=`, so it can be shared (P10-7). */
   readonly compare = computed(() => ['/', this.culture(), 'compare']);
   /** *Compra con tu agente*: how to point an assistant at the shop (R-8, H-5). */
@@ -42,6 +45,11 @@ export class ShopLinks {
 
   product(slug: string, code: string): unknown[] {
     return ['/', this.culture(), 'p', slug, code];
+  }
+
+  /** One entry of the address book, to edit it. */
+  address(id: string): unknown[] {
+    return ['/', this.culture(), 'account', 'addresses', id];
   }
 
   order(id: string): unknown[] {

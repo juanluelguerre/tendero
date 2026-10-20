@@ -83,6 +83,22 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
   },
   {
+    // The address book (P15-2): the list, then one entry added or edited.
+    path: 'account/addresses',
+    title: 'addresses.title',
+    loadComponent: () => import('./features/account/addresses-page').then((m) => m.AddressesPage),
+  },
+  {
+    path: 'account/addresses/new',
+    title: 'addresses.addTitle',
+    loadComponent: () => import('./features/account/address-form-page').then((m) => m.AddressFormPage),
+  },
+  {
+    path: 'account/addresses/:id',
+    title: 'addresses.editTitle',
+    loadComponent: () => import('./features/account/address-form-page').then((m) => m.AddressFormPage),
+  },
+  {
     path: 'cart',
     title: 'cart.title',
     loadComponent: () => import('./features/cart/cart-page').then((m) => m.CartPage),

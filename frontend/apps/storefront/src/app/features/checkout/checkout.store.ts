@@ -1,12 +1,13 @@
 import { computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import { form, maxLength, pattern, required } from '@angular/forms/signals';
+import { form } from '@angular/forms/signals';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import type { AddressRequest, Money, ShippingOptionView } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
+import { addressOf, addressSchema, type AddressDraft } from '../../addresses/address-draft';
 import { CartStore } from '../../cart/cart.store';
 import { OrderService } from '../../data-access/order.service';
 import { ShopLinks } from '../../shop-links';
@@ -21,21 +22,6 @@ import { checkoutProblem } from './checkout-problem';
  * adapter replaces this block with a card field and nothing else changes.
  */
 export const CheckoutCards = ['card-ok', 'card-declined', 'card-unreachable', 'card-capture-fails'] as const;
-
-/**
- * The address as the form edits it: every field a string, since an input holds
- * text, the optional ones empty rather than null. `address` turns it into the
- * API's request.
- */
-interface AddressDraft {
-  recipientName: string;
-  line1: string;
-  line2: string;
-  city: string;
-  region: string;
-  postalCode: string;
-  countryCode: string;
-}
 
 interface CheckoutState {
   readonly options: readonly ShippingOptionView[];
@@ -91,23 +77,11 @@ export const CheckoutStore = signalStore(
       region: '',
       postalCode: '28013',
       countryCode: 'ES',
+      phone: '',
     });
     // Named, so each input's `name` is `address.<field>`: stable for autofill and for the browser suites.
-    const addressForm = form(
-      draft,
-      (address) => {
-        required(address.recipientName);
-        // A name of spaces is no name: the server refuses it as one.
-        pattern(address.recipientName, /\S/);
-        required(address.line1);
-        required(address.city);
-        required(address.postalCode);
-        required(address.countryCode);
-        maxLength(address.countryCode, 2);
-        pattern(address.countryCode, /^[A-Za-z]{2}$/);
-      },
-      { name: 'address' },
-    );
+    // The account's address book edits the same draft under the same schema (address-draft.ts).
+    const addressForm = form(draft, addressSchema, { name: 'address' });
     return { _draft: draft, addressForm };
   }),
   withProps(() => ({
@@ -126,17 +100,7 @@ export const CheckoutStore = signalStore(
   })),
   withComputed(({ _cart, _draft }) => ({
     /** The address as the API takes it: the optional fields null when empty. */
-    address: computed<AddressRequest>(() => {
-      const draft = _draft();
-      return {
-        ...draft,
-        recipientName: draft.recipientName.trim(),
-        line2: draft.line2 || null,
-        region: draft.region || null,
-        countryCode: draft.countryCode.toUpperCase(),
-        phone: null,
-      };
-    }),
+    address: computed<AddressRequest>(() => addressOf(_draft())),
   })),
   withMethods((store) => {
     const money = (amount: Money): string => formatPrice(amount, store._culture.active());

@@ -37,6 +37,13 @@
           <button type="button" class="quiet" (click)="store.signOut()">{{ t('account.signOut') }}</button>
         </header>
 
+        <!-- The sections that exist so far, as links; the menu that gathers them is built last (P15-7). -->
+        <nav class="mb-6 flex flex-wrap gap-4" [attr.aria-label]="t('account.title')">
+          <a class="quiet underline" [routerLink]="links.addresses()" data-account-addresses>{{
+            t('account.addresses')
+          }}</a>
+        </nav>
+
         <h2 class="mb-3 text-lg">{{ t('account.orders') }}</h2>
 
         @if (session.orders.length === 0) {
