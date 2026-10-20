@@ -9,6 +9,9 @@ public interface IBrowsingHistoryRepository
     Task<BrowsingHistory?> FindAsync(CustomerId customer, CancellationToken ct = default);
 
     void Add(BrowsingHistory history);
+
+    /// <summary>The whole trail gone, when the account is removed (P15-9).</summary>
+    void Remove(BrowsingHistory history);
 }
 
 /// <summary>

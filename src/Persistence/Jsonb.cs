@@ -160,6 +160,29 @@ internal static class Jsonb
         entries => entries.Aggregate(0, (hash, entry) => HashCode.Combine(hash, entry.GetHashCode())),
         entries => new List<Accounts.Domain.AddressEntry>(entries));
 
+    /// <summary>
+    /// A customer's saved ways to pay (P15-4): the provider's tokens and what may
+    /// be shown of each card, five at most, always read with their wallet. The
+    /// tokens waiting to be forgotten sit in a list of their own beside them.
+    /// </summary>
+    public static readonly ValueConverter<List<Ordering.Domain.SavedMethod>, string> SavedMethodsConverter = new(
+        methods => JsonSerializer.Serialize(methods, Options),
+        json => JsonSerializer.Deserialize<List<Ordering.Domain.SavedMethod>>(json, Options) ?? new List<Ordering.Domain.SavedMethod>());
+
+    public static readonly ValueComparer<List<Ordering.Domain.SavedMethod>> SavedMethodsComparer = new(
+        (left, right) => left != null && right != null && left.SequenceEqual(right),
+        methods => methods.Aggregate(0, (hash, method) => HashCode.Combine(hash, method.GetHashCode())),
+        methods => new List<Ordering.Domain.SavedMethod>(methods));
+
+    public static readonly ValueConverter<List<Ordering.Domain.TokenToForget>, string> TokensToForgetConverter = new(
+        tokens => JsonSerializer.Serialize(tokens, Options),
+        json => JsonSerializer.Deserialize<List<Ordering.Domain.TokenToForget>>(json, Options) ?? new List<Ordering.Domain.TokenToForget>());
+
+    public static readonly ValueComparer<List<Ordering.Domain.TokenToForget>> TokensToForgetComparer = new(
+        (left, right) => left != null && right != null && left.SequenceEqual(right),
+        tokens => tokens.Aggregate(0, (hash, token) => HashCode.Combine(hash, token.GetHashCode())),
+        tokens => new List<Ordering.Domain.TokenToForget>(tokens));
+
     public static readonly ValueComparer<List<string>> StringListComparer = new(
         (left, right) => left != null && right != null && left.SequenceEqual(right, StringComparer.Ordinal),
         values => values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode(StringComparison.Ordinal))),

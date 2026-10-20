@@ -124,17 +124,21 @@ public sealed record PlaceOrderCommand(
     Address? BillingAddress,
     string ShippingOptionCode,
     string? ExpectedQuoteHash,
-    string Instrument,
+    [property: AuditRedacted] string Instrument,
     string IdempotencyKey,
     IReadOnlyList<string> Coupons,
-    string Culture) : ICommand<PlaceOrderResult>;
+    string Culture,
+    SavedMethodId? SavedMethod = null) : ICommand<PlaceOrderResult>;
 
 public sealed class PlaceOrderValidator : AbstractValidator<PlaceOrderCommand>
 {
     public PlaceOrderValidator()
     {
         RuleFor(command => command.IdempotencyKey).NotEmpty().MaximumLength(200);
-        RuleFor(command => command.Instrument).NotEmpty().MaximumLength(100);
+        // A card typed now or one kept in the wallet (P15-4), never both and never neither.
+        RuleFor(command => command.Instrument).NotEmpty().MaximumLength(100).When(command => command.SavedMethod is null);
+        RuleFor(command => command.Instrument).Empty().When(command => command.SavedMethod is not null)
+            .WithMessage("A saved way to pay is charged by its id alone.");
         RuleFor(command => command.ShippingOptionCode).NotEmpty().MaximumLength(50);
         RuleFor(command => command.ShippingAddress).NotNull();
     }
@@ -142,6 +146,8 @@ public sealed class PlaceOrderValidator : AbstractValidator<PlaceOrderCommand>
 
 public sealed class PlaceOrderHandler(
     ICartRepository carts,
+    IWalletRepository wallets,
+    IOptions<CheckoutOptions> options,
     ICheckoutSessionRepository sessions,
     OrderPlacement placement,
     IUnitOfWork unitOfWork,
@@ -192,6 +198,28 @@ public sealed class PlaceOrderHandler(
             return new PlaceOrderResult(PlaceOrderOutcome.NothingToShip, null, null, null);
         }
 
+        // A saved way to pay is charged by its token, read here and nowhere else: the
+        // browser named it by the id the shop minted (P15-4). Only the person's own
+        // wallet, only through the provider that kept it, and never for an agent,
+        // which uses none of the account in phase 15 (decision 8). Anything else is
+        // a card the shop will not charge: declined, with nothing written.
+        var instrument = command.Instrument;
+        if (command.SavedMethod is { } saved)
+        {
+            var method = principal.Current is { Agent: null, Customer: { } owner }
+                ? (await wallets.FindAsync(owner, cancellationToken))?.Find(saved)
+                : null;
+
+            if (method is null || method.ProviderKey != options.Value.ProviderFor(mode))
+            {
+                activity?.SetTag("checkout.outcome", "saved_method_unknown");
+                return new PlaceOrderResult(PlaceOrderOutcome.PaymentDeclined, null, null, "That saved way to pay is not in this account's wallet.");
+            }
+
+            activity?.SetTag("checkout.saved_method", true);
+            instrument = method.Token;
+        }
+
         // A cart an agent's checkout handed to a person (requires_escalation,
         // P11-1): the email the agent gave is where the order is confirmed.
         var session = await sessions.FindByCartAsync(cart.Id, cancellationToken) is { Status: CheckoutSessionStatus.Open } open ? open : null;
@@ -200,7 +228,7 @@ public sealed class PlaceOrderHandler(
             cart,
             new PlacementRequest(
                 command.ShippingAddress, command.BillingAddress, command.ShippingOptionCode,
-                command.ExpectedQuoteHash, command.Instrument, command.IdempotencyKey, command.Coupons, command.Culture,
+                command.ExpectedQuoteHash, instrument, command.IdempotencyKey, command.Coupons, command.Culture,
                 session?.Buyer.Email),
             mode,
             cancellationToken);
@@ -228,7 +256,8 @@ public sealed record PlaceOrderRequest(
     string QuoteHash,
     string Instrument,
     AddressRequest? BillingAddress = null,
-    IReadOnlyList<string>? Coupons = null);
+    IReadOnlyList<string>? Coupons = null,
+    Guid? SavedMethodId = null);
 
 /// <summary>
 /// What comes back when the price moved: the new fingerprint and the new total,
@@ -395,7 +424,8 @@ public sealed class CheckoutEndpoints : ICarterModule
                             request.Instrument,
                             idempotencyKey,
                             request.Coupons ?? [],
-                            resolved),
+                            resolved,
+                            request.SavedMethodId is { } savedMethod ? new SavedMethodId(savedMethod) : null),
                         ct);
                 }
                 catch

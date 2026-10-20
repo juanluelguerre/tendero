@@ -194,6 +194,97 @@
             "bearer": []
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "RemoveAccount",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountRemovalView"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Your account is not ready yet. Sign in again.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NoCustomer"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
+            ]
+          }
+        ]
       }
     },
     "/api/dashboard/agent-denials": {
@@ -6015,6 +6106,99 @@
         }
       }
     },
+    "/api/accounts/me/data": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ExportPersonalData",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalDataExport"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Your account is not ready yet. Sign in again.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NoCustomer"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/accounts/me/history": {
       "get": {
         "tags": [
@@ -6514,6 +6698,305 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BrowsingHistoryView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/me/preferences": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "GetPreferences",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesView"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Your account is not ready yet. Sign in again.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NoCustomer"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/me/preferences/culture": {
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ChooseCulture",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CulturePreferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesView"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Your account is not ready yet. Sign in again.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NoCustomer"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/me/preferences/marketing": {
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "SetMarketingConsent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketingPreferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesView"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Your account is not ready yet. Sign in again.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NoCustomer"
+                      ],
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -7995,6 +8478,475 @@
           {
             "bearer": [
               "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/me/payment-methods": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "GetWallet",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "KeepCard",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeepCardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The payment provider could not keep this card.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "CardRefused"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Your account is not ready yet. Sign in again. \u00B7 You already have 5 ways to pay. Remove one to keep another.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NoCustomer",
+                        "WalletFull"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The payment provider did not answer. Try again in a moment.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "PaymentProviderUnavailable"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/me/payment-methods/{id}": {
+      "delete": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "RemoveCard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "That way to pay is not saved in your account.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "UnknownPaymentMethod"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Your account is not ready yet. Sign in again.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NoCustomer"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/me/payment-methods/{id}/default": {
+      "put": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "UseCardByDefault",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "That way to pay is not saved in your account.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "UnknownPaymentMethod"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Your account is not ready yet. Sign in again.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NoCustomer"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopper"
             ]
           }
         ]
@@ -10640,6 +11592,81 @@
   },
   "components": {
     "schemas": {
+      "AccountData": {
+        "required": [
+          "displayName",
+          "culture",
+          "cultureChosen",
+          "marketingGiven",
+          "marketingAt",
+          "marketingWording",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "culture": {
+            "type": "string"
+          },
+          "cultureChosen": {
+            "type": "boolean"
+          },
+          "marketingGiven": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "marketingAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "marketingWording": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AccountRemovalView": {
+        "required": [
+          "forgotten",
+          "kept",
+          "keptForYears"
+        ],
+        "type": "object",
+        "properties": {
+          "forgotten": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kept": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keptForYears": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "AddToCartRequest": {
         "required": [
           "sku"
@@ -12371,6 +13398,20 @@
           }
         }
       },
+      "CulturePreferenceRequest": {
+        "required": [
+          "culture"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "DashboardPeriod": {
         "enum": [
           "Day",
@@ -12871,6 +13912,24 @@
         }
       },
       "JsonElement": {},
+      "KeepCardRequest": {
+        "required": [
+          "instrument",
+          "makeDefault"
+        ],
+        "type": "object",
+        "properties": {
+          "instrument": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "makeDefault": {
+            "type": "boolean"
+          }
+        }
+      },
       "KitBinding": {
         "enum": [
           "None",
@@ -13555,6 +14614,37 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "MarketingConsentView": {
+        "required": [
+          "given",
+          "at",
+          "wording"
+        ],
+        "type": "object",
+        "properties": {
+          "given": {
+            "type": "boolean"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "wording": {
+            "type": "string"
+          }
+        }
+      },
+      "MarketingPreferenceRequest": {
+        "required": [
+          "given"
+        ],
+        "type": "object",
+        "properties": {
+          "given": {
+            "type": "boolean"
           }
         }
       },
@@ -14292,6 +15382,26 @@
           "Worst"
         ]
       },
+      "PersonalDataExport": {
+        "required": [
+          "generatedAt",
+          "account",
+          "sections"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "account": {
+            "$ref": "#/components/schemas/AccountData"
+          },
+          "sections": {
+            "type": "object"
+          }
+        }
+      },
       "PictureBox": {
         "type": "object",
         "properties": {
@@ -14528,6 +15638,43 @@
             "items": {
               "type": "string"
             }
+          },
+          "savedMethodId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "PreferencesView": {
+        "required": [
+          "culture",
+          "cultureChosen",
+          "marketing",
+          "marketingWording"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": "string"
+          },
+          "cultureChosen": {
+            "type": "boolean"
+          },
+          "marketing": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MarketingConsentView"
+              }
+            ]
+          },
+          "marketingWording": {
+            "type": "string"
           }
         }
       },
@@ -16794,6 +17941,43 @@
           }
         }
       },
+      "SavedMethodView": {
+        "required": [
+          "id",
+          "brand",
+          "last4",
+          "expiryMonth",
+          "expiryYear",
+          "expired",
+          "isDefault"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "last4": {
+            "type": "string"
+          },
+          "expiryMonth": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expiryYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expired": {
+            "type": "boolean"
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        }
+      },
       "ScreenContext": {
         "required": [
           "page",
@@ -18484,6 +19668,25 @@
             "items": {
               "$ref": "#/components/schemas/VisualMatch"
             }
+          }
+        }
+      },
+      "WalletView": {
+        "required": [
+          "methods",
+          "maxMethods"
+        ],
+        "type": "object",
+        "properties": {
+          "methods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SavedMethodView"
+            }
+          },
+          "maxMethods": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

@@ -62,6 +62,12 @@ public sealed class FakePaymentProvider(
     public const string CardUnreachable = "card-unreachable";
     public const string CardCaptureFails = "card-capture-fails";
 
+    /// <summary>A second card to keep, so a wallet has more than one way to pay (P15-4).</summary>
+    public const string CardMastercard = "card-mastercard";
+
+    /// <summary>Kept as already past its date: a card that expired since it was saved.</summary>
+    public const string CardExpired = "card-expired";
+
     /// <summary>The header the fake signs with. Named after itself rather than
     /// after Stripe, so nobody reads this adapter as a Stripe integration.</summary>
     public const string SignatureHeader = "X-Tendero-Signature";
@@ -76,7 +82,22 @@ public sealed class FakePaymentProvider(
         if (request.Amount.IsNegative || request.Amount.IsZero)
             return Task.FromResult(PaymentAuthorization.Declined("An authorization needs a positive amount."));
 
-        return Task.FromResult(request.Instrument switch
+        // A kept card is charged by its token: what it was made from decides the
+        // answer, once the token is known to be live and in date.
+        var instrument = request.Instrument;
+        if (instrument.StartsWith(TokenPrefix, StringComparison.Ordinal))
+        {
+            if (!TryReadToken(instrument, out var card, out var expires) || !Cards.ContainsKey(card))
+                return Task.FromResult(PaymentAuthorization.Declined("This saved card is not one this provider keeps."));
+            if (this.forgotten.ContainsKey(instrument))
+                return Task.FromResult(PaymentAuthorization.Declined("This saved card was removed."));
+            if (expires.HasExpiredAt(clock.GetUtcNow()))
+                return Task.FromResult(PaymentAuthorization.Declined("The card has expired."));
+
+            instrument = card;
+        }
+
+        return Task.FromResult(instrument switch
         {
             CardDeclined => PaymentAuthorization.Declined("The card was declined by the issuer."),
             CardUnreachable => PaymentAuthorization.Unavailable("The payment provider did not answer."),
@@ -89,8 +110,51 @@ public sealed class FakePaymentProvider(
             _ => PaymentAuthorization.Authorized(Reference(
                 "auth",
                 request.IdempotencyKey,
-                marked: request.Instrument == CardCaptureFails))
+                marked: instrument == CardCaptureFails))
         });
+    }
+
+    /// <summary>
+    /// Keeps one of the test cards (P15-4), as a real provider keeps what its own
+    /// card field collected: a token, and what may be shown. Expiry is counted
+    /// from the shop's clock, so the cards stay in date however long the demo runs
+    /// — all but <see cref="CardExpired"/>, which stands for a card that expired
+    /// since it was kept.
+    ///
+    /// The token carries which test card it stands for and when it expires, so the
+    /// fake stays stateless for everything but forgetting. It is a fake talking to
+    /// itself; a real token is opaque, and nothing outside this class reads one.
+    /// </summary>
+    public Task<InstrumentSaving> SaveInstrumentAsync(string instrument, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(instrument);
+
+        if (instrument == CardUnreachable)
+            return Task.FromResult(InstrumentSaving.Unavailable("The payment provider did not answer."));
+
+        if (!Cards.TryGetValue(instrument, out var card))
+            return Task.FromResult(InstrumentSaving.Refused("This is not a card this provider can keep."));
+
+        var now = clock.GetUtcNow();
+        var expires = now.AddMonths(card.MonthsLeft);
+        var saved = new SavedInstrument(
+            $"{TokenPrefix}{Guid.NewGuid():N}_{instrument}_{expires.Year:D4}{expires.Month:D2}",
+            card.Brand, card.Last4, expires.Month, expires.Year);
+
+        return Task.FromResult(InstrumentSaving.Saved(saved));
+    }
+
+    /// <summary>
+    /// Forgets a token for as long as this process lives — the one state the fake
+    /// keeps, and enough: the wallet deletes its row in the same change, so a
+    /// forgotten token is never offered again after a restart either.
+    /// </summary>
+    public Task<InstrumentForgetting> ForgetInstrumentAsync(string token, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+
+        this.forgotten.TryAdd(token, 0);
+        return Task.FromResult(InstrumentForgetting.Forgotten);
     }
 
     public Task<PaymentCapture> CaptureAsync(
@@ -187,6 +251,40 @@ public sealed class FakePaymentProvider(
     public DateTimeOffset Now => clock.GetUtcNow();
 
     private const string CaptureFailsMarker = "-nocapture";
+
+    private const string TokenPrefix = "tok_";
+
+    /// <summary>The tokens forgotten since the process started; see <see cref="ForgetInstrumentAsync"/>.</summary>
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> forgotten = new(StringComparer.Ordinal);
+
+    /// <summary>What each test card is kept as: the brand and the last four a wallet shows, and how long it stays in date.</summary>
+    private sealed record TestCard(string Brand, string Last4, int MonthsLeft);
+
+    private static Dictionary<string, TestCard> Cards { get; } = new(StringComparer.Ordinal)
+    {
+        [CardOk] = new("Visa", "4242", 36),
+        [CardMastercard] = new("Mastercard", "4444", 14),
+        [CardDeclined] = new("Visa", "0002", 24),
+        [CardCaptureFails] = new("Visa", "0259", 24),
+        [CardExpired] = new("Visa", "0341", -1),
+    };
+
+    private static bool TryReadToken(string token, out string card, out SavedInstrument expires)
+    {
+        // tok_<32 hex>_<card>_<yyyyMM>
+        card = string.Empty;
+        expires = null!;
+
+        var parts = token[TokenPrefix.Length..].Split('_');
+        if (parts.Length != 3 || parts[0].Length != 32 || parts[2].Length != 6
+            || !int.TryParse(parts[2][..4], CultureInfo.InvariantCulture, out var year)
+            || !int.TryParse(parts[2][4..], CultureInfo.InvariantCulture, out var month))
+            return false;
+
+        card = parts[1];
+        expires = new SavedInstrument(token, string.Empty, string.Empty, month, year);
+        return true;
+    }
 
     private static WebhookVerification Interpret(string rawBody)
     {

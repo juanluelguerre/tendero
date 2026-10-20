@@ -7,6 +7,7 @@ using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
 using ElGuerre.Tendero.Ordering;
+using ElGuerre.Tendero.Ordering.Features.ManageWallet;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Search;
@@ -151,6 +152,10 @@ public static class WorkerServices
         // A customer's trail is forgotten after ninety days (R-8, docs/privacy.md),
         // including the trails of customers who never come back to trigger it.
         builder.Services.AddHostedService<ForgetOldBrowsingWorker>();
+
+        // A saved card removed while its provider was unreachable is forgotten there
+        // as soon as it answers (P15-4): a token outlives nothing.
+        builder.Services.AddHostedService<ForgetSavedCardsWorker>();
 
         builder.Services.AddHostedService<OutboxWorker>();
 

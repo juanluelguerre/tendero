@@ -215,6 +215,8 @@ public sealed class ManageTrailTests
 
         public void Add(BrowsingHistory history) => store.Add(history);
 
+        public void Remove(BrowsingHistory history) => store.Remove(history);
+
         public Task<BrowsingTrail?> ForCustomerAsync(CustomerId customer, DateTimeOffset now, CancellationToken ct = default) =>
             Task.FromResult(store.Find(history => history.CustomerId == customer) is { } history ? BrowsingTrail.Of(history, now) : null);
     }

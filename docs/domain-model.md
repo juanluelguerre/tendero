@@ -520,6 +520,14 @@ stateDiagram-v2
 
 ```mermaid
 classDiagram
+    class CardOnFile {
+        <<record>>
+        +string Token
+        +string Brand
+        +string Last4
+        +int ExpiryMonth
+        +int ExpiryYear
+    }
     class Cart {
         <<aggregate>>
         +CartId Id
@@ -750,6 +758,37 @@ classDiagram
         Rejected
         Cancelled
     }
+    class SavedMethod {
+        <<record>>
+        +SavedMethodId Id
+        +string ProviderKey
+        +string Token
+        +string Brand
+        +string Last4
+        +int ExpiryMonth
+        +int ExpiryYear
+        +DateTimeOffset SavedAt
+    }
+    class SavedMethodId {
+        <<record>>
+        +Guid Value
+    }
+    class TokenToForget {
+        <<record>>
+        +string ProviderKey
+        +string Token
+        +DateTimeOffset Since
+    }
+    class Wallet {
+        <<aggregate>>
+        +CustomerId CustomerId
+        +SavedMethod[] Methods
+        +TokenToForget[] ToForget
+        +SavedMethodId? Default
+        +bool IsFull
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset UpdatedAt
+    }
     Cart "1" --> "*" CartLine : Lines
     CheckoutSession --> CheckoutBuyer : Buyer
     Order --> OrderShipping : Shipping
@@ -762,6 +801,10 @@ classDiagram
     Order --> OrderStop : Stop
     Order "1" --> "*" OrderLine : Lines
     ReturnRequest "1" --> "*" ReturnLine : Lines
+    SavedMethod --> SavedMethodId : Id
+    Wallet "1" --> "*" SavedMethod : Methods
+    Wallet "1" --> "*" TokenToForget : ToForget
+    Wallet --> SavedMethodId : Default
 ```
 
 ### Events
@@ -893,11 +936,22 @@ classDiagram
         +string? Subject
         +string? DisplayName
         +string Culture
+        +bool CultureChosen
+        +MarketingConsent? Marketing
+        +DateTimeOffset? ErasedAt
+        +bool IsErased
+        +bool MayBeSentMarketing
         +string Segment
         +CustomerId? SupersededBy
         +DateTimeOffset CreatedAt
         +DateTimeOffset UpdatedAt
         +bool IsGuest
+    }
+    class MarketingConsent {
+        <<record>>
+        +bool Given
+        +DateTimeOffset At
+        +string Wording
     }
     class TrailEntry {
         <<record>>
@@ -908,6 +962,7 @@ classDiagram
     AddressBook --> AddressEntryId : DeliveryDefault
     AddressBook --> AddressEntryId : BillingDefault
     AddressEntry --> AddressEntryId : Id
+    Customer --> MarketingConsent : Marketing
 ```
 
 ### Events

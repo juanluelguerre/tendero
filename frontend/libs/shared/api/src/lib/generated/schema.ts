@@ -30,7 +30,7 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["LinkIdentity"];
-        delete?: never;
+        delete: operations["RemoveAccount"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1124,6 +1124,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/me/data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExportPersonalData"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/me/history": {
         parameters: {
             query?: never;
@@ -1213,6 +1229,54 @@ export interface paths {
         };
         get?: never;
         put: operations["SetBrowsingHistory"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetPreferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/preferences/culture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ChooseCulture"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/preferences/marketing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetMarketingConsent"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1390,6 +1454,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["DecideReturn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetWallet"];
+        put?: never;
+        post: operations["KeepCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/payment-methods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["RemoveCard"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/payment-methods/{id}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UseCardByDefault"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1720,6 +1832,23 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountData: {
+            displayName: null | string;
+            culture: string;
+            cultureChosen: boolean;
+            marketingGiven: null | boolean;
+            /** Format: date-time */
+            marketingAt: null | string;
+            marketingWording: null | string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AccountRemovalView: {
+            forgotten: string[];
+            kept: string[];
+            /** Format: int32 */
+            keptForYears: number;
+        };
         AddToCartRequest: {
             sku: string;
             /**
@@ -2148,6 +2277,9 @@ export interface components {
             hybrid: components["schemas"]["StrategyScore"];
             queries: components["schemas"]["QueryEvaluation"][];
         };
+        CulturePreferenceRequest: {
+            culture: null | string;
+        };
         /** @enum {unknown} */
         DashboardPeriod: "Day" | "Week" | "Month";
         /** @enum {unknown} */
@@ -2275,6 +2407,10 @@ export interface components {
             elapsedSeconds: number;
         };
         JsonElement: unknown;
+        KeepCardRequest: {
+            instrument: null | string;
+            makeDefault: boolean;
+        };
         /** @enum {unknown} */
         KitBinding: "None" | "Budget" | "Candidates";
         /** @enum {unknown} */
@@ -2432,6 +2568,15 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        MarketingConsentView: {
+            given: boolean;
+            /** Format: date-time */
+            at: string;
+            wording: string;
+        };
+        MarketingPreferenceRequest: {
+            given: boolean;
         };
         MergeHistoryRequest: {
             views: null | components["schemas"]["ViewedProduct"][];
@@ -2617,6 +2762,12 @@ export interface components {
         };
         /** @enum {unknown} */
         PerformanceRanking: "Best" | "Worst";
+        PersonalDataExport: {
+            /** Format: date-time */
+            generatedAt: string;
+            account: components["schemas"]["AccountData"];
+            sections: Record<string, never>;
+        };
         PictureBox: {
             /** Format: int32 */
             left?: number;
@@ -2685,6 +2836,14 @@ export interface components {
             instrument: string;
             billingAddress?: null | components["schemas"]["AddressRequest"];
             coupons?: null | string[];
+            /** Format: uuid */
+            savedMethodId?: null | string;
+        };
+        PreferencesView: {
+            culture: string;
+            cultureChosen: boolean;
+            marketing: null | components["schemas"]["MarketingConsentView"];
+            marketingWording: string;
         };
         PriceBand: {
             from: null | components["schemas"]["Money"];
@@ -3254,6 +3413,17 @@ export interface components {
             countryCode: string;
             phone: null | string;
         };
+        SavedMethodView: {
+            id: string;
+            brand: string;
+            last4: string;
+            /** Format: int32 */
+            expiryMonth: number;
+            /** Format: int32 */
+            expiryYear: number;
+            expired: boolean;
+            isDefault: boolean;
+        };
         ScreenContext: {
             page: string;
             subject: null | string;
@@ -3670,6 +3840,11 @@ export interface components {
         VisualSearchResult: {
             items: components["schemas"]["VisualMatch"][];
         };
+        WalletView: {
+            methods: components["schemas"]["SavedMethodView"][];
+            /** Format: int32 */
+            maxMethods: number;
+        };
         WarehouseCoverage: {
             warehouseCode: string;
             /** Format: double */
@@ -3782,6 +3957,62 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    RemoveAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountRemovalView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
                     } & components["schemas"]["Problem"];
                 };
             };
@@ -6962,6 +7193,62 @@ export interface operations {
             };
         };
     };
+    ExportPersonalData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonalDataExport"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     GetBrowsingHistory: {
         parameters: {
             query?: never;
@@ -7284,6 +7571,182 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    GetPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ChooseCulture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CulturePreferenceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    SetMarketingConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketingPreferenceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
                     } & components["schemas"]["Problem"];
                 };
             };
@@ -8089,6 +8552,274 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "IllegalTransition" | "NothingToRefund";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    GetWallet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    KeepCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeepCardRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletView"];
+                };
+            };
+            /** @description The payment provider could not keep this card. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "CardRefused";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. · You already have 5 ways to pay. Remove one to keep another. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer" | "WalletFull";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description The payment provider did not answer. Try again in a moment. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "PaymentProviderUnavailable";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    RemoveCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description That way to pay is not saved in your account. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownPaymentMethod";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    UseCardByDefault: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description That way to pay is not saved in your account. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownPaymentMethod";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
                     } & components["schemas"]["Problem"];
                 };
             };

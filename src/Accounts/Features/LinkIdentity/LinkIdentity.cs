@@ -157,7 +157,8 @@ public sealed class LinkIdentityHandler(
             // guest on a device where they later signed in.
             var merged = await MergeAsync(command.Guest, existing.Id, cancellationToken);
 
-            existing.UseCulture(clock, command.Culture);
+            // Only until they choose one in their account (P15-6).
+            existing.ObserveCulture(clock, command.Culture);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             activity?.SetTag("accounts.outcome", nameof(LinkOutcome.Recognised));
@@ -170,7 +171,7 @@ public sealed class LinkIdentityHandler(
         // keeps working, which is the whole reason a guest is a Customer rather
         // than a null.
         if (command.Guest is { } guestId
-            && await customers.FindByIdAsync(guestId, cancellationToken) is { IsGuest: true } guest)
+            && await customers.FindByIdAsync(guestId, cancellationToken) is { IsGuest: true, IsErased: false } guest)
         {
             guest.LinkIdentity(clock, subject, command.DisplayName);
             guest.UseCulture(clock, command.Culture);

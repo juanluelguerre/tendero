@@ -4,6 +4,13 @@ namespace ElGuerre.Tendero.Accounts.Domain;
 
 public sealed record CustomerRegistered(CustomerId CustomerId, DateTimeOffset OccurredAt) : IDomainEvent;
 
+/// <summary>
+/// What a customer said about marketing (P15-6): given or withdrawn, when, and the
+/// version of the wording they said it to — what they agreed to is part of what
+/// they agreed. A domain fact, unlike analytics consent, which is the browser's.
+/// </summary>
+public sealed record MarketingConsent(bool Given, DateTimeOffset At, string Wording);
+
 /// <summary>A guest turned into somebody with a name. The event carries both
 /// facts because "this customer existed before they signed in" is the thing an
 /// audit reader wants and cannot reconstruct afterwards.</summary>
@@ -42,6 +49,26 @@ public sealed class Customer : AggregateRoot
     /// <summary>The language the shop last saw them in. It is stored because a
     /// returning customer should not have to choose twice.</summary>
     public string Culture { get; private set; } = default!;
+
+    /// <summary>
+    /// True once they chose <see cref="Culture"/> in their account (P15-6): from then
+    /// on a sign-in no longer replaces it with the browser's.
+    /// </summary>
+    public bool CultureChosen { get; private set; }
+
+    /// <summary>What the shop may send them: null until they say, then what they said, when, and to which wording.</summary>
+    public MarketingConsent? Marketing { get; private set; }
+
+    /// <summary>
+    /// When the account was removed (P15-9): the customer is kept, anonymised, so an
+    /// order's owner still resolves; null for a customer who was never erased.
+    /// </summary>
+    public DateTimeOffset? ErasedAt { get; private set; }
+
+    public bool IsErased => ErasedAt is not null;
+
+    /// <summary>Marketing only on a consent given and not withdrawn.</summary>
+    public bool MayBeSentMarketing => Marketing is { Given: true };
 
     /// <summary>
     /// Which tariff applies. It lives here rather than in `Pricing` because
@@ -170,6 +197,83 @@ public sealed class Customer : AggregateRoot
         Touch(clock);
     }
 
+    /// <summary>
+    /// The language the shop saw them in at sign-in, kept only until they choose
+    /// one (P15-6): a choice made in the account is not overwritten by whichever
+    /// browser they signed in from next.
+    /// </summary>
+    public void ObserveCulture(TimeProvider clock, string culture)
+    {
+        if (!CultureChosen)
+            UseCulture(clock, culture);
+    }
+
+    /// <summary>The language the shop speaks to them in when a request names no other, chosen in the account (P15-6).</summary>
+    public void ChooseCulture(TimeProvider clock, string culture)
+    {
+        EnsureSomebody();
+
+        var normalised = Domain.Culture.Normalise(culture);
+        if (!CultureNegotiation.Supported.Contains(normalised))
+            throw new ArgumentException($"The shop does not speak '{culture}'.", nameof(culture));
+
+        UseCulture(clock, normalised);
+        if (CultureChosen) return;
+
+        CultureChosen = true;
+        Touch(clock);
+    }
+
+    /// <summary>
+    /// Marketing given (P15-6): off until now, kept with the date and the wording it
+    /// was given to, each change an audit row. Giving again to the same wording
+    /// changes nothing; to new wording, it is a new consent.
+    /// </summary>
+    public void GiveMarketingConsent(TimeProvider clock, string wording) => Consent(clock, given: true, wording);
+
+    /// <summary>Marketing withdrawn: a fact with its own date, not the absence of one.</summary>
+    public void WithdrawMarketingConsent(TimeProvider clock, string wording) => Consent(clock, given: false, wording);
+
+    private void Consent(TimeProvider clock, bool given, string wording)
+    {
+        EnsureSomebody();
+        ArgumentException.ThrowIfNullOrWhiteSpace(wording);
+
+        if (Marketing is { } current && current.Given == given && current.Wording == wording)
+            return;
+
+        // Withdrawing what was never given is still recorded: the shopper said no, and when.
+        Marketing = new MarketingConsent(given, clock.GetUtcNow(), wording);
+        Touch(clock);
+    }
+
+    /// <summary>
+    /// The account removed (P15-9): who they were and what they chose is cleared —
+    /// the identity's subject and name, the chosen language, the consent — and the
+    /// customer is kept, marked erased, so the orders the law makes the shop keep
+    /// still have an owner. A later sign-in with the same identity finds nobody
+    /// and starts a new customer; this one cannot be anybody again.
+    /// </summary>
+    public void Erase(TimeProvider clock)
+    {
+        EnsureCurrent();
+
+        Subject = null;
+        DisplayName = null;
+        CultureChosen = false;
+        Marketing = null;
+        ErasedAt = clock.GetUtcNow();
+        Touch(clock);
+    }
+
+    /// <summary>Preferences are a person's: a guest has nobody to keep them for.</summary>
+    private void EnsureSomebody()
+    {
+        EnsureCurrent();
+        if (IsGuest)
+            throw new InvalidOperationException($"Customer {Id} is a guest and keeps no preferences.");
+    }
+
     public void MoveToSegment(TimeProvider clock, string segment)
     {
         var normalised = Segments.Normalise(segment);
@@ -186,6 +290,9 @@ public sealed class Customer : AggregateRoot
         if (SupersededBy is { } survivor)
             throw new InvalidOperationException(
                 $"Customer {Id} was merged into {survivor} and cannot change.");
+
+        if (IsErased)
+            throw new InvalidOperationException($"Customer {Id} was erased and cannot change.");
     }
 
     private void Touch(TimeProvider clock) => UpdatedAt = clock.GetUtcNow();

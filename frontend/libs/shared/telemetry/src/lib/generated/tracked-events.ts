@@ -470,6 +470,41 @@ export interface TrackedEvents {
     /** Whether the sentence said a budget, read by code. */
     readonly budget: boolean;
   };
+
+  /**
+   * A signed-in shopper placed an order (P15-3, P15-5): whether the address and the way to pay came from the account or were typed now. Only with analytics consent; never the address or the card.
+   *
+   * The shopper's account: Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used?
+   * Decides: If almost every signed-in order still types its address, the book is not reachable enough at checkout, and checkout changes before the account grows another section; if checkout fills the book, the account's own form stays plain; a high share of saved cards declined means the wallet warns before expiry, not at the till. Erasure changes nothing in the product: it is the evidence the operation is real, and the number the article quotes.
+   */
+  readonly checkout_prefilled: {
+    /** Sent to an entry of the address book, or to an address typed at checkout. */
+    readonly address: 'saved' | 'typed';
+    /** Paid with a card kept in the wallet, or a new one. */
+    readonly method: 'saved' | 'new';
+  };
+
+  /**
+   * A new address typed at checkout was kept in the address book by its box (P15-3). Only with analytics consent; never the address or its label.
+   *
+   * The shopper's account: Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used?
+   * Decides: If almost every signed-in order still types its address, the book is not reachable enough at checkout, and checkout changes before the account grows another section; if checkout fills the book, the account's own form stays plain; a high share of saved cards declined means the wallet warns before expiry, not at the till. Erasure changes nothing in the product: it is the evidence the operation is real, and the number the article quotes.
+   */
+  readonly address_kept_at_checkout: {
+    /** Whether it was kept; false when the order was placed and keeping it failed. */
+    readonly kept: boolean;
+  };
+
+  /**
+   * A card kept in the wallet was declined at checkout (P15-5). Only with analytics consent; never the card.
+   *
+   * The shopper's account: Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used?
+   * Decides: If almost every signed-in order still types its address, the book is not reachable enough at checkout, and checkout changes before the account grows another section; if checkout fills the book, the account's own form stays plain; a high share of saved cards declined means the wallet warns before expiry, not at the till. Erasure changes nothing in the product: it is the evidence the operation is real, and the number the article quotes.
+   */
+  readonly saved_method_declined: {
+    /** Whether the wallet already said the card had expired; checkout never offers one, so true means a card that expired between the page and the till. */
+    readonly expired: boolean;
+  };
 }
 
 /**
@@ -511,4 +546,7 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   kit_built: 'behavioural',
   kit_added_to_cart: 'behavioural',
   kit_sentence_read: 'behavioural',
+  checkout_prefilled: 'behavioural',
+  address_kept_at_checkout: 'behavioural',
+  saved_method_declined: 'behavioural',
 };

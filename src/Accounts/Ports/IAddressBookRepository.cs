@@ -9,6 +9,9 @@ public interface IAddressBookRepository
     Task<AddressBook?> FindAsync(CustomerId customer, CancellationToken ct = default);
 
     void Add(AddressBook book);
+
+    /// <summary>The whole book gone, when the account is removed (P15-9).</summary>
+    void Remove(AddressBook book);
 }
 
 /// <summary>

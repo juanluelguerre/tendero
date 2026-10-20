@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261020212557_AddressBooks";
+    public override string LastMigrationId => "20261020232809_WalletsPreferencesAndErasure";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -256,10 +256,20 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("character varying(10)")
                     .HasColumnName("culture");
 
+                b.Property<bool>("CultureChosen")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("boolean")
+                    .HasDefaultValue(false)
+                    .HasColumnName("culture_chosen");
+
                 b.Property<string>("DisplayName")
                     .HasMaxLength(200)
                     .HasColumnType("character varying(200)")
                     .HasColumnName("display_name");
+
+                b.Property<DateTimeOffset?>("ErasedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("erased_at");
 
                 b.Property<string>("Segment")
                     .IsRequired()
@@ -279,6 +289,23 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateTimeOffset>("UpdatedAt")
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("updated_at");
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Marketing", "ElGuerre.Tendero.Accounts.Domain.Customer.Marketing#MarketingConsent", b1 =>
+                    {
+                        b1.Property<DateTimeOffset>("At")
+                            .HasColumnType("timestamp with time zone")
+                            .HasColumnName("marketing_at");
+
+                        b1.Property<bool>("Given")
+                            .HasColumnType("boolean")
+                            .HasColumnName("marketing_given");
+
+                        b1.Property<string>("Wording")
+                            .IsRequired()
+                            .HasMaxLength(50)
+                            .HasColumnType("character varying(50)")
+                            .HasColumnName("marketing_wording");
+                    });
 
                 b.HasKey("Id")
                     .HasName("pk_customers");
@@ -1673,6 +1700,44 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDatabaseName("ux_return_requests_order_id_number");
 
                 b.ToTable("return_requests", "ordering");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Ordering.Domain.Wallet", b =>
+            {
+                b.Property<Guid>("CustomerId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("customer_id");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<Guid?>("Default")
+                    .HasColumnType("uuid")
+                    .HasColumnName("default_method");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.Property<string>("methods")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("methods")
+                    .HasDefaultValueSql("'[]'::jsonb");
+
+                b.Property<string>("toForget")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("to_forget")
+                    .HasDefaultValueSql("'[]'::jsonb");
+
+                b.HasKey("CustomerId")
+                    .HasName("pk_wallets");
+
+                b.ToTable("wallets", "ordering");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Persistence.Outbox.OutboxMessage", b =>

@@ -65,6 +65,7 @@
 | [0061](0061-speech-is-a-port-of-ai.md) | Speech is a port of AI: `ISpeechToText` beside the chat profiles, AI's first slice for the transcription, each engine a keyed adapter and the model its options; a fixed 16 kHz mono WAV refused by its bytes; no engine, no microphone | accepted |
 | [0062](0062-objects-in-a-photograph-are-found-by-a-detector.md) | The objects in a photograph are found by a detector, and the detector is OWLv2: `IObjectDetector` in `Search/Images`, measured against SigLIP's grid and the local Qwen before it was chosen; our export, tier 1, with the text tower and CLIP's tokenizer ours so the kinds stay configuration; no export, the photograph is one object | accepted |
 | [0063](0063-a-picture-is-a-question-not-a-fact.md) | A picture is the shopper's question, never a fact: reads made by code over closed lists, each labelled as what it is (*similar in the shop*, never *this is*); nothing a model reads in a shopper's picture is written anywhere; a model that writes words never receives it; the picture is not kept | accepted |
+| [0064](0064-a-saved-card-is-the-providers-token.md) | A saved card is the provider's token and what may be shown of it, never the card: the port gains save and forget, charging a kept card is the authorisation unchanged, the wallet is Ordering's, a token outlives nothing, and it never leaves the server | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

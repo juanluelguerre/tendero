@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Ordering.Adapters;
 using ElGuerre.Tendero.Ordering.Features.Dashboard;
+using ElGuerre.Tendero.Ordering.PersonalData;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
@@ -82,6 +83,11 @@ public static class OrderingServiceCollectionExtensions
 
         services.AddKeyedSingleton<IPaymentProvider, FakePaymentProvider>(FakePaymentProvider.Key);
         services.TryAddSingleton<IPaymentProviderRegistry, KeyedPaymentProviderRegistry>();
+
+        // What Ordering holds about a person, for their download and the removal of
+        // their account (P15-9): the wallet, forgotten, and the orders, kept.
+        services.AddScoped<IPersonalDataHolder, WalletPersonalData>();
+        services.AddScoped<IPersonalDataHolder, OrdersPersonalData>();
 
         // The one file that knows Pricing exists. Scoped, because the dispatcher
         // it delegates to resolves scoped handlers.

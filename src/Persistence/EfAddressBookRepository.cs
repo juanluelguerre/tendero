@@ -13,6 +13,8 @@ internal sealed class EfAddressBookRepository(TenderoDbContext context) : IAddre
         context.AddressBooks.FirstOrDefaultAsync(book => book.CustomerId == customer, ct);
 
     public void Add(AddressBook book) => context.AddressBooks.Add(book);
+
+    public void Remove(AddressBook book) => context.AddressBooks.Remove(book);
 }
 
 /// <summary>A customer's address book as the page and checkout read it: untracked, never saved back.</summary>

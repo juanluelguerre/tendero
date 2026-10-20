@@ -202,6 +202,8 @@ public sealed class ManageAddressesTests
 
         public void Add(AddressBook book) => store.Add(book);
 
+        public void Remove(AddressBook book) => store.Remove(book);
+
         public Task<AddressBook?> ForCustomerAsync(CustomerId customer, CancellationToken ct = default) =>
             Task.FromResult(store.Find(book => book.CustomerId == customer));
     }
