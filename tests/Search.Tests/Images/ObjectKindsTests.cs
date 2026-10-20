@@ -54,4 +54,24 @@ public sealed class ObjectKindsTests
 
         Assert.Contains("bottle", refused.Message, StringComparison.Ordinal);
     }
+
+    /// <summary>The file says which kinds are sold by where it lists them: that is what draws a block or the line (CS-1.6).</summary>
+    [Fact]
+    public void A_kind_is_sold_or_not_by_the_list_it_is_in()
+    {
+        var kinds = ObjectKinds.Parse("""
+            { "sold": { "SHIRT": "t-shirt" }, "notSold": { "bottle": { "words": "bottle", "es": "botella", "en": "bottle" } } }
+            """);
+
+        Assert.Equal([new ObjectKind("SHIRT", "t-shirt", Sold: true), new ObjectKind("bottle", "bottle", Sold: false)], kinds.All);
+    }
+
+    [Theory]
+    [InlineData("""{ "words": "bottle", "es": "botella" }""")]
+    [InlineData("""{ "words": "bottle", "es": "botella", "en": " " }""")]
+    [InlineData("""{ "words": "bottle", "es": "", "en": "bottle" }""")]
+    public void A_kind_not_sold_missing_either_name_is_refused(string kind)
+    {
+        Assert.Throws<InvalidDataException>(() => ObjectKinds.Parse($$"""{ "sold": {}, "notSold": { "bottle": {{kind}} } }"""));
+    }
 }

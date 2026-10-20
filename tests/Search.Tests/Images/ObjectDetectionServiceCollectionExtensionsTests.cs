@@ -56,5 +56,19 @@ public sealed class ObjectDetectionServiceCollectionExtensionsTests : IDisposabl
         Assert.Contains("owlv2", refused.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>The floor is a setting, never a constant: 0.4 is provisional (the author, 2026-10-19).</summary>
+    [Fact]
+    public void The_floor_is_read_from_the_settings()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection([KeyValuePair.Create("Search:Objects:MinScore", (string?)"0.35")])
+            .Build();
+
+        var options = new ServiceCollection().AddObjectDetection(configuration).BuildServiceProvider()
+            .GetRequiredService<Microsoft.Extensions.Options.IOptions<ObjectDetectionOptions>>();
+
+        Assert.Equal(0.35, options.Value.MinScore);
+    }
+
     public void Dispose() => Directory.Delete(this.folder, recursive: true);
 }

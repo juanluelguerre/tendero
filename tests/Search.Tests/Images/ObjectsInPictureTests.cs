@@ -84,4 +84,35 @@ public sealed class ObjectsInPictureTests
 
         Assert.Equal(["lamp", "keyboard", "mouse", "rug"], read.Select(found => found.Kind.Code));
     }
+
+    /// <summary>
+    /// By its centre, not its top: a tall object that starts high but sits mostly
+    /// lower is read after a small one in the top third (the backpack below a
+    /// shoulder), and a wide object starting at the left edge after a narrow one
+    /// nearer its middle.
+    /// </summary>
+    [Fact]
+    public void An_object_is_read_where_its_centre_is()
+    {
+        DetectedObject At(string code, int left, int top, int width, int height) =>
+            new(new ObjectKind(code, code, Sold: true), new PictureBox(left, top, width, height), 0.5);
+        var tall = At("tall", left: 200, top: 10, width: 30, height: 150);
+        var small = At("small", left: 10, top: 100, width: 30, height: 10);
+
+        Assert.Equal(["tall", "small"], ObjectsInPicture.InReadingOrder([small, tall], pictureHeight: 300).Select(found => found.Kind.Code));
+
+        var wide = At("wide", left: 0, top: 10, width: 100, height: 10);
+        var near = At("near", left: 40, top: 10, width: 10, height: 10);
+        var right = At("right", left: 120, top: 10, width: 10, height: 10);
+
+        Assert.Equal(["near", "wide", "right"], ObjectsInPicture.InReadingOrder([right, wide, near], pictureHeight: 300).Select(found => found.Kind.Code));
+    }
+
+    /// <summary>A box that only touches the picture's edge has no pixels in it: nothing to crop.</summary>
+    [Fact]
+    public void A_box_touching_the_edge_from_outside_clips_to_nothing()
+    {
+        Assert.Null(new PictureBox(320, 10, 20, 20).ClippedTo(320, 240));
+        Assert.Null(new PictureBox(10, 240, 20, 20).ClippedTo(320, 240));
+    }
 }

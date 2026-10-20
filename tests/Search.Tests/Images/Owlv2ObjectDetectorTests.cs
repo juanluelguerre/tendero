@@ -28,6 +28,22 @@ public sealed class Owlv2ObjectDetectorTests
         Assert.Equal((Patch: 0, Logit: 9f), Owlv2ObjectDetector.Likeliest(logits, 3, [1]));
     }
 
+    /// <summary>Each pixel keeps its own colour on its way into the square: red on the left stays left, blue on the right stays right.</summary>
+    [Fact]
+    public void Each_pixel_lands_where_it_was()
+    {
+        byte[] redThenBlue = [255, 0, 0, 0, 0, 255];
+
+        var tensor = Owlv2ObjectDetector.Pixels(redThenBlue, 2, 1);
+
+        var last = Owlv2ObjectDetector.Side - 1;
+        // Red and nothing of blue on the left; blue and nothing of red on the right.
+        Assert.Equal((1f - 0.48145466f) / 0.26862954f, tensor[0, 0, 0, 0], 2);
+        Assert.Equal((0f - 0.40821073f) / 0.27577711f, tensor[0, 2, 0, 0], 2);
+        Assert.Equal((1f - 0.40821073f) / 0.27577711f, tensor[0, 2, 0, last], 2);
+        Assert.Equal((0f - 0.48145466f) / 0.26862954f, tensor[0, 0, 0, last], 2);
+    }
+
     /// <summary>The picture is laid at the top left of a grey square, as the maker's processor pads it, and normalised with CLIP's mean and deviation.</summary>
     [Fact]
     public void The_picture_is_padded_grey_below_and_normalised()

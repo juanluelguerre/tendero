@@ -123,3 +123,6 @@ Next, in order:
     other fields. The storefront: with no detector, a picture by-image refuses is the sheet's
     *refused*, not a block that failed. Tests first, red, then green.
 12. Stryker scoped over `Search`, and the notebook.
+    **Done 2026-10-19.** The 20 files the branch changed, 79.75 % of covered; 28 survivors were
+    real and closed by tests red by hand first (about 84.8 % by count), the rest classified in
+    `docs/testing.md`, *The camera search's stage 1, scoped*.

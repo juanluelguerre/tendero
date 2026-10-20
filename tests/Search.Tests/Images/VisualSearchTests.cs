@@ -143,6 +143,29 @@ public sealed class VisualSearchTests
         Assert.Equal(valid, new SearchPicturesByTextValidator().Validate(new SearchPicturesByTextQuery(q, "es", 12)).IsValid);
     }
 
+    [Fact]
+    public void Words_against_the_pictures_name_their_culture_and_limit()
+    {
+        var validator = new SearchPicturesByTextValidator();
+
+        Assert.Equal("limit", Assert.Single(validator.Validate(new SearchPicturesByTextQuery("mesa", "es", VisualSearch.MaxLimit + 1)).Errors).PropertyName);
+        Assert.Equal("limit", Assert.Single(validator.Validate(new SearchPicturesByTextQuery("mesa", "es", 0)).Errors).PropertyName);
+        Assert.Equal("q", Assert.Single(validator.Validate(new SearchPicturesByTextQuery("m", "es", 12)).Errors).PropertyName);
+        Assert.False(validator.Validate(new SearchPicturesByTextQuery("mesa", "fr", 12)).IsValid);
+    }
+
+    /// <summary>The words and the category are bounded as the endpoint names them: q at 200, category at 64.</summary>
+    [Fact]
+    public void A_pictures_words_and_category_are_bounded()
+    {
+        var validator = new SearchByImageValidator();
+        var picture = APicture(40, 40, SKEncodedImageFormat.Png);
+
+        Assert.True(validator.Validate(new SearchByImageQuery(picture, "es", 12, new string('a', 200), new string('C', 64))).IsValid);
+        Assert.Equal("q", Assert.Single(validator.Validate(new SearchByImageQuery(picture, "es", 12, Words: new string('a', 201))).Errors).PropertyName);
+        Assert.Equal("category", Assert.Single(validator.Validate(new SearchByImageQuery(picture, "es", 12, Category: new string('C', 65))).Errors).PropertyName);
+    }
+
     // ---------- The answer ----------
 
     [Fact]
@@ -213,14 +236,18 @@ public sealed class VisualSearchTests
         Assert.Equal(["chair", "stool"], pictures.Among!.Order());
     }
 
-    [Fact]
-    public async Task A_picture_with_neither_is_answered_among_everything_and_the_words_are_not_asked()
+    /// <summary>Blank is neither: a field left empty by the storefront narrows nothing.</summary>
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("", " ")]
+    [InlineData(" ", "")]
+    public async Task A_picture_with_neither_is_answered_among_everything_and_the_words_are_not_asked(string? q, string? category)
     {
         var pictures = new Nearest(new PictureMatch("lamp", "a", 0.90));
         var words = new Strategies.Lexical("chair");
         var handler = new SearchByImageHandler(new Model(), new VisualSearch(pictures, new Index("lamp"), words), Floors());
 
-        var result = await handler.HandleAsync(new SearchByImageQuery(APicture(64, 48, SKEncodedImageFormat.Png), "es", 12), Ct);
+        var result = await handler.HandleAsync(new SearchByImageQuery(APicture(64, 48, SKEncodedImageFormat.Png), "es", 12, q, category), Ct);
 
         Assert.Equal("lamp", Assert.Single(result.Items).Product.ProductId);
         Assert.Empty(words.Asked);
