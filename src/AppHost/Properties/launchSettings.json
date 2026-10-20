@@ -122,7 +122,29 @@
         "Tendero__Steward": "true",
         "Tendero__Tino": "true",
         "Tendero__Voice": "true",
-        "Tendero__Vision": "true"
+        "Tendero__Vision": "true",
+        "Tendero__Issuer": "keycloak"
+      }
+    },
+    "https-mock": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17130;http://localhost:15130",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_ENVIRONMENT": "Development",
+        "ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL": "https://localhost:21130",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22130",
+        "Tendero__Issuer": "dev-issuer",
+        "Tendero__Vectors": "false",
+        "Tendero__Knowledge": "false",
+        "Tendero__Steward": "false",
+        "Tendero__Tino": "false",
+        "Tendero__Voice": "false",
+        "Tendero__Vision": "false",
+        "Tendero__Observability": "false",
+        "Tendero__Tools": "false"
       }
     },
     "https-observability": {

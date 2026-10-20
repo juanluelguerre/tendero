@@ -656,14 +656,15 @@ database a new password its volume does not know.
 | `https-vectors` | plus the vector layer: search by meaning, similar products, the reranker on a GPU |
 | `https-knowledge` | plus the claims models: the extractor and the support scorer |
 | `https-advanced` | plus both: every AI stage on — their containers' memory limits add up to about 14 GB on a CPU |
-| `https-all` | every AI piece at once: the vector layer, the claims models, Steward's model and Tino on it, its vision and voice — not the Grafana stack. Measured on an 8 GB card on 2026-10-16: the embeddings, the reranker, the local model with its vision and Whisper fill it (7.8 GB); nothing fails, but the model writes about four times slower while a question is being heard (`docs/analysis/voice-models.md`) |
+| `https-mock` | the basic stack and nothing else, whatever user secrets say: the development issuer, no vector layer, no claims models, no Steward, no Tino, no voice, no vision, no Grafana, no tools. Every switch is written `false`, which is the difference from `https`: a profile wins over user secrets, so this one is the same stack on every machine |
+| `https-all` | every AI piece at once: the vector layer, the claims models, Steward's model and Tino on it, its vision and voice — and Keycloak as the issuer, so you sign in as a real user (`ana` for the shop, `juanlu` for the backoffice; the password is the username) — not the Grafana stack. Measured on an 8 GB card on 2026-10-16: the embeddings, the reranker, the local model with its vision and Whisper fill it (7.8 GB); nothing fails, but the model writes about four times slower while a question is being heard (`docs/analysis/voice-models.md`) |
 | `https-steward` | plus Steward's local model (6 GB): without it the panel opens and answers that no model is available |
 | `https-tino` | plus Tino, the storefront's assistant, with its voice and its vision: the same local model as Steward's, the support scorer, the vision projector and Whisper. Only on a GPU — without one the door stays in the header and says *not available*; the local model, its vision and Whisper share the card in 6.9 GB |
 | `https-voice` | plus voice alone: Whisper prepared and served, the microphone in the phone's search box (and in Tino's, when Tino runs) |
 | `https-observability` | plus the Grafana stack |
 | `http` | the default stack, with the dashboard over plain HTTP |
 
-The rarer switches (Keycloak, the tools) are not profiles on purpose —
+The rarer switches (Keycloak outside `https-all`, the tools) are not profiles on purpose —
 every combination would be one more entry in the drop-down. Set them in user
 secrets, and they apply under whichever profile you pick. A profile's
 environment variables win over user secrets, so a profile can also turn one off
