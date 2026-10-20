@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Sdk Name="Aspire.AppHost.Sdk" Version="13.6.1" />
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.6.2" />
 
   <!-- "dotnet run" on this project brings everything up: the infrastructure in
        Docker and both .NET services, with the Aspire dashboard in front. -->
@@ -21,10 +21,6 @@
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
     <PackageReference Include="Aspire.Hosting.Keycloak" />
     <PackageReference Include="Aspire.Hosting.Qdrant" />
-    <!-- Not used here: Aspire brings it (through StreamJsonRpc) at 2.5.302, which
-         GHSA-qhrr-8q5h-9q3h flags. A direct reference lifts it to the patched
-         version; see Directory.Packages.props for when it goes. -->
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

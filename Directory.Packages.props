@@ -114,7 +114,7 @@
          DirectML below is about. Approved by the author on 2026-10-06. Tier 1. -->
     <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
     <!-- Qdrant.Client 1.19.0 — Apache-2.0, a licence EXPRESSION in the nuspec.
-         The version is not a choice: Aspire.Hosting.Qdrant 13.6.1 pins it (still, 2026-10-16), and a
+         The version is not a choice: Aspire.Hosting.Qdrant 13.6.2 pins it (still, 2026-10-20), and a
          newer client in a project the AppHost references is a downgrade NuGet
          reports and -warnaserror fails on. Its chain, each checked at the version
          it resolves: Grpc.Net.Client, Grpc.Net.Common and Grpc.Core.Api 2.71.0
@@ -133,29 +133,30 @@
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.11.0" />
   </ItemGroup>
   <ItemGroup Label="Aspire (AppHost only)">
-    <!-- Aspire 13.6.1 — MIT (checked 2026-10-16). It still brings MessagePack 2.5.302,
-         which NuGet's audit flags (GHSA-qhrr-8q5h-9q3h): pinned at the end of this group. -->
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.6.1" />
+    <!-- Aspire 13.6.2 — MIT (checked 2026-10-20). Its graph brings MessagePack 2.5.307
+         (MIT, with its Annotations), past GHSA-qhrr-8q5h-9q3h: the direct reference that
+         lifted 13.6.1's 2.5.302 to 2.5.303 on 2026-10-16 is gone, as it said it would be. -->
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.6.2" />
     <!-- Only what the AppHost declares today. Redis arrives when something reads
          it; the Ollama CommunityToolkit package does not come back for phase 8,
          because Text Embeddings Inference serves those models (ADR 0031) as a
          plain container. Elasticsearch is a plain container resource too
          (see ADR 0006). -->
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.1" />
-    <!-- MIT; its only Aspire dependency is exactly Aspire.Hosting 13.6.1. It
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.2" />
+    <!-- MIT; its only Aspire dependency is exactly Aspire.Hosting 13.6.2. It
          pins the server image to qdrant/qdrant:v1.18.0 and Qdrant.Client to
          1.19.0 (1.18.1 under 13.5.3), so Search takes exactly that client version: a newer
          one in a project the AppHost references would be a downgrade NuGet
          reports and -warnaserror turns into a failure. -->
-    <PackageVersion Include="Aspire.Hosting.Qdrant" Version="13.6.1" />
+    <PackageVersion Include="Aspire.Hosting.Qdrant" Version="13.6.2" />
     <!-- Orchestrates both Angular apps alongside the backend: one command brings
          everything up and the API's URL is injected instead of hand-written. MIT. -->
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.6.1" />
-    <!-- Aspire.Hosting.Keycloak 13.6.1-preview.1.26506.6 — MIT (checked 2026-10-16;
-         13.6.0-preview.1.26479.8 before), declared in the
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.6.2" />
+    <!-- Aspire.Hosting.Keycloak 13.6.2-preview.1.26519.11 — MIT (checked 2026-10-20;
+         13.6.1-preview.1.26506.6 before), declared in the
          nuspec (`<license type="expression">MIT</license>`), authored by
          Microsoft, from github.com/microsoft/aspire. Its only Aspire dependency
-         is `Aspire.Hosting 13.6.1`, which is exactly what the AppHost already
+         is `Aspire.Hosting 13.6.2`, which is exactly what the AppHost already
          resolves, so there is no version conflict.
 
          Both halves of ADR 0006's check, and this one passes where
@@ -165,23 +166,10 @@
 
          The version string is the awkward part and it is worth knowing rather
          than discovering: EVERY one of this package's 46 published versions is a
-         preview, while `Aspire.Hosting.AppHost` 13.6.1 is not. `dotnet package
+         preview, while `Aspire.Hosting.AppHost` 13.6.2 is not. `dotnet package
          search Aspire.Hosting.Keycloak` therefore returns "No results found",
          which reads exactly like a package that does not exist. -->
-    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.6.1-preview.1.26506.6" />
-    <!-- MessagePack 2.5.303 — MIT, the expression on that exact version, as is
-         MessagePack.Annotations 2.5.303; its other dependencies are Microsoft's,
-         already in the graph (checked 2026-10-16). We never call it: Aspire brings
-         it through StreamJsonRpc at 2.5.302, and an advisory published on
-         2026-10-15 (GHSA-qhrr-8q5h-9q3h, moderate: nested arrays get past the
-         buffer length limits) turned NuGet's audit warning NU1902 into a failed
-         build under -warnaserror, on every branch, overnight. Updating Aspire to
-         13.6.1 first, by the author's ruling, did not clear it. So the AppHost
-         references the patched release directly, the same series, and the
-         reference goes the day Aspire's own graph brings 2.5.303 or later.
-         Practical risk to a local-only AppHost was nearly nil; the build being
-         red was not. Tier 1, linked. -->
-    <PackageVersion Include="MessagePack" Version="2.5.303" />
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.6.2-preview.1.26519.11" />
   </ItemGroup>
   <ItemGroup Label="Knowledge">
     <!-- Microsoft.ML.OnnxRuntimeGenAI 0.18.0 - MIT (its LICENSE and its Managed
