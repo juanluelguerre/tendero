@@ -44,6 +44,8 @@ interface OrderState {
    * not be congratulated for it.
    */
   readonly justPlaced: boolean;
+  /** Checkout was asked to keep the address it was sent to and could not (P15-3): the order stands, and this says the book did not change. */
+  readonly addressNotKept: boolean;
 }
 
 /**
@@ -66,6 +68,7 @@ export const OrderStore = signalStore(
     returnMessage: null,
     returnOpened: false,
     justPlaced: false,
+    addressNotKept: false,
   }),
   withProps(() => ({
     _orders: inject(OrderService),
@@ -188,11 +191,17 @@ export const OrderStore = signalStore(
   }),
   withHooks({
     onInit(store) {
-      const handed = store._router.getCurrentNavigation()?.extras.state as { order?: OrderView } | undefined;
+      const handed = store._router.getCurrentNavigation()?.extras.state as
+        { order?: OrderView; addressKept?: boolean } | undefined;
       if (handed?.order) {
         // Checkout already has the order; asking for it again would be a round
         // trip to learn what we were just told.
-        patchState(store, { order: handed.order, justPlaced: true, loading: false });
+        patchState(store, {
+          order: handed.order,
+          justPlaced: true,
+          addressNotKept: handed.addressKept === false,
+          loading: false,
+        });
       }
 
       // Loaded anyway, and not only when the navigation state is empty. A

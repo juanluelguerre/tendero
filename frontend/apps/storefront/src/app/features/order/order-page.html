@@ -9,6 +9,9 @@
         <p class="basis-full font-semibold text-positive">
           {{ t(order.status === 'Confirmed' ? 'order.placed' : 'order.confirming') }}
         </p>
+        @if (store.addressNotKept()) {
+          <p class="m-0 basis-full text-sm text-muted" data-address-not-kept>{{ t('order.addressNotKept') }}</p>
+        }
       }
       <h1 class="text-2xl">{{ t('order.reference', { id: shortId(order.orderId) }) }}</h1>
       <lib-status-pill [tone]="orderTone(order.status)" size="md">

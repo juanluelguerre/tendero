@@ -28,8 +28,11 @@ describe('the order store', () => {
   let returning: () => Promise<ReturnView>;
   let sent: unknown[];
 
+  let addressKept: boolean | undefined;
+
   beforeEach(() => {
     handedOver = undefined;
+    addressKept = undefined;
     reads = 0;
     readIn = [];
     culture = signal('es');
@@ -44,7 +47,9 @@ describe('the order store', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'O-1' }) } } },
         {
           provide: Router,
-          useValue: { getCurrentNavigation: () => (handedOver ? { extras: { state: { order: handedOver } } } : null) },
+          useValue: {
+            getCurrentNavigation: () => (handedOver ? { extras: { state: { order: handedOver, addressKept } } } : null),
+          },
         },
         { provide: CultureStore, useValue: { active: culture } },
         { provide: TranslocoService, useValue: { translate: (key: string) => key } },
@@ -136,5 +141,17 @@ describe('the order store', () => {
     await store.requestReturn();
 
     expect([store.returnMessage(), store.returnOpened()]).toEqual(['order.returnClosed', false]);
+  });
+
+  /** The order stands when checkout could not keep its address; the page says the book did not change (P15-3). */
+  it('says the address was not kept only when checkout says so', async () => {
+    handedOver = order();
+    addressKept = false;
+    const notKept = opened().addressNotKept();
+    TestBed.resetTestingModule();
+    addressKept = true;
+    const kept = opened().addressNotKept();
+
+    expect([notKept, kept]).toEqual([true, false]);
   });
 });

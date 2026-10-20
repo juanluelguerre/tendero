@@ -129,7 +129,13 @@
       "gone": "La compra que preparó tu agente ya se completó, se canceló o caducó.",
       "backToShop": "Volver a la tienda",
       "failed": "No hemos podido recuperar la compra. Inténtalo dentro de un momento."
-    }
+    },
+    "chooseAddress": "Elige adónde enviarlo.",
+    "manageAddresses": "Gestionar direcciones",
+    "newAddress": "Una dirección nueva",
+    "keepAddress": "Guardarla en mis direcciones, como",
+    "billedTo": "Se factura a {{label}}, tu dirección de facturación.",
+    "bookFull": "Tu libreta de direcciones está llena, así que esta dirección no se puede guardar. El pedido no cambia."
   },
   "consent": {
     "title": "Ayúdanos a mejorar la tienda.",
@@ -198,7 +204,8 @@
       "payment_declined": "El pago fue rechazado, así que el pedido no llegó a hacerse.",
       "test_order_ended": "Pedido de prueba finalizado: no se envía y su stock ya se ha devuelto."
     },
-    "title": "Tu pedido"
+    "title": "Tu pedido",
+    "addressNotKept": "Tu pedido está hecho. La dirección nueva no se ha guardado en tus direcciones; puedes añadirla allí."
   },
   "product": {
     "addToCart": "Añadir al carrito",

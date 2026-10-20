@@ -27,79 +27,164 @@
             {{ t('checkout.address') }}
           </legend>
 
-          <div class="clear-both mb-4 grid grid-cols-2 gap-4 max-xs:grid-cols-1">
-            <label class="col-span-full grid gap-2">
-              <span class="text-sm font-medium text-muted">{{ t('checkout.recipientName') }}</span>
-              <input
-                class="field"
-                [formField]="store.addressForm.recipientName"
-                (change)="store.addressChanged()"
-                autocomplete="name"
-              />
-            </label>
+          <!-- The signed-in shopper's book (P15-3): the default preselected and
+               shown, the others one choice away, a new address last. Never a form
+               to retype; a book with no default leaves nothing chosen and asks. -->
+          @if (store.kept().length > 0) {
+            <div class="clear-both mb-4 grid gap-2" data-kept-addresses>
+              <div class="flex items-center justify-between gap-3">
+                @if (store.where() === null) {
+                  <p class="m-0 text-sm text-muted" role="status">{{ t('checkout.chooseAddress') }}</p>
+                } @else {
+                  <span></span>
+                }
+                <a class="quiet underline" [routerLink]="links.addresses()">{{ t('checkout.manageAddresses') }}</a>
+              </div>
+              @for (entry of store.kept(); track entry.id) {
+                <label class="" [attr.data-address]="entry.label">
+                  <input
+                    type="radio"
+                    name="where"
+                    [value]="entry.id"
+                    [checked]="entry.id === store.where()"
+                    (change)="store.sendTo(entry.id)"
+                  />
+                  <span class="grid min-w-0 gap-hair">
+                    <span class="flex flex-wrap items-center gap-2 font-medium">
+                      {{ entry.label }}
+                      @if (entry.deliveryDefault) {
+                        <span class="rounded-full border border-hairline bg-raised px-2 py-px text-2xs font-semibold">
+                          {{ t('addresses.deliveryDefault') }}
+                        </span>
+                      }
+                    </span>
+                    <span class="text-xs text-muted">
+                      {{ entry.address.recipientName }} · {{ entry.address.line1 }}
+                      @if (entry.address.line2) {
+                        , {{ entry.address.line2 }}
+                      }
+                      · {{ entry.address.postalCode }} {{ entry.address.city }}
+                    </span>
+                  </span>
+                </label>
+              }
+              <label class="" data-address-new>
+                <input
+                  type="radio"
+                  name="where"
+                  [value]="newAddress"
+                  [checked]="store.where() === newAddress"
+                  (change)="store.sendTo(newAddress)"
+                />
+                <span class="font-medium">{{ t('checkout.newAddress') }}</span>
+              </label>
+            </div>
+          }
 
-            <label class="col-span-full grid gap-2">
-              <span class="text-sm font-medium text-muted">{{ t('checkout.line1') }}</span>
-              <input
-                class="field"
-                [formField]="store.addressForm.line1"
-                (change)="store.addressChanged()"
-                autocomplete="address-line1"
-              />
-            </label>
+          @if (store.where() === newAddress) {
+            <div class="clear-both mb-4 grid grid-cols-2 gap-4 max-xs:grid-cols-1">
+              <label class="col-span-full grid gap-2">
+                <span class="text-sm font-medium text-muted">{{ t('checkout.recipientName') }}</span>
+                <input
+                  class="field"
+                  [formField]="store.addressForm.recipientName"
+                  (change)="store.addressChanged()"
+                  autocomplete="name"
+                />
+              </label>
 
-            <label class="col-span-full grid gap-2">
-              <span class="text-sm font-medium text-muted">{{ t('checkout.line2') }}</span>
-              <input
-                class="field"
-                [formField]="store.addressForm.line2"
-                (change)="store.addressChanged()"
-                autocomplete="address-line2"
-              />
-            </label>
+              <label class="col-span-full grid gap-2">
+                <span class="text-sm font-medium text-muted">{{ t('checkout.line1') }}</span>
+                <input
+                  class="field"
+                  [formField]="store.addressForm.line1"
+                  (change)="store.addressChanged()"
+                  autocomplete="address-line1"
+                />
+              </label>
 
-            <label class="grid gap-2">
-              <span class="text-sm font-medium text-muted">{{ t('checkout.postalCode') }}</span>
-              <input
-                class="field"
-                [formField]="store.addressForm.postalCode"
-                (change)="store.addressChanged()"
-                autocomplete="postal-code"
-              />
-            </label>
+              <label class="col-span-full grid gap-2">
+                <span class="text-sm font-medium text-muted">{{ t('checkout.line2') }}</span>
+                <input
+                  class="field"
+                  [formField]="store.addressForm.line2"
+                  (change)="store.addressChanged()"
+                  autocomplete="address-line2"
+                />
+              </label>
 
-            <label class="grid gap-2">
-              <span class="text-sm font-medium text-muted">{{ t('checkout.city') }}</span>
-              <input
-                class="field"
-                [formField]="store.addressForm.city"
-                (change)="store.addressChanged()"
-                autocomplete="address-level2"
-              />
-            </label>
+              <label class="grid gap-2">
+                <span class="text-sm font-medium text-muted">{{ t('checkout.postalCode') }}</span>
+                <input
+                  class="field"
+                  [formField]="store.addressForm.postalCode"
+                  (change)="store.addressChanged()"
+                  autocomplete="postal-code"
+                />
+              </label>
 
-            <label class="grid gap-2">
-              <span class="text-sm font-medium text-muted">{{ t('checkout.region') }}</span>
-              <input
-                class="field"
-                [formField]="store.addressForm.region"
-                (change)="store.addressChanged()"
-                autocomplete="address-level1"
-              />
-            </label>
+              <label class="grid gap-2">
+                <span class="text-sm font-medium text-muted">{{ t('checkout.city') }}</span>
+                <input
+                  class="field"
+                  [formField]="store.addressForm.city"
+                  (change)="store.addressChanged()"
+                  autocomplete="address-level2"
+                />
+              </label>
 
-            <label class="grid gap-2">
-              <span class="text-sm font-medium text-muted">{{ t('checkout.country') }}</span>
-              <!-- Two letters, uppercase: the value three different things
+              <label class="grid gap-2">
+                <span class="text-sm font-medium text-muted">{{ t('checkout.region') }}</span>
+                <input
+                  class="field"
+                  [formField]="store.addressForm.region"
+                  (change)="store.addressChanged()"
+                  autocomplete="address-level1"
+                />
+              </label>
+
+              <label class="grid gap-2">
+                <span class="text-sm font-medium text-muted">{{ t('checkout.country') }}</span>
+                <!-- Two letters, uppercase: the value three different things
                    look up (a rate, a tax rule, a market). -->
-              <input
-                class="field numeric"
-                autocomplete="country"
-                [formField]="store.addressForm.countryCode"
-                (change)="store.addressChanged()"
-              />
-            </label>
-          </div>
+                <input
+                  class="field numeric"
+                  autocomplete="country"
+                  [formField]="store.addressForm.countryCode"
+                  (change)="store.addressChanged()"
+                />
+              </label>
+            </div>
+
+            <!-- Kept after the order, by a second call: a full book or a failed save
+               never stops an order. Off by default; the label is the shopper's. -->
+            @if (store.canKeep()) {
+              <div class="mb-2 flex flex-wrap items-end gap-4 border-t border-hairline pt-4" data-keep-address>
+                <label class="flex min-h-target cursor-pointer items-center gap-3">
+                  <input type="checkbox" [formField]="store.keepForm.keep" />
+                  <span>{{ t('checkout.keepAddress') }}</span>
+                </label>
+                @if (store.keepForm.keep().value()) {
+                  <label class="grid gap-2">
+                    <span class="text-sm font-medium text-muted">{{ t('addresses.label') }}</span>
+                    <input class="field" [formField]="store.keepForm.label" autocomplete="off" />
+                  </label>
+                }
+              </div>
+            } @else if (store.bookFull()) {
+              <p class="mb-2 border-t border-hairline pt-4 text-sm text-muted" data-keep-refused>
+                {{ t('checkout.bookFull') }}
+              </p>
+            }
+          }
+
+          <!-- Where the invoice goes, when the book's billing default is another
+               address: said here, because a default applied unseen is not chosen. -->
+          @if (store.billing(); as billing) {
+            <p class="mt-2 mb-0 text-sm text-muted" data-billing-address>
+              {{ t('checkout.billedTo', { label: billing.label }) }}
+            </p>
+          }
 
           <!-- No button to press to learn the shipping (R-1, S-F3): the options and
                the total follow the address as it is written, and this says so
@@ -195,7 +280,9 @@
           <button
             class="button flex w-full"
             type="button"
-            [disabled]="store.paying() || !store.chosen() || !store.address().recipientName.trim()"
+            [disabled]="
+              store.paying() || !store.chosen() || !store.address()?.recipientName?.trim() || !store.keepValid()
+            "
             (click)="store.pay()"
           >
             {{

@@ -1,12 +1,13 @@
 import { computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import { form } from '@angular/forms/signals';
+import { form, maxLength } from '@angular/forms/signals';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
-import type { AddressRequest, Money, ShippingOptionView } from '@tendero/shared-api';
+import type { AddressEntryView, AddressRequest, Money, ShippingOptionView } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
+import { AddressBookStore } from '../../addresses/address-book.store';
 import { addressOf, addressSchema, type AddressDraft } from '../../addresses/address-draft';
 import { CartStore } from '../../cart/cart.store';
 import { OrderService } from '../../data-access/order.service';
@@ -23,7 +24,19 @@ import { checkoutProblem } from './checkout-problem';
  */
 export const CheckoutCards = ['card-ok', 'card-declined', 'card-unreachable', 'card-capture-fails'] as const;
 
+/** Where the order goes when it is an address typed here rather than one kept in the account. */
+export const NewAddress = 'new';
+
+/** The book's ceiling on a label, the server's `AddressBook.MaxLabelLength`. */
+const MaxLabelLength = 40;
+
 interface CheckoutState {
+  /**
+   * Where it goes (P15-3): an entry of the signed-in shopper's address book by its
+   * id, {@link NewAddress} for the form, or null while a book with no default
+   * waits for the shopper to choose — nothing is chosen for them.
+   */
+  readonly where: string | null;
   readonly options: readonly ShippingOptionView[];
   readonly chosen: ShippingOptionView | null;
   readonly instrument: string;
@@ -45,6 +58,7 @@ interface CheckoutState {
  */
 export const CheckoutStore = signalStore(
   withState<CheckoutState>(() => ({
+    where: NewAddress,
     options: [],
     chosen: null,
     instrument: CheckoutCards[0],
@@ -82,9 +96,17 @@ export const CheckoutStore = signalStore(
     // Named, so each input's `name` is `address.<field>`: stable for autofill and for the browser suites.
     // The account's address book edits the same draft under the same schema (address-draft.ts).
     const addressForm = form(draft, addressSchema, { name: 'address' });
-    return { _draft: draft, addressForm };
+
+    // *Keep it in my addresses, as…* (P15-3): off by default, and its label the
+    // shopper's words. It is sent after the order, never with it.
+    const keepDraft = signal({ keep: false, label: '' });
+    const keepForm = form(keepDraft, (keep) => maxLength(keep.label, MaxLabelLength), { name: 'keep' });
+
+    return { _draft: draft, addressForm, _keepDraft: keepDraft, keepForm };
   }),
   withProps(() => ({
+    _signedIn: inject(AuthStore).isSignedIn,
+    _book: inject(AddressBookStore),
     _cart: inject(CartStore),
     _orders: inject(OrderService),
     _router: inject(Router),
@@ -98,10 +120,38 @@ export const CheckoutStore = signalStore(
      */
     _idempotencyKey: crypto.randomUUID(),
   })),
-  withComputed(({ _cart, _draft }) => ({
-    /** The address as the API takes it: the optional fields null when empty. */
-    address: computed<AddressRequest>(() => addressOf(_draft())),
-  })),
+  withComputed(({ _draft, _keepDraft, _book, _signedIn, where }) => {
+    /** The kept entries checkout offers: a signed-in shopper's book, nothing for a guest. */
+    const kept = computed<readonly AddressEntryView[]>(() => (_signedIn() ? _book.entries() : []));
+    const entry = computed(() => kept().find((each) => each.id === where()) ?? null);
+
+    return {
+      kept,
+      /** The address as the API takes it — the entry's, or the form's with the optional fields null when empty; null until one is chosen. */
+      address: computed<AddressRequest | null>(() =>
+        where() === NewAddress ? addressOf(_draft()) : (entry()?.address ?? null),
+      ),
+      /**
+       * Where the invoice goes, said on the page and sent with the order: the
+       * billing default, when it is another entry than the one it is sent to.
+       * Otherwise none is sent, and the order bills to where it is delivered, as
+       * it always has.
+       */
+      billing: computed<AddressEntryView | null>(() => {
+        const billing = _signedIn() ? _book.billingDefault() : null;
+        return billing && billing.id !== where() ? billing : null;
+      }),
+      /** The box is offered to a signed-in shopper typing a new address, with room left in the book. */
+      canKeep: computed(() => _signedIn() && where() === NewAddress && !_book.full()),
+      /** A box ticked needs a label: what the shopper will find it by. */
+      keepValid: computed(() => {
+        const { keep, label } = _keepDraft();
+        return !keep || (label.trim().length > 0 && label.trim().length <= MaxLabelLength);
+      }),
+      /** A new address with no room for it in the book: no box, and a line that says why. */
+      bookFull: computed(() => _signedIn() && where() === NewAddress && _book.full()),
+    };
+  }),
   withMethods((store) => {
     const money = (amount: Money): string => formatPrice(amount, store._culture.active());
 
@@ -125,13 +175,32 @@ export const CheckoutStore = signalStore(
       await store._cart.quoteWithShipping(option.amount);
     };
 
+    /** The typed address kept in the book under the shopper's label; false when it could not be, never a thrown error. */
+    const keepAddress = async (address: AddressRequest): Promise<boolean> => {
+      try {
+        return await store._book.add({
+          label: store._keepDraft().label.trim(),
+          address,
+          deliveryDefault: false,
+          billingDefault: false,
+        });
+      } catch {
+        return false;
+      }
+    };
+
     const loadOptions = async (): Promise<void> => {
       // The whole address, recipient included: the server validates it as one,
       // and asking with a blank name answered 400 — which this page reads as
       // "we do not deliver there" (found live, 2026-09-11, the day the name
       // stopped being prefilled for guests).
-      if (!store.addressForm().valid()) return;
+      if (store.where() === NewAddress && !store.addressForm().valid()) return;
       const address = store.address();
+      // A book with no default asks first: nothing is priced for an address nobody chose.
+      if (!address) {
+        patchState(store, { options: [], chosen: null });
+        return;
+      }
 
       patchState(store, { rating: true, problem: null });
       try {
@@ -161,9 +230,25 @@ export const CheckoutStore = signalStore(
       money,
       choose,
       loadOptions,
+      /**
+       * The basket, and — for a signed-in shopper — the address book (P15-3): the
+       * delivery default preselected and shown, never a form to retype. A book
+       * with entries and no default asks; an empty book, or a guest, opens on the
+       * form, as checkout always has.
+       */
       async start(): Promise<void> {
         await store._cart.load();
+        if (store._signedIn()) {
+          await store._book.load();
+          const preselected = store._book.deliveryDefault()?.id;
+          patchState(store, { where: preselected ?? (store.kept().length > 0 ? null : NewAddress) });
+        }
         if (!store._cart.isEmpty()) await loadOptions();
+      },
+      /** Another entry of the book, or {@link NewAddress}: delivery is priced again for it. */
+      sendTo(where: string): Promise<void> {
+        patchState(store, { where });
+        return loadOptions();
       },
       /**
        * Any field of the address, once it has changed: the options and the total
@@ -181,13 +266,20 @@ export const CheckoutStore = signalStore(
       async pay(): Promise<void> {
         const option = store.chosen();
         const quote = store._cart.quote();
-        if (!option || !quote) return;
+        const address = store.address();
+        if (!option || !quote || !address || !store.keepValid()) return;
+
+        // Decided before the order: placing it changes nothing about the book, but
+        // what the shopper ticked is what is kept.
+        const keep = store.canKeep() && store._keepDraft().keep;
+        const billing = store.billing();
 
         patchState(store, { paying: true, problem: null });
         try {
           const order = await store._orders.place(
             {
-              shippingAddress: store.address(),
+              shippingAddress: address,
+              ...(billing ? { billingAddress: billing.address } : {}),
               shippingOptionCode: option.code,
               quoteHash: quote.inputHash,
               instrument: store.instrument(),
@@ -200,7 +292,14 @@ export const CheckoutStore = signalStore(
           // The basket became an order. Clearing the token is what stops the next
           // page load asking for a cart that is gone.
           store._cart.clear();
-          await store._router.navigate(store._links.order(order.orderId), { state: { order } });
+
+          // Kept by a second call after the order, so a full book or a failed save
+          // never stops an order; the order page says when it was not kept.
+          const kept = keep ? await keepAddress(address) : undefined;
+
+          await store._router.navigate(store._links.order(order.orderId), {
+            state: kept === undefined ? { order } : { order, addressKept: kept },
+          });
         } catch (error) {
           patchState(store, { problem: describe(error) });
           // The price moved. Re-quoting here means the summary and the button show

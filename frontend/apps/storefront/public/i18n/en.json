@@ -129,7 +129,13 @@
       "gone": "The purchase your agent prepared was already completed, canceled or expired.",
       "backToShop": "Back to the shop",
       "failed": "We could not pick up the purchase. Try again in a moment."
-    }
+    },
+    "chooseAddress": "Choose where to send it.",
+    "manageAddresses": "Manage addresses",
+    "newAddress": "A new address",
+    "keepAddress": "Keep it in my addresses, as",
+    "billedTo": "Billed to {{label}}, your billing address.",
+    "bookFull": "Your address book is full, so this address cannot be kept. The order is not affected."
   },
   "consent": {
     "title": "Help us improve the shop.",
@@ -198,7 +204,8 @@
       "payment_declined": "The payment was declined, so the order was not placed.",
       "test_order_ended": "Test order ended: it is never shipped, and its stock has been given back."
     },
-    "title": "Your order"
+    "title": "Your order",
+    "addressNotKept": "Your order is placed. The new address was not kept in your addresses; you can add it there."
   },
   "product": {
     "addToCart": "Add to cart",
