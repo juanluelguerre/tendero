@@ -49,7 +49,10 @@ public sealed record EvaluationOptions(
     string? Recordings = null,
     string? Whisper = null,
     string? Parakeet = null,
-    string? Lines = null)
+    string? Lines = null,
+    string? Pictures = null,
+    string? Owl = null,
+    string? Vision = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -84,6 +87,10 @@ public sealed record EvaluationOptions(
           --whisper <url>         voice: a whisper.cpp server to measure (whisper-server, with its VAD)
           --parakeet <dir>        voice: a Parakeet export to measure in this process (models/parakeet)
           --lines <file>          voice: what was said (default docs/analysis/voice-recordings.md)
+          --pictures <dir>        objects: the photographs tools/picture-eval/prepare.mjs wrote (default artifacts/picture-eval)
+          --siglip <dir>          objects: also measures SigLIP 2 over a grid of the photograph (models/siglip2)
+          --owl <dir>             objects: also measures OWLv2, the search box's detector (models/owlv2)
+          --vision <url>          objects: also measures the local model with its projector, asked for boxes (an OpenAI-compatible endpoint)
 
         The scope suite (--suite scope) needs only --embeddings, and reads:
           --scope <dir>           Scope query directory (default tools/SearchEval/scope)
@@ -168,13 +175,15 @@ public sealed record EvaluationOptions(
         if (rerankerModel is not null && rerankerModel.Split('@') is not [{ Length: > 0 }, { Length: > 0 }])
             throw new ArgumentException($"--reranker-model is <model id>@<full commit SHA>, and '{rerankerModel}' is not.");
 
-        // The pictures share the words' vector store, so they are measured where it is.
+        // The pictures share the words' vector store, so they are measured where it
+        // is; the objects suite asks the model about parts of a photograph instead.
+        var suite = values.GetValueOrDefault("suite", "search");
         var siglip = values.GetValueOrDefault("siglip");
-        if (siglip is not null && strategy is not SearchStrategies.Hybrid)
+        if (siglip is not null && strategy is not SearchStrategies.Hybrid && suite != "objects")
             throw new ArgumentException("--siglip measures the pictures in the vector store, and needs --strategy hybrid.");
 
         return new EvaluationOptions(
-            values.GetValueOrDefault("suite", "search"),
+            suite,
             values.GetValueOrDefault("elasticsearch", "http://localhost:9200"),
             values.GetValueOrDefault("golden", Path.Combine("tools", "SearchEval", "golden")),
             values.GetValueOrDefault("thresholds", Path.Combine("tools", "SearchEval", "eval.thresholds.json")),
@@ -216,6 +225,9 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("recordings", Path.Combine("artifacts", "voice-eval")),
             values.GetValueOrDefault("whisper"),
             values.GetValueOrDefault("parakeet"),
-            values.GetValueOrDefault("lines", Path.Combine("docs", "analysis", "voice-recordings.md")));
+            values.GetValueOrDefault("lines", Path.Combine("docs", "analysis", "voice-recordings.md")),
+            values.GetValueOrDefault("pictures", Path.Combine("artifacts", "picture-eval")),
+            values.GetValueOrDefault("owl"),
+            values.GetValueOrDefault("vision"));
     }
 }

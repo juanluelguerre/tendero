@@ -359,27 +359,37 @@ export interface TrackedEvents {
   /**
    * A shopper gave the shop a picture to search with (phase 13a). Only with analytics consent; never the picture, its name or anything read from it.
    *
-   * Search with a picture: Does anyone search with a picture, and does the picture find what they wanted?
-   * Decides: If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong.
+   * Search with a picture: Does anyone search with a picture, from where, do they mark a part, how much of what they photograph does the shop sell, and does the picture find what they wanted?
+   * Decides: If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. If most are marked, the detector matters less than the box and its cost is questioned; many objects not sold is the catalogue's gap, measured; and whether Tino gets pictures (the camera search's stage 2) is decided on these.
    */
   readonly search_by_image_submitted: {
-    /** How the picture was given. */
-    readonly how: 'chosen' | 'dropped' | 'pasted' | 'camera';
+    /** How the picture was given: chosen, dropped or pasted from the device, taken with the phone's own camera app, or with the shop's viewfinder in the page (the camera search, CS-6). */
+    readonly how: 'chosen' | 'dropped' | 'pasted' | 'camera' | 'viewfinder';
     /** What the shop did with it: an answer, a refusal of the file, the minute's limit, or not answering. */
     readonly outcome: 'answered' | 'refused' | 'too_many' | 'down';
-    /** How many products came back; 0 when none did or it was not answered. */
+    /** How many products came back, every block's together; 0 when none did or it was not answered. */
     readonly results: number;
+    /** The shopper marked a part, so only that part was sent (the camera search, CS-1.2). Mostly marked means the detector matters less than the box. */
+    readonly marked: boolean;
+    /** How many objects were found in what was sent, sold or not; 1 when the shop could not look for objects and searched it whole. */
+    readonly objects: number;
+    /** How many of those are of a kind the shop does not sell: the catalogue's gap, counted. Never which kinds. */
+    readonly not_sold: number;
+    /** Words were added to narrow the blocks (CS-4). Never the words. */
+    readonly words: boolean;
   };
 
   /**
    * A shopper opened a product from the answer to a picture (phase 13a). Only with analytics consent.
    *
-   * Search with a picture: Does anyone search with a picture, and does the picture find what they wanted?
-   * Decides: If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong.
+   * Search with a picture: Does anyone search with a picture, from where, do they mark a part, how much of what they photograph does the shop sell, and does the picture find what they wanted?
+   * Decides: If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. If most are marked, the detector matters less than the box and its cost is questioned; many objects not sold is the catalogue's gap, measured; and whether Tino gets pictures (the camera search's stage 2) is decided on these.
    */
   readonly search_by_image_result_followed: {
     /** Its place in the answer, from 1. */
     readonly position: number;
+    /** The object's number in the picture whose block it was opened from, from 1 (the camera search, CS-3); 0 from a list of its own. Whether a picture leads to a product from the first block only. */
+    readonly block: number;
   };
 
   /**

@@ -21,6 +21,7 @@ public static class PictureVectorServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.AddImageEmbeddings(configuration);
+        services.AddObjectDetection(configuration);
         services.AddQdrantPictureVectorsIfConfigured(configuration);
 
         services.TryAddSingleton<NoPictureVectors>();

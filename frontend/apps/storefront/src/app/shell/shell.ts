@@ -27,6 +27,8 @@ import { ListingParam } from '../listing/listing-filters';
 import { ShopLinks } from '../shop-links';
 import { TinoDock } from '../tino/tino-dock/tino-dock';
 import { TinoDoorStore } from '../tino/tino-door.store';
+import { PictureSheet } from '../visual-search/picture-sheet/picture-sheet';
+import { PictureSheetStore } from '../visual-search/picture-sheet/picture-sheet.store';
 import { VisualSearchPanel } from '../visual-search/visual-search-panel/visual-search-panel';
 import { MicrophoneButton } from '@tendero/shared-composer';
 import { VisualSearchStore } from '../visual-search/visual-search.store';
@@ -60,6 +62,7 @@ import { AccountMenu } from './account-menu/account-menu';
     AccountMenu,
     TinoDock,
     VisualSearchPanel,
+    PictureSheet,
     MicrophoneButton,
     Icon,
     NgOptimizedImage,
@@ -102,6 +105,7 @@ export class Shell {
   /** Tino's door: whether its panel is open, and whether Tino can be asked at all. */
   protected readonly tino = inject(TinoDoorStore);
   protected readonly visual = inject(VisualSearchStore);
+  protected readonly sheet = inject(PictureSheetStore);
   /** From the tablet turn the search box is the header row's; below it, the phone's own row. Which of the two is showing. */
   protected readonly wideEnoughForTheRow = followsMedia('(min-width: 48rem)');
 

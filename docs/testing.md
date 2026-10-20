@@ -1314,6 +1314,47 @@ scoped, so it sets no baseline (whole: 83.38 %).
   refuses exactly that (`Product.SetAttribute`, ADR 0056 amended: an axis is the
   variants', never the product's).
 
+**The camera search's stage 1, scoped (2026-10-19).** The 20 files of `src/Search`
+the branch changed (`--since develop`, 2,474 lines), four shares, a 30 s timeout
+margin, 86 minutes — about 26 s a mutant against the script's guess of 6, the
+timeouts' margin paid on the slow ones: **79.75 % of covered** (445 killed, 5
+timeouts, 113 survived, 152 no coverage), scoped, so it sets no baseline (whole:
+83.38 %). The 152 uncovered are the Qdrant adapter (61, Integration), the slices'
+endpoints (50, Api.Tests) and the OWLv2 tokenizer and the reference adapters'
+model paths (Model tests, which skip in a worktree with no `models/`). The 113:
+
+- **Real, closed the same day** (28), each test red by hand against its mutant
+  first: the reading order by the centre and not the top or the edge
+  (`An_object_is_read_where_its_centre_is`: `Height / 2` → `* 2` failed it);
+  a kind sold or not by the list it is in, and either name missing refused
+  (`A_kind_is_sold_or_not_by_the_list_it_is_in`: `Sold: true` → `false`); a box
+  touching the edge from outside clips to nothing (`>` → `>=`); the floor read
+  from the settings (the `Bind` removed); each pixel landing where it was
+  (`Each_pixel_lands_where_it_was`: `rgb[at * 3]` → `rgb[at / 3]` passed a
+  first, looser version of the test, which was tightened until it failed); blank
+  words and category narrowing nothing (`IsNullOrWhiteSpace(category)` →
+  `category is null`); and the by-image and pictures-by-words validators' bounds
+  and field names (the category's rule removed). Re-scored by count, not by a
+  second run: 473 of 558, about 84.8 %.
+- **Wording and static initialisers** (35): the refusals' sentences and codes in
+  `static readonly` fields (`PictureRefusals`, `ObjectsRefusals`), the upload's
+  messages, validator messages, the embedded resource's name, exception text.
+- **Guards** (6): `ThrowIfNull`, `ThrowIfCancellationRequested`.
+- **Held by a suite out of the configuration** (3): `AddPictureVectors`'
+  registrations, held by `Api.Tests`.
+- **Equivalent** (4): `" or "` split without `TrimEntries` (the separator carries
+  its spaces); an empty detector name looked up as a key (none answers, so the
+  fallback is the same); `>` for `>=` choosing the likeliest patch and the grid's
+  best cell, which differ only on an exact float tie.
+- **The reference adapters** (22): SigLIP's grid and the Qwen's boxes, registered
+  nowhere and measured by the objects suite, whose Model tests skip without the
+  models; written down, not chased — neither is on the shop's path (ADR 0062).
+- **The scripted detector** (1): a test double's filter, held by the endpoint
+  tests that use it with boxes; written down.
+- **Lines the branch did not write** (14): SigLIP's resampling and alpha blend,
+  and the hybrid strategy's fusion, in files the branch touched for one argument
+  (`ct:`); they belong to the whole project's next run.
+
 ## Property-based (CsCheck)
 
 Value objects carry the invariants worth generating inputs for:

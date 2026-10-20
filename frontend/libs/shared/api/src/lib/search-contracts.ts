@@ -61,6 +61,15 @@ export type VisualSearchResult = Schemas['VisualSearchResult'];
 export type VisualMatch = Schemas['VisualMatch'];
 export type VisualSearchAvailability = Schemas['VisualSearchAvailability'];
 
+/**
+ * The objects in a picture (the camera search, CS-2): each numbered in the
+ * picture's reading order, with its kind — a category's code when the shop
+ * sells it — its name in the culture asked, and its box in the picture's
+ * upright pixels, whose size comes with them.
+ */
+export type PictureObjectsView = Schemas['PictureObjectsView'];
+export type PictureObjectView = Schemas['PictureObjectView'];
+
 /** Search's stages, their state and since when, for the dashboard (R-9, D-7). */
 export type SearchStatus = Schemas['SearchStatus'];
 export type StageStatus = Schemas['StageStatus'];

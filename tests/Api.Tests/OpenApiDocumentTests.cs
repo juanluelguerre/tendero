@@ -95,6 +95,7 @@ public sealed class OpenApiDocumentTests
     {
         ["OrderMandateSummary.kind"] = "an AP2 credential's type (its vct), which the protocol leaves open",
         ["OfferView.kind"] = "a promotion effect's kind, declared by each effect rather than by an enum",
+        ["PictureObjectView.kind"] = "a category's code or a common object's name, data from object-kinds.json that grows with the catalogue (ADR 0062)",
     };
 
     [Fact]

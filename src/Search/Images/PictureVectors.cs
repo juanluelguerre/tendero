@@ -39,7 +39,12 @@ public interface IPictureVectorIndexer : IProductIndexer
 public interface IPictureSearch
 {
     /// <summary>The nearest products, nearest first, each once: by the nearest of its pictures.</summary>
-    Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, CancellationToken ct = default);
+    /// <param name="among">
+    /// When given, only these products are answered: what a category and words have
+    /// already narrowed the shop to (the camera search, CS-4). Empty is nothing to
+    /// answer, never "no filter".
+    /// </param>
+    Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default);
 }
 
 /// <param name="ImageId">The picture of the product that was nearest: what a result may show.</param>
@@ -70,6 +75,6 @@ public sealed class NoPictureVectors : IPictureVectorIndexer, IPictureSearch
     /// <summary>Never empty, so nothing ever sets out to rebuild a layer that does not exist.</summary>
     public Task<bool> IsEmptyAsync(CancellationToken ct = default) => Task.FromResult(false);
 
-    public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, CancellationToken ct = default) =>
+    public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default) =>
         throw new SearchStageNotConfiguredException(Stage);
 }

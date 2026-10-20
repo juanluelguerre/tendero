@@ -27,6 +27,7 @@ using ElGuerre.Tendero.Pricing.Features.QuoteCart;
 using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.BuildKit;
+using ElGuerre.Tendero.Search.Features.FindObjectsInPicture;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.Search.Health;
 using ElGuerre.Tendero.Search.Images;
@@ -159,6 +160,13 @@ builder.Services.AddRateLimiter(limiter =>
     // who asks. A budget of its own — a shopper who talked to Tino has not spent
     // their pictures.
     limiter.AddPolicy(VisualSearch.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        ClientOf(http),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // And twelve photographs' objects a minute (the camera search, CS-2): a
+    // detector's run of two to four seconds on this CPU, for anyone who asks, on a
+    // budget of its own.
+    limiter.AddPolicy(FindObjectsInPictureEndpoint.PerClient, http => RateLimitPartition.GetFixedWindowLimiter(
         ClientOf(http),
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 

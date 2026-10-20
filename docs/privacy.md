@@ -145,17 +145,41 @@ photograph from anyone, signed in or not. **It is never kept.**
 not sent to a model server, hosted or local. Nothing about it leaves the machine.
 
 The storefront makes the picture small in the browser before sending it —
-longest side 1,024, redrawn as a JPEG — so what travels is a redrawn copy
+longest side 1,536, redrawn as a JPEG — so what travels is a redrawn copy
 without the file's metadata, and the original never leaves the device. The
 picture shown beside the results is read from the page's own memory and is
 gone with the tab. None of the server's behaviour above depends on that: the
 endpoint can be called by anything, so what it does with a picture is decided
 on the server.
 
+### The objects in it, and the camera (the camera search)
+
+Since `docs/specs/camera-search.md` (CS-6, CS-7), a picture is also asked
+**which objects it shows** (`POST /api/search/by-image/objects`): the same
+rules as above — read in memory by a detector in the shop's own process,
+discarded, a span with its size and how many objects, never the pixels — and
+the answer is boxes and kinds, nothing more. The browser then cuts each object
+out and searches that crop, one request each, under the same rules.
+
+- **A part marked is the only part that leaves the device.** Marked before
+  sending, the browser cuts the box out and sends that crop alone: the face
+  above the t-shirt, the room round the lamp, never travel.
+- **The camera** is the browser's own, asked for only when the shopper presses
+  *Take a photo* on a phone, and only for that moment: the stream is shown in
+  the page, stopped the instant a frame is frozen or the viewfinder is closed,
+  and nothing of it is sent but the frame the shopper chooses to use. Refused
+  or absent, the phone's own camera app is opened instead, which hands the page
+  a file as choosing one does. The browser remembers the permission, not the shop.
+- **What is counted**, with analytics consent only (`search_by_image_submitted`):
+  how the picture was given, whether a part was marked, how many objects were
+  found and how many of them are of a kind the shop does not sell, how many
+  products came back, and whether words narrowed them — **never the picture,
+  its boxes, which kinds, or the words**.
+
 What is counted is who asked how often — twelve visual searches a minute for a
-client, by the person when one is signed in and by the address when nobody is —
-and that count is not kept either: it lives in the process and is gone with the
-minute.
+client, by the person when one is signed in and by the address when nobody is,
+and twelve photographs a minute asked for their objects — and that count is not
+kept either: it lives in the process and is gone with the minute.
 
 Words asked against the pictures (`GET /api/search/pictures`) are a search like
 any other: the words are embedded in the same process and are not recorded by

@@ -65,6 +65,40 @@ public sealed class VisualSearchTests
         Assert.NotNull(UploadedPicture.Read(APicture(UploadedPicture.MaxSide, 2, SKEncodedImageFormat.Png)).Picture);
     }
 
+    /// <summary>
+    /// A phone held upright stores its photograph on its side and says so; the
+    /// objects found in it are placed as it is seen (the camera search, CS-2), so
+    /// its size is given the same way. The four orientations that turn it a quarter
+    /// swap the sides; the other four do not.
+    /// </summary>
+    [Theory]
+    [InlineData(1, 200, 100)]
+    [InlineData(2, 200, 100)]
+    [InlineData(3, 200, 100)]
+    [InlineData(4, 200, 100)]
+    [InlineData(5, 100, 200)]
+    [InlineData(6, 100, 200)]
+    [InlineData(7, 100, 200)]
+    [InlineData(8, 100, 200)]
+    public void A_picture_stored_on_its_side_is_measured_as_it_is_seen(int orientation, int width, int height)
+    {
+        var picture = UploadedPicture.Read(SiglipPictureTests.QuadrantsSaying(orientation)).Picture!;
+
+        Assert.Equal((200, 100), (picture.Width, picture.Height));
+        Assert.Equal((width, height), (picture.UprightWidth, picture.UprightHeight));
+    }
+
+    /// <summary>A refusal answered as a coded problem is said in both of the shop's languages (invariant 6, ADR 0059).</summary>
+    [Fact]
+    public void A_picture_refused_is_refused_in_both_languages()
+    {
+        var refusal = UploadedPicture.Check("<svg onload='alert(1)'/>"u8).Refusal!;
+
+        Assert.Equal("A picture to search with is a JPEG, a PNG or a WebP.", refusal.In("en"));
+        Assert.Equal("Una foto para buscar es un JPEG, un PNG o un WebP.", refusal.In("es"));
+        Assert.Equal(refusal.In("en"), UploadedPicture.Read("<svg onload='alert(1)'/>"u8).Refusal);
+    }
+
     [Fact]
     public void A_picture_heavier_than_the_bound_is_refused_without_being_read()
     {
@@ -87,14 +121,14 @@ public sealed class VisualSearchTests
         Assert.NotNull(UploadedPicture.Read(APicture(2, UploadedPicture.MaxSide, SKEncodedImageFormat.Png)).Picture);
     }
 
+    /// <summary>The picture itself is refused at the endpoint, with its code (ADR 0059); the validator holds the rest of the question.</summary>
     [Fact]
-    public void The_door_names_the_picture_the_limit_and_the_culture()
+    public void The_door_names_the_limit_and_the_culture()
     {
         var validator = new SearchByImageValidator();
         var picture = APicture(40, 40, SKEncodedImageFormat.Png);
 
         Assert.True(validator.Validate(new SearchByImageQuery(picture, "es", 12)).IsValid);
-        Assert.Equal("picture", Assert.Single(validator.Validate(new SearchByImageQuery("not a picture"u8.ToArray(), "es", 12)).Errors).PropertyName);
         Assert.Equal("limit", Assert.Single(validator.Validate(new SearchByImageQuery(picture, "es", VisualSearch.MaxLimit + 1)).Errors).PropertyName);
         Assert.Equal("limit", Assert.Single(validator.Validate(new SearchByImageQuery(picture, "es", 0)).Errors).PropertyName);
         Assert.False(validator.Validate(new SearchByImageQuery(picture, "fr", 12)).IsValid);
@@ -109,6 +143,29 @@ public sealed class VisualSearchTests
         Assert.Equal(valid, new SearchPicturesByTextValidator().Validate(new SearchPicturesByTextQuery(q, "es", 12)).IsValid);
     }
 
+    [Fact]
+    public void Words_against_the_pictures_name_their_culture_and_limit()
+    {
+        var validator = new SearchPicturesByTextValidator();
+
+        Assert.Equal("limit", Assert.Single(validator.Validate(new SearchPicturesByTextQuery("mesa", "es", VisualSearch.MaxLimit + 1)).Errors).PropertyName);
+        Assert.Equal("limit", Assert.Single(validator.Validate(new SearchPicturesByTextQuery("mesa", "es", 0)).Errors).PropertyName);
+        Assert.Equal("q", Assert.Single(validator.Validate(new SearchPicturesByTextQuery("m", "es", 12)).Errors).PropertyName);
+        Assert.False(validator.Validate(new SearchPicturesByTextQuery("mesa", "fr", 12)).IsValid);
+    }
+
+    /// <summary>The words and the category are bounded as the endpoint names them: q at 200, category at 64.</summary>
+    [Fact]
+    public void A_pictures_words_and_category_are_bounded()
+    {
+        var validator = new SearchByImageValidator();
+        var picture = APicture(40, 40, SKEncodedImageFormat.Png);
+
+        Assert.True(validator.Validate(new SearchByImageQuery(picture, "es", 12, new string('a', 200), new string('C', 64))).IsValid);
+        Assert.Equal("q", Assert.Single(validator.Validate(new SearchByImageQuery(picture, "es", 12, Words: new string('a', 201))).Errors).PropertyName);
+        Assert.Equal("category", Assert.Single(validator.Validate(new SearchByImageQuery(picture, "es", 12, Category: new string('C', 65))).Errors).PropertyName);
+    }
+
     // ---------- The answer ----------
 
     [Fact]
@@ -117,7 +174,7 @@ public sealed class VisualSearchTests
         var pictures = new Nearest(new("lamp", "img-lamp-brass", 0.91), new("stool", "img-stool", 0.74));
         var search = new VisualSearch(pictures, new Index("stool", "lamp"));
 
-        var result = await search.NearestAsync(new float[4], floor: 0, "es", limit: 5, Ct);
+        var result = await search.NearestAsync(new float[4], floor: 0, "es", limit: 5, ct: Ct);
 
         Assert.Equal(["lamp", "stool"], result.Items.Select(item => item.Product.ProductId));
         Assert.Equal(("img-lamp-brass", 0.91), (result.Items[0].Picture, result.Items[0].Similarity));
@@ -130,7 +187,7 @@ public sealed class VisualSearchTests
     {
         var search = new VisualSearch(new Nearest(new("lamp", "a", 0.80), new("stool", "b", 0.60), new("rug", "c", 0.59)), new Index("lamp", "stool", "rug"));
 
-        var result = await search.NearestAsync(new float[4], floor: 0.60, "es", limit: 5, Ct);
+        var result = await search.NearestAsync(new float[4], floor: 0.60, "es", limit: 5, ct: Ct);
 
         Assert.Equal(["lamp", "stool"], result.Items.Select(item => item.Product.ProductId));
     }
@@ -140,7 +197,7 @@ public sealed class VisualSearchTests
     {
         var index = new Index("lamp");
 
-        var result = await new VisualSearch(new Nearest(new PictureMatch("lamp", "a", 0.2)), index).NearestAsync(new float[4], floor: 0.5, "es", 5, Ct);
+        var result = await new VisualSearch(new Nearest(new PictureMatch("lamp", "a", 0.2)), index).NearestAsync(new float[4], floor: 0.5, "es", 5, ct: Ct);
 
         Assert.Empty(result.Items);
         Assert.Equal(0, index.Asked);
@@ -152,9 +209,70 @@ public sealed class VisualSearchTests
     {
         var search = new VisualSearch(new Nearest(new("gone", "a", 0.9), new("lamp", "b", 0.8)), new Index("lamp"));
 
-        var result = await search.NearestAsync(new float[4], floor: 0, "es", 5, Ct);
+        var result = await search.NearestAsync(new float[4], floor: 0, "es", 5, ct: Ct);
 
         Assert.Equal("lamp", Assert.Single(result.Items).Product.ProductId);
+    }
+
+    // ---------- Narrowed by a category and words (the camera search, CS-4) ----------
+
+    /// <summary>
+    /// The block of an object in a photograph: the picture leads, and the words and
+    /// the object's category narrow it to the products the lexical search matches —
+    /// the order is still the picture's.
+    /// </summary>
+    [Fact]
+    public async Task A_picture_with_a_category_and_words_is_answered_among_what_the_words_match_there()
+    {
+        var pictures = new Nearest(new("lamp", "a", 0.90), new("stool", "b", 0.70), new("chair", "c", 0.65));
+        var words = new Strategies.Lexical("chair", "stool");
+        var handler = new SearchByImageHandler(new Model(), new VisualSearch(pictures, new Index("lamp", "stool", "chair"), words), Floors());
+
+        var result = await handler.HandleAsync(new SearchByImageQuery(APicture(64, 48, SKEncodedImageFormat.Png), "es", 12, Words: " negro ", Category: "SEATING"), Ct);
+
+        Assert.Equal(["stool", "chair"], result.Items.Select(item => item.Product.ProductId));
+        var asked = Assert.Single(words.Asked);
+        Assert.Equal(("negro", "SEATING", VisualSearch.NarrowingDepth), (asked.Text, asked.Category, asked.PageSize));
+        Assert.Equal(["chair", "stool"], pictures.Among!.Order());
+    }
+
+    /// <summary>Blank is neither: a field left empty by the storefront narrows nothing.</summary>
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("", " ")]
+    [InlineData(" ", "")]
+    public async Task A_picture_with_neither_is_answered_among_everything_and_the_words_are_not_asked(string? q, string? category)
+    {
+        var pictures = new Nearest(new PictureMatch("lamp", "a", 0.90));
+        var words = new Strategies.Lexical("chair");
+        var handler = new SearchByImageHandler(new Model(), new VisualSearch(pictures, new Index("lamp"), words), Floors());
+
+        var result = await handler.HandleAsync(new SearchByImageQuery(APicture(64, 48, SKEncodedImageFormat.Png), "es", 12, q, category), Ct);
+
+        Assert.Equal("lamp", Assert.Single(result.Items).Product.ProductId);
+        Assert.Empty(words.Asked);
+        Assert.Null(pictures.Among);
+    }
+
+    /// <summary>A block the words empty says so (CS-4): narrowed to nothing is nothing, never every product.</summary>
+    [Fact]
+    public async Task Words_that_match_nothing_in_the_category_are_an_empty_answer()
+    {
+        var pictures = new Nearest(new PictureMatch("lamp", "a", 0.90));
+        var handler = new SearchByImageHandler(new Model(), new VisualSearch(pictures, new Index("lamp"), new Strategies.Lexical()), Floors());
+
+        var result = await handler.HandleAsync(new SearchByImageQuery(APicture(64, 48, SKEncodedImageFormat.Png), "es", 12, Words: "de terciopelo", Category: "LIGHTING"), Ct);
+
+        Assert.Empty(result.Items);
+        Assert.Empty(pictures.Among!);
+    }
+
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(201, false)]
+    public void The_words_after_a_picture_are_a_line_not_an_essay(int length, bool valid)
+    {
+        Assert.Equal(valid, new SearchByImageValidator().Validate(new SearchByImageQuery(APicture(64, 48, SKEncodedImageFormat.Png), "es", 12, Words: new string('a', length))).IsValid);
     }
 
     // ---------- The two questions ----------
@@ -184,16 +302,16 @@ public sealed class VisualSearchTests
         Assert.Equal("lámpara de latón", model.LastText);
     }
 
-    /// <summary>A header that reads as a picture over a body that does not decode: the caller's mistake, said as one.</summary>
+    /// <summary>A header that reads as a picture over a body that does not decode: the caller's mistake, refused as the picture (PictureNotTaken), never a store that is down.</summary>
     [Fact]
-    public async Task A_picture_the_model_cannot_decode_is_the_callers_mistake_and_names_the_picture()
+    public async Task A_picture_the_model_cannot_decode_is_the_callers_mistake_and_says_so()
     {
         var handler = new SearchByImageHandler(new Model { Failure = new ArgumentException("truncated") }, Search(), Floors());
 
-        var refusal = await Assert.ThrowsAsync<ValidationException>(() =>
+        var refusal = await Assert.ThrowsAsync<UnreadablePictureException>(() =>
             handler.HandleAsync(new SearchByImageQuery(APicture(40, 40, SKEncodedImageFormat.Png), "es", 12), Ct));
 
-        Assert.Equal("picture", Assert.Single(refusal.Errors).PropertyName);
+        Assert.Equal("truncated", refusal.InnerException?.Message);
     }
 
     /// <summary>The model's own failure — a file missing from its folder — is the stage being down, not a 500.</summary>
@@ -262,14 +380,16 @@ public sealed class VisualSearchTests
         return encoded.ToArray();
     }
 
+    /// <summary>Pictures nearest in this order; narrowed, it answers only those among the products given, as the store does.</summary>
     private sealed class Nearest(params PictureMatch[] near) : IPictureSearch
     {
         public int AskedFor { get; private set; }
+        public IReadOnlyCollection<string>? Among { get; private set; }
 
-        public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, CancellationToken ct = default)
+        public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default)
         {
-            AskedFor = limit;
-            return Task.FromResult<IReadOnlyList<PictureMatch>>(near);
+            (AskedFor, Among) = (limit, among);
+            return Task.FromResult<IReadOnlyList<PictureMatch>>([.. near.Where(match => among is null || among.Contains(match.ProductId))]);
         }
     }
 

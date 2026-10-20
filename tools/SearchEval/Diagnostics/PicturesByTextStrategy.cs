@@ -26,7 +26,7 @@ internal sealed class PicturesByTextStrategy(IImageEmbeddingGenerator model, IPi
     {
         var stopwatch = Stopwatch.StartNew();
 
-        var matches = await pictures.NearestAsync(await model.EmbedTextAsync(query.Text, ct), query.Page * query.PageSize, ct);
+        var matches = await pictures.NearestAsync(await model.EmbedTextAsync(query.Text, ct), query.Page * query.PageSize, ct: ct);
         var similarity = matches.ToDictionary(match => match.ProductId, match => match.Similarity, StringComparer.Ordinal);
 
         // The cards come back in no promised order; the pictures' order is restored.

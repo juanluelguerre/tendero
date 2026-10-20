@@ -1,0 +1,218 @@
+{
+  "$comment": "Amazon Berkeley Objects' product types, as the kind a detector should name for the listing's main picture (docs/specs/camera-search.md, Measures). Each type maps to one of the shop's category codes (sold) or to one of the common objects the shop does not sell (notSold) — the list the detector is also given, so the shop can say so. ABO's types are noisy (ground coffee under COFFEE_MAKER, socks under LUGGAGE), so a listing is taken only when its English name matches 'name' and not 'not', case-insensitive; a type may list several rules, tried in order. A type in neither list is not used: its picture would have no right answer. No laptop is taken from ABO: its few listings with a large picture are stands and cables, and the author's desk photographs carry one.",
+  "sold": {
+    "TECHNICAL_SPORT_SHOE": {
+      "kind": "SHOES",
+      "name": "sneaker|trainer|running|sport"
+    },
+    "SHOES": [
+      {
+        "kind": "SHOES",
+        "name": "running|sneaker|trainer"
+      },
+      {
+        "kind": "FOOTWEAR",
+        "name": "shoe|loafer|brogue|oxford|flat|pump"
+      }
+    ],
+    "BOOT": {
+      "kind": "FOOTWEAR",
+      "name": "boot"
+    },
+    "SANDAL": {
+      "kind": "FOOTWEAR",
+      "name": "sandal"
+    },
+    "SAUTE_FRY_PAN": {
+      "kind": "COOKWARE",
+      "name": "pan|skillet|wok"
+    },
+    "DUTCH_OVENS": {
+      "kind": "COOKWARE",
+      "name": "dutch oven|casserole"
+    },
+    "CASSEROLES": {
+      "kind": "COOKWARE",
+      "name": "casserole|pot"
+    },
+    "PRESSURE_COOKER": {
+      "kind": "COOKWARE",
+      "name": "pressure cooker"
+    },
+    "COFFEE_MAKER": {
+      "kind": "COFFEE_MAKER",
+      "name": "coffee maker|espresso|french press|percolator|moka"
+    },
+    "LAMP": {
+      "kind": "LIGHTING",
+      "name": "lamp"
+    },
+    "HOME_LIGHTING_AND_LAMPS": {
+      "kind": "LIGHTING",
+      "name": "lamp"
+    },
+    "BACKPACK": {
+      "kind": "BACKPACK",
+      "name": "backpack"
+    },
+    "SUITCASE": {
+      "kind": "LUGGAGE",
+      "name": "luggage|suitcase|spinner|carry-on"
+    },
+    "LUGGAGE": {
+      "kind": "LUGGAGE",
+      "name": "luggage|suitcase|spinner|carry-on"
+    },
+    "TOTE_BAG": {
+      "kind": "BAGS_TOTE",
+      "name": "tote"
+    },
+    "KITCHEN_KNIFE": {
+      "kind": "KNIVES",
+      "name": "knife|knives"
+    },
+    "DISHWARE_PLATE": {
+      "kind": "TABLEWARE",
+      "name": "plate"
+    },
+    "DISHWARE_BOWL": {
+      "kind": "TABLEWARE",
+      "name": "bowl"
+    },
+    "DRINKING_CUP": {
+      "kind": "TABLEWARE",
+      "name": "glass|tumbler|mug"
+    },
+    "TOASTER": {
+      "kind": "SMALL_APPLIANCE",
+      "name": "toaster"
+    },
+    "FOOD_BLENDER": {
+      "kind": "SMALL_APPLIANCE",
+      "name": "blender"
+    },
+    "ELECTRIC_WATER_BOILER": {
+      "kind": "SMALL_APPLIANCE",
+      "name": "kettle"
+    },
+    "PILLOW": {
+      "kind": "TEXTILES",
+      "name": "pillow|cushion"
+    },
+    "RUG": {
+      "kind": "TEXTILES",
+      "name": "rug"
+    },
+    "BASKET": {
+      "kind": "STORAGE",
+      "name": "basket|bin"
+    },
+    "STORAGE_BOX": {
+      "kind": "STORAGE",
+      "name": "box|bin"
+    },
+    "CHAIR": {
+      "kind": "SEATING",
+      "name": "chair"
+    },
+    "SOFA": {
+      "kind": "SEATING",
+      "name": "sofa|couch|loveseat"
+    },
+    "STOOL_SEATING": {
+      "kind": "SEATING",
+      "name": "stool"
+    },
+    "TABLE": {
+      "kind": "TABLES",
+      "name": "table"
+    },
+    "DESK": {
+      "kind": "TABLES",
+      "name": "desk"
+    },
+    "BED": {
+      "kind": "BEDROOM",
+      "name": "bed"
+    },
+    "DRESSER": {
+      "kind": "BEDROOM",
+      "name": "dresser|chest of drawers|drawer"
+    },
+    "PLANTER": {
+      "kind": "PLANTS",
+      "name": "planter|pot"
+    },
+    "VASE": {
+      "kind": "DECOR",
+      "name": "vase"
+    },
+    "HOME_MIRROR": {
+      "kind": "DECOR",
+      "name": "mirror"
+    },
+    "TOWEL_HOLDER": {
+      "kind": "BATHROOM",
+      "name": "towel"
+    },
+    "HAT": {
+      "kind": "ACCESSORIES",
+      "name": "beanie|\bcap\b|\bhat\b",
+      "not": "gaiter|balaclava|mask|mitten"
+    }
+  },
+  "notSold": {
+    "HEADPHONES": {
+      "kind": "headphones",
+      "name": "headphone"
+    },
+    "KEYBOARDS": {
+      "kind": "keyboard",
+      "name": "keyboard"
+    },
+    "INPUT_MOUSE": {
+      "kind": "computer mouse",
+      "name": "mouse"
+    },
+    "TELEVISION": {
+      "kind": "television",
+      "name": "\\btv\\b|television"
+    },
+    "MONITOR": {
+      "kind": "television",
+      "name": "monitor"
+    },
+    "BOTTLE": {
+      "kind": "bottle",
+      "name": "bottle"
+    },
+    "SPEAKERS": {
+      "kind": "speaker",
+      "name": "speaker|sound bar"
+    },
+    "WATCH": {
+      "kind": "watch",
+      "name": "watch"
+    },
+    "PHONE": {
+      "kind": "phone",
+      "name": "phone"
+    },
+    "CELLULAR_PHONE": {
+      "kind": "phone",
+      "name": "phone"
+    },
+    "UMBRELLA": {
+      "kind": "umbrella",
+      "name": "umbrella"
+    },
+    "SUNGLASSES": {
+      "kind": "sunglasses",
+      "name": "sunglasses"
+    },
+    "TOY_FIGURE": {
+      "kind": "toy",
+      "name": "doll|teddy|plush|toy|figure"
+    }
+  }
+}

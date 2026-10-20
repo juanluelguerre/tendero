@@ -28,6 +28,7 @@
   <ItemGroup>
     <Content Include="Images/siglip-tokenizer-fixture.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Images/siglip-embedding-fixture.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Images/owlv2-fixture.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -88,9 +88,17 @@
   Neither is a leg of `/api/search`, whose ranking is the one the gate
   measures; a shop without the model's folder has neither, says so, and its
   search is byte for byte what it was.
+- **A photograph is first split into its objects** (the camera search, ADR
+  0062): OWLv2, an open-vocabulary detector exported by us and run in process on
+  the CPU, behind `IObjectDetector` in `Search/Images`, finds a box for each kind
+  it is asked for — the shop's categories and common objects it does not sell —
+  and each object is then a picture question of its own to SigLIP 2. Without its
+  folder a photograph is one object, searched whole.
 
 ```mermaid
 flowchart LR
+    P[A shopper's photograph] --> D[OWLv2 · in process<br/>one box a kind]
+    D -->|each object's crop| U
     U[A shopper's picture<br/>never kept] --> M[SigLIP 2 · in process]
     W[Words] --> M
     M --> C[(Qdrant · pictures<br/>one point a picture)]

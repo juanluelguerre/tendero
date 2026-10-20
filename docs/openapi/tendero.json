@@ -5331,6 +5331,29 @@
               }
             }
           },
+          "503": {
+            "description": "Searching by picture is not available here. \u00B7 Searching by picture is not answering right now.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "VisualSearchNotAnswering",
+                        "VisualSearchNotAvailable"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "429": {
             "description": "Too many requests in a row: wait a moment.",
             "headers": {
@@ -5386,6 +5409,20 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -5418,22 +5455,42 @@
             }
           },
           "400": {
-            "description": "The request is not valid.",
+            "description": "The picture cannot be used.",
             "content": {
               "application/problem\u002Bjson": {
                 "schema": {
                   "allOf": [
                     {
                       "$ref": "#/components/schemas/Problem"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
                     }
                   ],
                   "properties": {
                     "code": {
                       "enum": [
-                        "Invalid"
+                        "PictureNotTaken"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Searching by picture is not available here. \u00B7 Searching by picture is not answering right now.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "VisualSearchNotAnswering",
+                        "VisualSearchNotAvailable"
                       ],
                       "type": "string"
                     }
@@ -5625,6 +5682,129 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProductCardsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/by-image/objects": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "operationId": "FindObjectsInPicture",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "picture"
+                ],
+                "type": "object",
+                "properties": {
+                  "picture": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PictureObjectsView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The picture cannot be used.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "PictureNotTaken"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Finding the objects in a picture is not available here. \u00B7 Finding the objects in a picture is not answering right now.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "ObjectsNotAnswering",
+                        "ObjectsNotAvailable"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests in a row: wait a moment.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before asking again.",
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            },
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "TooManyRequests"
+                      ],
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -13418,6 +13598,27 @@
           "Worst"
         ]
       },
+      "PictureBox": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "top": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PictureDoubtDecision": {
         "enum": [
           "PictureIsFine",
@@ -13527,6 +13728,63 @@
           },
           "promptVersion": {
             "type": "string"
+          }
+        }
+      },
+      "PictureObjectView": {
+        "required": [
+          "number",
+          "kind",
+          "sold",
+          "name",
+          "box",
+          "score"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "sold": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "box": {
+            "$ref": "#/components/schemas/PictureBox"
+          },
+          "score": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "PictureObjectsView": {
+        "required": [
+          "width",
+          "height",
+          "objects"
+        ],
+        "type": "object",
+        "properties": {
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "objects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PictureObjectView"
+            }
           }
         }
       },
@@ -17460,11 +17718,15 @@
       },
       "VisualSearchAvailability": {
         "required": [
-          "available"
+          "available",
+          "objects"
         ],
         "type": "object",
         "properties": {
           "available": {
+            "type": "boolean"
+          },
+          "objects": {
             "type": "boolean"
           }
         }

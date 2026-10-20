@@ -65,15 +65,13 @@ public sealed class SearchPicturesByTextEndpoint : ICarterModule
                     }
                     catch (Exception exception) when (exception is SearchStageNotConfiguredException or SearchUnavailableException)
                     {
-                        return TypedResults.Problem(
-                            title: "Searching the pictures is not available right now.",
-                            detail: "Searching by words works as always.",
-                            statusCode: StatusCodes.Status503ServiceUnavailable);
+                        return PictureRefusals.NotAnsweringFor(exception);
                     }
                 })
             // By explicit decision, as the search it sits beside.
             .AllowAnonymous()
             .RequireRateLimiting(VisualSearch.PerClient)
+            .WithMetadata(new Refuses(PictureRefusals.NotAvailable, PictureRefusals.NotAnswering))
             .WithTags("Search")
             .WithName("SearchPicturesByText");
     }
@@ -103,7 +101,7 @@ public sealed class SearchPicturesByTextHandler(
             throw new SearchUnavailableException("embedding a text for the pictures", $"{exception.GetType().Name}: {exception.Message}");
         }
 
-        var result = await search.NearestAsync(vector, options.Value.MinTextSimilarity, query.Culture, query.Limit, ct);
+        var result = await search.NearestAsync(vector, options.Value.MinTextSimilarity, query.Culture, query.Limit, ct: ct);
 
         activity?.SetTag("search.pictures_by_text.found", result.Items.Count);
         if (result.Items is [var nearest, ..])

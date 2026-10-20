@@ -282,6 +282,7 @@
   --container-rail: 4.5rem;       /* the backoffice's nav, folded */
   --container-rail-open: 14.5rem; /* …and open (xl) */
   --container-panel: 26.25rem;    /* 420px — a panel beside the content: Steward's (from lg) */
+  --container-picture-sheet: 75rem; /* 1200px — the picture sheet's dialog: the picture beside four cards a block (not `sheet`: max-w-sheet is --spacing-sheet) */
 
   /* Heights tied to the viewport. */
   --spacing-centred: 60dvh;   /* a page whose one card sits in the middle */

@@ -83,15 +83,36 @@ public sealed class QdrantPictureVectorsTests(QdrantVectorLayerTests.QdrantConta
         Assert.Equal(1UL, await qdrant.Client.CountAsync(layer.Pictures.Collection, exact: true, cancellationToken: Ct));
         Assert.Equal(
             new[] { one.Id.ToString(), another.Id.ToString() }.Order(),
-            (await layer.Pictures.NearestAsync(layer.Model_.Vector("steel bottle"), 5, Ct)).Select(match => match.ProductId).Order());
+            (await layer.Pictures.NearestAsync(layer.Model_.Vector("steel bottle"), 5, ct: Ct)).Select(match => match.ProductId).Order());
 
         // One of them goes: the picture is still the other's.
         await layer.Pictures.RemoveAsync(one.Id, Ct);
-        Assert.Equal(another.Id.ToString(), Assert.Single(await layer.Pictures.NearestAsync(layer.Model_.Vector("steel bottle"), 5, Ct)).ProductId);
+        Assert.Equal(another.Id.ToString(), Assert.Single(await layer.Pictures.NearestAsync(layer.Model_.Vector("steel bottle"), 5, ct: Ct)).ProductId);
 
         // And the other: nobody shows it, and the point goes.
         await layer.Pictures.RemoveAsync(another.Id, Ct);
         Assert.True(await layer.Pictures.IsEmptyAsync(Ct));
+    }
+
+    /// <summary>
+    /// Narrowed by a category and words (the camera search, CS-4): the store answers
+    /// only the products given, nearest first among them — and a picture shared with
+    /// a product outside names only the one inside.
+    /// </summary>
+    [Fact]
+    public async Task Narrowed_to_some_products_the_nearest_are_only_among_them()
+    {
+        var layer = Layer();
+        var shared = layer.Store.Hold("steel bottle");
+        var (bottle, flask) = (AProduct(shared), AProduct(shared));
+        var kettle = AProduct(layer.Store.Hold("steel kettle"));
+        foreach (var product in new[] { bottle, flask, kettle })
+            await layer.Pictures.IndexAsync(product, Ct);
+
+        var among = await layer.Pictures.NearestAsync(layer.Model_.Vector("steel bottle"), 5, [flask.Id.ToString(), kettle.Id.ToString()], Ct);
+
+        Assert.Equal([flask.Id.ToString(), kettle.Id.ToString()], among.Select(match => match.ProductId));
+        Assert.Empty(await layer.Pictures.NearestAsync(layer.Model_.Vector("steel bottle"), 5, [], Ct));
     }
 
     [Fact]
@@ -105,7 +126,7 @@ public sealed class QdrantPictureVectorsTests(QdrantVectorLayerTests.QdrantConta
         kettle.ReplaceImages(Clock, [(side, null)]);
         await layer.Pictures.IndexAsync(kettle, Ct);
 
-        var match = Assert.Single(await layer.Pictures.NearestAsync(layer.Model_.Vector("blue kettle front"), 5, Ct));
+        var match = Assert.Single(await layer.Pictures.NearestAsync(layer.Model_.Vector("blue kettle front"), 5, ct: Ct));
         Assert.Equal(side.Value, match.ImageId);
         Assert.Equal(1UL, await qdrant.Client.CountAsync(layer.Pictures.Collection, exact: true, cancellationToken: Ct));
     }
@@ -125,7 +146,7 @@ public sealed class QdrantPictureVectorsTests(QdrantVectorLayerTests.QdrantConta
         foreach (var product in new[] { bike, scooter, kettle })
             await layer.Pictures.IndexAsync(product, Ct);
 
-        var nearest = await layer.Pictures.NearestAsync(layer.Model_.Vector("red bike front"), 2, Ct);
+        var nearest = await layer.Pictures.NearestAsync(layer.Model_.Vector("red bike front"), 2, ct: Ct);
 
         Assert.Equal([bike.Id.ToString(), scooter.Id.ToString()], nearest.Select(match => match.ProductId));
         Assert.Equal(bikeFront.Value, nearest[0].ImageId);
@@ -149,7 +170,7 @@ public sealed class QdrantPictureVectorsTests(QdrantVectorLayerTests.QdrantConta
     {
         var layer = Layer();
 
-        Assert.Empty(await layer.Pictures.NearestAsync(layer.Model_.Vector("anything"), 5, Ct));
+        Assert.Empty(await layer.Pictures.NearestAsync(layer.Model_.Vector("anything"), 5, ct: Ct));
         await layer.Pictures.RemoveAsync(ProductId.New(), Ct);
     }
 
@@ -188,7 +209,7 @@ public sealed class QdrantPictureVectorsTests(QdrantVectorLayerTests.QdrantConta
         ], cancellationToken: Ct);
 
         var refusal = await Assert.ThrowsAsync<SearchUnavailableException>(() =>
-            layer.Pictures.NearestAsync(layer.Model_.Vector("red bike"), 5, Ct));
+            layer.Pictures.NearestAsync(layer.Model_.Vector("red bike"), 5, ct: Ct));
 
         Assert.Contains("somebody/else", refusal.Message, StringComparison.Ordinal);
     }
@@ -199,7 +220,7 @@ public sealed class QdrantPictureVectorsTests(QdrantVectorLayerTests.QdrantConta
         var layer = Layer();
         await layer.Pictures.IndexAsync(AProduct(layer.Store.Hold("red bike")), Ct);
 
-        var refusal = await Assert.ThrowsAsync<SearchUnavailableException>(() => layer.Pictures.NearestAsync(new float[Dimensions / 2], 5, Ct));
+        var refusal = await Assert.ThrowsAsync<SearchUnavailableException>(() => layer.Pictures.NearestAsync(new float[Dimensions / 2], 5, ct: Ct));
 
         // Ours, with both sizes in it — not whatever the store would have said.
         Assert.Contains($"a vector of {Dimensions / 2} dimensions", refusal.Message, StringComparison.Ordinal);

@@ -59,8 +59,11 @@ public sealed class VisualSearchEndpointTests
 
         Assert.False(status!.Available);
         Assert.Equal(HttpStatusCode.ServiceUnavailable, byPicture.StatusCode);
-        Assert.Contains("not available here", (await byPicture.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("title").GetString(), StringComparison.Ordinal);
+        var problem = await byPicture.Content.ReadFromJsonAsync<JsonElement>(Ct);
+        Assert.Equal("VisualSearchNotAvailable", problem.GetProperty("code").GetString());
+        Assert.Contains("no se busca con imágenes", problem.GetProperty("title").GetString(), StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.ServiceUnavailable, byWords.StatusCode);
+        Assert.Equal("VisualSearchNotAvailable", (await byWords.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("code").GetString());
     }
 
     [Fact]
@@ -86,6 +89,37 @@ public sealed class VisualSearchEndpointTests
         Assert.False((await client.GetFromJsonAsync<VisualSearchAvailability>("/api/search/by-image/status", Ct))!.Available);
     }
 
+    /// <summary>
+    /// An object's block (the camera search, CS-3, CS-4): the crop is asked with the
+    /// object's category and the words typed after it, and the answer is only what
+    /// the lexical search matches for them there.
+    /// </summary>
+    [Fact]
+    public async Task A_crop_asked_with_its_category_and_words_is_answered_among_what_they_match()
+    {
+        var pictures = new Pictures([new PictureMatch("lamp", "img-lamp", 0.91), new PictureMatch("tee", "img-tee", 0.67)]);
+        var words = new Words("tee");
+        using var root = new TenderoApiFactory();
+        var client = root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            foreach (var warmUp in services.Where(service => service.ImplementationType == typeof(WarmVisualSearchAtStartupWorker)).ToList())
+                services.Remove(warmUp);
+            services.AddSingleton<IImageEmbeddingGenerator>(new Model());
+            services.AddScoped<IPictureSearch>(_ => pictures);
+            services.AddScoped<IPictureVectorIndexer>(_ => pictures);
+            services.AddScoped<IProductProfileReader>(_ => new Index());
+            services.AddScoped<ILexicalProductSearch>(_ => words);
+        })).CreateClient();
+
+        var response = await client.SendAsync(WithPicture(APicture(), "/api/search/by-image?category=SHIRT&q=blanca&culture=es"), Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var item = Assert.Single((await response.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("items").EnumerateArray());
+        Assert.Equal("tee", item.GetProperty("product").GetProperty("productId").GetString());
+        Assert.Equal(("blanca", "SHIRT"), (words.Asked!.Text, words.Asked.Category));
+        Assert.Equal(["tee"], pictures.Among);
+    }
+
     /// <summary>The store's own words name a host and a port; they stay in the log.</summary>
     [Fact]
     public async Task A_store_that_is_down_is_a_503_that_says_nothing_of_the_store()
@@ -93,10 +127,11 @@ public sealed class VisualSearchEndpointTests
         var (client, _, owner) = Compose(failure: new SearchUnavailableException("picture search", "RpcException: failed to connect to 10.0.0.7:6334"));
         using var _ = owner;
 
-        var response = await client.SendAsync(WithPicture(APicture()), Ct);
+        var response = await client.SendAsync(WithPicture(APicture(), "/api/search/by-image?culture=en"), Ct);
         var body = await response.Content.ReadAsStringAsync(Ct);
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal("VisualSearchNotAnswering", JsonDocument.Parse(body).RootElement.GetProperty("code").GetString());
         Assert.Contains("not answering right now", body, StringComparison.Ordinal);
         Assert.DoesNotContain("6334", body, StringComparison.Ordinal);
     }
@@ -107,10 +142,13 @@ public sealed class VisualSearchEndpointTests
         var (client, model, owner) = Compose();
         using var _ = owner;
 
-        var response = await client.SendAsync(WithPicture("<svg onload='alert(1)'/>"u8.ToArray(), contentType: "image/png"), Ct);
+        var response = await client.SendAsync(WithPicture("<svg onload='alert(1)'/>"u8.ToArray(), "/api/search/by-image?culture=es", contentType: "image/png"), Ct);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("JPEG, a PNG or a WebP", await response.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
+        // The same code its sibling answers for the same picture, said in the language asked (ADR 0059).
+        Assert.Equal("PictureNotTaken", problem.GetProperty("code").GetString());
+        Assert.Contains("un JPEG, un PNG o un WebP", problem.GetProperty("detail").GetString(), StringComparison.Ordinal);
         Assert.Equal(0, model.Pictures);
     }
 
@@ -257,8 +295,15 @@ public sealed class VisualSearchEndpointTests
     {
         public Exception? Failure { get; init; }
 
-        public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, CancellationToken ct = default) =>
-            Failure is not null ? throw Failure : Task.FromResult<IReadOnlyList<PictureMatch>>(near);
+        public IReadOnlyCollection<string>? Among { get; private set; }
+
+        public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default)
+        {
+            Among = among;
+            return Failure is not null
+                ? throw Failure
+                : Task.FromResult<IReadOnlyList<PictureMatch>>([.. near.Where(match => among is null || among.Contains(match.ProductId))]);
+        }
 
         public Task IndexAsync(Product product, CancellationToken ct = default) => Task.CompletedTask;
 
@@ -267,6 +312,19 @@ public sealed class VisualSearchEndpointTests
         public Task RecreateAsync(CancellationToken ct = default) => Task.CompletedTask;
 
         public Task<bool> IsEmptyAsync(CancellationToken ct = default) => Task.FromResult(false);
+    }
+
+    /// <summary>A lexical search that matched these products, whatever it was asked.</summary>
+    private sealed class Words(params string[] matched) : ILexicalProductSearch
+    {
+        public ProductSearchQuery? Asked { get; private set; }
+
+        public Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default)
+        {
+            Asked = query;
+            return Task.FromResult(new SearchResultPage([.. matched.Select(id => new SearchHit(id, $"CODE-{id}", $"Product {id}", $"product-{id}", null, "SHIRT", $"{id}-variant", $"{id}-SKU",
+                new Money(19.90m, "EUR"), new Money(19.90m, "EUR"), new Money(19.90m, "EUR"), null, InStock: true, Score: 1))], matched.Length, 1, query.PageSize, TookMs: 1));
+        }
     }
 
     /// <summary>An index that holds whatever it is asked for: the card is the lexical index's, and here it is a stand-in.</summary>

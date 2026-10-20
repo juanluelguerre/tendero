@@ -713,6 +713,17 @@ if (pictures)
     api.WithEnvironment("Search__Images__Models", pictureModels)
         .WithEnvironment("Search__Hybrid__PictureDepth", "10");
 
+// THE OBJECTS IN A PHOTOGRAPH (the camera search, CS-2; ADR 0062). OWLv2 runs
+// inside the API by the same rule as SigLIP: our export outside git
+// (`src/AppHost/scripts/prepare-owlv2.py`, 615 MB) is the opt-in, whole or not at
+// all. It finds the objects and SigLIP finds the products like each one, so it is
+// handed over only where the pictures are; without it a photograph is searched
+// whole, as one object.
+var objectModels = Path.Combine(repositoryRoot, "models", "owlv2");
+if (pictures && new[] { "detector.onnx", "text.onnx", "vocab.json", "merges.txt" }.All(file => File.Exists(Path.Combine(objectModels, file))))
+    api.WithEnvironment("Search__Objects__Detector", "owlv2")
+        .WithEnvironment("Search__Objects__Owlv2__Directory", objectModels);
+
 // The reranker by the same rule, one step narrower: `rerank` is `vectors` on a
 // GPU. It has no equivalent of the vector layer's read-time check before its
 // first call, which is one more reason never to hand over an address nothing
