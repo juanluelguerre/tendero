@@ -1,0 +1,186 @@
+<section
+  *transloco="let t"
+  class="grid grid-cols-[14.5rem_minmax(0,1fr)] gap-7 pt-6 pb-8 max-md:grid-cols-[minmax(0,1fr)]"
+>
+  <storefront-account-nav class="max-md:hidden" active="waysToPay" />
+  <div>
+    <a class="quiet mb-3 md:hidden" [routerLink]="links.account()">← {{ t('account.title') }}</a>
+
+    @if (!signedIn()) {
+      <h1 class="text-2xl">{{ t('wallet.title') }}</h1>
+      <p class="mt-3 max-w-measure-md text-muted">{{ t('wallet.signedOut') }}</p>
+      <a class="button mt-4" [routerLink]="links.account()">{{ t('account.signIn') }}</a>
+    } @else {
+      <header class="flex items-center justify-between gap-4 pb-5 max-sm:flex-col max-sm:items-start">
+        <div class="grid gap-1">
+          <h1 class="text-2xl">{{ t('wallet.title') }}</h1>
+          <p class="m-0 max-w-measure-lg text-sm text-muted">{{ t('wallet.lede') }}</p>
+        </div>
+        <!-- The page's one clay action. A full wallet offers no way to add, and says why below. -->
+        @if (wallet.status() === 'ready' && !wallet.full() && !adding()) {
+          <button type="button" class="button" (click)="adding.set(true)">+ {{ t('wallet.add') }}</button>
+        }
+      </header>
+
+      @if (wallet.problem(); as message) {
+        <lib-notice class="mb-4" tone="bad" live="assertive">{{ message }}</lib-notice>
+      }
+
+      @switch (wallet.status()) {
+        @case ('loading') {
+          <p class="text-muted" role="status" aria-live="polite">{{ t('wallet.loading') }}</p>
+        }
+        @case ('failed') {
+          <lib-notice tone="bad">{{ t('wallet.failed') }}</lib-notice>
+        }
+        @case ('ready') {
+          @if (wallet.full()) {
+            <p class="mb-4 text-sm text-muted">{{ t('wallet.full', { max: wallet.max() }) }}</p>
+          }
+
+          @if (wallet.methods().length === 0 && !adding()) {
+            <div class="blank">
+              <p class="blank__text">{{ t('wallet.empty') }}</p>
+              <p class="m-0 text-muted">{{ t('wallet.emptyHint') }}</p>
+            </div>
+          }
+
+          <ul class="grid gap-3" data-wallet>
+            @for (method of wallet.methods(); track method.id) {
+              <li class="grid gap-3 rounded-lg border border-hairline bg-surface p-4" [attr.data-method]="method.last4">
+                <div
+                  class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 max-sm:grid-cols-[auto_minmax(0,1fr)]"
+                >
+                  <span
+                    class="grid h-control-sm min-w-control-xl place-items-center rounded-md border border-hairline bg-raised text-2xs font-bold text-muted"
+                  >
+                    {{ method.brand }}
+                  </span>
+                  <span class="grid gap-hair">
+                    <span class="flex flex-wrap items-center gap-2 font-semibold" [class.text-muted]="method.expired">
+                      {{ t('wallet.ending', { brand: method.brand, last4: method.last4 }) }}
+                      @if (method.isDefault) {
+                        <span
+                          class="rounded-full border border-hairline bg-raised px-2 py-px text-2xs font-semibold text-body"
+                        >
+                          {{ t('wallet.default') }}
+                        </span>
+                      }
+                      @if (method.expired) {
+                        <span
+                          class="rounded-full border border-hairline bg-raised px-2 py-px text-2xs font-semibold text-warning"
+                        >
+                          {{ t('wallet.expiredTag') }}
+                        </span>
+                      }
+                    </span>
+                    <span
+                      class="numeric text-xs"
+                      [class.text-warning]="method.expired"
+                      [class.text-muted]="!method.expired"
+                    >
+                      {{
+                        t(method.expired ? 'wallet.expired' : 'wallet.expires', {
+                          month: method.expiryMonth < 10 ? '0' + method.expiryMonth : method.expiryMonth,
+                          year: method.expiryYear,
+                        })
+                      }}
+                    </span>
+                  </span>
+                  <span class="flex flex-wrap items-center gap-5 max-sm:col-span-full">
+                    @if (!method.isDefault && !method.expired) {
+                      <button
+                        type="button"
+                        class="quiet cursor-pointer border-0 bg-transparent p-0 underline"
+                        [disabled]="wallet.saving()"
+                        (click)="wallet.useByDefault(method.id)"
+                      >
+                        {{ t('wallet.makeDefault') }}
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="quiet cursor-pointer border-0 bg-transparent p-0 underline"
+                      (click)="confirming.set(method)"
+                    >
+                      {{ t('wallet.remove') }}
+                    </button>
+                  </span>
+                </div>
+
+                @if (confirming()?.id === method.id) {
+                  <div
+                    class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-hairline-strong bg-raised p-4 max-sm:grid-cols-[minmax(0,1fr)]"
+                    role="alertdialog"
+                    [attr.aria-label]="t('wallet.removeTitle', { brand: method.brand, last4: method.last4 })"
+                  >
+                    <div class="grid gap-1">
+                      <p class="m-0 font-semibold">
+                        {{ t('wallet.removeTitle', { brand: method.brand, last4: method.last4 }) }}
+                      </p>
+                      <p class="m-0 text-sm text-muted">{{ t('wallet.removeSays') }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                      <button type="button" class="button button--quiet" (click)="confirming.set(null)">
+                        {{ t('wallet.keepIt') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="button button--quiet text-danger"
+                        data-confirm-remove
+                        [disabled]="wallet.saving()"
+                        (click)="remove(method)"
+                      >
+                        {{ t('wallet.remove') }}
+                      </button>
+                    </div>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+
+          @if (adding()) {
+            <!-- The provider's own field. With the fake, its test cards; with a real
+               adapter, an iframe the number is typed into and the shop never sees. -->
+            <div class="mt-5 grid gap-4 rounded-lg border border-hairline bg-surface p-5" data-add-card>
+              <h2 class="m-0 text-lg">{{ t('wallet.add') }}</h2>
+              <fieldset class="grid gap-2 rounded-lg border border-hairline-strong bg-raised p-4">
+                <legend class="px-1 text-2xs font-semibold text-muted">{{ t('wallet.providerField') }}</legend>
+                @for (each of cards; track each) {
+                  <label
+                    class="grid min-h-control-lg cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-md border border-hairline bg-surface px-4 py-2 has-checked:border-accent"
+                  >
+                    <input
+                      type="radio"
+                      name="card"
+                      [value]="each"
+                      [checked]="each === card()"
+                      (change)="card.set(each)"
+                    />
+                    <span class="grid gap-hair">
+                      <span class="font-medium">{{ t(cardKey(each)) }}</span>
+                      <span class="numeric text-xs text-muted">{{ each }}</span>
+                    </span>
+                  </label>
+                }
+              </fieldset>
+              <label class="flex cursor-pointer items-center gap-3">
+                <input type="checkbox" [checked]="makeDefault()" (change)="makeDefault.set(!makeDefault())" />
+                <span>{{ t('wallet.makeItDefault') }}</span>
+              </label>
+              <div class="flex flex-wrap gap-3">
+                <button type="button" class="button button--quiet" [disabled]="wallet.saving()" (click)="keep()">
+                  {{ t('wallet.save') }}
+                </button>
+                <button type="button" class="button button--quiet" (click)="adding.set(false)">
+                  {{ t('wallet.cancel') }}
+                </button>
+              </div>
+            </div>
+          }
+        }
+      }
+    }
+  </div>
+</section>

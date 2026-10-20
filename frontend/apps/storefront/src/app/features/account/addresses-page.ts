@@ -6,6 +6,7 @@ import { AuthStore } from '@tendero/shared-auth';
 import { Notice } from '@tendero/shared-ui';
 import { AddressBookStore } from '../../addresses/address-book.store';
 import { ShopLinks } from '../../shop-links';
+import { AccountNav } from './account-nav/account-nav';
 
 /**
  * The shopper's address book (P15-2; board 02 of the account's mock-ups): the
@@ -20,7 +21,7 @@ import { ShopLinks } from '../../shop-links';
  */
 @Component({
   selector: 'storefront-addresses-page',
-  imports: [RouterLink, TranslocoDirective, Notice],
+  imports: [RouterLink, TranslocoDirective, Notice, AccountNav],
   templateUrl: './addresses-page.html',
 })
 export class AddressesPage implements OnInit {

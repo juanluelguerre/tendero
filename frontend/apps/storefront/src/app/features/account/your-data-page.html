@@ -1,0 +1,98 @@
+<section
+  *transloco="let t"
+  class="grid grid-cols-[14.5rem_minmax(0,1fr)] gap-7 pt-6 pb-8 max-md:grid-cols-[minmax(0,1fr)]"
+>
+  <storefront-account-nav class="max-md:hidden" active="yourData" />
+
+  <div class="grid content-start gap-5">
+    <a class="quiet md:hidden" [routerLink]="links.account()">← {{ t('account.title') }}</a>
+    <h1 class="m-0 text-2xl">{{ t('yourData.title') }}</h1>
+
+    @if (store.problem(); as message) {
+      <lib-notice tone="bad" live="assertive">{{ message }}</lib-notice>
+    }
+
+    @if (store.removed(); as removed) {
+      <!-- Done: what happened, said plainly, and the way out of a session whose account is gone. -->
+      <div class="grid gap-3 rounded-lg border border-hairline bg-surface p-5" role="status" data-account-removed>
+        <p class="m-0 text-lg font-semibold">{{ t('yourData.removedTitle') }}</p>
+        <p class="m-0 text-muted">{{ t('yourData.removedForgotten') }}</p>
+        @if (removed.kept.length > 0) {
+          <p class="m-0 text-muted">{{ t('yourData.removedKept', { years: removed.keptForYears }) }}</p>
+        }
+        <p class="m-0 text-muted">{{ t('yourData.removedSignIn') }}</p>
+        <div>
+          <button type="button" class="button button--quiet" (click)="signOut()">{{ t('account.signOut') }}</button>
+        </div>
+      </div>
+    } @else if (!signedIn()) {
+      <p class="m-0 max-w-measure-md text-muted">{{ t('yourData.signedOut') }}</p>
+    } @else {
+      <div
+        class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-hairline bg-surface p-5 max-sm:grid-cols-[minmax(0,1fr)]"
+      >
+        <div class="grid gap-1">
+          <h2 class="m-0 text-lg">{{ t('yourData.downloadTitle') }}</h2>
+          <p class="m-0 text-sm text-muted">{{ t('yourData.downloadWhat') }}</p>
+        </div>
+        <button
+          type="button"
+          class="button button--quiet"
+          [disabled]="store.busy() !== null"
+          (click)="download()"
+          data-download
+        >
+          {{ t(store.busy() === 'downloading' ? 'yourData.downloading' : 'yourData.download') }}
+        </button>
+      </div>
+
+      <div class="grid gap-4 rounded-lg border border-hairline bg-surface p-5">
+        <h2 class="m-0 text-lg">{{ t('yourData.removeTitle') }}</h2>
+        <div class="grid grid-cols-3 gap-4 max-tab:grid-cols-[minmax(0,1fr)]">
+          <div class="grid content-start gap-2 rounded-lg bg-raised p-4">
+            <p class="m-0 text-sm font-bold">{{ t('yourData.forgottenTitle') }}</p>
+            <p class="m-0 text-sm">{{ t('yourData.forgottenWhat') }}</p>
+          </div>
+          <div class="grid content-start gap-2 rounded-lg bg-raised p-4">
+            <p class="m-0 text-sm font-bold">{{ t('yourData.keptTitle') }}</p>
+            <p class="m-0 text-sm">{{ t('yourData.keptWhat') }}</p>
+          </div>
+          <div class="grid content-start gap-2 rounded-lg bg-raised p-4">
+            <p class="m-0 text-sm font-bold">{{ t('yourData.notOursTitle') }}</p>
+            <p class="m-0 text-sm">{{ t('yourData.notOursWhat') }}</p>
+          </div>
+        </div>
+
+        @if (confirming()) {
+          <div
+            class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-lg bg-danger-tint p-4 max-sm:grid-cols-[minmax(0,1fr)]"
+            role="alertdialog"
+            [attr.aria-label]="t('yourData.removeTitle')"
+          >
+            <p class="m-0 text-sm">{{ t('yourData.cannotBeUndone') }}</p>
+            <div class="flex gap-2">
+              <button type="button" class="button button--quiet" (click)="confirming.set(false)">
+                {{ t('yourData.keep') }}
+              </button>
+              <button
+                type="button"
+                class="button button--quiet text-danger"
+                [disabled]="store.busy() !== null"
+                (click)="store.remove()"
+                data-confirm-remove-account
+              >
+                {{ t(store.busy() === 'removing' ? 'yourData.removing' : 'yourData.remove') }}
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div>
+            <button type="button" class="button button--quiet text-danger" (click)="confirming.set(true)">
+              {{ t('yourData.remove') }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

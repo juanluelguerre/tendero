@@ -5,6 +5,7 @@ import { AuthStore } from '@tendero/shared-auth';
 import { type Culture, CultureStore } from '@tendero/shared-i18n';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { CultureSwitch, type ThemeChoice, ThemeStore, ThemeSwitch } from '@tendero/shared-ui';
+import { ShopLinks } from '../../shop-links';
 
 /**
  * Who is shopping and how the shop is shown to them: the language, the theme,
@@ -32,6 +33,7 @@ export class AccountMenu {
   private readonly theme = inject(ThemeStore);
   private readonly telemetry = inject(Telemetry);
   private readonly router = inject(Router);
+  private readonly links = inject(ShopLinks);
 
   private readonly menu = viewChild.required<ElementRef<HTMLElement>>('menu');
 
@@ -56,12 +58,7 @@ export class AccountMenu {
    * switch, and a language change is a page a person can bookmark and share.
    */
   protected use(culture: Culture): void {
-    const [path, query] = this.router.url.split('?');
-    const segments = path.split('/').filter(Boolean);
-
-    segments[0] = culture;
-
-    void this.router.navigateByUrl(`/${segments.join('/')}${query ? `?${query}` : ''}`);
+    void this.router.navigateByUrl(this.links.sameIn(this.router.url, culture));
   }
 
   protected choose(choice: ThemeChoice): void {

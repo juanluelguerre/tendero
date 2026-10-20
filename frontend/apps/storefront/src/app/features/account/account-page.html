@@ -32,31 +32,34 @@
     @case ('signedIn') {
       @let session = store.state();
       @if (session.status === 'signedIn') {
-        <header class="flex items-baseline justify-between gap-4 pt-6 pb-4">
-          <h1 class="text-2xl">{{ identity()?.name }}</h1>
-          <button type="button" class="quiet" (click)="store.signOut()">{{ t('account.signOut') }}</button>
-        </header>
+        <!-- The account's menu (P15-7): the sidebar on a wide screen; on a phone,
+             the list of sections under the header, each its own page. -->
+        <div class="grid grid-cols-[14.5rem_minmax(0,1fr)] gap-7 max-md:grid-cols-[minmax(0,1fr)]">
+          <storefront-account-nav class="pt-6 max-md:hidden" active="orders" />
+          <div>
+            <header class="flex items-baseline justify-between gap-4 pt-6 pb-4">
+              <h1 class="text-2xl">{{ identity()?.name }}</h1>
+              <button type="button" class="quiet" (click)="store.signOut()">{{ t('account.signOut') }}</button>
+            </header>
 
-        <!-- The sections that exist so far, as links; the menu that gathers them is built last (P15-7). -->
-        <nav class="mb-6 flex flex-wrap gap-4" [attr.aria-label]="t('account.title')">
-          <a class="quiet underline" [routerLink]="links.addresses()" data-account-addresses>{{
-            t('account.addresses')
-          }}</a>
-        </nav>
+            <!-- Who you are: the sign-in provider's, shown and never edited here (decision 1). -->
+            <p class="mb-5 text-sm text-muted" data-identity-managed>{{ t('account.managedByProvider') }}</p>
 
-        <h2 class="mb-3 text-lg">{{ t('account.orders') }}</h2>
+            <storefront-account-nav class="mb-6 md:hidden" />
 
-        @if (session.orders.length === 0) {
-          <!-- Truthful rather than helpful-sounding: somebody who has never
+            <h2 class="mb-3 text-lg">{{ t('account.orders') }}</h2>
+
+            @if (session.orders.length === 0) {
+              <!-- Truthful rather than helpful-sounding: somebody who has never
                ordered has no orders, and telling them about our wiring would be
                worse than saying nothing. -->
-          <p class="muted">{{ t('account.noOrders') }}</p>
-          <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
-        } @else {
-          <ul class="grid gap-2">
-            @for (order of session.orders; track order.orderId) {
-              <li class="rounded-md border border-hairline bg-surface px-4 py-3">
-                <!--
+              <p class="muted">{{ t('account.noOrders') }}</p>
+              <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
+            } @else {
+              <ul class="grid gap-2">
+                @for (order of session.orders; track order.orderId) {
+                  <li class="rounded-md border border-hairline bg-surface px-4 py-3">
+                    <!--
                   **What is in it, before what it cost.** The row used to say
                   "9 lines, 624.48 EUR", which describes an order nobody
                   remembers placing. A person recognises an order by the things
@@ -68,56 +71,56 @@
                   somebody reads them. On a phone the figures go under the names
                   instead of beside them.
                 -->
-                <a
-                  class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-between gap-3 max-sm:grid-cols-[auto_minmax(0,1fr)]"
-                  [routerLink]="links.order(order.orderId)"
-                >
-                  <!--
+                    <a
+                      class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-between gap-3 max-sm:grid-cols-[auto_minmax(0,1fr)]"
+                      [routerLink]="links.order(order.orderId)"
+                    >
+                      <!--
                     Only when at least one line HAS a picture. Six of the hundred
                     seed products carry one, so an unconditional strip drew three
                     empty boxes on almost every row — a container for nothing,
                     which reads worse than the names alone.
                   -->
-                  @if (hasImages(order)) {
-                    <span class="flex gap-1">
-                      @for (line of order.preview; track line.sku) {
-                        <!-- The same tile the rest of the shop uses when a picture
+                      @if (hasImages(order)) {
+                        <span class="flex gap-1">
+                          @for (line of order.preview; track line.sku) {
+                            <!-- The same tile the rest of the shop uses when a picture
                              is missing; the store hears of each failure too,
                              because a strip of nothing but tiles is not drawn. -->
-                        <storefront-product-image
-                          class="size-thumb-sm rounded-sm border border-hairline bg-surface object-cover"
-                          [src]="line.imageId ? imageUrl(line.imageId) : null"
-                          alt=""
-                          (failed)="store.imageFailed(line.sku)"
-                        />
+                            <storefront-product-image
+                              class="size-thumb-sm rounded-sm border border-hairline bg-surface object-cover"
+                              [src]="line.imageId ? imageUrl(line.imageId) : null"
+                              alt=""
+                              (failed)="store.imageFailed(line.sku)"
+                            />
+                          }
+                        </span>
                       }
-                    </span>
-                  }
 
-                  <span class="grid min-w-0 gap-1">
-                    <span class="truncate font-semibold">{{ names(order) }}</span>
-                    <span class="muted text-sm">
-                      {{ order.createdAt | dateTime: culture.active() }} ·
-                      {{ t('account.lineCount', { count: order.lineCount }) }}
-                    </span>
-                  </span>
+                      <span class="grid min-w-0 gap-1">
+                        <span class="truncate font-semibold">{{ names(order) }}</span>
+                        <span class="muted text-sm">
+                          {{ order.createdAt | dateTime: culture.active() }} ·
+                          {{ t('account.lineCount', { count: order.lineCount }) }}
+                        </span>
+                      </span>
 
-                  <span
-                    class="grid justify-items-end gap-1 text-end max-sm:col-span-full max-sm:justify-items-start max-sm:text-start"
-                  >
-                    <span class="text-sm text-muted">{{ t('order.status.' + order.status) }}</span>
-                    <span class="numeric font-semibold">{{ order.total | price: culture.active() }}</span>
-                  </span>
-                </a>
+                      <span
+                        class="grid justify-items-end gap-1 text-end max-sm:col-span-full max-sm:justify-items-start max-sm:text-start"
+                      >
+                        <span class="text-sm text-muted">{{ t('order.status.' + order.status) }}</span>
+                        <span class="numeric font-semibold">{{ order.total | price: culture.active() }}</span>
+                      </span>
+                    </a>
 
-                <!-- The history is where somebody goes looking for the order
+                    <!-- The history is where somebody goes looking for the order
                      that vanished, so the reason belongs here as much as on the
                      order itself. Same weight as the line count above it. -->
-                @if (order.stopCode) {
-                  <span class="muted block text-xs">{{ t('order.stop.' + order.stopCode) }}</span>
-                }
+                    @if (order.stopCode) {
+                      <span class="muted block text-xs">{{ t('order.stop.' + order.stopCode) }}</span>
+                    }
 
-                <!--
+                    <!--
                   Returns shipped in phase 5 and were invisible from here: you
                   had to open an order to discover you could send it back. The
                   window opens on Delivered, and the screen derives that from the
@@ -127,21 +130,23 @@
                   Not the clay action: the view already has one, and a link per
                   row would make four of them (design/DESIGN.md).
                 -->
-                @if (order.status === 'Delivered') {
-                  <a
-                    class="mt-2 inline-block text-sm text-body underline underline-offset-2 hover:text-accent"
-                    [routerLink]="links.order(order.orderId)"
-                    [fragment]="'return'"
-                    >{{ t('account.requestReturn') }}</a
-                  >
+                    @if (order.status === 'Delivered') {
+                      <a
+                        class="mt-2 inline-block text-sm text-body underline underline-offset-2 hover:text-accent"
+                        [routerLink]="links.order(order.orderId)"
+                        [fragment]="'return'"
+                        >{{ t('account.requestReturn') }}</a
+                      >
+                    }
+                  </li>
                 }
-              </li>
+              </ul>
             }
-          </ul>
-        }
 
-        <!-- *Tu historial* (R-8, H-3b): see it, delete it, switch it off. -->
-        <storefront-trail-history class="mt-7" />
+            <!-- *Tu historial* (R-8, H-3b): see it, delete it, switch it off. -->
+            <storefront-trail-history class="mt-7" />
+          </div>
+        </div>
       }
     }
   }

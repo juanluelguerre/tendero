@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
-import { CheckoutCards, CheckoutStore, NewAddress } from './checkout.store';
+import { CheckoutCards, CheckoutStore, NewAddress, NewCard } from './checkout.store';
 import { Notice, PricePipe } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
 import { Summary } from '../../summary/summary';
@@ -42,6 +42,9 @@ export class CheckoutPage {
 
   /** Where an address typed here goes, as the radio rows name it. */
   protected readonly newAddress = NewAddress;
+
+  /** How it is paid with one of the provider's test cards, as the radio rows name it. */
+  protected readonly newCard = NewCard;
 
   /** The notice above the form, when there is one. */
   private readonly notice = viewChild('notice', { read: ElementRef });

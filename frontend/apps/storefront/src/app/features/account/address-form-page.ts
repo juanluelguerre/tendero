@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Notice } from '@tendero/shared-ui';
 import { ShopLinks } from '../../shop-links';
+import { AccountNav } from './account-nav/account-nav';
 import { AddressFormStore } from './address-form.store';
 
 /**
@@ -15,7 +16,7 @@ import { AddressFormStore } from './address-form.store';
  */
 @Component({
   selector: 'storefront-address-form-page',
-  imports: [FormField, RouterLink, TranslocoDirective, Notice],
+  imports: [FormField, RouterLink, TranslocoDirective, Notice, AccountNav],
   providers: [AddressFormStore],
   templateUrl: './address-form-page.html',
 })

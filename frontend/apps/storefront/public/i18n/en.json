@@ -11,7 +11,7 @@
     "title": "Your account",
     "signIn": "Sign in",
     "requestReturn": "Request a return",
-    "addresses": "Your addresses"
+    "managedByProvider": "Your name and email are managed by your sign-in provider."
   },
   "addresses": {
     "title": "Addresses",
@@ -45,6 +45,90 @@
     "cancel": "Cancel",
     "editKeepsOrders": "Orders already placed keep the address they were sent to.",
     "signedOut": "Sign in to keep addresses. As a guest you type one at checkout, as always."
+  },
+  "wallet": {
+    "title": "Ways to pay",
+    "lede": "Your card is kept by our payment provider. We keep its brand, last four digits and expiry, never the card.",
+    "add": "Add a card",
+    "loading": "Loading your ways to pay...",
+    "failed": "Your ways to pay could not be read or changed. Try again in a moment.",
+    "full": "Your wallet is full: {{max}} ways to pay. Remove one to keep another.",
+    "empty": "No card kept yet.",
+    "emptyHint": "Keep one here and checkout will offer it.",
+    "ending": "{{brand}} ending {{last4}}",
+    "default": "Default",
+    "expiredTag": "Expired",
+    "expires": "Expires {{month}}/{{year}}",
+    "expired": "Expired {{month}}/{{year}}",
+    "makeDefault": "Make default",
+    "remove": "Remove",
+    "removeTitle": "Remove {{brand}} ending {{last4}}?",
+    "removeSays": "Our payment provider forgets it first, and it is not offered at checkout again. Orders already paid with it are not affected.",
+    "keepIt": "Keep it",
+    "providerField": "The payment provider's own field: test cards",
+    "makeItDefault": "Make it my default",
+    "save": "Save card",
+    "cancel": "Cancel",
+    "signedOut": "Sign in to keep a way to pay. As a guest you choose one at checkout, as always.",
+    "cards": {
+      "cardOk": "A card that works",
+      "cardMastercard": "A second card, another brand",
+      "cardExpired": "A card that has expired since it was kept",
+      "cardDeclined": "A card the bank declines when charged",
+      "cardUnreachable": "A provider that is down"
+    }
+  },
+  "preferences": {
+    "title": "Preferences",
+    "signedOut": "Sign in to choose your preferences.",
+    "failed": "Your preferences could not be read or changed. Try again in a moment.",
+    "language": "The shop speaks to you in",
+    "languageHint": "Used when a link or your browser does not name another language.",
+    "languages": {
+      "es": "Español",
+      "en": "English"
+    },
+    "marketing": "What the shop may send you",
+    "marketingWhat": "Offers and new arrivals, by email",
+    "offUntilGiven": "Off until you turn it on.",
+    "givenOn": "Given on {{day}}. Turn it off whenever you like.",
+    "withdrawnOn": "Turned off on {{day}}.",
+    "nothingSentYet": "The shop does not send email yet. This records your choice for when it does. Order emails will not depend on it.",
+    "analytics": "Measuring how the shop is used",
+    "analyticsHint": "Anonymous counts that help us improve the shop. Kept in this browser, not in your account: another device asks again.",
+    "analyticsAllowed": "Allowed in this browser"
+  },
+  "yourData": {
+    "title": "Your data",
+    "signedOut": "Sign in to see what the shop holds about you.",
+    "failed": "That could not be done now. Try again in a moment.",
+    "downloadTitle": "See what the shop holds about you",
+    "downloadWhat": "One file, JSON: your account, addresses, the cards' labels (never the card), what you have looked at, your consents with their dates, and your orders.",
+    "download": "Download my data",
+    "downloading": "Preparing...",
+    "removeTitle": "Remove your account",
+    "forgottenTitle": "Forgotten at once",
+    "forgottenWhat": "Your addresses, your saved cards (our payment provider forgets them first), what you have looked at, your preferences and consents.",
+    "keptTitle": "Kept, and used for nothing else",
+    "keptWhat": "Your orders and the addresses they went to, for six years, because the law requires a shop to keep its invoices. They are no longer linked to your name or your sign-in.",
+    "notOursTitle": "Not ours to remove",
+    "notOursWhat": "Your sign-in (name, email, password) is held by your sign-in provider; manage or remove it there.",
+    "cannotBeUndone": "This cannot be undone. You can still shop as a guest, or sign in again later as a new customer.",
+    "remove": "Remove my account",
+    "removing": "Removing...",
+    "keep": "Keep it",
+    "removedTitle": "Your account was removed.",
+    "removedForgotten": "Your addresses, saved cards, browsing history and preferences are gone.",
+    "removedKept": "Your orders are kept for {{years}} years, as the law requires, and used for nothing else.",
+    "removedSignIn": "Signing in again will start a new account. Your sign-in itself is your sign-in provider's."
+  },
+  "accountNav": {
+    "label": "Your account",
+    "orders": "Orders",
+    "addresses": "Addresses",
+    "waysToPay": "Ways to pay",
+    "preferences": "Preferences",
+    "yourData": "Your data"
   },
   "brand": {
     "area": "Shop",
@@ -135,7 +219,12 @@
     "newAddress": "A new address",
     "keepAddress": "Keep it in my addresses, as",
     "billedTo": "Billed to {{label}}, your billing address.",
-    "bookFull": "Your address book is full, so this address cannot be kept. The order is not affected."
+    "bookFull": "Your address book is full, so this address cannot be kept. The order is not affected.",
+    "chooseCard": "Choose how to pay.",
+    "manageCards": "Manage ways to pay",
+    "newCard": "A new card",
+    "cardDeclinedNow": "Declined just now. Try it again, or choose another way to pay.",
+    "cardExpired": "Expired: add its new card in your ways to pay."
   },
   "consent": {
     "title": "Help us improve the shop.",

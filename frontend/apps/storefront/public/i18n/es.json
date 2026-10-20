@@ -11,7 +11,7 @@
     "title": "Tu cuenta",
     "signIn": "Identifícate",
     "requestReturn": "Pedir devolución",
-    "addresses": "Tus direcciones"
+    "managedByProvider": "Tu nombre y tu email los gestiona tu proveedor de acceso."
   },
   "addresses": {
     "title": "Direcciones",
@@ -45,6 +45,90 @@
     "cancel": "Cancelar",
     "editKeepsOrders": "Los pedidos ya hechos conservan la dirección a la que se enviaron.",
     "signedOut": "Entra para guardar direcciones. Como invitado la escribes en el pago, como siempre."
+  },
+  "wallet": {
+    "title": "Formas de pago",
+    "lede": "Tu tarjeta la guarda nuestro proveedor de pagos. Nosotros guardamos su marca, los cuatro últimos dígitos y la caducidad, nunca la tarjeta.",
+    "add": "Añadir una tarjeta",
+    "loading": "Cargando tus formas de pago...",
+    "failed": "No se han podido leer ni cambiar tus formas de pago. Inténtalo de nuevo en un momento.",
+    "full": "Tu cartera está llena: {{max}} formas de pago. Quita una para guardar otra.",
+    "empty": "Todavía no has guardado ninguna tarjeta.",
+    "emptyHint": "Guarda una aquí y el pago te la ofrecerá.",
+    "ending": "{{brand}} acabada en {{last4}}",
+    "default": "Por defecto",
+    "expiredTag": "Caducada",
+    "expires": "Caduca {{month}}/{{year}}",
+    "expired": "Caducó {{month}}/{{year}}",
+    "makeDefault": "Usar por defecto",
+    "remove": "Quitar",
+    "removeTitle": "¿Quitar la {{brand}} acabada en {{last4}}?",
+    "removeSays": "Nuestro proveedor de pagos la olvida primero y no volverá a ofrecerse en el pago. Los pedidos ya pagados con ella no cambian.",
+    "keepIt": "Conservarla",
+    "providerField": "El campo del propio proveedor de pagos: tarjetas de prueba",
+    "makeItDefault": "Usarla por defecto",
+    "save": "Guardar la tarjeta",
+    "cancel": "Cancelar",
+    "signedOut": "Entra para guardar una forma de pago. Como invitado la eliges en el pago, como siempre.",
+    "cards": {
+      "cardOk": "Una tarjeta que funciona",
+      "cardMastercard": "Una segunda tarjeta, de otra marca",
+      "cardExpired": "Una tarjeta que ha caducado desde que se guardó",
+      "cardDeclined": "Una tarjeta que el banco rechaza al cobrar",
+      "cardUnreachable": "Un proveedor que no responde"
+    }
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "signedOut": "Entra para elegir tus preferencias.",
+    "failed": "No se han podido leer ni cambiar tus preferencias. Inténtalo de nuevo en un momento.",
+    "language": "La tienda te habla en",
+    "languageHint": "Se usa cuando un enlace o tu navegador no indican otro idioma.",
+    "languages": {
+      "es": "Español",
+      "en": "English"
+    },
+    "marketing": "Lo que la tienda puede enviarte",
+    "marketingWhat": "Ofertas y novedades, por email",
+    "offUntilGiven": "Desactivado hasta que lo actives.",
+    "givenOn": "Lo diste el {{day}}. Desactívalo cuando quieras.",
+    "withdrawnOn": "Lo desactivaste el {{day}}.",
+    "nothingSentYet": "La tienda todavía no envía emails. Esto guarda tu elección para cuando lo haga. Los emails de tus pedidos no dependerán de ella.",
+    "analytics": "Medir cómo se usa la tienda",
+    "analyticsHint": "Recuentos anónimos que nos ayudan a mejorar la tienda. Se guarda en este navegador, no en tu cuenta: otro dispositivo te volverá a preguntar.",
+    "analyticsAllowed": "Permitido en este navegador"
+  },
+  "yourData": {
+    "title": "Tus datos",
+    "signedOut": "Entra para ver lo que la tienda guarda sobre ti.",
+    "failed": "No se ha podido hacer ahora. Inténtalo de nuevo en un momento.",
+    "downloadTitle": "Lo que la tienda guarda sobre ti",
+    "downloadWhat": "Un fichero, JSON: tu cuenta, tus direcciones, los datos visibles de tus tarjetas (nunca la tarjeta), lo que has visto, tus consentimientos con su fecha y tus pedidos.",
+    "download": "Descargar mis datos",
+    "downloading": "Preparando...",
+    "removeTitle": "Borrar tu cuenta",
+    "forgottenTitle": "Se olvida al momento",
+    "forgottenWhat": "Tus direcciones, tus tarjetas guardadas (nuestro proveedor de pagos las olvida primero), lo que has visto, tus preferencias y consentimientos.",
+    "keptTitle": "Se conserva, y no se usa para nada más",
+    "keptWhat": "Tus pedidos y las direcciones a las que fueron, durante seis años, porque la ley obliga a una tienda a conservar sus facturas. Dejan de estar ligados a tu nombre y a tu acceso.",
+    "notOursTitle": "No nos toca borrarlo",
+    "notOursWhat": "Tu acceso (nombre, email, contraseña) lo guarda tu proveedor de acceso; gestiónalo o bórralo allí.",
+    "cannotBeUndone": "No se puede deshacer. Podrás seguir comprando como invitado, o volver a entrar más adelante como cliente nuevo.",
+    "remove": "Borrar mi cuenta",
+    "removing": "Borrando...",
+    "keep": "Conservarla",
+    "removedTitle": "Tu cuenta se ha borrado.",
+    "removedForgotten": "Tus direcciones, tarjetas guardadas, historial y preferencias ya no están.",
+    "removedKept": "Tus pedidos se conservan {{years}} años, como exige la ley, y no se usan para nada más.",
+    "removedSignIn": "Si vuelves a entrar se creará una cuenta nueva. Tu acceso en sí es de tu proveedor de acceso."
+  },
+  "accountNav": {
+    "label": "Tu cuenta",
+    "orders": "Pedidos",
+    "addresses": "Direcciones",
+    "waysToPay": "Formas de pago",
+    "preferences": "Preferencias",
+    "yourData": "Tus datos"
   },
   "brand": {
     "area": "Tienda",
@@ -135,7 +219,12 @@
     "newAddress": "Una dirección nueva",
     "keepAddress": "Guardarla en mis direcciones, como",
     "billedTo": "Se factura a {{label}}, tu dirección de facturación.",
-    "bookFull": "Tu libreta de direcciones está llena, así que esta dirección no se puede guardar. El pedido no cambia."
+    "bookFull": "Tu libreta de direcciones está llena, así que esta dirección no se puede guardar. El pedido no cambia.",
+    "chooseCard": "Elige cómo pagar.",
+    "manageCards": "Gestionar formas de pago",
+    "newCard": "Una tarjeta nueva",
+    "cardDeclinedNow": "Rechazada ahora mismo. Vuelve a intentarlo o elige otra forma de pago.",
+    "cardExpired": "Caducada: añade su tarjeta nueva en tus formas de pago."
   },
   "consent": {
     "title": "Ayúdanos a mejorar la tienda.",

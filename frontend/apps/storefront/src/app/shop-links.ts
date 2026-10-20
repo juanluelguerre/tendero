@@ -24,6 +24,11 @@ export class ShopLinks {
   /** The account's address book, and a new entry in it (P15-2). */
   readonly addresses = computed(() => ['/', this.culture(), 'account', 'addresses']);
   readonly newAddress = computed(() => ['/', this.culture(), 'account', 'addresses', 'new']);
+  /** The account's saved ways to pay (P15-4). */
+  readonly waysToPay = computed(() => ['/', this.culture(), 'account', 'ways-to-pay']);
+  /** The account's preferences and the shopper's own data (P15-6, P15-9). */
+  readonly preferences = computed(() => ['/', this.culture(), 'account', 'preferences']);
+  readonly yourData = computed(() => ['/', this.culture(), 'account', 'your-data']);
   /** The comparison; the products travel in `?codes=`, so it can be shared (P10-7). */
   readonly compare = computed(() => ['/', this.culture(), 'compare']);
   /** *Compra con tu agente*: how to point an assistant at the shop (R-8, H-5). */
@@ -54,6 +59,18 @@ export class ShopLinks {
 
   order(id: string): unknown[] {
     return ['/', this.culture(), 'orders', id];
+  }
+
+  /**
+   * The same page in another language: the first segment of the URL swapped,
+   * its query kept. Switching language navigates, because the URL is what carries
+   * the culture (`P5-13`), so a language change is a page a person can share.
+   */
+  sameIn(url: string, culture: string): string {
+    const [path, query] = url.split('?');
+    const segments = path.split('/').filter(Boolean);
+    segments[0] = culture;
+    return `/${segments.join('/')}${query ? `?${query}` : ''}`;
   }
 
   /** A category's path in a given language; its code is the same in every one. */

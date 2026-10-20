@@ -3,15 +3,17 @@ import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { form, maxLength } from '@angular/forms/signals';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
-import type { AddressEntryView, AddressRequest, Money, ShippingOptionView } from '@tendero/shared-api';
+import type { AddressEntryView, AddressRequest, Money, SavedMethodView, ShippingOptionView } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
+import { Telemetry } from '@tendero/shared-telemetry';
 import { formatPrice } from '@tendero/shared-util';
 import { AddressBookStore } from '../../addresses/address-book.store';
 import { addressOf, addressSchema, type AddressDraft } from '../../addresses/address-draft';
 import { CartStore } from '../../cart/cart.store';
 import { OrderService } from '../../data-access/order.service';
 import { ShopLinks } from '../../shop-links';
+import { WalletStore } from '../../wallet/wallet.store';
 import { checkoutProblem } from './checkout-problem';
 
 /**
@@ -27,6 +29,9 @@ export const CheckoutCards = ['card-ok', 'card-declined', 'card-unreachable', 'c
 /** Where the order goes when it is an address typed here rather than one kept in the account. */
 export const NewAddress = 'new';
 
+/** How it is paid when it is one of the provider's test cards rather than one kept in the wallet. */
+export const NewCard = 'new';
+
 /** The book's ceiling on a label, the server's `AddressBook.MaxLabelLength`. */
 const MaxLabelLength = 40;
 
@@ -37,6 +42,14 @@ interface CheckoutState {
    * waits for the shopper to choose — nothing is chosen for them.
    */
   readonly where: string | null;
+  /**
+   * How it is paid (P15-5): a saved card by its id, {@link NewCard} for the
+   * provider's test cards, or null while a wallet with no usable default waits for
+   * the shopper to choose.
+   */
+  readonly paysWith: string | null;
+  /** The saved card the provider just declined, said so on its row; null otherwise. */
+  readonly declined: string | null;
   readonly options: readonly ShippingOptionView[];
   readonly chosen: ShippingOptionView | null;
   readonly instrument: string;
@@ -59,6 +72,8 @@ interface CheckoutState {
 export const CheckoutStore = signalStore(
   withState<CheckoutState>(() => ({
     where: NewAddress,
+    paysWith: NewCard,
+    declined: null,
     options: [],
     chosen: null,
     instrument: CheckoutCards[0],
@@ -107,6 +122,8 @@ export const CheckoutStore = signalStore(
   withProps(() => ({
     _signedIn: inject(AuthStore).isSignedIn,
     _book: inject(AddressBookStore),
+    _wallet: inject(WalletStore),
+    _telemetry: inject(Telemetry),
     _cart: inject(CartStore),
     _orders: inject(OrderService),
     _router: inject(Router),
@@ -120,7 +137,7 @@ export const CheckoutStore = signalStore(
      */
     _idempotencyKey: crypto.randomUUID(),
   })),
-  withComputed(({ _draft, _keepDraft, _book, _signedIn, where }) => {
+  withComputed(({ _draft, _keepDraft, _book, _wallet, _signedIn, where }) => {
     /** The kept entries checkout offers: a signed-in shopper's book, nothing for a guest. */
     const kept = computed<readonly AddressEntryView[]>(() => (_signedIn() ? _book.entries() : []));
     const entry = computed(() => kept().find((each) => each.id === where()) ?? null);
@@ -150,6 +167,8 @@ export const CheckoutStore = signalStore(
       }),
       /** A new address with no room for it in the book: no box, and a line that says why. */
       bookFull: computed(() => _signedIn() && where() === NewAddress && _book.full()),
+      /** The saved cards checkout offers: a signed-in shopper's wallet, nothing for a guest. */
+      cards: computed<readonly SavedMethodView[]>(() => (_signedIn() ? _wallet.methods() : [])),
     };
   }),
   withMethods((store) => {
@@ -239,11 +258,25 @@ export const CheckoutStore = signalStore(
       async start(): Promise<void> {
         await store._cart.load();
         if (store._signedIn()) {
-          await store._book.load();
+          await Promise.all([store._book.load(), store._wallet.load()]);
           const preselected = store._book.deliveryDefault()?.id;
-          patchState(store, { where: preselected ?? (store.kept().length > 0 ? null : NewAddress) });
+          // The default card, unless it has expired: an expired default is said to
+          // be one and leaves checkout asking (P15-5), as does a wallet with no default.
+          const card = store._wallet.default();
+          patchState(store, {
+            where: preselected ?? (store.kept().length > 0 ? null : NewAddress),
+            paysWith: card && !card.expired ? card.id : store.cards().length > 0 ? null : NewCard,
+          });
         }
         if (!store._cart.isEmpty()) await loadOptions();
+      },
+      /**
+       * A saved card by its id, or {@link NewCard} for the provider's test cards.
+       * An expired card is never chosen, whoever asks: it is shown, and that is all.
+       */
+      payWith(paysWith: string): void {
+        if (paysWith !== NewCard && !store.cards().some((card) => card.id === paysWith && !card.expired)) return;
+        patchState(store, { paysWith, declined: null });
       },
       /** Another entry of the book, or {@link NewAddress}: delivery is priced again for it. */
       sendTo(where: string): Promise<void> {
@@ -267,14 +300,17 @@ export const CheckoutStore = signalStore(
         const option = store.chosen();
         const quote = store._cart.quote();
         const address = store.address();
-        if (!option || !quote || !address || !store.keepValid()) return;
+        const paysWith = store.paysWith();
+        if (!option || !quote || !address || !paysWith || !store.keepValid()) return;
 
         // Decided before the order: placing it changes nothing about the book, but
         // what the shopper ticked is what is kept.
         const keep = store.canKeep() && store._keepDraft().keep;
         const billing = store.billing();
+        // A saved card is charged by the id the shop minted; its token never reached this page (ADR 0064).
+        const saved = paysWith === NewCard ? null : paysWith;
 
-        patchState(store, { paying: true, problem: null });
+        patchState(store, { paying: true, problem: null, declined: null });
         try {
           const order = await store._orders.place(
             {
@@ -282,7 +318,7 @@ export const CheckoutStore = signalStore(
               ...(billing ? { billingAddress: billing.address } : {}),
               shippingOptionCode: option.code,
               quoteHash: quote.inputHash,
-              instrument: store.instrument(),
+              ...(saved ? { instrument: '', savedMethodId: saved } : { instrument: store.instrument() }),
             },
             store._idempotencyKey,
             store._cart.token(),
@@ -297,11 +333,30 @@ export const CheckoutStore = signalStore(
           // never stops an order; the order page says when it was not kept.
           const kept = keep ? await keepAddress(address) : undefined;
 
+          // What proves the account is used at checkout (P15-10), for a signed-in
+          // shopper only: where the address and the card came from, never which.
+          if (store._signedIn()) {
+            store._telemetry.trackEvent('checkout_prefilled', {
+              address: store.where() === NewAddress ? 'typed' : 'saved',
+              method: saved ? 'saved' : 'new',
+            });
+            if (kept !== undefined) store._telemetry.trackEvent('address_kept_at_checkout', { kept });
+          }
+
           await store._router.navigate(store._links.order(order.orderId), {
             state: kept === undefined ? { order } : { order, addressKept: kept },
           });
         } catch (error) {
           patchState(store, { problem: describe(error) });
+          // A saved card declined is said so on its own row and stays chosen: never
+          // skipped for the next one, never removed — a decline can be temporary,
+          // and the shopper decides (P15-5).
+          if (saved && (error as { status?: number })?.status === 402) {
+            patchState(store, { declined: saved });
+            store._telemetry.trackEvent('saved_method_declined', {
+              expired: store.cards().find((card) => card.id === saved)?.expired ?? false,
+            });
+          }
           // The price moved. Re-quoting here means the summary and the button show
           // the NEW total immediately, so the second press agrees to what is on
           // screen rather than to what was.

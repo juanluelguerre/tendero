@@ -1,0 +1,21 @@
+<nav *transloco="let t" [attr.aria-label]="t('accountNav.label')">
+  <ul
+    class="m-0 grid list-none gap-hair p-0 max-md:overflow-hidden max-md:rounded-lg max-md:border max-md:border-hairline max-md:bg-surface"
+  >
+    @for (section of sections(); track section.key) {
+      <li class="max-md:border-t max-md:border-hairline max-md:first:border-t-0">
+        <a
+          class="flex min-h-tap items-center justify-between gap-3 rounded-md px-3 text-body no-underline hover:bg-raised max-md:rounded-none max-md:px-4"
+          [class.font-semibold]="section.key === active()"
+          [class.bg-surface]="section.key === active()"
+          [attr.aria-current]="section.key === active() ? 'page' : null"
+          [routerLink]="section.link"
+          [attr.data-account-section]="section.key"
+        >
+          {{ t('accountNav.' + section.key) }}
+          <span class="text-muted md:hidden" aria-hidden="true">›</span>
+        </a>
+      </li>
+    }
+  </ul>
+</nav>

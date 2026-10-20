@@ -11,6 +11,7 @@ import { ShopLinks } from '../../shop-links';
 import { TrailHistory } from '../../trail/trail-history/trail-history';
 import { AccountStore } from './account.store';
 import { PageState } from '../../page-state/page-state';
+import { AccountNav } from './account-nav/account-nav';
 
 /**
  * A shopper's account, and their orders.
@@ -32,7 +33,7 @@ import { PageState } from '../../page-state/page-state';
  */
 @Component({
   selector: 'storefront-account-page',
-  imports: [TranslocoDirective, RouterLink, ProductImage, TrailHistory, PageState, PricePipe, DateTimePipe],
+  imports: [TranslocoDirective, RouterLink, ProductImage, TrailHistory, PageState, PricePipe, DateTimePipe, AccountNav],
   providers: [AccountStore],
   templateUrl: './account-page.html',
 })

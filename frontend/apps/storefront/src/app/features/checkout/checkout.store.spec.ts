@@ -2,13 +2,22 @@ import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import type { AddressEntryRequest, AddressEntryView, Money, PriceQuote, ShippingOptionView } from '@tendero/shared-api';
+import type {
+  AddressEntryRequest,
+  AddressEntryView,
+  Money,
+  PriceQuote,
+  SavedMethodView,
+  ShippingOptionView,
+} from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
+import { Telemetry } from '@tendero/shared-telemetry';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AddressBookStore } from '../../addresses/address-book.store';
 import { CartStore } from '../../cart/cart.store';
 import { OrderService } from '../../data-access/order.service';
+import { WalletStore } from '../../wallet/wallet.store';
 import { CheckoutStore } from './checkout.store';
 
 const option = (code: string, amount: number): ShippingOptionView =>
@@ -31,6 +40,16 @@ const kept = (id: string, label: string, line1: string, delivery = false, billin
   billingDefault: billing,
 });
 
+const card = (id: string, last4: string, isDefault = false, expired = false): SavedMethodView => ({
+  id,
+  brand: 'Visa',
+  last4,
+  expiryMonth: 8,
+  expiryYear: 2028,
+  expired,
+  isDefault,
+});
+
 /** Address, delivery, payment (ADR 0047): the checkout's own state, over the shop's one cart. */
 describe('the checkout store', () => {
   let name: string | null;
@@ -46,8 +65,15 @@ describe('the checkout store', () => {
   let keeping: (entry: AddressEntryRequest) => Promise<boolean>;
   let keptEntries: AddressEntryRequest[];
   let priced: string[];
-  let requests: { shippingAddress: { line1: string }; billingAddress?: { line1: string } | null }[];
+  let requests: {
+    shippingAddress: { line1: string };
+    billingAddress?: { line1: string } | null;
+    instrument: string;
+    savedMethodId?: string | null;
+  }[];
   let handed: unknown[];
+  let methods: SavedMethodView[];
+  let tracked: [string, unknown][];
 
   beforeEach(() => {
     signedIn = false;
@@ -58,6 +84,8 @@ describe('the checkout store', () => {
     priced = [];
     requests = [];
     handed = [];
+    methods = [];
+    tracked = [];
     name = 'Ana Ruiz';
     options = async () => ({ options: [option('STANDARD', 4.9), option('EXPRESS', 9.9)] });
     placing = async () => ({ orderId: 'O-1' });
@@ -73,6 +101,10 @@ describe('the checkout store', () => {
         CheckoutStore,
         { provide: AuthStore, useValue: { identity: () => (name ? { name } : null), isSignedIn: () => signedIn } },
         { provide: CultureStore, useValue: { active: signal('es') } },
+        {
+          provide: Telemetry,
+          useValue: { trackEvent: (name: string, attributes: unknown) => void tracked.push([name, attributes]) },
+        },
         { provide: TranslocoService, useValue: { translate: (key: string) => key } },
         {
           provide: Router,
@@ -94,6 +126,17 @@ describe('the checkout store', () => {
               billingDefault: computed(() => entries().find((entry) => entry.billingDefault) ?? null),
               full: () => full,
               add: (entry: AddressEntryRequest) => keeping(entry),
+            };
+          })(),
+        },
+        {
+          provide: WalletStore,
+          useValue: (() => {
+            const kept = signal<SavedMethodView[]>([]);
+            return {
+              load: async () => void kept.set(methods),
+              methods: kept,
+              default: computed(() => kept().find((each) => each.isDefault) ?? null),
             };
           })(),
         },
@@ -269,5 +312,100 @@ describe('the checkout store', () => {
     book = [kept('A', 'Home', 'Calle Mayor 12', true)];
 
     expect((await opened()).canKeep()).toBe(false);
+  });
+
+  /** The preferred way to pay (P15-5): the default card preselected and shown, charged by its id, never a token. */
+  it('pays with the signed-in shopper’s default card by its id', async () => {
+    signedIn = true;
+    methods = [card('V', '4242', true), card('M', '4444')];
+    const store = await opened();
+    await store.pay();
+
+    expect([store.paysWith(), requests[0].savedMethodId, requests[0].instrument]).toEqual(['V', 'V', '']);
+  });
+
+  /** A default that expired is said to be one and not chosen: checkout asks, and Pay waits. */
+  it('asks how to pay when the default card has expired', async () => {
+    signedIn = true;
+    methods = [card('V', '0341', true, true), card('M', '4444')];
+    const store = await opened();
+    await store.pay();
+
+    expect([store.paysWith(), requests.length]).toEqual([null, 0]);
+    store.payWith('M');
+    await store.pay();
+    expect(requests[0].savedMethodId).toBe('M');
+  });
+
+  it('will not choose an expired card even when asked to', async () => {
+    signedIn = true;
+    methods = [card('V', '0341', false, true)];
+    const store = await opened();
+    store.payWith('V');
+
+    expect(store.paysWith()).toBe(null);
+  });
+
+  /** A declined saved card is said so and stays chosen — never skipped for the next one, never removed. */
+  it('keeps a declined saved card chosen and says it was declined', async () => {
+    signedIn = true;
+    methods = [card('V', '4242', true), card('M', '4444')];
+    placing = () => Promise.reject({ status: 402 });
+    const store = await opened();
+    await store.pay();
+
+    expect([store.paysWith(), store.declined(), store.problem()]).toEqual(['V', 'V', 'checkout.declined']);
+  });
+
+  it('pays with a test card when the shopper has no saved card, or chooses a new one', async () => {
+    signedIn = true;
+    methods = [card('V', '4242', true)];
+    const store = await opened();
+    store.payWith('new');
+    await store.pay();
+
+    expect([requests[0].instrument, requests[0].savedMethodId ?? null]).toEqual(['card-ok', null]);
+  });
+
+  /** What proves the account is used at checkout (P15-10): where the address and the card came from. */
+  it('says a signed-in order came from the account, and a guest’s says nothing', async () => {
+    signedIn = true;
+    book = [kept('A', 'Home', 'Calle Mayor 12', true)];
+    methods = [card('V', '4242', true)];
+    const store = await opened();
+    await store.pay();
+
+    expect(tracked).toEqual([['checkout_prefilled', { address: 'saved', method: 'saved' }]]);
+  });
+
+  it('says nothing for a guest’s order', async () => {
+    const store = await opened();
+    await store.pay();
+
+    expect(tracked).toEqual([]);
+  });
+
+  it('says a typed address was kept, or that keeping it failed', async () => {
+    signedIn = true;
+    keeping = async () => false;
+    const store = await opened();
+    store.keepForm.keep().value.set(true);
+    store.keepForm.label().value.set('Beach flat');
+    await store.pay();
+
+    expect(tracked).toEqual([
+      ['checkout_prefilled', { address: 'typed', method: 'new' }],
+      ['address_kept_at_checkout', { kept: false }],
+    ]);
+  });
+
+  it('says a saved card was declined', async () => {
+    signedIn = true;
+    methods = [card('V', '4242', true)];
+    placing = () => Promise.reject({ status: 402 });
+    const store = await opened();
+    await store.pay();
+
+    expect(tracked).toEqual([['saved_method_declined', { expired: false }]]);
   });
 });
