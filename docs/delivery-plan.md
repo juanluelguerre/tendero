@@ -250,6 +250,15 @@ as **Hero caption** in the article's notes in `docs/blog/index.md`; Tendero's
 pre-flight refuses a hero without one, and the publishing script writes it under
 the hero in the body and on the image's media item.
 
+**12 · Every article says it belongs to the series** (decided 2026-10-20, from
+article 03 on; 00, 01 and 02 stay as published). Its first sentence, at the top of
+the TL;DR and above its bullets, is *"Continuing our series on Tendero, the
+AI-native ecommerce platform, in this article I …"*, finished with what this
+article does in one plain clause. A reader who arrives from a search knows where
+they are before the hook; the hook still comes right after, so rule 1 holds. An
+article with no TL;DR yet opens its first paragraph with it. Notes are outside the
+series and do not carry it. Tendero's pre-flight refuses an article without it.
+
 ---
 
 ## Phase 0 · Make the gates real
