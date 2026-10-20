@@ -64,6 +64,7 @@
 | [0060](0060-a-recommendation-is-solved-not-generated.md) | A recommendation is solved, not generated: parse, retrieve, solve, explain, with a model at the two ends only; a pure solver held by properties, coverage before relevance, exact under a ceiling it declares; the trace is the explanation's only source; the same ask gives the same kit | accepted |
 | [0061](0061-speech-is-a-port-of-ai.md) | Speech is a port of AI: `ISpeechToText` beside the chat profiles, AI's first slice for the transcription, each engine a keyed adapter and the model its options; a fixed 16 kHz mono WAV refused by its bytes; no engine, no microphone | accepted |
 | [0062](0062-objects-in-a-photograph-are-found-by-a-detector.md) | The objects in a photograph are found by a detector, and the detector is OWLv2: `IObjectDetector` in `Search/Images`, measured against SigLIP's grid and the local Qwen before it was chosen; our export, tier 1, with the text tower and CLIP's tokenizer ours so the kinds stay configuration; no export, the photograph is one object | accepted |
+| [0063](0063-a-picture-is-a-question-not-a-fact.md) | A picture is the shopper's question, never a fact: reads made by code over closed lists, each labelled as what it is (*similar in the shop*, never *this is*); nothing a model reads in a shopper's picture is written anywhere; a model that writes words never receives it; the picture is not kept | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

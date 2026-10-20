@@ -1314,7 +1314,7 @@ scoped, so it sets no baseline (whole: 83.38 %).
   refuses exactly that (`Product.SetAttribute`, ADR 0056 amended: an axis is the
   variants', never the product's).
 
-**The camera search's stage 1, scoped (2026-10-19).** The 20 files of `src/Search`
+**Phase 14b's close: the camera search's stage 1, scoped (2026-10-19; the phase numbered 2026-10-20).** The 20 files of `src/Search`
 the branch changed (`--since develop`, 2,474 lines), four shares, a 30 s timeout
 margin, 86 minutes — about 26 s a mutant against the script's guess of 6, the
 timeouts' margin paid on the slow ones: **79.75 % of covered** (445 killed, 5
@@ -1354,6 +1354,17 @@ model paths (Model tests, which skip in a worktree with no `models/`). The 113:
 - **Lines the branch did not write** (14): SigLIP's resampling and alpha blend,
   and the hybrid strategy's fusion, in files the branch touched for one argument
   (`ct:`); they belong to the whole project's next run.
+
+The phase's other code under `src/` is not mutated: `Api/Program.cs` (eight lines,
+the objects endpoint's and the detector's registration) is held by
+`VisualSearchEndpointTests`, which answer every route through it, and
+`AppHost/AppHost.cs` (eleven lines, the export handed over only when it is whole)
+and `prepare-owlv2.py` have no Stryker configuration, as every AppHost change
+before them. The storefront's half is held by its unit tests (the sheet's store,
+the geometry) and the two browser specs, `visual-search.spec.ts` and
+`camera.spec.ts`; the one bug found by hand afterwards, two clear buttons in the
+words field (Chromium's own beside the sheet's), has its browser test since
+2026-10-20. Report: `docs/blog/reports/2026-10-19-phase-14b-camera-search/stryker/`.
 
 ## Property-based (CsCheck)
 

@@ -3,7 +3,8 @@
 **Spec**: `docs/specs/camera-search.md`, stage 1 accepted on 2026-10-19 (the
 flow, the two sources of photographs, the detector measured before it is
 chosen). Stage 2, Tino, is not in this run.
-**Branch**: `feature/camera-search`, from `develop`.
+**Branch**: `feature/camera-search`, from `develop`; merged into `develop` on 2026-10-20.
+**Phase**: 14b, numbered and closed on 2026-10-20 (ADR 0063 at the close).
 **Waiting on the author**: eight to ten photographs (scenes, an accessory to
 mark) in `artifacts/camera-photos/`. Everything that does not need them goes
 first; the detectors' comparison waits for them, because scenes are what

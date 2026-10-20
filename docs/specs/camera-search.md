@@ -1,6 +1,7 @@
 # Spec: Searching with the camera — in the search box and in Tino
 
 **Status**: **stage 1 accepted** (2026-10-19): the scope, the flow and every decision stage 1 needs were taken by the author in conversation (*Decided by the author*, *Decisions*); stage 2's three decisions stay proposed until stage 2 is decided
+**Phase**: **14b** (numbered 2026-10-20); **stage 1 closed 2026-10-20**, merged into `develop` the same day
 **Follows**: phase 12b (Tino, `docs/specs/tino.md`) and phase 13a (images, I-6, `docs/specs/images.md`); before phase 15
 **Branch**: `feature/camera-search`, cut from `develop`
 **Slice(s)**: Search (an object detector behind a port, beside SigLIP; objects in a picture; `find_by_picture`; the by-image endpoint narrowed), `AI` (`read_picture`, stage 2), `Assist` (Tino's turn takes a picture), the storefront (one picture-search component, shared by the search box and Tino; the camera)
@@ -473,7 +474,9 @@ questions before raising the turn's cap.
 - `CS-4` The photographs — ABO's chosen and labelled, the author's redrawn — the
   picture suite, the three floors, `docs/privacy.md`, ABO's attribution.
 - `CS-5` The tracking plan's events, an ADR (*a picture is a question, not a
-  fact*), Stryker scoped, the notebook, the close of stage 1.
+  fact*), Stryker scoped, the notebook, the close of stage 1. **Done 2026-10-20**:
+  ADR 0063; Stryker scoped over `Search` (`docs/testing.md`, *Phase 14b's close*);
+  the notebook and the book's map.
 
 **Stage 2 · Tino** — optional; decided on stage 1's evidence, and may wait
 behind another phase.
