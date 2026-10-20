@@ -833,6 +833,31 @@ stateDiagram-v2
 
 ```mermaid
 classDiagram
+    class AddressBook {
+        <<aggregate>>
+        +CustomerId CustomerId
+        +AddressEntry[] Entries
+        +AddressEntryId? DeliveryDefault
+        +AddressEntryId? BillingDefault
+        +bool IsFull
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset UpdatedAt
+    }
+    class AddressEntry {
+        <<record>>
+        +AddressEntryId Id
+        +string Label
+        +Address Address
+    }
+    class AddressEntryId {
+        <<record>>
+        +Guid Value
+    }
+    class AddressUse {
+        <<enumeration>>
+        Delivery
+        Billing
+    }
     class Agent {
         <<aggregate>>
         +AgentId Id
@@ -879,6 +904,10 @@ classDiagram
         +string Key
         +DateTimeOffset At
     }
+    AddressBook "1" --> "*" AddressEntry : Entries
+    AddressBook --> AddressEntryId : DeliveryDefault
+    AddressBook --> AddressEntryId : BillingDefault
+    AddressEntry --> AddressEntryId : Id
 ```
 
 ### Events

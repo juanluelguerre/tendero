@@ -146,6 +146,20 @@ internal static class Jsonb
         entries => entries.Aggregate(0, (hash, entry) => HashCode.Combine(hash, entry.GetHashCode())),
         entries => new List<Accounts.Domain.TrailEntry>(entries));
 
+    /// <summary>
+    /// A customer's address book (P15-2): <c>[{"id":{"value":"…"},"label":"Home","address":{…}}]</c>,
+    /// the kernel's <c>Address</c> as its own fields. Always read and written with its
+    /// book, ten at most, never queried on its own.
+    /// </summary>
+    public static readonly ValueConverter<List<Accounts.Domain.AddressEntry>, string> AddressEntriesConverter = new(
+        entries => JsonSerializer.Serialize(entries, Options),
+        json => JsonSerializer.Deserialize<List<Accounts.Domain.AddressEntry>>(json, Options) ?? new List<Accounts.Domain.AddressEntry>());
+
+    public static readonly ValueComparer<List<Accounts.Domain.AddressEntry>> AddressEntriesComparer = new(
+        (left, right) => left != null && right != null && left.SequenceEqual(right),
+        entries => entries.Aggregate(0, (hash, entry) => HashCode.Combine(hash, entry.GetHashCode())),
+        entries => new List<Accounts.Domain.AddressEntry>(entries));
+
     public static readonly ValueComparer<List<string>> StringListComparer = new(
         (left, right) => left != null && right != null && left.SequenceEqual(right, StringComparer.Ordinal),
         values => values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode(StringComparison.Ordinal))),

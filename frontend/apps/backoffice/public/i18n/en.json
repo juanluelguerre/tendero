@@ -94,7 +94,11 @@
       "UpdateCampaignCommand": "Edit a campaign",
       "UpdateCheckoutSessionCommand": "Update a checkout",
       "WithdrawProductCommand": "Take a product off sale",
-      "ApproveClaimsCommand": "Approve claims together"
+      "ApproveClaimsCommand": "Approve claims together",
+      "AddAddressCommand": "Keep an address in an address book",
+      "EditAddressCommand": "Change an address in an address book",
+      "RemoveAddressCommand": "Remove an address from an address book",
+      "UseAddressCommand": "Choose a default address"
     },
     "fromProposal": "Proposed by Steward"
   },

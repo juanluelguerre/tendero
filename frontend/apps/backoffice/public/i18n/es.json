@@ -94,7 +94,11 @@
       "UpdateCampaignCommand": "Editar una campaña",
       "UpdateCheckoutSessionCommand": "Actualizar un pago",
       "WithdrawProductCommand": "Retirar un producto de la venta",
-      "ApproveClaimsCommand": "Aprobar afirmaciones juntas"
+      "ApproveClaimsCommand": "Aprobar afirmaciones juntas",
+      "AddAddressCommand": "Guardar una dirección en una libreta",
+      "EditAddressCommand": "Cambiar una dirección de una libreta",
+      "RemoveAddressCommand": "Quitar una dirección de una libreta",
+      "UseAddressCommand": "Elegir una dirección por defecto"
     },
     "fromProposal": "Propuesto por Steward"
   },

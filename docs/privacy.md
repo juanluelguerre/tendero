@@ -59,6 +59,32 @@ log that exists for something else. **The codes and the words are redacted**
 "delete" a lie. The OpenTelemetry spans carry counts and the kind, never a code or
 a search.
 
+## A shopper's address book
+
+Phase 15, `P15-2` (`docs/specs/shopper-account.md`): the addresses a signed-in
+customer keeps so they are not typed again at checkout.
+
+- **What is kept**: in `accounts.address_books`, one row per customer, up to
+  **10** entries, each the address as checkout takes it (recipient, two lines,
+  postcode, city, region, country, phone if given) and a label in the
+  shopper's own words; and which entry is the default for delivery and for
+  billing. Nothing else: not where the shopper was when they typed it, not how
+  often it is used.
+- **How long**: until the shopper removes it. Removing an entry removes it from
+  the row at once; an order placed to it keeps the address it froze, because
+  that copy is the order's, not the book's. What happens to the book when the
+  account is removed is `P15-9`'s, and this section will say it then.
+- **Who can read it**: only the customer's own session. Every route under
+  `/api/accounts/me/addresses` requires the `Shopper` policy — never anonymous,
+  never an agent (decision 8 of the spec) — and no route or body names a
+  customer. `EndpointAuthorizationTests` holds the policy on every route.
+- **What the logs keep**: the audit row says an address was kept, changed or
+  removed and when; **the address and its label are redacted** (`[AuditRedacted]`):
+  a label is the shopper's words and can be somebody's name. A
+  refusal is recorded by its outcome's name, never by the sentence that quoted
+  the field it refused. The spans carry how many entries there are and the
+  outcome, never an address.
+
 ## What Steward reads, and what may leave the machine
 
 Steward, the backoffice copilot (phase 12), answers from six reads the contexts

@@ -233,6 +233,26 @@ public sealed class EndpointAuthorizationTests(TenderoApiFactory factory) : ICla
         });
     }
 
+    /// <summary>
+    /// A customer's address book (P15-2) is the trail's twin in this respect: a
+    /// person's own, through their own session — never anonymous, never an agent's,
+    /// which uses none of it in phase 15 (docs/specs/shopper-account.md, decision 8).
+    /// </summary>
+    [Theory]
+    [InlineData("/api/accounts/me/addresses", 2)]
+    [InlineData("/api/accounts/me/addresses/{id:guid}", 2)]
+    [InlineData("/api/accounts/me/addresses/{id:guid}/default/{use}", 1)]
+    public void The_address_book_is_the_shoppers_own(string route, int endpoints) =>
+        The_trail_is_the_shoppers_own(route, endpoints);
+
+    [Fact]
+    public async Task A_stranger_cannot_read_anybodys_address_book()
+    {
+        var response = await factory.CreateClient().GetAsync("/api/accounts/me/addresses", TestContext.Current.CancellationToken);
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     [Fact]
     public async Task A_stranger_cannot_read_anybodys_trail()
     {

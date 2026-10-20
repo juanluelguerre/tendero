@@ -1284,6 +1284,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/me/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAddressBook"];
+        put?: never;
+        post: operations["AddAddress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/addresses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["EditAddress"];
+        post?: never;
+        delete: operations["RemoveAddress"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/addresses/{id}/default/{use}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UseAddressByDefault"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ordering/best-sellers": {
         parameters: {
             query?: never;
@@ -1679,6 +1727,24 @@ export interface components {
              * @default 1
              */
             quantity: number;
+        };
+        AddressBookView: {
+            entries: components["schemas"]["AddressEntryView"][];
+            /** Format: int32 */
+            maxEntries: number;
+        };
+        AddressEntryRequest: {
+            label: null | string;
+            address: null | components["schemas"]["SavedAddress"];
+            deliveryDefault: boolean;
+            billingDefault: boolean;
+        };
+        AddressEntryView: {
+            id: string;
+            label: string;
+            address: components["schemas"]["SavedAddress"];
+            deliveryDefault: boolean;
+            billingDefault: boolean;
         };
         AddressRequest: {
             recipientName: string;
@@ -3177,6 +3243,16 @@ export interface components {
             current: components["schemas"]["SalesFigures"];
             previous: components["schemas"]["SalesFigures"];
             bestSellers: components["schemas"]["BestSeller"][];
+        };
+        SavedAddress: {
+            recipientName: string;
+            line1: string;
+            line2: null | string;
+            city: string;
+            region: null | string;
+            postalCode: string;
+            countryCode: string;
+            phone: null | string;
         };
         ScreenContext: {
             page: string;
@@ -7494,6 +7570,349 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    GetAddressBook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressBookView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    AddAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressBookView"];
+                };
+            };
+            /** @description The address is incomplete or not valid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "InvalidAddress";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. · You already have 10 addresses. Remove one to keep another. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "AddressBookFull" | "NoCustomer";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    EditAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressBookView"];
+                };
+            };
+            /** @description The address is incomplete or not valid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "InvalidAddress";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description That address is not in your address book. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownAddress";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    RemoveAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressBookView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description That address is not in your address book. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownAddress";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    UseAddressByDefault: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                use: "Delivery" | "Billing";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressBookView"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description That address is not in your address book. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownAddress";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Your account is not ready yet. Sign in again. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NoCustomer";
                     } & components["schemas"]["Problem"];
                 };
             };
