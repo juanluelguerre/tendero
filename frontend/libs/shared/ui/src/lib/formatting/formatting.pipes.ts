@@ -1,5 +1,12 @@
 import { Pipe, type PipeTransform } from '@angular/core';
-import { formatDate, formatDateTime, formatPrice, formatTime, type MoneyAmount } from '@tendero/shared-util';
+import {
+  formatCountry,
+  formatDate,
+  formatDateTime,
+  formatPrice,
+  formatTime,
+  type MoneyAmount,
+} from '@tendero/shared-util';
 
 /*
  * Money and moments in the reader's language, from a template (the review of
@@ -43,5 +50,13 @@ export class DayPipe implements PipeTransform {
 export class ClockPipe implements PipeTransform {
   transform(value: string | Date, culture: string): string {
     return formatTime(value, culture);
+  }
+}
+
+/** A country by name from its code: `{{ address.countryCode | country: culture.active() }}` — "Alemania", "Germany". */
+@Pipe({ name: 'country' })
+export class CountryPipe implements PipeTransform {
+  transform(code: string, culture: string): string {
+    return formatCountry(code, culture);
   }
 }

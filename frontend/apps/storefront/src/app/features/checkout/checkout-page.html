@@ -145,14 +145,23 @@
 
               <label class="grid gap-2">
                 <span class="text-sm font-medium text-muted">{{ t('checkout.country') }}</span>
-                <!-- Two letters, uppercase: the value three different things
-                   look up (a rate, a tax rule, a market). -->
-                <input
-                  class="field numeric"
+                <!-- The countries checkout quotes for, by name, and the code as the
+                     value: a country the shop does not reach is not offered, so it
+                     is not refused at the end. -->
+                <select
+                  class="field select"
                   autocomplete="country"
                   [formField]="store.addressForm.countryCode"
                   (change)="store.addressChanged()"
-                />
+                >
+                  @let chosen = store.addressForm.countryCode().value();
+                  @if (!countries.offers()(chosen)) {
+                    <option [value]="chosen" selected>{{ chosen | country: culture.active() }}</option>
+                  }
+                  @for (country of countries.options(); track country.code) {
+                    <option [value]="country.code" [selected]="country.code === chosen">{{ country.name }}</option>
+                  }
+                </select>
               </label>
             </div>
 

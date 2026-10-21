@@ -74,7 +74,16 @@
 
           <label class="grid content-start gap-2">
             <span class="text-sm font-medium text-muted">{{ t('checkout.country') }}</span>
-            <input class="field numeric" [formField]="store.addressForm.countryCode" autocomplete="country" />
+            <select class="field select" [formField]="store.addressForm.countryCode" autocomplete="country">
+              @let chosen = store.addressForm.countryCode().value();
+              <!-- A kept address in a country no longer offered shows as itself, never as a blank. -->
+              @if (!countries.offers()(chosen)) {
+                <option [value]="chosen" selected>{{ chosen | country: culture.active() }}</option>
+              }
+              @for (country of countries.options(); track country.code) {
+                <option [value]="country.code" [selected]="country.code === chosen">{{ country.name }}</option>
+              }
+            </select>
           </label>
 
           <div class="col-span-full grid gap-3 border-t border-hairline pt-4">

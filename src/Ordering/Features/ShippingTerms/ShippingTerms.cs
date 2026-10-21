@@ -1,7 +1,12 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using Carter;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 
 namespace ElGuerre.Tendero.Ordering.Features.ShippingTerms;
@@ -56,6 +61,29 @@ public sealed class ShippingTermsHandler(IShippingRateProviderRegistry shipping,
         return Task.FromResult(there.Count > 0
             ? new ShippingTermsResult(country, true, there, reaches)
             : new ShippingTermsResult(country, false, [], reaches));
+    }
+}
+
+// ---------- the endpoint ----------
+
+/// <param name="Countries">The countries the shop delivers to, as ISO codes in order; null when it delivers to every country.</param>
+public sealed record ShippingCountries(IReadOnlyList<string>? Countries);
+
+public sealed class ShippingTermsEndpoints : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        // What an address form offers as its country, from the same terms checkout
+        // quotes with: a zone added in configuration reaches the form without a
+        // release, and a country the shop does not reach is never offered. Codes
+        // only — naming them is the browser's, where a language has its names.
+        // Anonymous by decision: a guest fills in an address at checkout.
+        app.MapGet("/api/shipping/countries",
+            async Task<Ok<ShippingCountries>> (IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(new ShippingCountries((await dispatcher.SendAsync(new ShippingTermsQuery(null), ct)).Reaches)))
+            .AllowAnonymous()
+            .WithTags("Checkout")
+            .WithName("ShippingCountries");
     }
 }
 

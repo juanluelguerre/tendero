@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AddressEntryView } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
-import { Notice } from '@tendero/shared-ui';
+import { CultureStore } from '@tendero/shared-i18n';
+import { CountryPipe, Notice } from '@tendero/shared-ui';
 import { AddressBookStore } from '../../addresses/address-book.store';
 import { ShopLinks } from '../../shop-links';
 import { AccountNav } from './account-nav/account-nav';
@@ -21,12 +22,13 @@ import { AccountNav } from './account-nav/account-nav';
  */
 @Component({
   selector: 'storefront-addresses-page',
-  imports: [RouterLink, TranslocoDirective, Notice, AccountNav],
+  imports: [RouterLink, TranslocoDirective, Notice, AccountNav, CountryPipe],
   templateUrl: './addresses-page.html',
 })
 export class AddressesPage implements OnInit {
   protected readonly book = inject(AddressBookStore);
   protected readonly links = inject(ShopLinks);
+  protected readonly culture = inject(CultureStore);
   protected readonly signedIn = inject(AuthStore).isSignedIn;
 
   /** The entry whose removal is being asked about; null when nothing is. */
