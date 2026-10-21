@@ -200,6 +200,63 @@
     font: inherit;
   }
 
+  /* ---------- A switch ----------
+     A yes-or-no fact: the browser's own checkbox, said to be a switch
+     (role="switch") and drawn as a track and a knob from the tokens, clay when
+     on. A checkbox, not a component: it stays an input — a form, Signal Forms
+     and the keyboard all take it as one — and a small, much-repeated primitive
+     is a class here (CLAUDE.md), not a component. Its label wraps it, so the
+     whole row is the target (the author asked why a component, 2026-10-21; it
+     was lib-toggle-switch for a day). */
+  .switch {
+    appearance: none;
+    position: relative;
+    flex: none;
+    inline-size: var(--spacing-switch-w);
+    block-size: var(--spacing-switch-h);
+    margin: 0;
+    border-radius: var(--radius-full);
+    background: var(--color-hairline-strong);
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-brand);
+  }
+
+  .switch::before {
+    content: '';
+    position: absolute;
+    inset-block-start: var(--spacing-knob-inset);
+    inset-inline-start: var(--spacing-knob-inset);
+    inline-size: var(--spacing-knob);
+    block-size: var(--spacing-knob);
+    border-radius: inherit;
+    background: var(--color-surface);
+    transition: translate var(--dur-fast) var(--ease-brand);
+  }
+
+  .switch:checked {
+    background: var(--color-accent);
+  }
+
+  .switch:checked::before {
+    translate: var(--spacing-knob-travel) 0;
+  }
+
+  .switch:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* With forced colours the fills are dropped: an edge and a knob the system draws. */
+  @media (forced-colors: active) {
+    .switch {
+      border: 1px solid CanvasText;
+    }
+
+    .switch::before {
+      background: CanvasText;
+    }
+  }
+
   /* A dropdown draws its own chevron, with room around it. The browser's arrow
      sits against the right border and ignores padding, so a select read as a
      box with a mark stuck to its edge (the author, the redesign's second

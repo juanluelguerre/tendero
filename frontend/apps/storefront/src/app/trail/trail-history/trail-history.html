@@ -12,13 +12,18 @@
       </p>
     </div>
 
-    <lib-toggle-switch
-      class="text-sm font-semibold"
-      [checked]="store.kept().enabled"
-      (toggled)="trail.setEnabled($event)"
+    <label
+      class="flex min-h-control-md cursor-pointer items-center justify-between gap-3 text-sm font-semibold text-body pointer-coarse:min-h-tap"
     >
-      {{ t('history.switch') }}
-    </lib-toggle-switch>
+      <span class="min-w-0">{{ t('history.switch') }}</span>
+      <input
+        class="switch"
+        type="checkbox"
+        role="switch"
+        [checked]="store.kept().enabled"
+        (change)="trail.setEnabled(!store.kept().enabled)"
+      />
+    </label>
   </div>
 
   @if (!store.kept().enabled) {

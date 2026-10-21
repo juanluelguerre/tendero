@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
-import { DayPipe, Notice, ToggleSwitch } from '@tendero/shared-ui';
+import { DayPipe, Notice } from '@tendero/shared-ui';
 import { ShopLinks } from '../../shop-links';
 import { AccountNav } from './account-nav/account-nav';
 import { PreferencesStore } from './preferences.store';
@@ -15,7 +15,7 @@ import { PreferencesStore } from './preferences.store';
  */
 @Component({
   selector: 'storefront-preferences-page',
-  imports: [RouterLink, TranslocoDirective, Notice, DayPipe, AccountNav, ToggleSwitch],
+  imports: [RouterLink, TranslocoDirective, Notice, DayPipe, AccountNav],
   providers: [PreferencesStore],
   templateUrl: './preferences-page.html',
 })

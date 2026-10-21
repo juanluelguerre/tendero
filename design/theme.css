@@ -218,12 +218,14 @@
   --spacing-skeleton:    5.5rem; /* a skeleton card in a line */
   --spacing-skeleton-lg: 8rem;   /* a skeleton description */
 
-  /* The filter sheet's switch: a track, a knob, the knob's inset and its travel. */
-  --spacing-switch-w: 2.5rem;
-  --spacing-switch-h: 1.375rem;
-  --spacing-knob: 1rem;
+  /* The shop's switch (.switch): a track, a knob, the knob's inset and its travel.
+     24px tall — the target floor (WCAG 2.5.8) — since the input itself is the
+     target the checker measures; travel = width − 2 × inset − knob. */
+  --spacing-switch-w: 2.75rem;
+  --spacing-switch-h: 1.5rem;
+  --spacing-knob: 1.125rem;
   --spacing-knob-inset: 3px;
-  --spacing-knob-travel: 1.125rem;
+  --spacing-knob-travel: 1.25rem;
 
   /* Columns and fields that hold a known kind of content. */
   --spacing-col-2xs: 2ch;        /* a one- or two-digit count */

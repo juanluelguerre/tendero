@@ -8,7 +8,6 @@ export * from './lib/status-pill/status-pill';
 export * from './lib/icon/icon';
 export * from './lib/switches/culture-switch';
 export * from './lib/switches/theme-switch';
-export * from './lib/switches/toggle-switch';
 export * from './lib/formatting/formatting.pipes';
 // A conversation with an agent, in either app: Steward's panel and Tino's.
 export * from './lib/conversation/follows-media';
