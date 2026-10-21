@@ -1421,8 +1421,12 @@ configurations, `EfWalletRepository`'s SQL) has no Stryker configuration and is
 held by the integration tests; `SharedKernel` gained one interface and one record;
 `Api/Program.cs` and `Workers/WorkerServices.cs` three and five registration lines.
 The storefront's half is held by its unit tests (the address book, wallet,
-checkout, preferences and your-data stores; 471 in all) — no browser spec of the
-account yet, written down for the next run. The second scoped run, on the commit
+checkout, preferences and your-data stores; 471 in all) and by `account.spec.ts`
+in the browser (2026-10-21): the spec's three journeys — a kept address and card
+in two clicks, a default removed leaving checkout asking, a kept card declined and
+said so — the consent and the menu, and the account removed. Proven by a hand
+mutation: checkout never preselecting the default card turns the card journey
+red (`toBeChecked`). The second scoped run, on the commit
 that carried the tests (the parallel runner mutates `HEAD`), killed ten more in
 Accounts and fifteen more in Ordering; what survives is what the list above says. Reports:
 `docs/blog/reports/2026-10-21-phase-15-shopper-account/stryker/`.
