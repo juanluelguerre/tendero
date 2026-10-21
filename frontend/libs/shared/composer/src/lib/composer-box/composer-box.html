@@ -7,7 +7,7 @@
     </p>
   }
   <form
-    class="relative flex items-end gap-1 rounded-lg border border-hairline-strong bg-surface p-1 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
+    class="relative flex items-end gap-1 rounded-lg border border-hairline-strong bg-surface p-1 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-focus"
     (submit)="$event.preventDefault(); box.send()"
   >
     @if (single(); as kind) {
