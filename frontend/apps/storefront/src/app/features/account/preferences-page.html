@@ -28,6 +28,7 @@
               class="flex min-h-control-lg min-w-control-xl cursor-pointer items-center gap-3 rounded-lg border border-hairline-strong bg-surface px-4 has-checked:border-body has-checked:font-semibold"
             >
               <input
+                class="size-icon accent-accent"
                 type="radio"
                 name="language"
                 [value]="language"
@@ -44,7 +45,12 @@
       <!-- One consent, off until given, kept with its date. Nothing is sent yet, and this says so. -->
       <fieldset class="m-0 grid gap-3 rounded-lg border border-hairline bg-surface p-5" data-marketing>
         <legend class="float-start mb-1 w-full text-lg font-semibold">{{ t('preferences.marketing') }}</legend>
-        <label class="clear-both flex cursor-pointer items-center justify-between gap-4">
+        <lib-toggle-switch
+          class="clear-both"
+          [checked]="store.marketingGiven()"
+          [disabled]="store.saving() || store.status() !== 'ready'"
+          (toggled)="store.setMarketing($event)"
+        >
           <span class="grid gap-1">
             <span class="font-medium">{{ t('preferences.marketingWhat') }}</span>
             <span class="text-sm text-muted">
@@ -59,30 +65,24 @@
               }
             </span>
           </span>
-          <input
-            type="checkbox"
-            role="switch"
-            [checked]="store.marketingGiven()"
-            [disabled]="store.saving() || store.status() !== 'ready'"
-            (change)="store.setMarketing(!store.marketingGiven())"
-          />
-        </label>
+        </lib-toggle-switch>
         <p class="m-0 rounded-md bg-raised px-4 py-3 text-sm text-muted">{{ t('preferences.nothingSentYet') }}</p>
       </fieldset>
 
       <!-- Analytics consent stays in this browser, where it has always been. -->
       <fieldset class="m-0 grid gap-3 rounded-lg border border-hairline bg-surface p-5" data-analytics>
         <legend class="float-start mb-1 w-full text-lg font-semibold">{{ t('preferences.analytics') }}</legend>
-        <p class="clear-both m-0 text-sm text-muted">{{ t('preferences.analyticsHint') }}</p>
-        <label class="flex cursor-pointer items-center justify-between gap-4">
-          <span class="font-medium">{{ t('preferences.analyticsAllowed') }}</span>
-          <input
-            type="checkbox"
-            role="switch"
-            [checked]="store.analyticsAllowed()"
-            (change)="store.setAnalytics(!store.analyticsAllowed())"
-          />
-        </label>
+        <!-- The same choice as the notice every visitor is asked once, said in its words. -->
+        <lib-toggle-switch
+          class="clear-both"
+          [checked]="store.analyticsAllowed()"
+          (toggled)="store.setAnalytics($event)"
+        >
+          <span class="grid gap-1">
+            <span class="font-medium">{{ t('preferences.analyticsWhat') }}</span>
+            <span class="text-sm text-muted">{{ t('preferences.analyticsDetail') }}</span>
+          </span>
+        </lib-toggle-switch>
       </fieldset>
     }
   </div>

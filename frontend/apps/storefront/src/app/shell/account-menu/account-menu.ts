@@ -4,7 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
 import { type Culture, CultureStore } from '@tendero/shared-i18n';
 import { Telemetry } from '@tendero/shared-telemetry';
-import { CultureSwitch, type ThemeChoice, ThemeStore, ThemeSwitch } from '@tendero/shared-ui';
+import { CultureSwitch, Icon, type ThemeChoice, ThemeStore, ThemeSwitch } from '@tendero/shared-ui';
 import { ShopLinks } from '../../shop-links';
 
 /**
@@ -22,7 +22,7 @@ import { ShopLinks } from '../../shop-links';
  */
 @Component({
   selector: 'storefront-account-menu',
-  imports: [TranslocoDirective, RouterLink, CultureSwitch, ThemeSwitch],
+  imports: [TranslocoDirective, RouterLink, CultureSwitch, Icon, ThemeSwitch],
   templateUrl: './account-menu.html',
   styleUrl: './account-menu.css',
   host: { class: 'inline-flex' },

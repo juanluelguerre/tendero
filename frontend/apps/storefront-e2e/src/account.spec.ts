@@ -154,14 +154,23 @@ test.describe('the shopper’s account', () => {
     await page.goto('/en/account/preferences');
 
     const consent = page.locator('[data-marketing]');
+    // The switch shows what the shop has recorded, so it turns once the server
+    // answers, not on the click: click, then wait for the state — never check(),
+    // which wants the change at the click.
     const toggle = consent.getByRole('switch');
-    await toggle.setChecked(false);
+    await expect(toggle).toBeEnabled();
+    if (await toggle.isChecked()) {
+      await toggle.click();
+      await expect(toggle).not.toBeChecked();
+    }
     await expect(consent).toContainText(/turned off on|off until you turn it on/i);
 
-    await toggle.check();
+    await toggle.click();
+    await expect(toggle).toBeChecked();
     await expect(consent).toContainText(/given on/i);
     await expect(consent).toContainText('The shop does not send email yet.');
-    await toggle.uncheck();
+    await toggle.click();
+    await expect(toggle).not.toBeChecked();
     await expect(consent).toContainText(/turned off on/i);
 
     // The menu: every section is one click from every other.

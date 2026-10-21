@@ -27,9 +27,12 @@
       <ul class="grid" role="list">
         @for (group of department.groups; track group.category.code) {
           @if (group.children.length > 0) {
-            <li class="mt-2">
-              <span class="block text-2xs font-semibold tracking-wide text-muted">{{ group.category.name }}</span>
-              <ul class="grid" role="list">
+            <!-- A group is a title, larger than its links and not one of them, and
+                 its links sit one step in: the hierarchy reads at a glance (the
+                 author, 2026-10-21). It was a caption smaller than its children. -->
+            <li class="mt-3">
+              <h3 class="text-lg font-semibold text-body in-[.in-drawer]:ps-3">{{ group.category.name }}</h3>
+              <ul class="grid ps-4" role="list">
                 @for (leaf of group.children; track leaf.code) {
                   <li>
                     <!-- 44 px on a desktop, 48 in the drawer, where a thumb aims (R-2, S-P3). -->

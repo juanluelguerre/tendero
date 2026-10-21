@@ -36,7 +36,7 @@
     "removeKeepsOrders": "Orders already placed keep their address.",
     "keep": "Keep it",
     "unknown": "That address is not in your address book.",
-    "label": "Label",
+    "label": "Nickname",
     "labelHint": "Your name for it: Home, Work, Mum's…",
     "phone": "Phone (optional)",
     "deliverHere": "Deliver here by default",
@@ -95,8 +95,8 @@
     "withdrawnOn": "Turned off on {{day}}.",
     "nothingSentYet": "The shop does not send email yet. This records your choice for when it does. Order emails will not depend on it.",
     "analytics": "Measuring how the shop is used",
-    "analyticsHint": "Anonymous counts that help us improve the shop. Kept in this browser, not in your account: another device asks again.",
-    "analyticsAllowed": "Allowed in this browser"
+    "analyticsWhat": "Count what I do here, anonymously",
+    "analyticsDetail": "Which products I open and what brought me to them, never who I am. Saying no changes nothing about the shop. Kept in this browser: another device asks again."
   },
   "yourData": {
     "title": "Your data",
@@ -427,9 +427,11 @@
     "dark": "Dark"
   },
   "accountMenu": {
-    "open": "Your account and preferences ({{name}})",
     "guest": "Guest",
-    "profile": "Profile"
+    "open": "Your account and preferences ({{name}})",
+    "profile": "Profile",
+    "signedIn": "Signed in",
+    "signedOut": "Not signed in"
   },
   "listing": {
     "filters": "Filters",

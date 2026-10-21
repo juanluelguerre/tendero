@@ -21,61 +21,69 @@
       }
 
       <form class="grid gap-5" novalidate (submit)="$event.preventDefault(); store.save()">
+        <!-- The mock-up's rows (03-address-form): the label alone with its hint, name
+             and phone, the two lines, postcode · city · province, the country. Every
+             label is content-start: stretched to its row, a field with no hint grew
+             to the height of the one beside it that had one. -->
         <div class="grid grid-cols-2 gap-4 rounded-lg border border-hairline bg-surface p-5 max-xs:grid-cols-1">
-          <label class="grid gap-2">
+          <label class="grid content-start gap-2">
             <span class="text-sm font-medium text-muted">{{ t('addresses.label') }}</span>
             <input class="field" [formField]="store.entryForm.label" autocomplete="off" />
             <span class="text-2xs text-muted">{{ t('addresses.labelHint') }}</span>
           </label>
 
-          <label class="grid gap-2">
-            <span class="text-sm font-medium text-muted">{{ t('addresses.phone') }}</span>
-            <input class="field" type="tel" [formField]="store.addressForm.phone" autocomplete="tel" />
-          </label>
-
           <!-- The same fields, names and autofill hints as checkout's (address-draft.ts). -->
-          <label class="col-span-full grid gap-2">
+          <label class="col-start-1 grid content-start gap-2 max-xs:col-auto">
             <span class="text-sm font-medium text-muted">{{ t('checkout.recipientName') }}</span>
             <input class="field" [formField]="store.addressForm.recipientName" autocomplete="name" />
           </label>
 
-          <label class="col-span-full grid gap-2">
+          <label class="grid content-start gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('addresses.phone') }}</span>
+            <input class="field" type="tel" [formField]="store.addressForm.phone" autocomplete="tel" />
+          </label>
+
+          <label class="col-span-full grid content-start gap-2">
             <span class="text-sm font-medium text-muted">{{ t('checkout.line1') }}</span>
             <input class="field" [formField]="store.addressForm.line1" autocomplete="address-line1" />
           </label>
 
-          <label class="col-span-full grid gap-2">
+          <label class="col-span-full grid content-start gap-2">
             <span class="text-sm font-medium text-muted">{{ t('checkout.line2') }}</span>
             <input class="field" [formField]="store.addressForm.line2" autocomplete="address-line2" />
           </label>
 
-          <label class="grid gap-2">
-            <span class="text-sm font-medium text-muted">{{ t('checkout.postalCode') }}</span>
-            <input class="field" [formField]="store.addressForm.postalCode" autocomplete="postal-code" />
-          </label>
+          <div
+            class="col-span-full grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,2fr)] gap-4 max-xs:grid-cols-1"
+          >
+            <label class="grid content-start gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.postalCode') }}</span>
+              <input class="field" [formField]="store.addressForm.postalCode" autocomplete="postal-code" />
+            </label>
 
-          <label class="grid gap-2">
-            <span class="text-sm font-medium text-muted">{{ t('checkout.city') }}</span>
-            <input class="field" [formField]="store.addressForm.city" autocomplete="address-level2" />
-          </label>
+            <label class="grid content-start gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.city') }}</span>
+              <input class="field" [formField]="store.addressForm.city" autocomplete="address-level2" />
+            </label>
 
-          <label class="grid gap-2">
-            <span class="text-sm font-medium text-muted">{{ t('checkout.region') }}</span>
-            <input class="field" [formField]="store.addressForm.region" autocomplete="address-level1" />
-          </label>
+            <label class="grid content-start gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.region') }}</span>
+              <input class="field" [formField]="store.addressForm.region" autocomplete="address-level1" />
+            </label>
+          </div>
 
-          <label class="grid gap-2">
+          <label class="grid content-start gap-2">
             <span class="text-sm font-medium text-muted">{{ t('checkout.country') }}</span>
             <input class="field numeric" [formField]="store.addressForm.countryCode" autocomplete="country" />
           </label>
 
           <div class="col-span-full grid gap-3 border-t border-hairline pt-4">
             <label class="flex cursor-pointer items-center gap-3">
-              <input type="checkbox" [formField]="store.entryForm.deliveryDefault" />
+              <input class="size-icon accent-accent" type="checkbox" [formField]="store.entryForm.deliveryDefault" />
               <span>{{ t('addresses.deliverHere') }}</span>
             </label>
             <label class="flex cursor-pointer items-center gap-3">
-              <input type="checkbox" [formField]="store.entryForm.billingDefault" />
+              <input class="size-icon accent-accent" type="checkbox" [formField]="store.entryForm.billingDefault" />
               <span>{{ t('addresses.billHere') }}</span>
             </label>
           </div>
