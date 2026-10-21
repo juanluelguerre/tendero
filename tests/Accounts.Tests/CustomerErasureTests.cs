@@ -52,4 +52,16 @@ public sealed class CustomerErasureTests
 
         Assert.True(guest.IsErased);
     }
+
+    [Fact]
+    public void Erasing_says_when_in_the_customers_updated_time()
+    {
+        var clock = new TestClock();
+        var ana = Customer.Identified(clock, "ana", "Ana García", "es", Segments.Retail);
+        clock.Advance(TimeSpan.FromDays(2));
+
+        ana.Erase(clock);
+
+        Assert.Equal(clock.GetUtcNow(), ana.UpdatedAt);
+    }
 }

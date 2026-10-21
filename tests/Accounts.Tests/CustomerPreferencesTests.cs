@@ -112,4 +112,55 @@ public sealed class CustomerPreferencesTests
         Assert.Throws<InvalidOperationException>(() => guest.GiveMarketingConsent(clock, "marketing-2026-10"));
         Assert.Throws<InvalidOperationException>(() => guest.ChooseCulture(clock, "en"));
     }
+
+    /// <summary>Each preference is a change to the customer, and says when it was made.</summary>
+    [Fact]
+    public void Choosing_a_language_or_saying_about_marketing_moves_the_customers_updated_time()
+    {
+        var clock = new TestClock();
+        var ana = Ana(clock);
+
+        clock.Advance(TimeSpan.FromHours(1));
+        ana.ChooseCulture(clock, "en");
+        var chosen = ana.UpdatedAt;
+        clock.Advance(TimeSpan.FromHours(1));
+        ana.GiveMarketingConsent(clock, "marketing-2026-10");
+
+        Assert.Equal(TestClock.Default.AddHours(1), chosen);
+        Assert.Equal(clock.GetUtcNow(), ana.UpdatedAt);
+    }
+
+    /// <summary>Choosing the language it already speaks still records that it was chosen.</summary>
+    [Fact]
+    public void Choosing_the_language_it_already_speaks_marks_it_chosen_and_says_when()
+    {
+        var clock = new TestClock();
+        var ana = Ana(clock);
+        clock.Advance(TimeSpan.FromHours(1));
+
+        ana.ChooseCulture(clock, "es");
+
+        Assert.Equal((true, clock.GetUtcNow()), (ana.CultureChosen, ana.UpdatedAt));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void A_consent_names_the_wording_it_was_given_to(string wording)
+    {
+        var clock = new TestClock();
+
+        Assert.Throws<ArgumentException>(() => Ana(clock).GiveMarketingConsent(clock, wording));
+    }
+
+    [Fact]
+    public void An_erased_customer_keeps_no_preferences_at_all()
+    {
+        var clock = new TestClock();
+        var ana = Ana(clock);
+        ana.Erase(clock);
+
+        Assert.Throws<InvalidOperationException>(() => ana.ChooseCulture(clock, "en"));
+        Assert.Throws<InvalidOperationException>(() => ana.WithdrawMarketingConsent(clock, "marketing-2026-10"));
+    }
 }

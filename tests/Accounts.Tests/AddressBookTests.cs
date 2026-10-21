@@ -211,4 +211,15 @@ public sealed class AddressBookTests
         Assert.Equal(created, book.CreatedAt);
         Assert.Equal(clock.GetUtcNow(), book.UpdatedAt);
     }
+
+    [Fact]
+    public void An_entry_without_an_address_is_refused()
+    {
+        var (book, clock) = Fresh();
+        var home = book.Add(clock, "Home", Home);
+
+        Assert.Throws<ArgumentNullException>(() => book.Add(clock, "Work", null!));
+        Assert.Throws<ArgumentNullException>(() => book.Edit(clock, home.Id, "Home", null!, delivery: false, billing: false));
+        Assert.Equal(Home, Assert.Single(book.Entries).Address);
+    }
 }

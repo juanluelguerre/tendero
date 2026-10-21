@@ -223,4 +223,19 @@ public sealed class ManageAddressesTests
             return Task.CompletedTask;
         }
     }
+
+    /// <summary>Each field is bounded, so an address cannot be used to store anything else.</summary>
+    [Fact]
+    public void Every_field_of_an_entry_is_bounded()
+    {
+        var validator = new AddAddressValidator();
+        var tooLong = new string('a', AddressEntryRules.MaxFieldLength + 1);
+
+        Assert.False(validator.Validate(new AddAddressCommand("Home", Home with { RecipientName = "" }, false, false)).IsValid);
+        Assert.False(validator.Validate(new AddAddressCommand("Home", Home with { RecipientName = tooLong }, false, false)).IsValid);
+        Assert.False(validator.Validate(new AddAddressCommand("Home", Home with { Line2 = tooLong }, false, false)).IsValid);
+        Assert.False(validator.Validate(new AddAddressCommand("Home", Home with { Region = tooLong }, false, false)).IsValid);
+        Assert.False(validator.Validate(new AddAddressCommand("Home", Home with { Phone = new string('6', 41) }, false, false)).IsValid);
+        Assert.True(validator.Validate(new AddAddressCommand("Home", Home with { Phone = new string('6', 40) }, false, false)).IsValid);
+    }
 }
