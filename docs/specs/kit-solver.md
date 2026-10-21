@@ -172,8 +172,8 @@ the kit's. A kit from a search that stopped at its ceiling says it is the
 best found; one missing a slot it needs says it is not complete; a
 requirement no slot could be held to is named.
 
-**A model may reword it, and only reword it** (`P13-7`, not built yet — see
-*Open* below): given the sentences,
+**A model may reword it, and only reword it** (`P13-7` — **not built, by
+decision of 2026-10-21**: no reader needs it; see *Open* below). As designed, given the sentences,
 it writes them as one paragraph in the page's language. Before it is shown,
 code holds it to the trace as Tino's answers are held to their facts (ADR
 0055): every amount and every product named in it must be one of the trace's,
@@ -325,7 +325,7 @@ otherwise, because two of them go against the roadmap.
    all in this phase. The written-by-code text is complete without it; the
    rewording is where a sentence can go wrong and what the article's claim
    (*a model may phrase, never add facts*) needs to be demonstrated rather
-   than stated.
+   than stated. *Settled 2026-10-21 as **not at all***: see *Open*.
 7. **`build_kit` over MCP in this phase.** It is one registration over the
    same query. *Otherwise*: the storefront only, and the agent surface later.
 8. **An ADR at the close**: *a recommendation is solved, not generated* —
@@ -342,6 +342,19 @@ otherwise, because two of them go against the roadmap.
   rewords any list of sentences it is handed, with Tino's grounding beside it;
   or it waits until the page shows whether the sentences need it.
 
+  **Settled 2026-10-21 by the author: the third — and the page showed it does
+  not.** The rewording has no reader. The page composes its own sentence per
+  slot from the answer's codes and amounts (ADR 0059, decided on the mock-up),
+  so a paragraph there would repeat its rows. The server's sentences are for an
+  agent over `build_kit`, and an agent is a model that phrases for itself:
+  rewording for it adds a cost and a way to go wrong, and nothing it can use.
+  Tino, building a kit from a sentence (K-6), writes its own reply under its own
+  grounding (ADR 0055) — which is where *a model may phrase, never add facts* is
+  demonstrated, with tests that add an amount, change one and drop a product.
+  A model where code already says it well is what invariant 12 rules out. If a
+  reader appears, the place is the second: a slice in `Assist`, over sentences,
+  with Tino's grounding beside it.
+
 ## Building it, in order
 
 1. **K-1 · The solver** (`P13-5`, `P13-6`): the types, branch and bound, the
@@ -351,7 +364,7 @@ otherwise, because two of them go against the roadmap.
    per slot, the requirement-by-category rule, the quote; the two endpoints,
    the OpenAPI document.
 3. **K-3 · The explanation** (`P13-7`): written by code in es and en; then the
-   rewording and its grounding, if decision 6 says so.
+   rewording and its grounding, if decision 6 says so (it did not: *Open*).
 4. **K-4 · The mock-up**, for the author, before any screen.
 5. **K-5 · The storefront's form** (`P13-8`), the page store, add to cart, the
    events, the browser spec.
