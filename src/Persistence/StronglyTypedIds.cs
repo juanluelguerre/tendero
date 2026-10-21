@@ -1,4 +1,6 @@
+using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Pricing.Domain;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +31,8 @@ internal static class StronglyTypedIds
         conventions.Properties<CheckoutSessionId>().HaveConversion<CheckoutSessionIdConverter>();
         conventions.Properties<ReturnRequestId>().HaveConversion<ReturnRequestIdConverter>();
         conventions.Properties<CustomerId>().HaveConversion<CustomerIdConverter>();
+        conventions.Properties<AddressEntryId>().HaveConversion<AddressEntryIdConverter>();
+        conventions.Properties<SavedMethodId>().HaveConversion<SavedMethodIdConverter>();
         conventions.Properties<ImageId>().HaveConversion<ImageIdConverter>();
         conventions.Properties<AgentId>().HaveConversion<AgentIdConverter>();
         conventions.Properties<ClaimId>().HaveConversion<ClaimIdConverter>();
@@ -45,6 +49,8 @@ internal static class StronglyTypedIds
     private sealed class CheckoutSessionIdConverter() : ValueConverter<CheckoutSessionId, Guid>(id => id.Value, value => new CheckoutSessionId(value));
     private sealed class ReturnRequestIdConverter() : ValueConverter<ReturnRequestId, Guid>(id => id.Value, value => new ReturnRequestId(value));
     private sealed class CustomerIdConverter() : ValueConverter<CustomerId, Guid>(id => id.Value, value => new CustomerId(value));
+    private sealed class SavedMethodIdConverter() : ValueConverter<SavedMethodId, Guid>(id => id.Value, value => new SavedMethodId(value));
+    private sealed class AddressEntryIdConverter() : ValueConverter<AddressEntryId, Guid>(id => id.Value, value => new AddressEntryId(value));
     private sealed class ImageIdConverter() : ValueConverter<ImageId, string>(id => id.Value, value => new ImageId(value));
     private sealed class AgentIdConverter() : ValueConverter<AgentId, string>(id => id.Value, value => new AgentId(value));
     private sealed class ClaimIdConverter() : ValueConverter<ClaimId, Guid>(id => id.Value, value => new ClaimId(value));

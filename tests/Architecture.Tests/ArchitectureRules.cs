@@ -272,6 +272,32 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
+    /// The shop never holds a card (P15-4, ADR 0064): what it keeps is the
+    /// provider's token and what may be shown. No type anywhere in the solution has
+    /// a member named like a card number, a CVC or a full expiry date — a guard
+    /// against the mistake, not proof of its absence, and the first line a reviewer
+    /// would otherwise have to remember.
+    /// </summary>
+    [Fact]
+    public void No_type_has_a_member_named_like_a_card_number_or_its_security_code()
+    {
+        string[] forbidden = ["cardnumber", "pan", "cvc", "cvv", "cvv2", "securitycode", "expirydate", "expirationdate"];
+
+        var members = Solution.All
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => type.Namespace?.StartsWith("ElGuerre.Tendero", StringComparison.Ordinal) == true)
+            .SelectMany(type => type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
+                .Where(member => member is PropertyInfo or FieldInfo)
+                .Select(member => (Type: type, Name: member.Name.Trim('<', '>').Replace("k__BackingField", "", StringComparison.Ordinal)))
+                .Where(member => forbidden.Contains(member.Name.TrimStart('_').ToLowerInvariant())))
+            .Select(member => $"  {member.Type.FullName}.{member.Name}")
+            .Distinct()
+            .ToArray();
+
+        Assert.True(members.Length == 0, "These members are named like card data the shop must never hold:\n" + string.Join('\n', members));
+    }
+
+    /// <summary>
     /// A command result that carries an <c>Outcome</c> can be a refusal, and the
     /// audit log can only say so if the result tells it. Until 2026-09-11 none
     /// did, and a declined card, a refused return and an illegal transition were

@@ -233,6 +233,76 @@ public sealed class EndpointAuthorizationTests(TenderoApiFactory factory) : ICla
         });
     }
 
+    /// <summary>
+    /// A customer's address book (P15-2) is the trail's twin in this respect: a
+    /// person's own, through their own session — never anonymous, never an agent's,
+    /// which uses none of it in phase 15 (docs/specs/shopper-account.md, decision 8).
+    /// </summary>
+    [Theory]
+    [InlineData("/api/accounts/me/addresses", 2)]
+    [InlineData("/api/accounts/me/addresses/{id:guid}", 2)]
+    [InlineData("/api/accounts/me/addresses/{id:guid}/default/{use}", 1)]
+    public void The_address_book_is_the_shoppers_own(string route, int endpoints) =>
+        The_trail_is_the_shoppers_own(route, endpoints);
+
+    /// <summary>
+    /// A customer's saved ways to pay (P15-4): the shopper's own, through their own
+    /// session, never an agent's (decision 8) — and the one surface here that holds a
+    /// credential to charge somebody's card.
+    /// </summary>
+    [Theory]
+    [InlineData("/api/accounts/me/payment-methods", 2)]
+    [InlineData("/api/accounts/me/payment-methods/{id:guid}", 1)]
+    [InlineData("/api/accounts/me/payment-methods/{id:guid}/default", 1)]
+    public void The_wallet_is_the_shoppers_own(string route, int endpoints) =>
+        The_trail_is_the_shoppers_own(route, endpoints);
+
+    /// <summary>
+    /// A customer's preferences and their own data (P15-6, P15-9): the download of
+    /// everything the shop holds and the removal of the account are the shopper's
+    /// alone, through their own session — the gravest two routes of the account.
+    /// </summary>
+    [Theory]
+    [InlineData("/api/accounts/me/preferences", 1)]
+    [InlineData("/api/accounts/me/preferences/culture", 1)]
+    [InlineData("/api/accounts/me/preferences/marketing", 1)]
+    [InlineData("/api/accounts/me/data", 1)]
+    public void The_preferences_and_the_data_are_the_shoppers_own(string route, int endpoints) =>
+        The_trail_is_the_shoppers_own(route, endpoints);
+
+    [Fact]
+    public void Removing_an_account_is_the_shoppers_own()
+    {
+        _ = factory.CreateClient();
+
+        var removal = factory.Services
+            .GetRequiredService<EndpointDataSource>()
+            .Endpoints
+            .OfType<RouteEndpoint>()
+            .Single(endpoint => endpoint.RoutePattern.RawText?.TrimEnd('/') == "/api/accounts/me"
+                                && endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods.Contains("DELETE") == true);
+
+        Assert.Null(removal.Metadata.GetMetadata<IAllowAnonymous>());
+        Assert.Contains(SharedKernel.TenderoPolicyNames.Shopper,
+            removal.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(data => data.Policy));
+    }
+
+    [Fact]
+    public async Task A_stranger_cannot_read_anybodys_wallet()
+    {
+        var response = await factory.CreateClient().GetAsync("/api/accounts/me/payment-methods", TestContext.Current.CancellationToken);
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_stranger_cannot_read_anybodys_address_book()
+    {
+        var response = await factory.CreateClient().GetAsync("/api/accounts/me/addresses", TestContext.Current.CancellationToken);
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     [Fact]
     public async Task A_stranger_cannot_read_anybodys_trail()
     {

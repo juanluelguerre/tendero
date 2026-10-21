@@ -113,6 +113,15 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IBrowsingHistoryReader, EfBrowsingHistoryReader>();
         services.AddScoped<IBrowsingRetention, EfBrowsingRetention>();
 
+        // A customer's address book (P15-2): the aggregate and the reader the page and checkout use.
+        services.AddScoped<IAddressBookRepository, EfAddressBookRepository>();
+        services.AddScoped<IAddressBookReader, EfAddressBookReader>();
+
+        // A customer's saved ways to pay (P15-4): the aggregate, which checkout and the
+        // forgetting worker load too, and the page's reader.
+        services.AddScoped<IWalletRepository, EfWalletRepository>();
+        services.AddScoped<IWalletReader, EfWalletReader>();
+
         // Pricing's first writer (ADR 0044): one adapter, the backoffice's
         // repository and the shop's reader, one instance per scope.
         services.AddScoped<ICampaignRepository, EfCampaignRepository>();

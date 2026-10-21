@@ -116,6 +116,105 @@ public abstract class PaymentProviderContractTests
             () => Provider.AuthorizeAsync(Request(key: "  "), Ct));
     }
 
+    // ---------- Keeping a card (P15-4) ----------
+
+    /// <summary>
+    /// One the provider keeps as already past its date — a card that has expired
+    /// since it was saved. Each adapter reaches that state its own way.
+    /// </summary>
+    protected abstract string ExpiredInstrument { get; }
+
+    /// <summary>
+    /// What comes back is a token and the four things a wallet may show, and
+    /// nothing a shop must not hold: the token is not the instrument it was made
+    /// from, and the digits are the last four only.
+    /// </summary>
+    [Fact]
+    public async Task A_saved_card_comes_back_as_a_token_and_only_what_may_be_shown()
+    {
+        var saving = await Provider.SaveInstrumentAsync(WorkingInstrument, Ct);
+
+        Assert.Equal(InstrumentSavingOutcome.Saved, saving.Outcome);
+        var saved = Assert.IsType<SavedInstrument>(saving.Instrument);
+        Assert.False(string.IsNullOrWhiteSpace(saved.Token));
+        Assert.NotEqual(WorkingInstrument, saved.Token);
+        Assert.False(string.IsNullOrWhiteSpace(saved.Brand));
+        Assert.Matches("^[0-9]{4}$", saved.Last4);
+        Assert.InRange(saved.ExpiryMonth, 1, 12);
+        Assert.InRange(saved.ExpiryYear, 2000, 2100);
+    }
+
+    /// <summary>Charging a kept card is the authorisation every order already makes, with the token as its instrument.</summary>
+    [Fact]
+    public async Task A_saved_token_authorizes()
+    {
+        var saved = (await Provider.SaveInstrumentAsync(WorkingInstrument, Ct)).Instrument!;
+
+        var authorization = await Provider.AuthorizeAsync(Request(saved.Token, key: "checkout-saved"), Ct);
+
+        Assert.True(authorization.Succeeded);
+    }
+
+    /// <summary>A token outlives nothing: once forgotten it is a card the provider declines, with a reason.</summary>
+    [Fact]
+    public async Task A_forgotten_token_is_declined()
+    {
+        var saved = (await Provider.SaveInstrumentAsync(WorkingInstrument, Ct)).Instrument!;
+
+        Assert.True((await Provider.ForgetInstrumentAsync(saved.Token, Ct)).Succeeded);
+        var authorization = await Provider.AuthorizeAsync(Request(saved.Token, key: "checkout-forgotten"), Ct);
+
+        Assert.Equal(PaymentOutcome.Declined, authorization.Outcome);
+        Assert.False(string.IsNullOrWhiteSpace(authorization.DeclineReason));
+    }
+
+    /// <summary>The wallet retries a forgetting it could not finish, so a second one must be as good as the first.</summary>
+    [Fact]
+    public async Task Forgetting_twice_is_one_forgetting()
+    {
+        var saved = (await Provider.SaveInstrumentAsync(WorkingInstrument, Ct)).Instrument!;
+
+        var first = await Provider.ForgetInstrumentAsync(saved.Token, Ct);
+        var second = await Provider.ForgetInstrumentAsync(saved.Token, Ct);
+
+        Assert.True(first.Succeeded && second.Succeeded);
+    }
+
+    /// <summary>
+    /// The same card kept twice — by two customers, or by one on two devices — is
+    /// two tokens: forgetting one must not take the other's away.
+    /// </summary>
+    [Fact]
+    public async Task One_card_kept_twice_is_two_tokens_and_forgetting_one_keeps_the_other()
+    {
+        var first = (await Provider.SaveInstrumentAsync(WorkingInstrument, Ct)).Instrument!;
+        var second = (await Provider.SaveInstrumentAsync(WorkingInstrument, Ct)).Instrument!;
+
+        await Provider.ForgetInstrumentAsync(first.Token, Ct);
+
+        Assert.NotEqual(first.Token, second.Token);
+        Assert.True((await Provider.AuthorizeAsync(Request(second.Token, key: "checkout-other"), Ct)).Succeeded);
+    }
+
+    [Fact]
+    public async Task An_expired_card_is_declined_with_a_reason_a_shopper_reads()
+    {
+        var saved = (await Provider.SaveInstrumentAsync(ExpiredInstrument, Ct)).Instrument!;
+
+        var authorization = await Provider.AuthorizeAsync(Request(saved.Token, key: "checkout-expired"), Ct);
+
+        Assert.Equal(PaymentOutcome.Declined, authorization.Outcome);
+        Assert.Contains("expired", authorization.DeclineReason, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task A_token_this_provider_never_minted_is_declined()
+    {
+        var authorization = await Provider.AuthorizeAsync(Request("tok_" + Guid.NewGuid().ToString("N"), key: "checkout-stranger"), Ct);
+
+        Assert.Equal(PaymentOutcome.Declined, authorization.Outcome);
+    }
+
     // ---------- Capturing and refunding ----------
 
     [Fact]
@@ -281,6 +380,8 @@ public sealed class FakePaymentProviderContractTests : PaymentProviderContractTe
 
     protected override string DecliningInstrument => FakePaymentProvider.CardDeclined;
 
+    protected override string ExpiredInstrument => FakePaymentProvider.CardExpired;
+
     protected override DateTimeOffset Now => Clock.GetUtcNow();
 
     protected override (string Body, IReadOnlyDictionary<string, string> Headers) SignedWebhook(
@@ -325,6 +426,35 @@ public sealed class FakePaymentProviderContractTests : PaymentProviderContractTe
         Assert.False(string.IsNullOrWhiteSpace(capture.FailureReason));
     }
 
+
+    /// <summary>A token of the fake's own shape for a card it never kept is declined, not charged.</summary>
+    [Fact]
+    public async Task A_well_formed_token_for_a_card_it_never_kept_is_declined()
+    {
+        var token = $"tok_{Guid.NewGuid():N}_card-unknown_209912";
+
+        var authorization = await Provider.AuthorizeAsync(Request(token, key: "checkout-unknown-card"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(PaymentOutcome.Declined, authorization.Outcome);
+    }
+
+    [Fact]
+    public async Task Keeping_or_forgetting_nothing_is_refused()
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => Provider.SaveInstrumentAsync(" ", ct));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => Provider.ForgetInstrumentAsync("", ct));
+    }
+
+    /// <summary>Good through the last day of its month, expired from the first of the next: the same rule the wallet keeps.</summary>
+    [Theory]
+    [InlineData(2028, 8, 31, false)]
+    [InlineData(2028, 9, 1, true)]
+    [InlineData(2027, 12, 31, false)]
+    [InlineData(2029, 1, 1, true)]
+    public void A_kept_card_expires_at_the_end_of_its_month(int year, int month, int day, bool expired) =>
+        Assert.Equal(expired, new SavedInstrument("tok", "Visa", "4242", 8, 2028).HasExpiredAt(new DateTimeOffset(year, month, day, 12, 0, 0, TimeSpan.Zero)));
     /// <summary>
     /// A cryptographic RNG would have been the obvious choice for a reference,
     /// and it is exactly what breaks idempotency. The check lives here rather

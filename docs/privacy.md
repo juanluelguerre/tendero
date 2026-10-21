@@ -59,6 +59,98 @@ log that exists for something else. **The codes and the words are redacted**
 "delete" a lie. The OpenTelemetry spans carry counts and the kind, never a code or
 a search.
 
+## A shopper's address book
+
+Phase 15, `P15-2` (`docs/specs/shopper-account.md`): the addresses a signed-in
+customer keeps so they are not typed again at checkout.
+
+- **What is kept**: in `accounts.address_books`, one row per customer, up to
+  **10** entries, each the address as checkout takes it (recipient, two lines,
+  postcode, city, region, country, phone if given) and a label in the
+  shopper's own words; and which entry is the default for delivery and for
+  billing. Nothing else: not where the shopper was when they typed it, not how
+  often it is used.
+- **How long**: until the shopper removes it. Removing an entry removes it from
+  the row at once; an order placed to it keeps the address it froze, because
+  that copy is the order's, not the book's. When the account is removed, the
+  whole book goes with it (*Removing an account*, below).
+- **Who can read it**: only the customer's own session. Every route under
+  `/api/accounts/me/addresses` requires the `Shopper` policy — never anonymous,
+  never an agent (decision 8 of the spec) — and no route or body names a
+  customer. `EndpointAuthorizationTests` holds the policy on every route.
+- **What the logs keep**: the audit row says an address was kept, changed or
+  removed and when; **the address and its label are redacted** (`[AuditRedacted]`):
+  a label is the shopper's words and can be somebody's name. A
+  refusal is recorded by its outcome's name, never by the sentence that quoted
+  the field it refused. The spans carry how many entries there are and the
+  outcome, never an address.
+
+## A shopper's saved ways to pay
+
+Phase 15, `P15-4` and `P15-5` (ADR 0064).
+
+- **What is kept**: in `ordering.wallets`, one row per customer, up to **5**
+  methods, each the payment provider's token and what may be shown of the card —
+  its brand, its last four digits, the month and year it expires — and which one
+  is the default. **Never the card number, never the CVC, never a full expiry
+  date**: the number is typed into the provider's own field and never reaches
+  the shop, not even in transit. An architecture rule fails on any member named
+  like one of them.
+- **The token never leaves the server.** The page sees what may be shown and an
+  id the shop minted; checkout charges a kept card by that id, from the caller's
+  own wallet, and only there is the token read. It is never logged, never in a
+  span, never in an audit row (`[AuditRedacted]` on the one-time instrument).
+- **How long**: until the shopper removes the card. Removing it asks the provider
+  to forget the token first; when the provider cannot be reached, the card leaves
+  the wallet at once — never offered again — and its token waits in the row until
+  `ForgetSavedCardsWorker` gets the provider to forget it (every 15 minutes).
+- **Who can read it**: only the customer's own session, under the `Shopper`
+  policy; never an agent (decision 8).
+
+## A shopper's preferences
+
+Phase 15, `P15-6`.
+
+- **The language** the shop speaks to them in when a request names no other:
+  `Customer.Culture`, chosen in the account and not overwritten by the next
+  sign-in once chosen.
+- **Marketing**: one consent, off until given, kept in the customer's row with
+  **the date and the version of the wording** it was given or withdrawn to; each
+  change an audit row. **Nothing is sent**: the shop has no mailer, and the page
+  says so. Order emails, when there is a mailer, will not depend on it.
+- **Analytics consent stays in the browser** (`tendero.analytics-consent`): the
+  preferences page shows and changes it there. Moving it to the server would tie
+  an anonymous visitor's choice to an account.
+
+## The shopper's own data, and removing an account
+
+Phase 15, `P15-9`. Each context says for itself what it holds about a person
+(`IPersonalDataHolder`); the account's page gathers them.
+
+- **See what the shop holds**: `GET /api/accounts/me/data`, one JSON download of
+  the account (the name the sign-in provider sent, the language, the consent with
+  its date), the address book, the saved cards' labels (**never a token**), the
+  trail and whether it is on, and the orders with the addresses they froze. The
+  shop keeps no copy of the download.
+- **Removing an account**, `DELETE /api/accounts/me`, in one save:
+  - **forgotten at once**: the address book, the saved cards (each token
+    forgotten at its provider first, or left to the worker as above), the trail,
+    the chosen language and the consent;
+  - **the customer is kept, anonymised**: the sign-in's subject and the name
+    cleared, marked erased with when, so an order's owner still resolves. A later
+    sign-in with the same identity finds nobody and starts a new customer; an
+    erased customer cannot become anybody again;
+  - **kept, and blocked**: the orders, with the addresses they went to, for
+    **six years** — Spain's Commercial Code (art. 30) makes a shop keep its
+    invoices; `Privacy:OrderRetentionYears` configures it. What is kept is
+    **blocked** in the sense of LOPDGDD art. 32: held for that obligation and used
+    for nothing else. They are no longer linked to an account or a sign-in;
+    the address on each still names whom it was sent to, as an invoice must;
+  - **not the shop's**: the identity at the sign-in provider (name, email,
+    password). The page says so.
+- **What the logs keep**: the removal's audit row and a counter,
+  `tendero.accounts.erased`, with no identity.
+
 ## What Steward reads, and what may leave the machine
 
 Steward, the backoffice copilot (phase 12), answers from six reads the contexts

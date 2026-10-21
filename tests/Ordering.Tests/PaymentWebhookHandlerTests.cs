@@ -310,6 +310,12 @@ public sealed class PaymentWebhookHandlerTests
 
         public Task<PaymentVoid> VoidAsync(string authorizationId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
+
+        public Task<InstrumentSaving> SaveInstrumentAsync(string instrument, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<InstrumentForgetting> ForgetInstrumentAsync(string token, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
     }
 
     private sealed class SingleProvider(IPaymentProvider provider) : IPaymentProviderRegistry

@@ -94,7 +94,17 @@
       "UpdateCampaignCommand": "Edit a campaign",
       "UpdateCheckoutSessionCommand": "Update a checkout",
       "WithdrawProductCommand": "Take a product off sale",
-      "ApproveClaimsCommand": "Approve claims together"
+      "ApproveClaimsCommand": "Approve claims together",
+      "AddAddressCommand": "Keep an address in an address book",
+      "EditAddressCommand": "Change an address in an address book",
+      "RemoveAddressCommand": "Remove an address from an address book",
+      "UseAddressCommand": "Choose a default address",
+      "KeepCardCommand": "Keep a card in a wallet",
+      "RemoveCardCommand": "Remove a card from a wallet",
+      "UseCardByDefaultCommand": "Choose a default way to pay",
+      "ChooseCultureCommand": "Choose the language the shop speaks",
+      "SetMarketingConsentCommand": "Give or withdraw marketing consent",
+      "RemoveAccountCommand": "Remove an account"
     },
     "fromProposal": "Proposed by Steward"
   },

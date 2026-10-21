@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-48 features: **43** answered by a signal emitted today,
+49 features: **44** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -39,6 +39,7 @@ everything here that is not *planned* is emitted.
 | Search with a picture | Does anyone search with a picture, from where, do they mark a part, how much of what they photograph does the shop sell, and does the picture find what they wanted? | If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. If most are marked, the detector matters less than the box and its cost is questioned; many objects not sold is the catalogue's gap, measured; and whether Tino gets pictures (the camera search's stage 2) is decided on these. | `search_by_image_submitted`, `search_by_image_result_followed` | emitted |
 | Speak to the shop | Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send? | If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop. | `voice_input_heard`, `voice_transcript_used` | emitted |
 | Kits | Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit? | A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant. | `kit_built`, `kit_added_to_cart`, `kit_sentence_read` | emitted |
+| The shopper's account | Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used? | If almost every signed-in order still types its address, the book is not reachable enough at checkout, and checkout changes before the account grows another section; if checkout fills the book, the account's own form stays plain; a high share of saved cards declined means the wallet warns before expiry, not at the till. Erasure changes nothing in the product: it is the evidence the operation is real, and the number the article quotes. | `checkout_prefilled`, `address_kept_at_checkout`, `saved_method_declined`, `tendero.accounts.erased` | emitted |
 
 ### Backoffice
 
@@ -525,6 +526,43 @@ Answers:
 | `template` | string | — | The kit it named, as in kit_built; none when it named none. |
 | `budget` | boolean | — | Whether the sentence said a budget, read by code. |
 
+### `checkout_prefilled`
+
+browser event, behavioural. A signed-in shopper placed an order (P15-3, P15-5): whether the address and the way to pay came from the account or were typed now. Only with analytics consent; never the address or the card.
+
+Answers:
+
+- **The shopper's account** — Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `address` | string | `saved`, `typed` | Sent to an entry of the address book, or to an address typed at checkout. |
+| `method` | string | `saved`, `new` | Paid with a card kept in the wallet, or a new one. |
+
+### `address_kept_at_checkout`
+
+browser event, behavioural. A new address typed at checkout was kept in the address book by its box (P15-3). Only with analytics consent; never the address or its label.
+
+Answers:
+
+- **The shopper's account** — Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `kept` | boolean | — | Whether it was kept; false when the order was placed and keeping it failed. |
+
+### `saved_method_declined`
+
+browser event, behavioural. A card kept in the wallet was declined at checkout (P15-5). Only with analytics consent; never the card.
+
+Answers:
+
+- **The shopper's account** — Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `expired` | boolean | — | Whether the wallet already said the card had expired; checkout never offers one, so true means a card that expired between the page and the till. |
+
 ## Metrics
 
 Created by a Tendero `Meter` (`TelemetrySources`), as a static field. No
@@ -894,3 +932,13 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `outcome` | string | `read`, `skipped`, `failed` | read: the model's description was kept as a document, in both languages. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be kept. |
+
+### `tendero.accounts.erased`
+
+counter, unit `{account}`. Accounts removed by their owner (P15-9): a count, with no identity, and nothing else about them.
+
+Answers:
+
+- **The shopper's account** — Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used?
+
+No attributes.

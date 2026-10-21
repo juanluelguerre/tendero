@@ -83,6 +83,39 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
   },
   {
+    // The address book (P15-2): the list, then one entry added or edited.
+    path: 'account/addresses',
+    title: 'addresses.title',
+    loadComponent: () => import('./features/account/addresses-page').then((m) => m.AddressesPage),
+  },
+  {
+    path: 'account/addresses/new',
+    title: 'addresses.addTitle',
+    loadComponent: () => import('./features/account/address-form-page').then((m) => m.AddressFormPage),
+  },
+  {
+    // Preferences and the shopper's own data (P15-6, P15-9).
+    path: 'account/preferences',
+    title: 'preferences.title',
+    loadComponent: () => import('./features/account/preferences-page').then((m) => m.PreferencesPage),
+  },
+  {
+    path: 'account/your-data',
+    title: 'yourData.title',
+    loadComponent: () => import('./features/account/your-data-page').then((m) => m.YourDataPage),
+  },
+  {
+    // Saved ways to pay (P15-4).
+    path: 'account/ways-to-pay',
+    title: 'wallet.title',
+    loadComponent: () => import('./features/account/ways-to-pay-page').then((m) => m.WaysToPayPage),
+  },
+  {
+    path: 'account/addresses/:id',
+    title: 'addresses.editTitle',
+    loadComponent: () => import('./features/account/address-form-page').then((m) => m.AddressFormPage),
+  },
+  {
     path: 'cart',
     title: 'cart.title',
     loadComponent: () => import('./features/cart/cart-page').then((m) => m.CartPage),

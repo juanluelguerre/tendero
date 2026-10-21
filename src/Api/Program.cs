@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using Carter;
 using ElGuerre.Tendero.Accounts;
 using ElGuerre.Tendero.Accounts.Features.LinkIdentity;
+using ElGuerre.Tendero.Accounts.Features.YourData;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.AI.Features.TranscribeSpeech;
 using ElGuerre.Tendero.AI.Speech;
@@ -58,6 +59,8 @@ builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
 
 builder.Services.AddAccounts();
+// How long the orders an erased account leaves behind are kept (P15-9).
+builder.Services.Configure<PrivacyOptions>(builder.Configuration.GetSection(PrivacyOptions.SectionName));
 
 builder.Services.AddCatalog(builder.Configuration);
 

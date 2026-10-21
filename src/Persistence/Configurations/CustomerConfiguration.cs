@@ -28,6 +28,21 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(customer => customer.Culture).HasMaxLength(10).IsRequired();
         builder.Property(customer => customer.Segment).HasMaxLength(50).IsRequired();
 
+        // P15-6: a language chosen in the account, and the one marketing consent,
+        // in the customer's own row — three columns, null until the shopper says.
+        builder.Property(customer => customer.CultureChosen).HasDefaultValue(false);
+        builder.ComplexProperty(customer => customer.Marketing, marketing =>
+        {
+            marketing.Property(consent => consent.Given).HasColumnName("MarketingGiven");
+            marketing.Property(consent => consent.At).HasColumnName("MarketingAt");
+            marketing.Property(consent => consent.Wording).HasColumnName("MarketingWording").HasMaxLength(50);
+        });
+        builder.Ignore(customer => customer.MayBeSentMarketing);
+
+        // P15-9: an erased customer is kept, anonymised, with when.
+        builder.Property(customer => customer.ErasedAt);
+        builder.Ignore(customer => customer.IsErased);
+
         builder.Property(customer => customer.CreatedAt);
         builder.Property(customer => customer.UpdatedAt);
 

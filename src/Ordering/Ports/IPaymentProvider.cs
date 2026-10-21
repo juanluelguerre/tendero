@@ -83,6 +83,53 @@ public sealed record PaymentVoid(bool Succeeded, string? FailureReason)
     public static PaymentVoid Failed(string reason) => new(false, reason);
 }
 
+/// <summary>
+/// A card kept by the provider for later (P15-4): the provider's token, and what
+/// may be shown of the card — its brand, its last four digits, the month and year
+/// it expires. Never the number, never the CVC: the number is typed into the
+/// provider's own field and never reaches the shop, not even in transit.
+///
+/// <see cref="Token"/> is a credential to charge somebody's card. It is never
+/// logged, never sent to a browser, never in an audit row.
+/// </summary>
+public sealed record SavedInstrument(string Token, string Brand, string Last4, int ExpiryMonth, int ExpiryYear)
+{
+    /// <summary>A card is good through the last day of its expiry month, in the shop's terms: expired from the first of the next.</summary>
+    public bool HasExpiredAt(DateTimeOffset now) =>
+        now.Year > ExpiryYear || (now.Year == ExpiryYear && now.Month > ExpiryMonth);
+}
+
+public enum InstrumentSavingOutcome
+{
+    Saved,
+
+    /// <summary>The provider would not keep it: a card it does not accept, or one already past its date.</summary>
+    Refused,
+
+    /// <summary>The provider could not be reached. Retryable.</summary>
+    Unavailable
+}
+
+public sealed record InstrumentSaving(InstrumentSavingOutcome Outcome, SavedInstrument? Instrument, string? Reason)
+{
+    public static InstrumentSaving Saved(SavedInstrument instrument) => new(InstrumentSavingOutcome.Saved, instrument, null);
+
+    public static InstrumentSaving Refused(string reason) => new(InstrumentSavingOutcome.Refused, null, reason);
+
+    public static InstrumentSaving Unavailable(string reason) => new(InstrumentSavingOutcome.Unavailable, null, reason);
+}
+
+/// <summary>
+/// The provider deleting a token. <c>Succeeded</c> is true for a token already
+/// forgotten too: forgetting is idempotent, because the wallet retries it.
+/// </summary>
+public sealed record InstrumentForgetting(bool Succeeded, string? FailureReason)
+{
+    public static readonly InstrumentForgetting Forgotten = new(true, null);
+
+    public static InstrumentForgetting Unavailable(string reason) => new(false, reason);
+}
+
 /// <summary>What a webhook turned out to be, once its signature held.</summary>
 public sealed record PaymentEvent(string Kind, string Reference, OrderId? OrderId, string? Reason);
 
@@ -115,9 +162,11 @@ public sealed record WebhookVerification(WebhookVerdict Verdict, PaymentEvent? E
 /// Money, through one port with keyed adapters — the promise ADR 0003 made in
 /// the present tense before any of it existed.
 ///
-/// Four operations and no more. Partial captures, split payments and gift cards
-/// are the scope creep this phase was warned about; the port stays the shape a
-/// second adapter can honestly implement.
+/// Four operations on money and no more. Partial captures, split payments and
+/// gift cards are the scope creep this phase was warned about; the port stays the
+/// shape a second adapter can honestly implement. Phase 15 added two that touch
+/// no money — keeping a card and forgetting it — because every real provider has
+/// them and a wallet cannot be built without.
 ///
 /// **Authorise and capture are separate**, and that is not ceremony: the order
 /// holds stock between them, so a capture that fails after stock was committed
@@ -164,6 +213,21 @@ public interface IPaymentProvider
     /// once, and this runs on a domain event.
     /// </summary>
     Task<PaymentVoid> VoidAsync(string authorizationId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Keeps a card for later (P15-4): hands the provider a one-time instrument —
+    /// what its own card field produced — and gets back a token and what may be
+    /// shown. **Charging a saved card is <see cref="AuthorizeAsync"/>, unchanged**,
+    /// with the token as the instrument: it was already opaque.
+    /// </summary>
+    Task<InstrumentSaving> SaveInstrumentAsync(string instrument, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The provider deletes the token, so it can never be charged again.
+    /// Idempotent: forgetting twice is one deletion, and a token this provider
+    /// never minted is as forgotten as one it deleted.
+    /// </summary>
+    Task<InstrumentForgetting> ForgetInstrumentAsync(string token, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Whether this webhook is really from the provider, and what it says.

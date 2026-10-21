@@ -13,6 +13,8 @@ internal sealed class EfBrowsingHistoryRepository(TenderoDbContext context) : IB
         context.BrowsingHistories.FirstOrDefaultAsync(history => history.CustomerId == customer, ct);
 
     public void Add(BrowsingHistory history) => context.BrowsingHistories.Add(history);
+
+    public void Remove(BrowsingHistory history) => context.BrowsingHistories.Remove(history);
 }
 
 /// <summary>

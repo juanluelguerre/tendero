@@ -94,7 +94,17 @@
       "UpdateCampaignCommand": "Editar una campaña",
       "UpdateCheckoutSessionCommand": "Actualizar un pago",
       "WithdrawProductCommand": "Retirar un producto de la venta",
-      "ApproveClaimsCommand": "Aprobar afirmaciones juntas"
+      "ApproveClaimsCommand": "Aprobar afirmaciones juntas",
+      "AddAddressCommand": "Guardar una dirección en una libreta",
+      "EditAddressCommand": "Cambiar una dirección de una libreta",
+      "RemoveAddressCommand": "Quitar una dirección de una libreta",
+      "UseAddressCommand": "Elegir una dirección por defecto",
+      "KeepCardCommand": "Guardar una tarjeta en una cartera",
+      "RemoveCardCommand": "Quitar una tarjeta de una cartera",
+      "UseCardByDefaultCommand": "Elegir una forma de pago por defecto",
+      "ChooseCultureCommand": "Elegir el idioma de la tienda",
+      "SetMarketingConsentCommand": "Dar o retirar el consentimiento de marketing",
+      "RemoveAccountCommand": "Borrar una cuenta"
     },
     "fromProposal": "Propuesto por Steward"
   },

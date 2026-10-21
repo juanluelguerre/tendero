@@ -1,0 +1,97 @@
+<section
+  *transloco="let t"
+  class="grid grid-cols-[14.5rem_minmax(0,1fr)] gap-7 pt-6 pb-8 max-md:grid-cols-[minmax(0,1fr)]"
+>
+  <storefront-account-nav class="max-md:hidden" active="addresses" />
+  <div>
+    <a class="quiet mb-3" [routerLink]="links.addresses()">← {{ t('addresses.title') }}</a>
+
+    <h1 class="mb-5 text-2xl">
+      {{
+        store.editing() ? t('addresses.editHeading', { label: store.entry()?.label ?? '' }) : t('addresses.addTitle')
+      }}
+    </h1>
+
+    @if (store.editing() && store.book.status() === 'ready' && !store.entry()) {
+      <!-- An id that is not in the book: removed in another tab, or never there. -->
+      <lib-notice tone="bad">{{ t('addresses.unknown') }}</lib-notice>
+    } @else {
+      @if (store.book.problem(); as message) {
+        <lib-notice class="mb-4" tone="bad" live="assertive">{{ message }}</lib-notice>
+      }
+
+      <form class="grid gap-5" novalidate (submit)="$event.preventDefault(); store.save()">
+        <div class="grid grid-cols-2 gap-4 rounded-lg border border-hairline bg-surface p-5 max-xs:grid-cols-1">
+          <label class="grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('addresses.label') }}</span>
+            <input class="field" [formField]="store.entryForm.label" autocomplete="off" />
+            <span class="text-2xs text-muted">{{ t('addresses.labelHint') }}</span>
+          </label>
+
+          <label class="grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('addresses.phone') }}</span>
+            <input class="field" type="tel" [formField]="store.addressForm.phone" autocomplete="tel" />
+          </label>
+
+          <!-- The same fields, names and autofill hints as checkout's (address-draft.ts). -->
+          <label class="col-span-full grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('checkout.recipientName') }}</span>
+            <input class="field" [formField]="store.addressForm.recipientName" autocomplete="name" />
+          </label>
+
+          <label class="col-span-full grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('checkout.line1') }}</span>
+            <input class="field" [formField]="store.addressForm.line1" autocomplete="address-line1" />
+          </label>
+
+          <label class="col-span-full grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('checkout.line2') }}</span>
+            <input class="field" [formField]="store.addressForm.line2" autocomplete="address-line2" />
+          </label>
+
+          <label class="grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('checkout.postalCode') }}</span>
+            <input class="field" [formField]="store.addressForm.postalCode" autocomplete="postal-code" />
+          </label>
+
+          <label class="grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('checkout.city') }}</span>
+            <input class="field" [formField]="store.addressForm.city" autocomplete="address-level2" />
+          </label>
+
+          <label class="grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('checkout.region') }}</span>
+            <input class="field" [formField]="store.addressForm.region" autocomplete="address-level1" />
+          </label>
+
+          <label class="grid gap-2">
+            <span class="text-sm font-medium text-muted">{{ t('checkout.country') }}</span>
+            <input class="field numeric" [formField]="store.addressForm.countryCode" autocomplete="country" />
+          </label>
+
+          <div class="col-span-full grid gap-3 border-t border-hairline pt-4">
+            <label class="flex cursor-pointer items-center gap-3">
+              <input type="checkbox" [formField]="store.entryForm.deliveryDefault" />
+              <span>{{ t('addresses.deliverHere') }}</span>
+            </label>
+            <label class="flex cursor-pointer items-center gap-3">
+              <input type="checkbox" [formField]="store.entryForm.billingDefault" />
+              <span>{{ t('addresses.billHere') }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- The page's one clay action. -->
+          <button type="submit" class="button" [disabled]="!store.valid() || store.book.saving()">
+            {{ t('addresses.save') }}
+          </button>
+          <a class="button button--quiet" [routerLink]="links.addresses()">{{ t('addresses.cancel') }}</a>
+          @if (store.editing()) {
+            <p class="m-0 text-sm text-muted">{{ t('addresses.editKeepsOrders') }}</p>
+          }
+        </div>
+      </form>
+    }
+  </div>
+</section>

@@ -77,7 +77,7 @@ laborious.
 ```bash
 dotnet run --project src/AppHost              # full stack via Aspire
 Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana stack (or profile https-observability)
-Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (6 GB, on the GPU when there is one; ADR 0053; or profile https-steward; profile https-all turns on vectors, knowledge, Steward and Tino)
+Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (6 GB, on the GPU when there is one; ADR 0053; or profile https-steward; profile https-all turns on vectors, knowledge, Steward and Tino, with Keycloak as the issuer; profile https-mock writes every switch off, the dev issuer included)
 Tendero__Tino=true dotnet run --project src/AppHost           # + Tino, the storefront's assistant, on the same local model and the support scorer — only on a GPU; without one it stays off and says so; or profile https-tino
 Tendero__Voice=true dotnet run --project src/AppHost          # + speaking to the shop: Whisper large-v3-turbo q8_0 on whisper.cpp, prepared by the AppHost in the background on a first start (1.6 GB); the API does not wait, and the microphone appears once the server answers (docs/analysis/voice-models.md; profile https-voice; https-tino and https-all include it)
 Tendero__Vision=true dotnet run --project src/AppHost         # + the local model's eyes: its vision projector, converted once (8.8 GB of download), so the same model reads pictures — only on a GPU (ADR 0031; docs/specs/images.md)

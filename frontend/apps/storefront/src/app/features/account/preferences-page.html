@@ -1,0 +1,89 @@
+<section
+  *transloco="let t"
+  class="grid grid-cols-[14.5rem_minmax(0,1fr)] gap-7 pt-6 pb-8 max-md:grid-cols-[minmax(0,1fr)]"
+>
+  <storefront-account-nav class="max-md:hidden" active="preferences" />
+
+  <div class="grid content-start gap-5">
+    <a class="quiet md:hidden" [routerLink]="links.account()">← {{ t('account.title') }}</a>
+    <h1 class="m-0 text-2xl">{{ t('preferences.title') }}</h1>
+
+    @if (!signedIn()) {
+      <p class="m-0 max-w-measure-md text-muted">{{ t('preferences.signedOut') }}</p>
+    } @else {
+      @if (store.problem(); as message) {
+        <lib-notice tone="bad" live="assertive">{{ message }}</lib-notice>
+      }
+      @if (store.status() === 'failed') {
+        <lib-notice tone="bad">{{ t('preferences.failed') }}</lib-notice>
+      }
+
+      <!-- The language the shop speaks to them in when a request names no other. -->
+      <fieldset class="m-0 grid gap-3 rounded-lg border border-hairline bg-surface p-5">
+        <legend class="float-start mb-1 w-full text-lg font-semibold">{{ t('preferences.language') }}</legend>
+        <p class="clear-both m-0 text-sm text-muted">{{ t('preferences.languageHint') }}</p>
+        <div class="flex flex-wrap gap-3">
+          @for (language of languages; track language) {
+            <label
+              class="flex min-h-control-lg min-w-control-xl cursor-pointer items-center gap-3 rounded-lg border border-hairline-strong bg-surface px-4 has-checked:border-body has-checked:font-semibold"
+            >
+              <input
+                type="radio"
+                name="language"
+                [value]="language"
+                [checked]="language === (store.culture() ?? culture())"
+                [disabled]="store.saving() || store.status() !== 'ready'"
+                (change)="store.chooseCulture(language)"
+              />
+              {{ t('preferences.languages.' + language) }}
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <!-- One consent, off until given, kept with its date. Nothing is sent yet, and this says so. -->
+      <fieldset class="m-0 grid gap-3 rounded-lg border border-hairline bg-surface p-5" data-marketing>
+        <legend class="float-start mb-1 w-full text-lg font-semibold">{{ t('preferences.marketing') }}</legend>
+        <label class="clear-both flex cursor-pointer items-center justify-between gap-4">
+          <span class="grid gap-1">
+            <span class="font-medium">{{ t('preferences.marketingWhat') }}</span>
+            <span class="text-sm text-muted">
+              @if (store.marketingAt(); as at) {
+                {{
+                  t(store.marketingGiven() ? 'preferences.givenOn' : 'preferences.withdrawnOn', {
+                    day: at | day: culture(),
+                  })
+                }}
+              } @else {
+                {{ t('preferences.offUntilGiven') }}
+              }
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            [checked]="store.marketingGiven()"
+            [disabled]="store.saving() || store.status() !== 'ready'"
+            (change)="store.setMarketing(!store.marketingGiven())"
+          />
+        </label>
+        <p class="m-0 rounded-md bg-raised px-4 py-3 text-sm text-muted">{{ t('preferences.nothingSentYet') }}</p>
+      </fieldset>
+
+      <!-- Analytics consent stays in this browser, where it has always been. -->
+      <fieldset class="m-0 grid gap-3 rounded-lg border border-hairline bg-surface p-5" data-analytics>
+        <legend class="float-start mb-1 w-full text-lg font-semibold">{{ t('preferences.analytics') }}</legend>
+        <p class="clear-both m-0 text-sm text-muted">{{ t('preferences.analyticsHint') }}</p>
+        <label class="flex cursor-pointer items-center justify-between gap-4">
+          <span class="font-medium">{{ t('preferences.analyticsAllowed') }}</span>
+          <input
+            type="checkbox"
+            role="switch"
+            [checked]="store.analyticsAllowed()"
+            (change)="store.setAnalytics(!store.analyticsAllowed())"
+          />
+        </label>
+      </fieldset>
+    }
+  </div>
+</section>

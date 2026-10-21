@@ -1,3 +1,5 @@
+using ElGuerre.Tendero.Accounts;
+using ElGuerre.Tendero.Accounts.Features.LinkIdentity;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Catalog.Features.PublishProduct;
@@ -84,12 +86,16 @@ internal sealed class Shop : IAsyncDisposable
         services.AddTenderoCqrs(
             typeof(ImportProductsCommand).Assembly,
             typeof(ElGuerre.Tendero.Pricing.Features.QuoteCart.QuoteCartQuery).Assembly,
-            typeof(PlaceOrderCommand).Assembly);
+            typeof(PlaceOrderCommand).Assembly,
+            // The account's own slices (phase 15): the address book, the preferences,
+            // the shopper's data — the last of which gathers Ordering's share too.
+            typeof(LinkIdentityCommand).Assembly);
         services.AddTenderoPersistence(factory.ConnectionString);
         services.AddCatalog(configuration);
         services.AddPricing(configuration);
         services.AddInventory(configuration);
         services.AddOrdering(configuration);
+        services.AddAccounts();
         services.AddSingleton(principal ?? new SystemPrincipalAccessor());
         if (actor is not null) services.AddSingleton(actor);
 

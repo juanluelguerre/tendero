@@ -74,6 +74,11 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// </summary>
     public async Task<TenderoDbContextFactory> CreateDatabaseAsync(string name)
     {
+        // The tests of this collection run one at a time, so the idle connections the
+        // earlier ones left in their pools are nobody's: closed before a new database
+        // takes its share of the container's hundred.
+        Npgsql.NpgsqlConnection.ClearAllPools();
+
         await using var admin = new Npgsql.NpgsqlConnection(ConnectionString);
         await admin.OpenAsync();
         await using (var command = admin.CreateCommand())
@@ -82,7 +87,11 @@ public sealed class PostgresFixture : IAsyncLifetime
             await command.ExecuteNonQueryAsync();
         }
 
-        var builder = new Npgsql.NpgsqlConnectionStringBuilder(ConnectionString) { Database = name };
+        // A pool of ten per test database. Each database keeps its pool open after its
+        // test, and the container's hundred connections ran out once phase 15 added
+        // the wallet's and the account's databases ("53300: too many clients",
+        // 2026-10-21); no test here holds more than a few at once.
+        var builder = new Npgsql.NpgsqlConnectionStringBuilder(ConnectionString) { Database = name, MaxPoolSize = 10 };
         return new TenderoDbContextFactory(builder.ConnectionString);
     }
 
