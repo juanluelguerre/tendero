@@ -1,5 +1,11 @@
 [
   {
+    "when": "cafeteras",
+    "calls": [{ "tool": "search_products", "arguments": { "text": "cafeteras", "culture": "es", "minPrice": 31, "maxPrice": 50 } }],
+    "say": "DONE",
+    "reply": { "kind": "products", "products": [{ "code": "AROMA-12", "reasons": [] }] }
+  },
+  {
     "when": "induction",
     "calls": [{ "tool": "search_products", "arguments": { "text": "sartén inducción", "culture": "es", "maxPrice": 40 } }],
     "then": [{ "tool": "get_product_specs", "arguments": { "codes": ["PAN-1", "PAN-2"], "culture": "es" } }],

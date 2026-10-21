@@ -293,7 +293,7 @@ export interface TrackedEvents {
    * A shopper opened Tino's panel, from the header or from the search page's offer (phase 12b). Only with analytics consent; never what they ask.
    *
    * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
-   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.
    */
   readonly tino_opened: {
     /** The header's door, or the search page's *Ask Tino this*. */
@@ -306,7 +306,7 @@ export interface TrackedEvents {
    * Tino answered a turn (phase 12b). The kind of answer and its counts, never the question nor a sentence of the answer. Only with analytics consent.
    *
    * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
-   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.
    */
   readonly tino_answered: {
     /** The shape of the answer. */
@@ -325,20 +325,22 @@ export interface TrackedEvents {
    * A shopper followed something an answer of Tino's offered (phase 12b): a product, the order's page, or all the search's results. Only with analytics consent.
    *
    * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
-   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.
    */
   readonly tino_result_followed: {
     /** What was followed. */
     readonly action: 'product_opened' | 'order_opened' | 'search_opened';
     /** For a product, its place in the answer, from 1; 0 otherwise. */
     readonly position: number;
+    /** For a product, whether its card carried the model's reasons or only code's line that the search found it (2026-10-21); none for anything else. */
+    readonly card: 'reasoned' | 'matched' | 'none';
   };
 
   /**
    * Tino did not answer and the panel showed the search results instead, or said it is not available (phase 12b). Only with analytics consent.
    *
    * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
-   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.
    */
   readonly tino_unavailable: {
     /** The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. */

@@ -35,11 +35,17 @@ public sealed class TinoTurnTests
         public abstract Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default);
     }
 
-    private sealed class Search() : ShopperRead("search_products")
+    /// <summary>Two pans; or, when a test says what the search found, those products, named by their codes —
+    /// and any it returned that were not found for what was asked.</summary>
+    private sealed class Search(Found? found = null, IReadOnlyList<string>? unfound = null) : ShopperRead("search_products")
     {
         public override Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default) =>
-            Task.FromResult(new ReadAnswer(new { products = new[] { "PAN-1", "PAN-2" } }, 2, 14,
-                Subjects: [new Subject("PAN-1", "Sartén de aluminio"), new Subject("PAN-2", "Sartén de hierro")]));
+            Task.FromResult(found is null
+                ? new ReadAnswer(new { products = new[] { "PAN-1", "PAN-2" } }, 2, 14,
+                    Subjects: [new Subject("PAN-1", "Sartén de aluminio"), new Subject("PAN-2", "Sartén de hierro")])
+                : new ReadAnswer(new { products = found.Products.Select(product => product.Code) }, found.Products.Count, (int)found.Total,
+                    Subjects: [.. found.Products.Select(product => product.Code).Concat(unfound ?? []).Select(code => new Subject(code, code))],
+                    Found: found));
     }
 
     /// <summary>The specs of the codes asked for: an approved claim and a weight for the first pan, a weight for the second.</summary>
@@ -168,7 +174,8 @@ public sealed class TinoTurnTests
 
     private static Shop Compose(
         string? model = "scripted", string? fallback = null, bool enabled = true, long spentToday = 0, long spentInConversation = 0,
-        int turnSeconds = 20, int contextTokens = 8192, bool withScorer = true, Func<string, string, double>? support = null)
+        int turnSeconds = 20, int contextTokens = 8192, bool withScorer = true, Func<string, string, double>? support = null,
+        Found? found = null, IReadOnlyList<string>? unfound = null)
     {
         var settings = new Dictionary<string, string?>
         {
@@ -200,7 +207,7 @@ public sealed class TinoTurnTests
         services.AddTenderoCqrs(typeof(TinoTurnCommand).Assembly);
         services.AddSingleton<IPrincipalAccessor>(new Nobody());
         services.AddOptions<ShopOptions>();
-        services.AddScoped<IReadTool, Search>();
+        services.AddScoped<IReadTool>(_ => new Search(found, unfound));
         services.AddScoped<IReadTool, Specs>();
         services.AddScoped<IReadTool, Policy>();
         services.AddScoped<IReadTool, MyOrders>();
@@ -490,6 +497,116 @@ public sealed class TinoTurnTests
         Assert.Equal(TinoKind.Products, answer.Kind);
         Assert.Equal(["PAN-1"], answer.Products.Select(product => product.Code));
         Assert.Equal(2, answer.ReasonsDropped);
+    }
+
+    // ---------- the cards the search found (2026-10-21, option C) ----------
+
+    private static Found Found(long perCategory, params FoundProduct[] products) =>
+        new(products, new Dictionary<string, long> { ["COFFEE_MAKER"] = perCategory, ["COOKWARE"] = 6 },
+            new SearchLink("cafeteras", null, null, new Money(31m, "EUR"), new Money(50m, "EUR"), false, false), 11);
+
+    /// <summary>
+    /// The author's walk of 2026-10-14: coffee makers between 31 and 50 €, and one card,
+    /// the one that could not be bought. Code tops the cards up to three from what the
+    /// search found in the category of the one the model chose — never the pan the same
+    /// search found — the ones that can be bought first and first among the cards, each
+    /// under the line code can say of it.
+    /// </summary>
+    [Fact]
+    public async Task One_card_named_is_topped_up_to_three_of_its_category_those_that_can_be_bought_first()
+    {
+        await using var shop = Compose(found: Found(4,
+            new FoundProduct("AROMA-12", "COFFEE_MAKER", false), new FoundProduct("PAN-24", "COOKWARE", true),
+            new FoundProduct("IND-4", "COFFEE_MAKER", true), new FoundProduct("PRESS", "COFFEE_MAKER", false),
+            new FoundProduct("COMPACTA", "COFFEE_MAKER", true)));
+
+        var answer = await shop.Ask("¿y cafeteras entre 31 y 50?");
+
+        Assert.Equal((TinoStatus.Answered, TinoKind.Products), (answer.Status, answer.Kind));
+        Assert.Equal(["IND-4", "COMPACTA", "AROMA-12"], answer.Products.Select(product => product.Code));
+        Assert.All(answer.Products, product =>
+        {
+            Assert.Empty(product.Reasons);
+            Assert.Equal(new Message<ProductNote>(ProductNote.MatchesSearch, product.Code, "Coincide con tu búsqueda."), product.Note);
+        });
+    }
+
+    /// <summary>
+    /// "See all" is the search as it was run, inside the category the cards are of — a
+    /// filter the listing shows and the shopper can take off — and counts that category.
+    /// </summary>
+    [Fact]
+    public async Task See_all_is_the_search_as_run_inside_the_cards_category_and_counts_that_category()
+    {
+        await using var shop = Compose(found: Found(4,
+            new FoundProduct("AROMA-12", "COFFEE_MAKER", false), new FoundProduct("PAN-24", "COOKWARE", true),
+            new FoundProduct("IND-4", "COFFEE_MAKER", true), new FoundProduct("COMPACTA", "COFFEE_MAKER", true)));
+
+        var answer = await shop.Ask("¿y cafeteras entre 31 y 50?");
+
+        Assert.Equal(
+            new SeeAll(new SearchLink("cafeteras", "COFFEE_MAKER", null, new Money(31m, "EUR"), new Money(50m, "EUR"), false, false), 4),
+            answer.More);
+    }
+
+    /// <summary>Everything the category holds is on the cards: there is nothing more to see.</summary>
+    [Fact]
+    public async Task With_every_product_of_the_category_on_the_cards_there_is_no_see_all()
+    {
+        await using var shop = Compose(found: Found(2,
+            new FoundProduct("AROMA-12", "COFFEE_MAKER", true), new FoundProduct("IND-4", "COFFEE_MAKER", true)));
+
+        var answer = await shop.Ask("¿y cafeteras entre 31 y 50?", culture: "en");
+
+        Assert.Equal(["AROMA-12", "IND-4"], answer.Products.Select(product => product.Code));
+        Assert.Equal("Matches your search.", answer.Products[0].Note!.Text);
+        Assert.Null(answer.More);
+    }
+
+    /// <summary>The cards the model explained keep their reasons and need no line; code adds the third.</summary>
+    [Fact]
+    public async Task Cards_the_model_explained_keep_their_reasons_and_code_adds_one_of_their_category()
+    {
+        await using var shop = Compose(found: Found(4,
+            new FoundProduct("PAN-1", "COOKWARE", true), new FoundProduct("MUG-1", "TABLEWARE", true),
+            new FoundProduct("PAN-2", "COOKWARE", true), new FoundProduct("PAN-3", "COOKWARE", true)));
+
+        var answer = await shop.Ask(Question);
+
+        Assert.Equal(["PAN-1", "PAN-2", "PAN-3"], answer.Products.Select(product => product.Code));
+        Assert.Equal([2, 1, 0], answer.Products.Select(product => product.Reasons.Count));
+        Assert.Equal([false, false, true], answer.Products.Select(product => product.Note is not null));
+    }
+
+    /// <summary>
+    /// A product every reason of which fell is one the model got wrong (2026-10-06), and
+    /// the line of the shop's does not bring it back: the search found it, and it still
+    /// is not shown.
+    /// </summary>
+    [Fact]
+    public async Task A_product_whose_reasons_all_fell_is_not_brought_back_as_a_card_the_search_found()
+    {
+        await using var shop = Compose(support: (_, sentence) => sentence.StartsWith("Pesa 2,3", StringComparison.Ordinal) || sentence.StartsWith("Pesa más", StringComparison.Ordinal) ? 0.1 : 0.95,
+            found: Found(4, new FoundProduct("PAN-1", "COOKWARE", true), new FoundProduct("PAN-2", "COOKWARE", true), new FoundProduct("PAN-3", "COOKWARE", true)));
+
+        var answer = await shop.Ask(Question);
+
+        Assert.Equal(["PAN-1", "PAN-3"], answer.Products.Select(product => product.Code));
+    }
+
+    /// <summary>
+    /// A product the model named and said nothing of, that no search found for what was
+    /// asked, has nothing true to stand under it: it is left out, as it always was.
+    /// </summary>
+    [Fact]
+    public async Task A_product_named_with_nothing_said_that_no_search_found_is_left_out()
+    {
+        await using var shop = Compose(found: Found(1, new FoundProduct("IND-4", "COFFEE_MAKER", true)), unfound: ["AROMA-12"]);
+
+        var answer = await shop.Ask("¿y cafeteras entre 31 y 50?");
+
+        // AROMA-12 was returned and not found for what was asked; IND-4 has no card of the model's to be the category of.
+        AssertUnavailable(answer, TinoCause.Model, "¿y cafeteras entre 31 y 50?");
     }
 
     // ---------- held to its facts ----------

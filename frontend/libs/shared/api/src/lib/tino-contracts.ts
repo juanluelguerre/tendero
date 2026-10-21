@@ -27,6 +27,10 @@ export type AnsweredProduct = Schemas['AnsweredProduct'];
 export type AnsweredOrder = Schemas['AnsweredOrder'];
 export type TinoNoData = Schemas['NoData'];
 
+/** Where an answer's "see all" leads: the search as it was run, and how many products it holds. */
+export type TinoSeeAll = Schemas['SeeAll'];
+export type TinoSearchLink = Schemas['SearchLink'];
+
 /** A sentence and the fact it rests on: the words are the model's, the source and the evidence the shop's. */
 export type TinoReason = Schemas['Reason'];
 export type FactSource = Schemas['FactSource'];

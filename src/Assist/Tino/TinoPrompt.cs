@@ -140,4 +140,12 @@ public static class TinoPrompt
     /// </summary>
     public static string DoesNotSay(string language) =>
         NoData(language, true, language == "en" ? "what you asked" : "lo que preguntas");
+
+    /// <summary>
+    /// The line under a card the model said nothing of (option C, the author,
+    /// 2026-10-21): code knows a search of the turn found it for what was asked, and
+    /// says that and nothing more.
+    /// </summary>
+    public static string MatchesSearch(string language) =>
+        language == "en" ? "Matches your search." : "Coincide con tu búsqueda.";
 }

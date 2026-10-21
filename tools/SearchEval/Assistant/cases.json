@@ -422,6 +422,66 @@
         "notOrder": "ana-delivered",
         "notSays": ["Botines", "Calcetines", "entregado"]
       }
+    },
+    {
+      "id": "coffee-makers-under-30-es",
+      "culture": "es",
+      "question": "enséñame la lista de cafeteras por debajo de 30 €",
+      "expect": {
+        "kinds": ["Products"],
+        "tools": ["search_products"],
+        "anyProduct": ["6-cup stovetop coffee maker"],
+        "minProducts": 1,
+        "onlyProducts": ["6-cup stovetop coffee maker"],
+        "language": "es"
+      }
+    },
+    {
+      "id": "coffee-makers-under-30-en",
+      "culture": "en",
+      "question": "show me the list of coffee makers under €30",
+      "expect": {
+        "kinds": ["Products"],
+        "tools": ["search_products"],
+        "anyProduct": ["6-cup stovetop coffee maker"],
+        "minProducts": 1,
+        "onlyProducts": ["6-cup stovetop coffee maker"],
+        "language": "en"
+      }
+    },
+    {
+      "id": "coffee-makers-31-to-50-es",
+      "culture": "es",
+      "before": [
+        { "role": "user", "text": "enséñame la lista de cafeteras por debajo de 30 €" },
+        { "role": "assistant", "text": "Cafetera italiana de 6 tazas: cuesta 29,90 €." }
+      ],
+      "question": "¿y entre 31 y 50?",
+      "expect": {
+        "kinds": ["Products"],
+        "tools": ["search_products"],
+        "anyProduct": ["4-cup induction stovetop coffee maker", "Aroma Compact drip coffee maker", "1 litre glass french press", "Aroma programmable drip coffee maker, 12 cups"],
+        "minProducts": 3,
+        "onlyProducts": ["4-cup induction stovetop coffee maker", "Aroma Compact drip coffee maker", "1 litre glass french press", "Aroma programmable drip coffee maker, 12 cups"],
+        "language": "es"
+      }
+    },
+    {
+      "id": "coffee-makers-31-to-50-en",
+      "culture": "en",
+      "before": [
+        { "role": "user", "text": "show me the list of coffee makers under €30" },
+        { "role": "assistant", "text": "6-cup stovetop coffee maker: it costs €29.90." }
+      ],
+      "question": "and between 31 and 50?",
+      "expect": {
+        "kinds": ["Products"],
+        "tools": ["search_products"],
+        "anyProduct": ["4-cup induction stovetop coffee maker", "Aroma Compact drip coffee maker", "1 litre glass french press", "Aroma programmable drip coffee maker, 12 cups"],
+        "minProducts": 3,
+        "onlyProducts": ["4-cup induction stovetop coffee maker", "Aroma Compact drip coffee maker", "1 litre glass french press", "Aroma programmable drip coffee maker, 12 cups"],
+        "language": "en"
+      }
     }
   ]
 }

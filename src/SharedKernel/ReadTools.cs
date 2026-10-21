@@ -62,9 +62,30 @@ public enum ToolAudience
 /// sentence with what it is about and where it comes from.</param>
 /// <param name="Subjects">The products the read returned, by code and name: what an
 /// answer may name, whether or not the read said anything citable about them.</param>
+/// <param name="Found">For a search, what it found for what was asked: none for any other read.</param>
 public sealed record ReadAnswer(
     object Data, int Rows, int? Total, IReadOnlyList<ResultTable>? Tables = null, IReadOnlyList<Fact>? Facts = null,
-    IReadOnlyList<Subject>? Subjects = null);
+    IReadOnlyList<Subject>? Subjects = null, Found? Found = null);
+
+/// <summary>
+/// What a search found for what was asked (2026-10-21), for the code that draws an
+/// answer and not for the model: which products, of which category, and whether
+/// each can be bought — the shopper's assistant tops its cards up from these, the
+/// ones in stock first — and the search as it was run, where "see all" leads.
+/// A search that found only the nearest found nothing that was asked, and has none.
+/// </summary>
+/// <param name="Products">In the order the search ranked them.</param>
+/// <param name="PerCategory">How many products the search holds in each category
+/// branch, as its facet counts them: "see all" inside one counts that one.</param>
+public sealed record Found(
+    IReadOnlyList<FoundProduct> Products, IReadOnlyDictionary<string, long> PerCategory, SearchLink Search, long Total);
+
+/// <param name="Category">Its category's code; none when it is filed under none.</param>
+public sealed record FoundProduct(string Code, string? Category, bool InStock);
+
+/// <summary>A search as it was run, in the terms the storefront's listing is linked with.</summary>
+public sealed record SearchLink(
+    string Text, string? Category, string? Brand, Money? MinPrice, Money? MaxPrice, bool OnOffer, bool InStock);
 
 /// <summary>What a read can be about, besides the shop itself.</summary>
 public enum SubjectKind
@@ -221,6 +242,9 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
     /// <summary>The products the read returned; none for a read that is about no product.</summary>
     protected virtual IReadOnlyList<Subject> Subjects(TData data) => [];
 
+    /// <summary>What a search found for what was asked; none for any read that is not a search.</summary>
+    protected virtual Found? Found(TData data) => null;
+
     public async Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default)
     {
         TArgs read;
@@ -237,7 +261,8 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
         try
         {
             var (data, rows, total) = await ReadAsync(read, queries, cancellationToken);
-            return new ReadAnswer(data, rows, total, Tables(data), [.. Facts(data).Take(ReadLimits.MaxFacts)], Subjects(data));
+            return new ReadAnswer(data, rows, total, Tables(data), [.. Facts(data).Take(ReadLimits.MaxFacts)], Subjects(data),
+                Found(data));
         }
         catch (ValidationException refused)
         {

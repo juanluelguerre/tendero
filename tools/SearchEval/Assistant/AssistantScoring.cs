@@ -32,10 +32,13 @@ public sealed record CaseContext(string? Product = null, string? Order = null);
 /// <param name="Order">The answer is about this order of the laboratory's.</param>
 /// <param name="NotOrder">And is not about this one, nor are its reads' answers shown.</param>
 /// <param name="Language">The language the model's sentences are in.</param>
+/// <param name="MinProducts">The answer shows at least this many products.</param>
+/// <param name="OnlyProducts">And every product it shows is one of these (English names).</param>
 public sealed record Expectation(
     IReadOnlyList<string>? Kinds = null, IReadOnlyList<string>? Tools = null, IReadOnlyList<string>? NoTools = null,
     IReadOnlyList<string>? AnyProduct = null, IReadOnlyList<string>? NoProduct = null, IReadOnlyList<Citation>? Cites = null,
-    IReadOnlyList<string>? NotSays = null, string? Order = null, string? NotOrder = null, string? Language = null);
+    IReadOnlyList<string>? NotSays = null, string? Order = null, string? NotOrder = null, string? Language = null,
+    int? MinProducts = null, IReadOnlyList<string>? OnlyProducts = null);
 
 /// <param name="Product">Whose fact, by English name; any product's, or the shop's or an order's, when omitted.</param>
 /// <param name="Contains">Words of the fact as the shop holds it.</param>
@@ -98,6 +101,19 @@ public static class AssistantScoring
             foreach (var name in (expect.NoProduct ?? []).Where(name => named.Contains(codes[name])))
                 problems.Add($"named {name}");
 
+            // How many cards, and which: code tops an answer up from what its search found (2026-10-21).
+            if (expect.MinProducts is { } least && answer.Products.Count < least)
+                problems.Add($"showed {answer.Products.Count} products, not at least {least}");
+            if (expect.OnlyProducts is { Count: > 0 } only)
+            {
+                var allowed = only.Select(name => codes[name]).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var product in answer.Products.Where(product => !allowed.Contains(product.Code)))
+                {
+                    var name = codes.FirstOrDefault(pair => string.Equals(pair.Value, product.Code, StringComparison.OrdinalIgnoreCase)).Key ?? product.Code;
+                    problems.Add($"showed {name}, not one of: {string.Join(", ", only)}");
+                }
+            }
+
             foreach (var citation in expect.Cites ?? [])
             {
                 var cited = reasons.Any(pair =>
@@ -137,7 +153,7 @@ public static class AssistantScoring
         var unknown = new List<string>();
         foreach (var item in cases.Cases)
         {
-            var products = (item.Expect.AnyProduct ?? []).Concat(item.Expect.NoProduct ?? [])
+            var products = (item.Expect.AnyProduct ?? []).Concat(item.Expect.NoProduct ?? []).Concat(item.Expect.OnlyProducts ?? [])
                 .Concat((item.Expect.Cites ?? []).Select(citation => citation.Product).OfType<string>())
                 .Append(item.Context?.Product).OfType<string>();
             unknown.AddRange(products.Where(name => !codes.ContainsKey(name)).Select(name => $"{item.Id}: product \"{name}\""));

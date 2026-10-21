@@ -30,15 +30,21 @@ public sealed class Grounding(ISupportScorer scorer, double threshold)
         {
             case TinoKind.Products:
                 var products = new List<AnsweredProduct>();
+                var fell = new List<string>(body.Fell);
                 foreach (var product in body.Products)
                 {
                     var held = await HeldAsync(product.Reasons, product.Name, cancellationToken);
                     dropped += product.Reasons.Count - held.Count;
-                    products.Add(product with { Reasons = held });
+
+                    // Every reason of it fell: the model got this product wrong, and it leaves.
+                    // One the model wrote no reason for stays, for the turn to decide.
+                    if (product.Reasons.Count > 0 && held.Count == 0)
+                        fell.Add(product.Code);
+                    else
+                        products.Add(product with { Reasons = held });
                 }
 
-                // A product whose reasons all fell is the turn's to leave out: here it is only counted.
-                return body with { Products = products, Dropped = dropped };
+                return body with { Products = products, Dropped = dropped, Fell = fell };
 
             // An order's facts are whole sentences and so is the policy: each is held to
             // the fact alone.

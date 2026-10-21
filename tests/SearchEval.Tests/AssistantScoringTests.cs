@@ -73,6 +73,23 @@ public sealed class AssistantScoringTests
     }
 
     /// <summary>The fact is the shop's text, compared; the model's words are not what is looked at.</summary>
+    /// <summary>
+    /// The author's walk of 2026-10-14: one card where four coffee makers were in range,
+    /// and a link that counted pans. A case can ask for at least so many cards, and for
+    /// every card to be one of those it names.
+    /// </summary>
+    [Fact]
+    public void A_case_can_ask_for_at_least_so_many_cards_each_one_of_those_it_names()
+    {
+        var two = Answer(TinoKind.Products,
+            [new AnsweredProduct("PAN-IRON", "Sartén de hierro", []), new AnsweredProduct("MUG-1", "Taza", [])]);
+
+        Assert.Equal(["showed 2 products, not at least 3"], Judge(new Expectation(MinProducts: 3), two).Problems);
+        Assert.Equal(["showed Mug, not one of: Iron pan, Steel pan"],
+            Judge(new Expectation(OnlyProducts: ["Iron pan", "Steel pan"]), two).Problems);
+        Assert.True(Judge(new Expectation(MinProducts: 2, OnlyProducts: ["Iron pan", "Mug"]), two).Passed);
+    }
+
     [Fact]
     public void A_citation_is_the_fact_under_a_shown_sentence_not_the_sentences_own_words()
     {
@@ -145,7 +162,8 @@ public sealed class AssistantScoringTests
         [
             new("fine", "es", "q", new Expectation(["Products"], ["search_products"], AnyProduct: ["Iron pan"], Order: "ana-delivered")),
             new("wrong", "es", "q",
-                new Expectation(["Essay"], ["read_minds"], ["my_orders"], ["Gold pan"], Cites: [new Citation("x", "Silver pan")], NotOrder: "no-such-order"),
+                new Expectation(["Essay"], ["read_minds"], ["my_orders"], ["Gold pan"], Cites: [new Citation("x", "Silver pan")], NotOrder: "no-such-order",
+                    OnlyProducts: ["Tin pan"]),
                 As: "nobody-we-know", Context: new CaseContext(Product: "Copper pan")),
         ]);
 
@@ -153,7 +171,7 @@ public sealed class AssistantScoringTests
 
         Assert.Equal(
             [
-                "wrong: product \"Gold pan\"", "wrong: product \"Silver pan\"", "wrong: product \"Copper pan\"", "wrong: order \"no-such-order\"",
+                "wrong: product \"Gold pan\"", "wrong: product \"Tin pan\"", "wrong: product \"Silver pan\"", "wrong: product \"Copper pan\"", "wrong: order \"no-such-order\"",
                 "wrong: read \"read_minds\"", "wrong: asker \"nobody-we-know\"", "wrong: kind \"Essay\"",
             ],
             unknown);

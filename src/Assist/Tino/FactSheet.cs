@@ -26,6 +26,7 @@ public sealed class FactSheet
     private readonly List<NumberedFact> facts = [];
     private readonly List<Subject> products = [];
     private readonly List<Subject> orders = [];
+    private readonly List<Found> searches = [];
 
     public IReadOnlyList<NumberedFact> Facts => this.facts;
 
@@ -50,6 +51,14 @@ public sealed class FactSheet
     public Subject? Product(string? code) =>
         this.products.FirstOrDefault(product => string.Equals(product.Key, code, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>What each search the turn ran found for what was asked, in the order searched: what the cards are topped up from.</summary>
+    public IReadOnlyList<Found> Searches => this.searches;
+
+    /// <summary>A product as a search found it, with its category and whether it can be bought; none when no search found it.</summary>
+    public FoundProduct? Found(string? code) =>
+        this.searches.SelectMany(search => search.Products)
+            .FirstOrDefault(product => string.Equals(product.Code, code, StringComparison.OrdinalIgnoreCase));
+
     /// <summary>What a read returned joins the sheet: a product once, a fact once.</summary>
     public void Add(ReadAnswer answer)
     {
@@ -57,6 +66,9 @@ public sealed class FactSheet
         {
             foreach (var subject in answer.Subjects ?? [])
                 Know(subject);
+
+            if (answer.Found is { } found)
+                this.searches.Add(found);
 
             foreach (var fact in answer.Facts ?? [])
             {
