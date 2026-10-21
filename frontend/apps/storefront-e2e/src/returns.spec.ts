@@ -31,8 +31,15 @@ async function move(page: Page, orderId: string, label: RegExp): Promise<void> {
     await expect(row.getByRole('button', { name: label })).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 30_000 });
 
+  // The server's answer, not the button's absence: the row hides its moves while
+  // one is on its way (`busy`), so the button was gone before the move was done,
+  // and the next goto could abort it — the order stayed unshipped and *Delivered*
+  // never appeared (one run in five, 2026-10-21).
+  const answered = page.waitForResponse(
+    (response) => response.url().includes(`/api/orders/${orderId}/move`) && response.request().method() === 'POST',
+  );
   await row.getByRole('button', { name: label }).click();
-  await expect(row.getByRole('button', { name: label })).toHaveCount(0);
+  expect((await answered).ok()).toBe(true);
 }
 
 test.describe('a return', () => {
