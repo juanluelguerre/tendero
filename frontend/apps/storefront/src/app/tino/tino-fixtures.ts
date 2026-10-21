@@ -49,6 +49,18 @@ export const answer = (extra: Partial<TinoAnswer> = {}): TinoAnswer => ({
   fellBack: false,
   conversationId: 'conv-1',
   order: null,
+  more: {
+    search: {
+      text: 'sartén inducción',
+      category: null,
+      brand: null,
+      minPrice: null,
+      maxPrice: null,
+      onOffer: false,
+      inStock: false,
+    },
+    total: 14,
+  },
   ...extra,
 });
 
@@ -59,6 +71,7 @@ export const unavailable = (cause: NonNullable<TinoAnswer['cause']>): TinoAnswer
     kind: null,
     products: [],
     reads: [],
+    more: null,
     cost: null,
     profile: null,
     reasonsDropped: 0,

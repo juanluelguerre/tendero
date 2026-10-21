@@ -565,3 +565,50 @@ pans each *entra en la campaña de 5 € en menaje*.
 | Run | Passed | Failed |
 |---|---|---|
 | 32 | 32 of 37 | the two language cases, `shipping-cost-en` (read `my_orders`), and both `pan-induction` cases. Alone those passed 6 of 8, as they come and go (runs 16 and 18). Every offers case passed. The largest call was 5,224 tokens, `offers-today-es` reading the campaigns and the products on offer |
+
+## A list of products: the cards code adds (2026-10-21)
+
+The author's walk of 2026-10-14 became four cases. Each is asked in es and in en:
+
+- *coffee makers under €30*;
+- then *and between 31 and 50?*, with the first question and an answer before it.
+
+The judge gained two fields: `minProducts` (at least so many cards) and
+`onlyProducts` (every card is one of these).
+
+The before run uses `develop`'s code in a worktree, with this branch's judge and
+cases, so both runs are held to the same expectations. Both use the local
+Qwen3.5-4B on the GPU and the same throwaway containers.
+
+| Run | Passed | Coffee-maker cases | Sentences shown / dropped | p50 / p95 |
+|---|---|---|---|---|
+| before (`develop`) | **32 of 41** | 0 of 4. Under 30: both ask back. 31–50 es: the model's failure. 31–50 en: **one card**, the walk's bug | 60 / 8 | 4.2 s / 11.6 s |
+| after (this branch) | **34 of 41** | 1 of 4. 31–50 en: three coffee makers. The other three ask back | 65 / 2 | 4.1 s / 12.5 s |
+| after, coffee cases alone | 1 of 4 | 31–50 es: **three coffee makers, each under *Coincide con tu búsqueda***. *See all* goes inside `COFFEE_MAKER`, 31–50 €, and counts **4** | | |
+| after, a category's name read as its code (the author, the same night) | **35 of 41** | **2 of 4**: both 31–50 cases show three coffee makers. Both under-30 cases still ask back (the backlog row *Tino asks back after a search that found what was asked*) | 68 / 3 | 4.3 s / 12.1 s |
+
+**What the after run's failures are.** They were read from each turn's reads,
+dumped by hand for the coffee-maker cases alone.
+
+- **Under 30, both languages.** `search_products` found the one coffee maker
+  under 30 (the 6-cup stovetop), and the model read its specs. It still asked
+  back, in es *¿Qué precio máximo tienes en mente?* and in en *Which coffee maker
+  are you looking for?*. That is the model's choice of the `ask` kind, and code
+  does not overrule it.
+- **31–50 in English.** The model passed `category: "coffee makers"`: a name,
+  where the tool asks for a code. The search found nothing and the model asked
+  back.
+- **The two runs disagree** on which 31–50 case passes: es in one, en in the
+  other. The same turn on the same model varies with the order in which the
+  hybrid search returns near-equal scores.
+
+**Passed before and failed after: `pan-induction-en` and `shipping-cost-en`.**
+Both are in run 32's list of cases that come and go. Neither failure is a card:
+one answered `ask` with no product, the other read `my_orders`. Four cases went
+the other way: `backpack-laptop-en`, `dishwasher-sin-dato-es`,
+`order-of-an-account-by-nobody-es`, and the walk's own 31–50 en.
+
+Wherever the search found the coffee makers, the cards were the walk's fix:
+three of them, the ones in stock first, no pan, and a link that counts the
+category. The two drops in the after run are sentences grounding refused. The
+cards under them came from code and say nothing a model wrote.

@@ -1068,3 +1068,42 @@ the reranker, three runs of each, identical to the third decimal:
 - Eleven hand mutations of the leg, ten red. The survivor is equivalent: asking
   a shop that has no model is answered by the stand-in saying so, which the
   leg treats as the leg not being there.
+
+## Narrowing a search by the category its words name: refuted (2026-10-21)
+
+Tino's search for *cafeteras* found pans too, and its *See the 11 results*
+counted them (the board, 2026-10-14). The first fix was to narrow the search to a
+category whenever its words named one in the shop's own taxonomy. The narrowing
+was exact, with no embeddings:
+
+- each category name was split into the things it names (*Flexos y lámparas de
+  escritorio* → flexos, desk lamps);
+- singular and plural matched, with accents folded;
+- several names on one branch narrowed to the deepest, and names on two branches
+  narrowed to none.
+
+It was held to one line: **no query of this golden set may hide a product it
+grades 2 or 3.**
+
+| | es + en |
+|---|---:|
+| Queries | 140 |
+| Narrowed to a category | 57 |
+| Narrowed and hid relevant products | **12** |
+| Relevant products hidden | **45** |
+
+Where the taxonomy and the shopper part ways:
+
+- *mochila* / *backpack* → Backpacks hides the travel backpack, filed under Luggage;
+- *ropa deportiva* / *sportswear* hides the running shoes and tights;
+- *ordenar la cocina* / *organising the kitchen* → Kitchen hides all of Storage;
+- *setting the table* → Tables hides the tableware;
+- *bedside table* hides the nightstand, filed under Bedroom;
+- *ropa de abrigo* → Coats hides gloves and hats.
+
+**Not built.** A category is where a product is filed, and a shopper's words say
+what it is for. Tino now uses the category another way, which hides nothing. The
+cards code adds come from the category of the products the model chose, among the
+search's own results. *See all* becomes a filter that the listing shows and the
+shopper can take off. The matcher and its test were deleted; this table is what is
+left of them (`docs/plans/2026-10-21-tino-product-list.md`).

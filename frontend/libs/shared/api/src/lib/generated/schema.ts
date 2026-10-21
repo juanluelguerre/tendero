@@ -1974,6 +1974,7 @@ export interface components {
             code: string;
             name: string;
             reasons: components["schemas"]["Reason"][];
+            note?: null | components["schemas"]["MessageOfProductNote"];
         };
         AppliedDiscountResponse: {
             promotionCode: string;
@@ -2603,6 +2604,11 @@ export interface components {
             about: null | string;
             text: string;
         };
+        MessageOfProductNote: {
+            code: components["schemas"]["ProductNote"];
+            about: null | string;
+            text: string;
+        };
         MissingAttributeView: {
             code: string;
             label: string;
@@ -2964,6 +2970,8 @@ export interface components {
             /** Format: int32 */
             sortOrder: number;
         };
+        /** @enum {unknown} */
+        ProductNote: "MatchesSearch";
         ProductPerformance: {
             period: components["schemas"]["DashboardPeriod"];
             ranking: components["schemas"]["PerformanceRanking"];
@@ -3481,6 +3489,15 @@ export interface components {
             score: number;
             deals?: components["schemas"]["ProductDeal"][];
         };
+        SearchLink: {
+            text: string;
+            category: null | string;
+            brand: null | string;
+            minPrice: null | components["schemas"]["Money"];
+            maxPrice: null | components["schemas"]["Money"];
+            onOffer: boolean;
+            inStock: boolean;
+        };
         /** @enum {unknown} */
         SearchMatch: "Exact" | "Related";
         SearchResultPage: {
@@ -3500,6 +3517,11 @@ export interface components {
         SearchStage: "Words" | "Meaning" | "Reranking";
         SearchStatus: {
             stages: components["schemas"]["StageStatus"][];
+        };
+        SeeAll: {
+            search: components["schemas"]["SearchLink"];
+            /** Format: int64 */
+            total: number;
         };
         /** @enum {unknown} */
         SeriesStep: "Hour" | "Day";
@@ -3736,6 +3758,7 @@ export interface components {
             fellBack: boolean;
             conversationId: string;
             order?: null | components["schemas"]["AnsweredOrder"];
+            more?: null | components["schemas"]["SeeAll"];
         };
         TinoAvailability: {
             available: boolean;

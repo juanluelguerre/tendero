@@ -53,8 +53,15 @@ test.describe('Tino', () => {
     const answer = panel(page).locator('[data-kind="Products"]');
     await expect(answer).toBeVisible({ timeout: 30_000 });
     // The card is the shop's: its name links to the product's own page.
-    await expect(answer.locator('storefront-product-card a.card__link')).toHaveAttribute('href', /\/es\/p\//);
-    await expect(answer.getByText('Es lo que la tienda tiene anotado de ella.')).toBeVisible();
+    const explained = answer.locator('[data-card="reasoned"]');
+    await expect(explained.locator('storefront-product-card a.card__link')).toHaveAttribute('href', /\/es\/p\//);
+    await expect(explained.getByText('Es lo que la tienda tiene anotado de ella.')).toBeVisible();
+    // The script names one pan; code tops the answer up with others of its category the
+    // search found, each under the one line code can say of it (2026-10-21). How many
+    // the search finds is the catalogue's; that each added card carries the line is not.
+    const added = answer.locator('[data-card="matched"]');
+    await expect(added.first().locator('[data-note]')).toHaveText('Coincide con tu búsqueda');
+    expect(await added.locator('[data-note]').count()).toBe(await added.count());
 
     // The chip says where the sentence comes from, and opens the fact itself.
     const chip = answer.locator('storefront-tino-source summary');

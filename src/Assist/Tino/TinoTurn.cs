@@ -231,7 +231,8 @@ public sealed class TinoTurnHandler(
             var (body, cost, answered) = (walk.Answer.Body!, walk.Answer.Cost, walk.Candidate!);
             activity?.SetTag("assist.profile", answered.Name);
             return Count(new TinoAnswer(TinoStatus.Answered, null, body.Kind, body.Products, body.Says, body.Ask, body.NoData,
-                answered.Reads, SearchText(command), body.Dropped, cost, answered.Name, walk.FellBack, command.ConversationId, body.Order));
+                answered.Reads, SearchText(command), body.Dropped, cost, answered.Name, walk.FellBack, command.ConversationId, body.Order,
+                body.More));
         }
 
         activity?.SetTag("assist.unavailable", true);
@@ -335,10 +336,11 @@ public sealed class TinoTurnHandler(
 
     /// <summary>
     /// What of an answer is still an answer once grounding has dropped what did not
-    /// hold, or null when nothing is. A card with nothing said of it is never shown
-    /// (the author, 2026-10-06): a product left with no reason is left out, and when
-    /// that leaves none, what is true is said by code — on a product's page, that its
-    /// details do not say what was asked; anywhere else, nothing.
+    /// hold, or null when nothing is. A card is shown when something true stands under
+    /// it: a reason that held, or the line code can say of a product a search found for
+    /// what was asked (option C, the author, 2026-10-21, refining the rule of
+    /// 2026-10-06). When no card is left, what is true is said by code — on a product's
+    /// page, that its details do not say what was asked; anywhere else, nothing.
     /// </summary>
     private static TinoBody? Said(TinoBody body, FactSheet sheet, TinoTurnCommand command)
     {
@@ -348,9 +350,9 @@ public sealed class TinoTurnHandler(
                 return null;
 
             case { Kind: TinoKind.Products }:
-                var explained = body.Products.Where(product => product.Reasons.Count > 0).ToList();
-                if (explained.Count > 0)
-                    return body with { Products = explained };
+                var cards = TinoCards.Of(body, sheet, command.Culture);
+                if (cards.Count > 0)
+                    return body with { Products = cards, More = TinoCards.SeeAll(cards, sheet) };
 
                 return AnswerSchema.OnScreen(sheet, command.Context) is { } shown
                     ? new TinoBody(TinoKind.NoData, [], [], null,

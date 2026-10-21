@@ -100,7 +100,11 @@
                     @case ('Products') {
                       <ul class="m-0 grid list-none gap-3 p-0" role="list">
                         @for (named of item.named; track named.product.code) {
-                          <li class="grid gap-2" [attr.data-position]="$index + 1">
+                          <li
+                            class="grid gap-2"
+                            [attr.data-position]="$index + 1"
+                            [attr.data-card]="named.product.note ? 'matched' : 'reasoned'"
+                          >
                             @if (named.card; as card) {
                               <storefront-product-card [hit]="card" layout="line" [actions]="false" />
                             } @else {
@@ -112,6 +116,10 @@
                                 <p class="m-0 text-sm">{{ reason.text }}</p>
                                 <storefront-tino-source [reason]="reason" />
                               </div>
+                            }
+                            @if (named.product.note; as note) {
+                              <!-- Nothing the model said: the one line code knows is true of it (option C, 2026-10-21). -->
+                              <p class="m-0 ps-3 text-sm text-muted" data-note>{{ t('tino.note.' + note.code) }}</p>
                             }
                           </li>
                         }
@@ -178,7 +186,7 @@
             <a
               class="justify-self-start text-sm text-accent"
               [routerLink]="links.home()"
-              [queryParams]="{ q: more.text }"
+              [queryParams]="more.params"
               (click)="followed('search_opened')"
               >{{ t(more.nearest ? 'tino.seeAllRelated' : 'tino.seeAll', { count: more.total }) }}</a
             >

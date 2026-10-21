@@ -603,6 +603,9 @@
     "stopped": "Parado. Pregunta otra vez cuando quieras.",
     "answered": "Tino ha respondido.",
     "nearest": "Lo que sí dice",
+    "note": {
+      "MatchesSearch": "Coincide con tu búsqueda"
+    },
     "openOrder": "Abrir este pedido →",
     "seeAll": "Ver los {{count}} resultados →",
     "seeAllRelated": "Ver los {{count}} productos parecidos →",

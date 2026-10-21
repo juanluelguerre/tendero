@@ -12099,6 +12099,16 @@
             "items": {
               "$ref": "#/components/schemas/Reason"
             }
+          },
+          "note": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MessageOfProductNote"
+              }
+            ]
           }
         }
       },
@@ -14717,6 +14727,28 @@
           }
         }
       },
+      "MessageOfProductNote": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ProductNote"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
       "MissingAttributeView": {
         "required": [
           "code",
@@ -16142,6 +16174,11 @@
             "format": "int32"
           }
         }
+      },
+      "ProductNote": {
+        "enum": [
+          "MatchesSearch"
+        ]
       },
       "ProductPerformance": {
         "required": [
@@ -18176,6 +18213,61 @@
           }
         }
       },
+      "SearchLink": {
+        "required": [
+          "text",
+          "category",
+          "brand",
+          "minPrice",
+          "maxPrice",
+          "onOffer",
+          "inStock"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "brand": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minPrice": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Money"
+              }
+            ]
+          },
+          "maxPrice": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Money"
+              }
+            ]
+          },
+          "onOffer": {
+            "type": "boolean"
+          },
+          "inStock": {
+            "type": "boolean"
+          }
+        }
+      },
       "SearchMatch": {
         "enum": [
           "Exact",
@@ -18253,6 +18345,22 @@
             "items": {
               "$ref": "#/components/schemas/StageStatus"
             }
+          }
+        }
+      },
+      "SeeAll": {
+        "required": [
+          "search",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "search": {
+            "$ref": "#/components/schemas/SearchLink"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -19227,6 +19335,16 @@
               },
               {
                 "$ref": "#/components/schemas/AnsweredOrder"
+              }
+            ]
+          },
+          "more": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SeeAll"
               }
             ]
           }

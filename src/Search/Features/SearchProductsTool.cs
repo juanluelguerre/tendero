@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 
@@ -22,9 +23,11 @@ public sealed record SearchForShopperArguments(
 /// <param name="Search">The search as it was run, so the shopper can be sent to all of its results.</param>
 /// <param name="OnlyNearest">No product carries the words: these are only the nearest (the search's <c>Related</c>, ADR 0032).</param>
 /// <param name="Culture">The language its facts are said in; not the model's to read, which was told it.</param>
+/// <param name="PerCategory">How many products each category branch holds, from the search's facet: for the answer's link, not the model.</param>
 public sealed record ProductsForShopper(
     int Total, IReadOnlyList<ProductForShopper> Products, SearchAsRun Search, bool OnlyNearest,
-    [property: JsonIgnore] string Culture = CultureNegotiation.Default);
+    [property: JsonIgnore] string Culture = CultureNegotiation.Default,
+    [property: JsonIgnore] IReadOnlyDictionary<string, long>? PerCategory = null);
 
 /// <summary>A product as the search found it. The price and whether it can be bought
 /// are for choosing among them; the shopper reads both on the product's card.</summary>
@@ -52,7 +55,8 @@ public sealed record SearchAsRun(
 /// sweatshirt and gloves on offer, and the assistant said the gloves were. Nothing
 /// on offer is like what was asked is the answer, and code gives it, not the model.
 /// </summary>
-public sealed class SearchProductsTool(IQueryDispatcher queries) : ReadTool<SearchForShopperArguments, ProductsForShopper>(queries)
+public sealed class SearchProductsTool(IQueryDispatcher queries, ICategoryReader? categories = null)
+    : ReadTool<SearchForShopperArguments, ProductsForShopper>(queries)
 {
     /// <summary>The most products one search hands the model: an answer names four at most.</summary>
     public const int MaxProducts = 12;
@@ -79,8 +83,9 @@ public sealed class SearchProductsTool(IQueryDispatcher queries) : ReadTool<Sear
             InStock = arguments.InStock,
         };
         var culture = CultureNegotiation.Resolve(arguments.Culture, default);
+        var category = await CategoryAsync(arguments.Category, cancellationToken);
         var page = await queries.SendAsync(
-            new SearchProductsQuery(arguments.Text, culture, 1, MaxProducts, arguments.Category, ProductSort.Relevance, filters),
+            new SearchProductsQuery(arguments.Text, culture, 1, MaxProducts, category, ProductSort.Relevance, filters),
             cancellationToken);
 
         var onlyNearest = page.Answer?.Match == SearchMatch.Related;
@@ -95,7 +100,7 @@ public sealed class SearchProductsTool(IQueryDispatcher queries) : ReadTool<Sear
         if (onlyNearest && arguments.OnOffer)
         {
             var plain = await queries.SendAsync(
-                new SearchProductsQuery(arguments.Text, culture, 1, MaxProducts, arguments.Category, ProductSort.Relevance,
+                new SearchProductsQuery(arguments.Text, culture, 1, MaxProducts, category, ProductSort.Relevance,
                     filters with { OnOffer = false }),
                 cancellationToken);
             List<SearchHit> inDeals = plain.Answer?.Match == SearchMatch.Related ? [] : [.. plain.Hits.Where(hit => hit.Deals.Count > 0)];
@@ -109,10 +114,11 @@ public sealed class SearchProductsTool(IQueryDispatcher queries) : ReadTool<Sear
                     hit.Code, hit.Name, hit.Brand, hit.Category, hit.Price.Amount, hit.Price.Currency, hit.InStock,
                     hit.Deals.Count == 0 ? null : hit.Deals)),
             ],
-            new SearchAsRun(arguments.Text, arguments.Category, arguments.Brand, arguments.MinPrice, arguments.MaxPrice,
+            new SearchAsRun(arguments.Text, category, arguments.Brand, arguments.MinPrice, arguments.MaxPrice,
                 onOffer, arguments.InStock),
             onlyNearest,
-            culture);
+            culture,
+            PerCategory(page, hits));
         return (found, found.Products.Count, total);
     }
 
@@ -143,6 +149,59 @@ public sealed class SearchProductsTool(IQueryDispatcher queries) : ReadTool<Sear
     private static string NoneOnOffer(string text, string culture) =>
         culture == "en" ? $"Nothing on offer now matches “{text}”." : $"No hay nada en oferta ahora que coincida con «{text}».";
 
+    /// <summary>
+    /// The category to search inside, by its code. The model is asked for a code and
+    /// sometimes writes the name: "coffee makers" searched a category that does not
+    /// exist, found nothing, and the assistant asked back (2026-10-21). A name the
+    /// taxonomy holds, in either language and any case, is that category; anything
+    /// else is searched as written — nothing is guessed from words that name none.
+    /// </summary>
+    private async Task<string?> CategoryAsync(string? written, CancellationToken cancellationToken)
+    {
+        if (written?.Trim() is not { Length: > 0 } asked || categories is null)
+            return written;
+
+        var tree = await categories.AllAsync(cancellationToken);
+        if (tree.ByCode(asked) is { } known)
+            return known.Code;
+
+        return tree.All.FirstOrDefault(each => each.Name.Values.Values
+                .Any(name => string.Equals(name.Trim(), asked, StringComparison.OrdinalIgnoreCase)))?.Code
+            ?? written;
+    }
+
     protected override IReadOnlyList<Subject> Subjects(ProductsForShopper data) =>
         [.. data.Products.Select(product => new Subject(product.Code, product.Name))];
+
+    /// <summary>
+    /// What the search found, for the code that draws the answer: the nearest are not
+    /// what was asked, so a search that found only those found nothing here.
+    /// </summary>
+    protected override Found? Found(ProductsForShopper data)
+    {
+        if (data.OnlyNearest || data.Products.Count == 0)
+            return null;
+
+        var (search, currency) = (data.Search, data.Products[0].Currency);
+        return new Found(
+            [.. data.Products.Select(product => new FoundProduct(product.Code, product.Category, product.InStock))],
+            data.PerCategory ?? new Dictionary<string, long>(),
+            new SearchLink(search.Text, search.Category, search.Brand,
+                search.MinPrice is { } low ? new Money(low, currency) : null,
+                search.MaxPrice is { } high ? new Money(high, currency) : null,
+                search.OnOffer, search.InStock),
+            data.Total);
+    }
+
+    /// <summary>
+    /// How many products each category branch holds, as the search's facet counts
+    /// them — with every other filter applied, which is the count the listing shows.
+    /// The products in promotions found by a second search are counted as they are.
+    /// </summary>
+    private static Dictionary<string, long> PerCategory(SearchResultPage page, IReadOnlyList<SearchHit> hits) =>
+        ReferenceEquals(hits, page.Hits) && page.Facets?.FirstOrDefault(facet => facet.Kind == FacetKind.Category) is { } categories
+            ? categories.Options.ToDictionary(option => option.Value, option => option.Count, StringComparer.OrdinalIgnoreCase)
+            : hits.Where(hit => hit.Category is not null)
+                .CountBy(hit => hit.Category!, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(count => count.Key, count => (long)count.Value, StringComparer.OrdinalIgnoreCase);
 }

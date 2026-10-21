@@ -97,7 +97,7 @@ JSON schema (the local server constrains the output to it), one of five kinds
 
 | Kind | What the model writes | What code draws |
 |---|---|---|
-| `products` | up to three product codes, and for each up to two **reasons** (four and three until T-5 measured them): a sentence and the id of the fact it cites | a card per product, **built by code from the read** — name, picture, price, availability, never the model's — and under it each reason with its **source chip**; *See all 14 results* links to the search the tool ran |
+| `products` | up to three product codes, and for each up to two **reasons** (four and three until T-5 measured them): a sentence and the id of the fact it cites | a card per product, **built by code from the read** — name, picture, price, availability, never the model's — and under it each reason with its **source chip**. Code **tops the cards up to three** from what the turn's searches found in the category of the products the model named, and puts those that can be bought first (2026-10-21); a card with no reason carries code's line *Matches your search*. *See all 4 results* links to the search as it was run, inside the cards' category when they share one — the listing's own `within` and `price` filters, which the shopper sees and can take off — and counts that category |
 | `order` | sentences about an order, each citing a fact of that order or of the policy | the order's status line built by code, the sentences with their chips, and a link to the order's page (where a return is opened) |
 | `shop` | one to three sentences about the shop itself — its return policy — each citing a fact of the shop | the sentences with their chips |
 | `ask` | one question back to the shopper | the question |
@@ -139,9 +139,14 @@ Each reason passes three checks, in this order, all in code:
    claim.
 
 A dropped reason is **counted** (`reasonsDropped`, on the turn and in its event),
-never shown, never silently replaced. **A card with nothing said of it is never
-shown** (the author, 2026-10-06; until then it was a plain card): a product left
-with no reason is left out of the answer, and when that leaves none, code says what
+never shown, never silently replaced. **A card is shown only with something true
+under it** — a reason that held, or the line code can say of a product a search of
+the turn found for what was asked: *Coincide con tu búsqueda* / *Matches your
+search* (option C, the author, 2026-10-21). It refines the rule of 2026-10-06, *a
+card with nothing said of it is never shown*, which had replaced a plain card. A
+product **every reason of which fell** is one the model got wrong, and is left out
+and never brought back as a card the search found; one the model named and said
+nothing of, that no search found, is left out too. When that leaves none, code says what
 is true — on a product's page, *This product's details don't say what you asked* /
 *La ficha de este producto no indica lo que preguntas*; anywhere else the turn ends
 as the model's failure and the panel shows the search's results for the same
@@ -384,6 +389,7 @@ storefront's consent.
 | `tino_opened` (page, from: header or search) | is it used, and from where? | where the entry lives; whether the search page's offer earns its place |
 | `tino_answered` (kind, tools, products shown, reasons shown, **reasons dropped**, model calls, latency) | what is asked of it, and how much of what the model writes survives grounding? | above 20 % dropped, the prompt or the model is the problem; which tools to add |
 | `tino_result_followed` (action: product opened or added to cart, position) | **does an answer lead to a product, compared with a search?** | if answers convert no better than search results, the conversation is not worth its cost |
+| `tino_result_followed` · `card` (reasoned, matched — 2026-10-21) | **is a card code added under *Matches your search* ever opened?** | if those are opened far less than the cards the model explained, topping an answer up to three stops |
 | `tino_unavailable` (cause: model, scorer, time, budget) | how often does the shopper get the fallback? | the turn's time, the budget, the default profile |
 
 ## Evaluation and tests

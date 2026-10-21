@@ -60,6 +60,75 @@ public sealed class SearchProductsToolTests
         Assert.Equal(new SearchAsRun("sartén inducción", "KITCHEN", "Vertex", null, 40m, false, true), found.Search);
     }
 
+    /// <summary>
+    /// What the search found, for the code that draws the answer (2026-10-21): each
+    /// product's category and whether it can be bought, in the order ranked, how many
+    /// each category holds, and the search as run, prices as money.
+    /// </summary>
+    [Fact]
+    public async Task It_says_what_it_found_with_each_ones_category_and_stock_and_the_count_of_each_category()
+    {
+        SearchHit Of(string code, string category, bool inStock = true) => Hit(code, code, 40m, inStock) with { Category = category };
+        var page = new SearchResultPage(
+            [Of("AROMA-12", "COFFEE_MAKER", inStock: false), Of("PAN-24", "COOKWARE"), Of("IND-4", "COFFEE_MAKER")], 11, 1, 12, 1,
+            Facets: [new SearchFacet("category", FacetKind.Category, "Categoría",
+                [new FacetOption("KITCHEN", "Cocina", 11, false), new FacetOption("COFFEE_MAKER", "Cafeteras", 4, false)])]);
+
+        var answer = await new SearchProductsTool(new Shop(page)).ReadAsync(
+            Arguments("""{"text":"cafeteras","culture":"es","minPrice":31,"maxPrice":50}"""), Ct);
+
+        var found = Assert.IsType<Found>(answer.Found);
+        Assert.Equal(
+            [new FoundProduct("AROMA-12", "COFFEE_MAKER", false), new FoundProduct("PAN-24", "COOKWARE", true), new FoundProduct("IND-4", "COFFEE_MAKER", true)],
+            found.Products);
+        Assert.Equal(4, found.PerCategory["COFFEE_MAKER"]);
+        Assert.Equal(11, found.Total);
+        Assert.Equal(new SearchLink("cafeteras", null, null, new Money(31m, "EUR"), new Money(50m, "EUR"), false, false), found.Search);
+    }
+
+    private sealed class Taxonomy : ElGuerre.Tendero.Catalog.Ports.ICategoryReader
+    {
+        public Task<ElGuerre.Tendero.Catalog.Domain.CategoryTree> AllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new ElGuerre.Tendero.Catalog.Domain.CategoryTree(
+            [
+                ElGuerre.Tendero.Catalog.Domain.Category.Define(TimeProvider.System, "COFFEE_MAKER", LocalizedText.Both("Coffee makers", "Cafeteras")),
+            ]));
+    }
+
+    /// <summary>
+    /// The model was asked for a category's code and wrote its name: "coffee makers"
+    /// searched a category that does not exist, found nothing, and the assistant asked
+    /// back (2026-10-21). A name the taxonomy holds, in either language and any case, is
+    /// that category; the search as run says the code, so "see all" leads inside it.
+    /// </summary>
+    [Theory]
+    [InlineData("coffee makers", "COFFEE_MAKER")]
+    [InlineData(" Cafeteras ", "COFFEE_MAKER")]
+    [InlineData("COFFEE_MAKER", "COFFEE_MAKER")]
+    // A word that names no category stays what was written: nothing is guessed.
+    [InlineData("coffee", "coffee")]
+    public async Task A_categorys_name_is_searched_as_its_code(string written, string searched)
+    {
+        var shop = new Shop(new SearchResultPage([Hit("IND-4", "Cafetera de inducción")], 1, 1, 12, 1));
+
+        var answer = await new SearchProductsTool(shop, new Taxonomy()).ReadAsync(
+            Arguments($$"""{"text":"cafeteras","culture":"en","category":"{{written}}"}"""), Ct);
+
+        Assert.Equal(searched, shop.Asked!.Category);
+        Assert.Equal(searched, Assert.IsType<ProductsForShopper>(answer.Data).Search.Category);
+    }
+
+    /// <summary>The nearest are not what was asked: "matches your search" would be false of them.</summary>
+    [Fact]
+    public async Task Only_the_nearest_is_nothing_found()
+    {
+        var page = new SearchResultPage([Hit("PAN-1", "Sartén")], 9, 1, 12, 1, new SearchAnswer(SearchMatch.Related));
+
+        var answer = await new SearchProductsTool(new Shop(page)).ReadAsync(Arguments("""{"text":"tostadora"}"""), Ct);
+
+        Assert.Null(answer.Found);
+    }
+
     /// <summary>What it finds is which products there are; what is true of each is another read's.</summary>
     [Fact]
     public async Task A_search_hands_an_answer_nothing_to_cite()

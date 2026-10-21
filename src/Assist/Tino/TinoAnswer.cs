@@ -60,9 +60,18 @@ public enum TinoKind
 /// <param name="Quotes">For an approved claim, the words it was approved on.</param>
 public sealed record Reason(string Text, FactSource Source, string Fact, IReadOnlyList<string> Quotes, double? Support);
 
+/// <summary>What code says under a card the model said nothing of (2026-10-21): the one line it knows is true.</summary>
+public enum ProductNote
+{
+    /// <summary>A search of this turn found it for what was asked.</summary>
+    MatchesSearch,
+}
+
 /// <summary>A product the answer names. Its card is the storefront's, drawn from the
 /// shop's own read of that code; the name is here for a reader that draws none.</summary>
-public sealed record AnsweredProduct(string Code, string Name, IReadOnlyList<Reason> Reasons);
+/// <param name="Note">Code's line under a card with no reason (option C, the author,
+/// 2026-10-21); none under a card the model explained.</param>
+public sealed record AnsweredProduct(string Code, string Name, IReadOnlyList<Reason> Reasons, Message<ProductNote>? Note = null);
 
 /// <param name="Code">The product whose details do not say, or none when it is the shop that has no such information.</param>
 /// <param name="Sentence">Written by code, in es or en: the model supplies only what was asked about.</param>
@@ -73,7 +82,11 @@ public sealed record NoData(string? Code, string? Name, string Sentence, IReadOn
 /// order's page — where a return is opened — and went nowhere near a model.</summary>
 public sealed record AnsweredOrder(string Id, string Title);
 
-/// <summary>A read the turn made, with what it was asked — a search's is where "see all" leads.</summary>
+/// <summary>Where "see all" leads from an answer's cards: the search as it was run, inside
+/// the cards' category when they share one, and how many products that holds.</summary>
+public sealed record SeeAll(SearchLink Search, long Total);
+
+/// <summary>A read the turn made, with what it was asked.</summary>
 public sealed record TinoRead(string Tool, JsonElement Arguments, int Rows, int? Total);
 
 /// <summary>
@@ -83,15 +96,24 @@ public sealed record TinoRead(string Tool, JsonElement Arguments, int Rows, int?
 /// </summary>
 /// <param name="SearchText">The shopper's last words: what the storefront searches for when Tino did not answer.</param>
 /// <param name="ReasonsDropped">Sentences the model wrote that did not hold and were not shown.</param>
+/// <param name="More">Where "see all" leads, when the search holds more than the cards show.</param>
 public sealed record TinoAnswer(
     TinoStatus Status, TinoCause? Cause, TinoKind? Kind,
     IReadOnlyList<AnsweredProduct> Products, IReadOnlyList<Reason> Says, string? Ask, NoData? NoData,
     IReadOnlyList<TinoRead> Reads, string SearchText, int ReasonsDropped,
-    TurnCost? Cost, string? Profile, bool FellBack, string ConversationId, AnsweredOrder? Order = null);
+    TurnCost? Cost, string? Profile, bool FellBack, string ConversationId, AnsweredOrder? Order = null, SeeAll? More = null);
 
 /// <summary>What the model's reply holds once code has read it: one of the kinds, and how much of it was dropped.</summary>
 /// <param name="Claim">For a <see cref="TinoKind.NoData"/> about a product, the statement
 /// the model says its details do not make — what grounding checks that none of them does.</param>
 public sealed record TinoBody(
     TinoKind Kind, IReadOnlyList<AnsweredProduct> Products, IReadOnlyList<Reason> Says, string? Ask, NoData? NoData, int Dropped,
-    string? Claim = null, AnsweredOrder? Order = null);
+    string? Claim = null, AnsweredOrder? Order = null)
+{
+    /// <summary>The products grounding left out because every reason the model wrote of them fell:
+    /// never shown again in the turn, not even as a card the search found.</summary>
+    public IReadOnlyList<string> Fell { get; init; } = [];
+
+    /// <summary>Where "see all" leads from the cards, once code has drawn them.</summary>
+    public SeeAll? More { get; init; }
+}

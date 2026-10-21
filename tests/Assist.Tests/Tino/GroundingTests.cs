@@ -141,19 +141,28 @@ public sealed class GroundingTests
     {
         var held = await Hold(Products(new AnsweredProduct("P-1", "Producto", [About("Dice algo.", "dato")])), new Scorer((_, _) => score));
 
-        Assert.Equal(stands ? 1 : 0, held.Products.Single().Reasons.Count);
+        Assert.Equal(stands ? 1 : 0, held.Products.Sum(product => product.Reasons.Count));
         Assert.Equal(stands ? 0 : 1, held.Dropped);
     }
 
-    /// <summary>The search found it, so it is shown — as a plain card, with nothing said of it.</summary>
+    /// <summary>
+    /// A product every reason of which fell is one the model got wrong — the injected
+    /// description's case — and leaves the answer, remembered so that nothing puts it
+    /// back (2026-10-21). One the model wrote no reason for is not wrong, only
+    /// unexplained, and stays for the turn to decide.
+    /// </summary>
     [Fact]
-    public async Task A_product_left_with_no_reason_is_still_named_and_what_was_dropped_before_is_kept_in_the_count()
+    public async Task A_product_whose_reasons_all_fell_leaves_and_is_remembered_and_one_never_explained_stays()
     {
-        var body = Products(new AnsweredProduct("P-1", "Producto", [About("Es el mejor.", "dato")])) with { Dropped = 2 };
+        var body = Products(
+            new AnsweredProduct("P-1", "Producto", [About("Es el mejor.", "dato")]),
+            new AnsweredProduct("P-2", "Otro", [])) with
+        { Dropped = 2 };
 
         var held = await Hold(body, Scorer.Saying());
 
-        Assert.Equal(("P-1", 0), (held.Products.Single().Code, held.Products.Single().Reasons.Count));
+        Assert.Equal(["P-2"], held.Products.Select(product => product.Code));
+        Assert.Equal(["P-1"], held.Fell);
         Assert.Equal(3, held.Dropped);
     }
 

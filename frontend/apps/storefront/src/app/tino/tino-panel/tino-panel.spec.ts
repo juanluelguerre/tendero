@@ -112,12 +112,57 @@ describe('the tino panel', () => {
     expect(link.getAttribute('href')).toBe('/es?q=sart%C3%A9n%20inducci%C3%B3n');
   });
 
-  it('offers no more results when the search found only what is shown', async () => {
+  /**
+   * The search as it was run, inside the cards' category: filters the listing shows
+   * and the shopper can take off, and the count of that category (2026-10-21) — the
+   * link that counted pans among coffee makers.
+   */
+  it('leads to the search as it was run, its category and price as the listing writes them', async () => {
     const element = await asked(
-      answer({ reads: [{ tool: 'search_products', arguments: { text: 'sartén' }, rows: 1, total: 1 }] }),
+      answer({
+        more: {
+          search: {
+            text: 'cafeteras',
+            category: 'COFFEE_MAKER',
+            brand: null,
+            minPrice: { amount: 3100, currency: 'EUR' },
+            maxPrice: { amount: 5000, currency: 'EUR' },
+            onOffer: false,
+            inStock: false,
+          },
+          total: 4,
+        },
+      }),
     );
 
+    const link = [...element.querySelectorAll('a')].find((a) => a.textContent!.includes('tino.seeAll'))!;
+    expect(link.getAttribute('href')).toBe('/es?q=cafeteras&within=COFFEE_MAKER&price=31-50');
+  });
+
+  it('offers no more results when the search found only what is shown', async () => {
+    const element = await asked(answer({ more: null }));
+
     expect(element.textContent).not.toContain('tino.seeAll');
+  });
+
+  /** A card the model said nothing of stands under the one line code knows is true of it (option C). */
+  it("shows code's line under a card the model said nothing of", async () => {
+    const element = await asked(
+      answer({
+        products: [
+          {
+            code: 'PAN-1',
+            name: 'Sartén de hierro',
+            reasons: [],
+            note: { code: 'MatchesSearch', about: 'PAN-1', text: 'Coincide con tu búsqueda.' },
+          },
+        ],
+      }),
+      { cards: { items: [hit('PAN-1')] } },
+    );
+
+    expect(element.querySelector('[data-note]')!.textContent).toContain('tino.note.MatchesSearch');
+    expect(element.querySelector('storefront-tino-source')).toBeNull();
   });
 
   it("says what a product's details do not say with the server's sentence, and the nearest facts with their chips", async () => {
@@ -305,12 +350,17 @@ describe('the tino panel', () => {
 
   // ---------- what an answer leads to ----------
 
-  it('counts a product followed with its place in the answer, and nothing for a click that follows nothing', async () => {
+  it('counts a product followed with its place in the answer and its kind of card, and nothing for a click that follows nothing', async () => {
     const element = await asked(
       answer({
         products: [
           { code: 'PAN-1', name: 'Sartén de hierro', reasons: [reason('Es de hierro.')] },
-          { code: 'PAN-2', name: 'Sartén de acero', reasons: [] },
+          {
+            code: 'PAN-2',
+            name: 'Sartén de acero',
+            reasons: [],
+            note: { code: 'MatchesSearch', about: 'PAN-2', text: 'Coincide con tu búsqueda.' },
+          },
         ],
       }),
       { cards: { items: [hit('PAN-1'), hit('PAN-2', 'Sartén de acero')] } },
@@ -320,9 +370,11 @@ describe('the tino panel', () => {
 
     products[1].querySelector<HTMLAnchorElement>('a.card__link')!.click();
     products[0].querySelector('summary')!.click();
+    products[0].querySelector<HTMLAnchorElement>('a.card__link')!.click();
 
     expect(telemetry.trackEvent.mock.calls).toEqual([
-      ['tino_result_followed', { action: 'product_opened', position: 2 }],
+      ['tino_result_followed', { action: 'product_opened', position: 2, card: 'matched' }],
+      ['tino_result_followed', { action: 'product_opened', position: 1, card: 'reasoned' }],
     ]);
   });
 
@@ -345,7 +397,11 @@ describe('the tino panel', () => {
     await new Promise((resolve) => setTimeout(resolve));
 
     expect(TestBed.inject(Router).url).toBe('/es?q=sart%C3%A9n');
-    expect(telemetry.trackEvent).toHaveBeenCalledWith('tino_result_followed', { action: 'search_opened', position: 0 });
+    expect(telemetry.trackEvent).toHaveBeenCalledWith('tino_result_followed', {
+      action: 'search_opened',
+      position: 0,
+      card: 'none',
+    });
   });
 
   // ---------- speaking to Tino (phase 14, the voice spec V-2 and V-3) ----------

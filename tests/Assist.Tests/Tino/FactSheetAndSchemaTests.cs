@@ -40,6 +40,25 @@ public sealed class FactSheetAndSchemaTests
         Assert.Null(sheet.Product("PAN-2"));
     }
 
+    /// <summary>What each search found is kept for the code that draws the cards, in the order searched.</summary>
+    [Fact]
+    public void What_each_search_found_is_kept_in_the_order_searched()
+    {
+        var sheet = new FactSheet();
+        var under30 = new Found([new FoundProduct("STOVE-6", "COFFEE_MAKER", true)], new Dictionary<string, long>(),
+            new SearchLink("cafeteras", null, null, null, new Money(30m, "EUR"), false, false), 1);
+        var from31 = new Found([new FoundProduct("AROMA-12", "COFFEE_MAKER", false), new FoundProduct("IND-4", "COFFEE_MAKER", true)],
+            new Dictionary<string, long>(), new SearchLink("cafeteras", null, null, new Money(31m, "EUR"), new Money(50m, "EUR"), false, false), 2);
+
+        sheet.Add(new ReadAnswer(new { }, 1, 1, Subjects: [new Subject("STOVE-6", "Italiana 6 tazas")], Found: under30));
+        sheet.Add(new ReadAnswer(new { }, 1, null, Subjects: [new Subject("STOVE-6", "Italiana 6 tazas")]));
+        sheet.Add(new ReadAnswer(new { }, 2, 2, Found: from31));
+
+        Assert.Equal([under30, from31], sheet.Searches);
+        Assert.Equal(new FoundProduct("IND-4", "COFFEE_MAKER", true), sheet.Found("ind-4"));
+        Assert.Null(sheet.Found("PAN-1"));
+    }
+
     /// <summary>A fact about a product no read named still makes it one an answer may name.</summary>
     [Fact]
     public void A_fact_brings_its_product_and_the_shop_is_no_product()

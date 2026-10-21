@@ -603,6 +603,9 @@
     "stopped": "Stopped. Ask again when you like.",
     "answered": "Tino has answered.",
     "nearest": "What they do say",
+    "note": {
+      "MatchesSearch": "Matches your search"
+    },
     "openOrder": "Open this order →",
     "seeAll": "See all {{count}} results →",
     "seeAllRelated": "See all {{count}} similar products →",
