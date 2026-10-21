@@ -19,6 +19,9 @@ export type CartView = Schemas['CartView'];
 export type CartLineView = Schemas['CartLineView'];
 
 export type ShippingOptionsResponse = Schemas['ShippingOptionsResponse'];
+
+/** The countries the shop delivers to, as codes; null when it delivers to every country. */
+export type ShippingCountries = Schemas['ShippingCountries'];
 export type ShippingOptionView = Schemas['ShippingOptionView'];
 
 export type AddressRequest = Schemas['AddressRequest'];

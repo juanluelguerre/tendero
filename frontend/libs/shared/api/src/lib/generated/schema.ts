@@ -708,6 +708,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/shipping/countries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ShippingCountries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{orderId}/returns": {
         parameters: {
             query?: never;
@@ -3518,6 +3534,9 @@ export interface components {
             productId: string;
             outcome: components["schemas"]["TranslationOutcome"];
         };
+        ShippingCountries: {
+            countries: null | string[];
+        };
         ShippingOptionView: {
             code: string;
             label: string;
@@ -6111,6 +6130,26 @@ export interface operations {
                         /** @enum {string} */
                         code?: "DoubtNotWaiting";
                     } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ShippingCountries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingCountries"];
                 };
             };
         };

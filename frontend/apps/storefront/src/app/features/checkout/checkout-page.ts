@@ -6,7 +6,8 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
 import { CheckoutCards, CheckoutStore, NewAddress, NewCard } from './checkout.store';
-import { Notice, PricePipe } from '@tendero/shared-ui';
+import { CountryPipe, Notice, PricePipe } from '@tendero/shared-ui';
+import { ShippingCountriesStore } from '../../addresses/shipping-countries.store';
 import { Totals } from '../../totals/totals';
 import { Summary } from '../../summary/summary';
 
@@ -26,7 +27,7 @@ import { Summary } from '../../summary/summary';
  */
 @Component({
   selector: 'storefront-checkout',
-  imports: [TranslocoDirective, RouterLink, Notice, Totals, Summary, PricePipe, FormField],
+  imports: [TranslocoDirective, RouterLink, Notice, Totals, Summary, PricePipe, CountryPipe, FormField],
   providers: [CheckoutStore],
   templateUrl: './checkout-page.html',
 })
@@ -34,6 +35,7 @@ export class CheckoutPage {
   protected readonly culture = inject(CultureStore);
   protected readonly store = inject(CheckoutStore);
   protected readonly cart = inject(CartStore);
+  protected readonly countries = inject(ShippingCountriesStore);
 
   /** Every link carries the language segment (P5-13). */
   protected readonly links = inject(ShopLinks);

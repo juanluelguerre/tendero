@@ -82,7 +82,7 @@
                       @if (entry.address.region) {
                         , {{ entry.address.region }}
                       }
-                      · {{ entry.address.countryCode }}
+                      · {{ entry.address.countryCode | country: culture.active() }}
                     </span>
                     @if (entry.address.phone) {
                       <span>{{ entry.address.phone }}</span>

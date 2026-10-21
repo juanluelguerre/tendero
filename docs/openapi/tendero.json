@@ -4155,6 +4155,26 @@
         ]
       }
     },
+    "/api/shipping/countries": {
+      "get": {
+        "tags": [
+          "Checkout"
+        ],
+        "operationId": "ShippingCountries",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingCountries"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orders/{orderId}/returns": {
       "post": {
         "tags": [
@@ -18351,6 +18371,23 @@
           },
           "outcome": {
             "$ref": "#/components/schemas/TranslationOutcome"
+          }
+        }
+      },
+      "ShippingCountries": {
+        "required": [
+          "countries"
+        ],
+        "type": "object",
+        "properties": {
+          "countries": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
