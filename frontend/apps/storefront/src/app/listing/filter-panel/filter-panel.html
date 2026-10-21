@@ -396,16 +396,23 @@
     </label>
   </ng-template>
 
-  <!-- A yes-or-no fact as a switch: the shop's one switch (lib-toggle-switch). -->
+  <!-- A yes-or-no fact as a switch: the shop's one switch (.switch, styles.css). -->
   <ng-template #toggleSwitch let-kind="kind" let-option="option">
-    <lib-toggle-switch
-      class="text-sm in-[.in-sheet]:text-md"
-      [checked]="chosen(kind, option.value)"
-      [disabled]="dead(kind, option)"
-      (toggled)="toggle(kind, option.value)"
+    <label
+      class="flex min-h-control-md cursor-pointer items-center justify-between gap-3 text-sm text-body in-[.in-sheet]:text-md has-disabled:cursor-not-allowed has-disabled:text-muted pointer-coarse:min-h-tap"
     >
-      {{ option.label }}
-      <span class="text-xs font-normal text-muted"> ({{ option.count }})</span>
-    </lib-toggle-switch>
+      <span class="min-w-0">
+        {{ option.label }}
+        <span class="text-xs font-normal text-muted"> ({{ option.count }})</span>
+      </span>
+      <input
+        class="switch"
+        type="checkbox"
+        role="switch"
+        [checked]="chosen(kind, option.value)"
+        [disabled]="dead(kind, option)"
+        (change)="toggle(kind, option.value)"
+      />
+    </label>
   </ng-template>
 </ng-container>

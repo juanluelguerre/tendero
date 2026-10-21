@@ -182,8 +182,10 @@ describe('the listing', () => {
   it('draws a switch as one, with its state, and a colour with its name beside the swatch', async () => {
     const { harness, element } = await open('/?offer=1');
 
-    const offer = column(element).querySelector<HTMLButtonElement>('[role="switch"]');
-    expect(offer?.getAttribute('aria-checked')).toBe('true');
+    // A checkbox said to be a switch: its state is the input's own, which the
+    // browser gives assistive technology as the switch's, with no aria-checked.
+    const offer = column(element).querySelector<HTMLInputElement>('input[type="checkbox"][role="switch"]');
+    expect(offer?.checked).toBe(true);
     expect(last()?.['onOffer']).toBe('true');
 
     const black = column(element).querySelector<HTMLButtonElement>('.swatch');

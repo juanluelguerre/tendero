@@ -6,7 +6,7 @@ import { ProductCard } from '../../product-card/product-card';
 import { ShopLinks } from '../../shop-links';
 import { TrailStore } from '../trail.store';
 import { TrailHistoryStore } from './trail-history.store';
-import { Icon, ToggleSwitch } from '@tendero/shared-ui';
+import { Icon } from '@tendero/shared-ui';
 
 /**
  * *Tu historial*, in *Tu cuenta* (R-8, H-3b; docs/privacy.md): the whole trail,
@@ -19,7 +19,7 @@ import { Icon, ToggleSwitch } from '@tendero/shared-ui';
  */
 @Component({
   selector: 'storefront-trail-history',
-  imports: [TranslocoDirective, RouterLink, ProductCard, Icon, ToggleSwitch],
+  imports: [TranslocoDirective, RouterLink, ProductCard, Icon],
   providers: [TrailHistoryStore],
   templateUrl: './trail-history.html',
   host: { class: 'block' },

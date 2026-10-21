@@ -225,10 +225,7 @@ test('Ofertas in the departments row lists everything on offer', async ({ page }
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ofertas');
   await listed(page);
   await expect(page.locator('.chips .chip')).toHaveText([/oferta/i]);
-  await expect(page.locator('#listing-filters').getByRole('switch', { name: /oferta/i })).toHaveAttribute(
-    'aria-checked',
-    'true',
-  );
+  await expect(page.locator('#listing-filters').getByRole('switch', { name: /oferta/i })).toBeChecked();
 });
 
 test('a filtered category names the unfiltered one as canonical, and a search keeps itself out of the index', async ({

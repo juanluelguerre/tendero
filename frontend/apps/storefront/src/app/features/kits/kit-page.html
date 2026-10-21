@@ -46,12 +46,18 @@
             <fieldset class="grid gap-3">
               <legend class="mb-2 text-sm font-semibold">{{ t('kits.requirements') }}</legend>
               @for (option of template.requirements; track option.facet) {
-                <lib-toggle-switch
-                  [checked]="store.required().includes(option.facet)"
-                  (toggled)="store.require(option.facet, $event)"
+                <label
+                  class="flex min-h-control-md cursor-pointer items-center justify-between gap-3 text-body pointer-coarse:min-h-tap"
                 >
-                  {{ option.label }}
-                </lib-toggle-switch>
+                  <span class="min-w-0">{{ option.label }}</span>
+                  <input
+                    class="switch"
+                    type="checkbox"
+                    role="switch"
+                    [checked]="store.required().includes(option.facet)"
+                    (change)="store.require(option.facet, !store.required().includes(option.facet))"
+                  />
+                </label>
               }
             </fieldset>
           }
