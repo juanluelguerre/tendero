@@ -863,7 +863,7 @@ frontend/                  # Nx workspace
   apps/backoffice/         # the shopkeeper's: dashboard, review queues, catalogue, promotions, campaigns, stock, orders, returns, agents, audit
   apps/*-e2e/              # Playwright — the thinnest layer of the pyramid
   libs/shared/             # tokens, ui, util, api, i18n, auth, agent, telemetry, a11y
-keycloak/                  # the committed realm: users, roles and clients for a fresh clone
+keycloak/                  # the committed realm and the sign-in page's theme in the shop's tokens (keycloak/README.md)
 brand/  design/            # logo and brand guide; DESIGN.md and tokens.css, the single source of every colour, light and dark
 seed/                      # the sample catalogue and its prices, stock and campaigns (es/en)
 tools/                     # SearchEval (quality gates), TrafficSim, SeedImages (the product illustrations), api-map, c4, tracking-plan

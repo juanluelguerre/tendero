@@ -203,7 +203,17 @@ export class AuthStore {
     // pressing sign in on their account page means to come back to it. A screen
     // that exists ONLY to sign in has to say otherwise, or it sends you back to
     // itself — which is how this was wrong the first time.
-    this.oauth.initCodeFlow(returnTo ?? window.location.pathname + window.location.search);
+    //
+    // And in the page's own language: the issuer's sign-in page is otherwise the
+    // one page of the shop in a language nobody chose. `ui_locales` is OIDC's
+    // parameter for it; Keycloak honours it on a realm with its languages turned
+    // on (keycloak/README.md). The page's language is <html lang>, which
+    // the apps' culture store keeps — read here so this library needs no other.
+    const language = document.documentElement.lang;
+    this.oauth.initCodeFlow(
+      returnTo ?? window.location.pathname + window.location.search,
+      language ? { ui_locales: language } : {},
+    );
   }
 
   /**

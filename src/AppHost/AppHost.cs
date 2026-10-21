@@ -621,6 +621,19 @@ var keycloak = builder.AddKeycloak("keycloak", port: keycloakPort, adminPassword
     // this project's path and is left behind by a folder rename.
     .WithDataVolume("tendero-keycloak-data")
     .WithRealmImport("../../keycloak/realms")
+    // The sign-in page in the shop's look (keycloak/themes/tendero; ADR 0065, and
+    // keycloak/README.md): Keycloak's own login theme with the shop's
+    // tokens, typefaces and mark, mounted read-only. The realm names it as its
+    // login theme. Never as the server's default (KC_SPI_THEME__DEFAULT): that is
+    // the default of EVERY theme type, and with only a login theme here the admin
+    // console and the account pages found none — "The theme is null" and a 500.
+    .WithBindMount(Path.Combine(builder.AppHostDirectory, "..", "..", "keycloak", "themes", "tendero"),
+        "/opt/keycloak/themes/tendero", isReadOnly: true)
+    // A development stack: an edit to the theme shows on the next reload, not
+    // after a restart. Keycloak's own advice for working on a theme.
+    .WithEnvironment("KC_SPI_THEME__CACHE_THEMES", "false")
+    .WithEnvironment("KC_SPI_THEME__CACHE_TEMPLATES", "false")
+    .WithEnvironment("KC_SPI_THEME__STATIC_MAX_AGE", "-1")
     // Aspire issues Keycloak a certificate from its own development authority
     // and publishes 8443, so the browser reaches it over HTTPS without a
     // warning — which is the part that matters, because the sign-in screen

@@ -252,11 +252,13 @@ jobs:
           git diff --exit-code -- libs/shared/telemetry/src/lib/generated/ ../docs/telemetry/
 
       # The design tokens (ADR 0050) are Tailwind's theme in design/theme.css;
-      # the pages without Tailwind read design/tokens.css, written from it.
+      # the pages without Tailwind read design/tokens.css, written from it, and
+      # the sign-in page's theme reads its own copies of the tokens, the
+      # typefaces and the icon, written by the same script.
       - name: The design tokens for pages without Tailwind are current
         run: |
           node ../tools/tokens.mjs
-          git diff --exit-code -- ../design/tokens.css
+          git diff --exit-code -- ../design/tokens.css ../keycloak/themes/tendero/login/resources/
 
       # The C4 model (ADR 0035): LikeC4 validates it, the script holds its
       # containers to the AppHost's resources, and the diff holds the committed
