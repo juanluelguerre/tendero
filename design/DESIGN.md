@@ -166,6 +166,13 @@ Scanning the orders table, you can see at a glance what an agent bought.
   and `outline: var(--color-focus)` is **not** one: the shorthand resets
   `outline-style` to `none`, so it paints nothing and overrides the ring the
   system already draws. Always `outline: 2px solid var(--color-focus)`.
+- **Where the ring sits.** Outside, 2px out, on what has no edge of its own —
+  buttons, links, pictures. **On the edge** of a text field (`outline-offset:
+  -1px`): the field's border turns the focus colour at 2px, one line. A ring 2px
+  outside a field that already has a border drew a second line round something
+  plainly focused (the author, 2026-10-21). A wrapper that draws an input's box —
+  the price range, the composer, an input group — does the same with
+  `focus-within:-outline-offset-1`, and the bare input inside draws none.
 - Contrast is a gate, not an intention: `design-contrast.spec.ts` holds every text
   token against every surface at 4.5:1, and the focus ring at 3:1, in both themes.
 - Respect `prefers-reduced-motion`; the awning bar is the only thing that animates.

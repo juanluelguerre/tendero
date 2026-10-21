@@ -171,7 +171,7 @@
                    the right edge. The box draws the focus ring for its input. -->
               <div class="mt-2 flex gap-2">
                 <label
-                  class="flex min-h-control min-w-0 flex-1 items-center gap-1 rounded-md border border-hairline-strong bg-surface px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus pointer-coarse:min-h-tap"
+                  class="flex min-h-control min-w-0 flex-1 items-center gap-1 rounded-md border border-hairline-strong bg-surface px-3 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-focus pointer-coarse:min-h-tap"
                 >
                   <span class="text-xs text-muted" aria-hidden="true">{{ t('listing.price.min') }}</span>
                   <input
@@ -188,7 +188,7 @@
                   />
                 </label>
                 <label
-                  class="flex min-h-control min-w-0 flex-1 items-center gap-1 rounded-md border border-hairline-strong bg-surface px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus pointer-coarse:min-h-tap"
+                  class="flex min-h-control min-w-0 flex-1 items-center gap-1 rounded-md border border-hairline-strong bg-surface px-3 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-focus pointer-coarse:min-h-tap"
                 >
                   <span class="text-xs text-muted" aria-hidden="true">{{ t('listing.price.max') }}</span>
                   <input
@@ -396,28 +396,16 @@
     </label>
   </ng-template>
 
-  <!-- A yes-or-no fact as a switch: a button that says it is one. -->
+  <!-- A yes-or-no fact as a switch: the shop's one switch (lib-toggle-switch). -->
   <ng-template #toggleSwitch let-kind="kind" let-option="option">
-    <button
-      type="button"
-      role="switch"
-      class="group/switch flex min-h-control-md w-full cursor-pointer items-center justify-between gap-3 p-0 text-start text-sm text-body disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 in-[.in-sheet]:min-h-tap in-[.in-sheet]:text-md pointer-coarse:min-h-tap"
-      [attr.aria-checked]="chosen(kind, option.value)"
+    <lib-toggle-switch
+      class="text-sm in-[.in-sheet]:text-md"
+      [checked]="chosen(kind, option.value)"
       [disabled]="dead(kind, option)"
-      (click)="toggle(kind, option.value)"
+      (toggled)="toggle(kind, option.value)"
     >
-      <span>
-        {{ option.label }}
-        <span class="text-xs font-normal text-muted"> ({{ option.count }})</span>
-      </span>
-      <span
-        class="relative h-switch-h w-switch-w flex-none rounded-full bg-hairline-strong transition-[background] duration-(--dur-fast) ease-brand group-aria-checked/switch:bg-accent"
-        aria-hidden="true"
-      >
-        <span
-          class="absolute start-knob-inset top-knob-inset size-icon-sm rounded-full bg-surface transition-[translate] duration-(--dur-fast) ease-brand group-aria-checked/switch:translate-x-knob-travel"
-        ></span>
-      </span>
-    </button>
+      {{ option.label }}
+      <span class="text-xs font-normal text-muted"> ({{ option.count }})</span>
+    </lib-toggle-switch>
   </ng-template>
 </ng-container>

@@ -100,7 +100,7 @@ npm run format                                # from frontend/: Prettier, Tailwi
 UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
 node tools/c4.mjs                             # validate docs/c4/tendero.c4 against the AppHost, redraw its diagrams
 node tools/tracking-plan.mjs                   # docs/telemetry/tracking-plan.json → its .md and the browser's event types
-node tools/tokens.mjs                          # design/theme.css (the tokens, Tailwind's theme) → design/tokens.css for pages without Tailwind
+node tools/tokens.mjs                          # design/theme.css (the tokens, Tailwind's theme) → design/tokens.css for pages without Tailwind, and the Keycloak sign-in theme's tokens, fonts and icon (keycloak/README.md)
 node landing-page/tools/prepare.mjs           # the landing into landing-page/dist (Netlify); film: landing-page/README.md
 
 UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
@@ -547,6 +547,7 @@ and reconstructing it later is exactly what the notebook exists to prevent.
 - ADR index: `docs/adr/README.md`
 - Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): `docs/glossary.md`
 - Pointing an agent at the MCP server and the UCP profile: `docs/mcp.md`
+- Keycloak — the realm, its users, the sign-in page's theme, bringing an old volume in line: `keycloak/README.md`
 - Feature specs: `docs/specs/` — one living spec per feature, named for it; a
   design written before a feature goes here too, never in a folder named for a tool
 - Implementation plans, dated, one per run: `docs/plans/`

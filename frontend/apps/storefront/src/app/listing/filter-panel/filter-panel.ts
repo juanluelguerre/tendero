@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type { FacetKind, FacetOption, Money, PriceBand, SearchFacet } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { Icon } from '@tendero/shared-ui';
+import { Icon, ToggleSwitch } from '@tendero/shared-ui';
 import { majorUnits, ShopCurrency } from '@tendero/shared-util';
 import { TaxonomyStore } from '../../taxonomy/taxonomy.store';
 import { ShopLinks } from '../../shop-links';
@@ -35,7 +35,7 @@ let panels = 0;
  */
 @Component({
   selector: 'storefront-filter-panel',
-  imports: [TranslocoDirective, RouterLink, NgTemplateOutlet, Icon],
+  imports: [TranslocoDirective, RouterLink, NgTemplateOutlet, Icon, ToggleSwitch],
   templateUrl: './filter-panel.html',
   styleUrl: './filter-panel.css',
   host: { class: 'block', '[class.in-sheet]': "mode() === 'sheet'" },

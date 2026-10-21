@@ -79,6 +79,14 @@ const Paths = {
   lock: 'M7 11h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z M8 11V8a4 4 0 0 1 8 0v3',
   /** An agent, the shop's: the backoffice's register draws its own (`agents`). */
   bot: 'M8 8h8a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-5a3 3 0 0 1 3-3z M12 4v4 M9 13h.01 M15 13h.01 M9 16h6',
+
+  // ---------- The shopper's own: the account menu's rows
+  /** A person, the shop's account trigger drawn small: the way into the profile. */
+  person: 'M8.4 8a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0-7.2 0 M4.5 20a7.5 7.5 0 0 1 15 0',
+  /** Through the door and in. */
+  signIn: 'M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4 M9 16l4-4-4-4 M13 12H4',
+  /** Out through the door. */
+  signOut: 'M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4 M15 16l4-4-4-4 M19 12H9',
 } as const;
 
 export type IconName = keyof typeof Paths;

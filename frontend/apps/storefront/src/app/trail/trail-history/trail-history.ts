@@ -6,7 +6,7 @@ import { ProductCard } from '../../product-card/product-card';
 import { ShopLinks } from '../../shop-links';
 import { TrailStore } from '../trail.store';
 import { TrailHistoryStore } from './trail-history.store';
-import { Icon } from '@tendero/shared-ui';
+import { Icon, ToggleSwitch } from '@tendero/shared-ui';
 
 /**
  * *Tu historial*, in *Tu cuenta* (R-8, H-3b; docs/privacy.md): the whole trail,
@@ -19,7 +19,7 @@ import { Icon } from '@tendero/shared-ui';
  */
 @Component({
   selector: 'storefront-trail-history',
-  imports: [TranslocoDirective, RouterLink, ProductCard, Icon],
+  imports: [TranslocoDirective, RouterLink, ProductCard, Icon, ToggleSwitch],
   providers: [TrailHistoryStore],
   templateUrl: './trail-history.html',
   host: { class: 'block' },
@@ -29,8 +29,4 @@ export class TrailHistory {
   protected readonly trail = inject(TrailStore);
   protected readonly links = inject(ShopLinks);
   protected readonly signedIn = inject(AuthStore).isSignedIn;
-
-  protected toggle(event: Event): void {
-    this.trail.setEnabled((event.target as HTMLInputElement).checked);
-  }
 }

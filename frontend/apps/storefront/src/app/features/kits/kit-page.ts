@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { KitSlotView, SearchHit } from '@tendero/shared-api';
 import { CultureStore, PageTitles } from '@tendero/shared-i18n';
-import { Notice, PricePipe, StatusPill } from '@tendero/shared-ui';
+import { Notice, PricePipe, StatusPill, ToggleSwitch } from '@tendero/shared-ui';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { ProductImage } from '../../product-image/product-image';
 import { ShopLinks } from '../../shop-links';
@@ -24,7 +24,7 @@ import { KitStore } from './kit.store';
  */
 @Component({
   selector: 'storefront-kit',
-  imports: [TranslocoDirective, RouterLink, FormField, Notice, StatusPill, ProductImage, PricePipe],
+  imports: [TranslocoDirective, RouterLink, FormField, Notice, StatusPill, ProductImage, PricePipe, ToggleSwitch],
   providers: [KitStore],
   templateUrl: './kit-page.html',
 })

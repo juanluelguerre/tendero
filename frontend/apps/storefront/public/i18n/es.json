@@ -36,7 +36,7 @@
     "removeKeepsOrders": "Los pedidos ya hechos conservan su dirección.",
     "keep": "Conservarla",
     "unknown": "Esa dirección no está en tu libreta.",
-    "label": "Nombre",
+    "label": "Alias",
     "labelHint": "Cómo la llamas tú: Casa, Trabajo, Casa de mi madre…",
     "phone": "Teléfono (opcional)",
     "deliverHere": "Enviar aquí por defecto",
@@ -95,8 +95,8 @@
     "withdrawnOn": "Lo desactivaste el {{day}}.",
     "nothingSentYet": "La tienda todavía no envía emails. Esto guarda tu elección para cuando lo haga. Los emails de tus pedidos no dependerán de ella.",
     "analytics": "Medir cómo se usa la tienda",
-    "analyticsHint": "Recuentos anónimos que nos ayudan a mejorar la tienda. Se guarda en este navegador, no en tu cuenta: otro dispositivo te volverá a preguntar.",
-    "analyticsAllowed": "Permitido en este navegador"
+    "analyticsWhat": "Contar lo que hago aquí, de forma anónima",
+    "analyticsDetail": "Qué productos abro y qué me llevó a ellos, nunca quién soy. Decir que no no cambia nada de la tienda. Se guarda en este navegador: otro dispositivo te volverá a preguntar."
   },
   "yourData": {
     "title": "Tus datos",
@@ -427,9 +427,11 @@
     "dark": "Oscuro"
   },
   "accountMenu": {
-    "open": "Tu cuenta y tus preferencias ({{name}})",
     "guest": "Invitado",
-    "profile": "Perfil"
+    "open": "Tu cuenta y tus preferencias ({{name}})",
+    "profile": "Perfil",
+    "signedIn": "Sesión iniciada",
+    "signedOut": "Sin iniciar sesión"
   },
   "listing": {
     "filters": "Filtros",

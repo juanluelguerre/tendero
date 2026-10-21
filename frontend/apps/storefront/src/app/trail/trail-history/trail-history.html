@@ -12,17 +12,13 @@
       </p>
     </div>
 
-    <label class="inline-flex min-h-tap cursor-pointer items-center gap-2 text-sm font-semibold">
-      <!-- 24 px, WCAG 2.2's floor for a target (the ratchet). -->
-      <input
-        class="size-target accent-accent"
-        type="checkbox"
-        role="switch"
-        [checked]="store.kept().enabled"
-        (change)="toggle($event)"
-      />
-      <span>{{ t('history.switch') }}</span>
-    </label>
+    <lib-toggle-switch
+      class="text-sm font-semibold"
+      [checked]="store.kept().enabled"
+      (toggled)="trail.setEnabled($event)"
+    >
+      {{ t('history.switch') }}
+    </lib-toggle-switch>
   </div>
 
   @if (!store.kept().enabled) {

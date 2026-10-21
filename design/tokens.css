@@ -456,6 +456,21 @@
     border-radius: var(--radius-sm);
   }
 
+  /* A text field already has an edge, so focus is drawn ON it: the ring sits
+     over the 1px border and the edge turns the focus colour, 2px. Out at 2px it
+     drew a second line round a field that was plainly focused already (the
+     author, 2026-10-21). Buttons, links and pictures keep the ring outside: they
+     have no edge of their own to colour. A wrapper that draws the field's box for
+     an input (the price range, the composer) does the same with
+     `focus-within:-outline-offset-1`. */
+  :is(
+      input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='button'], [type='submit'], [type='reset'], [type='image']),
+      textarea,
+      select
+    ):focus-visible {
+    outline-offset: -1px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;

@@ -161,7 +161,7 @@
             @if (store.canKeep()) {
               <div class="mb-2 flex flex-wrap items-end gap-4 border-t border-hairline pt-4" data-keep-address>
                 <label class="flex min-h-target cursor-pointer items-center gap-3">
-                  <input type="checkbox" [formField]="store.keepForm.keep" />
+                  <input class="size-icon accent-accent" type="checkbox" [formField]="store.keepForm.keep" />
                   <span>{{ t('checkout.keepAddress') }}</span>
                 </label>
                 @if (store.keepForm.keep().value()) {

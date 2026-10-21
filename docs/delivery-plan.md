@@ -1060,6 +1060,33 @@ the payment port. `#ecommerce #dotnet #payments #privacy #DDD`
 
 ---
 
+## Platform — common to both apps, not a feature
+
+Work the storefront and the backoffice share that changes no aggregate, slice or
+event: it gets no phase and no spec under `docs/specs/`, and is documented where it
+lives. Recorded here so it has a place on the board.
+
+- [x] **The sign-in page in the shop's look and language** — **S**. *Done 2026-10-21*:
+  Keycloak's `keycloak.v2` theme in the shop's generated tokens, typefaces and mark,
+  light and dark, with no template copied (ADR 0065); the realm speaks es and en;
+  both apps ask for their language with `ui_locales`. Documented in
+  `keycloak/README.md`. **Article** (the author's call: one of the next): *"The
+  shop's door was somebody else's"* — dressing an identity provider without forking
+  it, and why four stylesheets beat a set of templates. `#Keycloak #dotnet #Angular
+  #AI #Tendero #ecommerce`
+- [ ] **A third identity adapter: an issuer of our own on OpenIddict** — **M**, not
+  scheduled. Proposed and confirmed by the author on 2026-10-21: a separate service
+  we implement, beside the shop like Keycloak's container, held to
+  `IdentityProviderContractTests` as the third subclass; `Tendero__Issuer=openiddict`.
+  Before code: an ADR on invariant 10 (an adapter, not an authorization server as a
+  feature), the exact version's licence, and the author's say-so for the package.
+  Article 32.
+- [x] **One switch, five places** — **S**. *Done 2026-10-21*: `lib-toggle-switch` in
+  `libs/shared/ui` (a `button role="switch"`), replacing the hand-drawn ones in the
+  listing's filters, the home trail, the kits and the account's preferences.
+
+---
+
 ## Standing backlog — deferred, with the number
 
 Not scheduled. Each is recorded so the deferral is a decision rather than an

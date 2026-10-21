@@ -1,0 +1,251 @@
+/* ============================================================
+   Tendero's sign-in page: Keycloak's keycloak.v2 theme (PatternFly 5) in the
+   shop's tokens. tokens.css, loaded before this file, is the shop's design
+   system as plain variables (generated from design/theme.css); this file only
+   says which PatternFly variable each token answers, and the few rules the
+   variables cannot reach. Never a hex here: the token test reads this file too.
+
+   Light and dark come from the tokens themselves — tendero.js sets
+   data-theme on <html> from the device's preference, and every --color-* below
+   changes with it. The selectors name Keycloak's dark class as well, so
+   PatternFly's own dark values never win over the shop's.
+   ============================================================ */
+
+html.login-pf,
+html.login-pf.pf-v5-theme-dark {
+  /* Type: the shop's faces, the display one for headings as in the shop. */
+  --pf-v5-global--FontFamily--text: var(--font-sans);
+  --pf-v5-global--FontFamily--heading: var(--font-display);
+  --pf-v5-global--FontFamily--monospace: var(--font-mono);
+
+  /* Surfaces and text. */
+  --pf-v5-global--BackgroundColor--100: var(--color-surface);
+  --pf-v5-global--BackgroundColor--200: var(--color-page);
+  --pf-v5-global--Color--100: var(--color-body);
+  --pf-v5-global--Color--200: var(--color-muted);
+  --pf-v5-global--BorderColor--100: var(--color-hairline-strong);
+  --pf-v5-global--BorderColor--200: var(--color-hairline);
+
+  /* The one clay action — Sign in — and the links, as the shop draws them. */
+  --pf-v5-global--primary-color--100: var(--color-accent);
+  --pf-v5-global--primary-color--200: var(--color-accent-hover);
+  --pf-v5-global--link--Color: var(--color-accent);
+  --pf-v5-global--link--Color--hover: var(--color-accent-hover);
+  --pf-v5-global--active-color--100: var(--color-accent);
+
+  /* What goes wrong, in the shop's danger and its tint. */
+  --pf-v5-global--danger-color--100: var(--color-danger);
+  --pf-v5-global--danger-color--200: var(--color-danger);
+
+  /* Corners: the shop's, a control's and a card's. */
+  --pf-v5-global--BorderRadius--sm: var(--radius-md);
+  --pf-v5-c-button--BorderRadius: var(--radius-md);
+
+  /* The card: no blue band on top; the shop's cards have a hairline, not a flag. */
+  --keycloak-card-top-color: var(--color-hairline);
+
+  color-scheme: light;
+}
+
+html.login-pf[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* The page: the shop's background, not Keycloak's polygons. */
+.login-pf body {
+  background: var(--color-page);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+}
+
+/* The header: the shop's own mark — the awning icon and the wordmark in the
+   display face, clay — where Keycloak wrote the realm's name in capitals. */
+#kc-header-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--color-brand) !important;
+}
+
+#kc-header-wrapper::before {
+  content: '';
+  inline-size: var(--spacing-tap);
+  block-size: var(--spacing-tap);
+  background: url('../img/tendero-icon.svg') center / contain no-repeat;
+}
+
+#kc-header {
+  display: flex;
+  justify-content: center;
+}
+
+/* The card, as the shop's: a surface with a hairline and its corner. */
+.pf-v5-c-login__main {
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+}
+
+.pf-v5-c-login__main-header {
+  border-top: 0;
+}
+
+/* The title and the language picker share a row. PatternFly's grid would not
+   let the title shrink, so in the shop's display face the picker reached 16px
+   past the card's padding; the title takes what is left and wraps instead. */
+html.login-pf .pf-v5-c-login__main-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--spacing-3);
+}
+
+/* On a phone the two would squeeze the title to three lines: the picker takes
+   its own row above it, at the end. 30rem is --breakpoint-2xs (a media query
+   cannot read a variable). */
+@media (width < 30rem) {
+  html.login-pf .pf-v5-c-login__main-header {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--spacing-3);
+  }
+
+  html.login-pf .pf-v5-c-login__main-header-utilities {
+    grid-row: 1;
+    justify-self: end;
+  }
+}
+
+/* The picker is a field like the others (the form-control rules below give it
+   its box), at the size of the shop's small controls. */
+#login-select-toggle {
+  min-block-size: var(--spacing-control-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-body);
+}
+
+.pf-v5-c-login__main-header .pf-v5-c-title,
+#kc-page-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-body);
+}
+
+/* Component variables, set on the components themselves: PatternFly's dark
+   theme sets them there too (`:where(.pf-v5-theme-dark) .pf-v5-c-button`), so a
+   value on <html> would be overridden by the nearer rule. The `html.login-pf`
+   prefix outranks its zero-specificity `:where()`. */
+
+/* The page's one clay action, in both themes. */
+html.login-pf .pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--Color: var(--color-on-accent);
+  --pf-v5-c-button--m-primary--hover--Color: var(--color-on-accent);
+  --pf-v5-c-button--m-primary--focus--Color: var(--color-on-accent);
+  --pf-v5-c-button--m-primary--active--Color: var(--color-on-accent);
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--color-accent);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--color-accent-hover);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--color-accent-hover);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--color-accent-hover);
+}
+
+/* Fields, as the shop's: a box with a strong hairline on every side, and the
+   shop's focus ring — not PatternFly's underline, which drew a second blue line
+   under the ring in light and left the dark theme's fields with no box at all. */
+html.login-pf .pf-v5-c-form-control {
+  --pf-v5-c-form-control--BackgroundColor: var(--color-surface);
+  --pf-v5-c-form-control--Color: var(--color-body);
+  --pf-v5-c-form-control--before--BorderTopColor: var(--color-hairline-strong);
+  --pf-v5-c-form-control--before--BorderRightColor: var(--color-hairline-strong);
+  --pf-v5-c-form-control--before--BorderLeftColor: var(--color-hairline-strong);
+  /* The bottom edge is ::after's (::before draws three sides): the same
+     hairline, which PatternFly turns blue and thicker on hover and focus. */
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--color-hairline-strong);
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: var(--color-hairline-strong);
+  --pf-v5-c-form-control--focus--after--BorderBottomColor: var(--color-hairline-strong);
+  --pf-v5-c-form-control--hover--after--BorderBottomWidth: 1px;
+  --pf-v5-c-form-control--focus--after--BorderBottomWidth: 1px;
+  --pf-v5-c-form-control--m-error--after--BorderBottomColor: var(--color-danger);
+  border-radius: var(--radius-md);
+}
+
+/* PatternFly draws the box with two pseudo-elements of square corners; they take
+   the field's corner, so the box and its focus share one shape. */
+html.login-pf .pf-v5-c-form-control::before,
+html.login-pf .pf-v5-c-form-control::after,
+html.login-pf .pf-v5-c-button.pf-m-control::after {
+  border-radius: inherit;
+}
+
+/* The shop's focus for a text field (design/theme.css): drawn ON the box's edge,
+   which turns the focus colour at 2px — one line, never a second ring outside a
+   field that is plainly focused already. On the box rather than the bare input
+   inside it. */
+html.login-pf .pf-v5-c-form-control:has(> :focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -1px;
+}
+
+/* The box draws the focus, so the bare input inside it draws none (tokens.css
+   carries the shop's rule for a text field, which would draw a second line). */
+html.login-pf .pf-v5-c-form-control > :focus-visible {
+  outline: none;
+}
+
+/* The password and its eye are one control, so the group owns the box's corners
+   and the focus, and the field inside draws none: focus round the field alone
+   left the eye outside it (the input-group pattern of shadcn, Nord and others). */
+html.login-pf .pf-v5-c-input-group {
+  border-radius: var(--radius-md);
+}
+
+html.login-pf .pf-v5-c-input-group:has(input:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -1px;
+}
+
+html.login-pf .pf-v5-c-input-group .pf-v5-c-form-control {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+html.login-pf .pf-v5-c-input-group .pf-v5-c-form-control:has(> :focus-visible) {
+  outline: none;
+}
+
+html.login-pf .pf-v5-c-input-group .pf-v5-c-button.pf-m-control {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+/* Edge draws an eye of its own inside a password field; Keycloak's is beside it,
+   and two eyes is one too many. Microsoft's advice for a page with its own. */
+html.login-pf input::-ms-reveal {
+  display: none;
+}
+
+/* The password's eye: a control beside the field, in the field's own box. */
+html.login-pf .pf-v5-c-button.pf-m-control {
+  --pf-v5-c-button--m-control--BackgroundColor: var(--color-surface);
+  --pf-v5-c-button--m-control--Color: var(--color-muted);
+  --pf-v5-c-button--m-control--after--BorderTopColor: var(--color-hairline-strong);
+  --pf-v5-c-button--m-control--after--BorderRightColor: var(--color-hairline-strong);
+  --pf-v5-c-button--m-control--after--BorderBottomColor: var(--color-hairline-strong);
+  --pf-v5-c-button--m-control--after--BorderLeftColor: var(--color-hairline-strong);
+}
+
+.pf-v5-c-form__label-text {
+  color: var(--color-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+/* The primary button is the page's one clay action, at the shop's height. */
+.pf-v5-c-button.pf-m-primary {
+  min-block-size: var(--spacing-control-lg);
+  font-weight: var(--font-weight-semibold);
+}

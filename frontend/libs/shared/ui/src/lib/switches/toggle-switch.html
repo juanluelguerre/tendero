@@ -1,0 +1,18 @@
+<button
+  type="button"
+  role="switch"
+  class="group/switch flex min-h-control-md w-full cursor-pointer items-center justify-between gap-3 border-0 bg-transparent p-0 text-start text-body disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 pointer-coarse:min-h-tap"
+  [attr.aria-checked]="checked()"
+  [disabled]="disabled()"
+  (click)="press()"
+>
+  <span class="min-w-0"><ng-content /></span>
+  <span
+    class="relative h-switch-h w-switch-w flex-none rounded-full bg-hairline-strong transition-[background] duration-(--dur-fast) ease-brand group-aria-checked/switch:bg-accent"
+    aria-hidden="true"
+  >
+    <span
+      class="absolute start-knob-inset top-knob-inset size-icon-sm rounded-full bg-surface transition-[translate] duration-(--dur-fast) ease-brand group-aria-checked/switch:translate-x-knob-travel"
+    ></span>
+  </span>
+</button>

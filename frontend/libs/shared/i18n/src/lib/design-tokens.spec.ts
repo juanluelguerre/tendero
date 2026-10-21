@@ -26,8 +26,14 @@ import { describe, expect, it } from 'vitest';
 describe('the design tokens', () => {
   /** The one file allowed to contain a raw colour (ADR 0050)… */
   const SOURCE = 'design/theme.css';
-  /** …and its copy for pages with no Tailwind, which tools/tokens.mjs writes from it. */
+  /** …and its copy for pages with no Tailwind, which tools/tokens.mjs writes from it… */
   const GENERATED = 'design/tokens.css';
+  /**
+   * …and the same copy inside the sign-in page's theme (keycloak/themes/tendero),
+   * which Keycloak serves from the theme alone. Exempt only while it is the copy
+   * byte for byte: the test below holds it to that.
+   */
+  const SIGN_IN_COPY = 'keycloak/themes/tendero/login/resources/css/tokens.css';
 
   /** `#fff`, `#ffffff`, `#ffffffff`. */
   const HEX = /#[0-9a-f]{3,8}\b/gi;
@@ -70,7 +76,7 @@ describe('the design tokens', () => {
   it('are the only place a colour is written down', () => {
     const offenders = stylesheets(repository)
       .map((path) => [relative(repository, path).replaceAll('\\', '/'), path] as const)
-      .filter(([name]) => name !== SOURCE && name !== GENERATED)
+      .filter(([name]) => name !== SOURCE && name !== GENERATED && name !== SIGN_IN_COPY)
       .flatMap(([name, path]) => {
         // Comments are prose and may name a colour; the rule is about values.
         const css = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
@@ -79,6 +85,13 @@ describe('the design tokens', () => {
       });
 
     expect(offenders).toEqual([]);
+  });
+
+  /** The sign-in page's copy is exempt above because it is the generated file, not a second palette. */
+  it('copy into the sign-in page’s theme byte for byte', () => {
+    expect(readFileSync(join(repository, SIGN_IN_COPY), 'utf8')).toBe(
+      readFileSync(join(repository, GENERATED), 'utf8'),
+    );
   });
 
   /**

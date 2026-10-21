@@ -2,6 +2,13 @@
   "realm": "tendero",
   "enabled": true,
   "displayName": "Tendero",
+  "loginTheme": "tendero",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "es",
+    "en"
+  ],
+  "defaultLocale": "es",
   "sslRequired": "none",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,

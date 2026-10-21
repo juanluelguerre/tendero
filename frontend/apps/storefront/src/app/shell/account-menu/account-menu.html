@@ -32,8 +32,9 @@
     class="menu w-[min(18rem,calc(100vw-2*var(--spacing-4)))] flex-col gap-4 rounded-lg border border-hairline-strong bg-surface p-4 text-body shadow-pop open:flex"
     popover
   >
-    <p>
+    <p class="grid gap-hair">
       <strong>{{ who?.name ?? t('accountMenu.guest') }}</strong>
+      <span class="text-sm text-muted">{{ who ? t('accountMenu.signedIn') : t('accountMenu.signedOut') }}</span>
     </p>
 
     <lib-culture-switch [label]="t('nav.language')" [cultures]="cultures" [active]="culture()" (chosen)="use($event)" />
@@ -45,16 +46,39 @@
       (chosen)="choose($event)"
     />
 
-    <div class="flex flex-wrap justify-between gap-3 border-t border-hairline pt-3">
+    <!-- Rows, each the width of the menu with its icon, as the prototype drew them
+         (the author, 2026-10-21): a list of places to go, not links side by side. -->
+    <div class="-mx-2 grid gap-1 border-t border-hairline pt-3">
       @if (who) {
         <!-- The way into the account is this menu: the header carries no link of its own (the author, 2026-10-20). -->
-        <a class="quiet" [routerLink]="accountLink()" (click)="close()">{{ t('accountMenu.profile') }}</a>
-        <button type="button" class="quiet" (click)="signOut()">{{ t('account.signOut') }}</button>
+        <a
+          class="flex min-h-control-md items-center gap-3 rounded-md px-2 font-medium text-body no-underline hover:bg-raised pointer-coarse:min-h-tap"
+          [routerLink]="accountLink()"
+          (click)="close()"
+        >
+          <lib-icon class="size-icon text-muted" name="person" />
+          {{ t('accountMenu.profile') }}
+        </a>
+        <button
+          type="button"
+          class="flex min-h-control-md cursor-pointer items-center gap-3 rounded-md border-0 bg-transparent px-2 text-start text-body hover:bg-raised pointer-coarse:min-h-tap"
+          (click)="signOut()"
+        >
+          <lib-icon class="size-icon text-muted" name="signOut" />
+          {{ t('account.signOut') }}
+        </button>
       } @else {
         <!-- To the account page and not straight to the issuer: that page is
              where signing in finishes, with the customer linked and the basket
              claimed. -->
-        <a class="quiet" [routerLink]="accountLink()" (click)="close()">{{ t('account.signIn') }}</a>
+        <a
+          class="flex min-h-control-md items-center gap-3 rounded-md px-2 font-medium text-body no-underline hover:bg-raised pointer-coarse:min-h-tap"
+          [routerLink]="accountLink()"
+          (click)="close()"
+        >
+          <lib-icon class="size-icon text-muted" name="signIn" />
+          {{ t('account.signIn') }}
+        </a>
       }
     </div>
   </div>
