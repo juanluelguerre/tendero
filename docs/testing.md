@@ -1373,10 +1373,10 @@ project's suites ran in half a second, so each run took a minute; the cost was t
 classification, not the mutation. Neither run sets a baseline: they are scoped to
 the files the phase changed, and those files carry code older than the phase too.
 
-| Project | Mutated with | Run 1 | Survivors | Report |
-|---|---|---|---|---|
-| `src/Accounts`, 10 files | `Accounts.Tests` | 62.56 % of covered | 76 | `Accounts-scoped-run1.html` |
-| `src/Ordering`, 9 files | `Ordering.Tests` | 48.50 % of covered | 137 | `Ordering-scoped-run1.html` |
+| Project | Mutated with | Run 1 | Run 2 | Survivors | Reports |
+|---|---|---|---|---|---|
+| `src/Accounts`, 10 files | `Accounts.Tests` | 62.56 % of covered | **67.49 %** | 76 → 66 | `Accounts-scoped-run1.html`, `-run2.html` |
+| `src/Ordering`, 9 files | `Ordering.Tests` | 48.50 % of covered | **53.73 %** | 137 → 124 | `Ordering-scoped-run1.html`, `-run2.html` |
 
 **What Stryker found, and what closed it.** The real gaps were all in code the
 phase wrote, and each has a test proven by a hand mutation (`test(account)` and
@@ -1422,8 +1422,9 @@ held by the integration tests; `SharedKernel` gained one interface and one recor
 `Api/Program.cs` and `Workers/WorkerServices.cs` three and five registration lines.
 The storefront's half is held by its unit tests (the address book, wallet,
 checkout, preferences and your-data stores; 471 in all) — no browser spec of the
-account yet, written down for the next run. A second scoped run waits for these
-tests to be committed: the parallel runner mutates `HEAD`. Reports:
+account yet, written down for the next run. The second scoped run, on the commit
+that carried the tests (the parallel runner mutates `HEAD`), killed ten more in
+Accounts and fifteen more in Ordering; what survives is what the list above says. Reports:
 `docs/blog/reports/2026-10-21-phase-15-shopper-account/stryker/`.
 
 ## Property-based (CsCheck)
