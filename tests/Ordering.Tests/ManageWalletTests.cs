@@ -152,11 +152,14 @@ public sealed class ManageWalletTests
         world.Provider.Down = true;
         await world.Handlers.HandleAsync(new RemoveCardCommand(id), Ct);
         world.Provider.Down = false;
+        var savesBefore = world.Saves;
 
         var forgotten = await world.Worker().ForgetAsync(Ct);
 
         Assert.Equal(1, forgotten);
         Assert.Empty(world.Store.Single().ToForget);
+        // Saved: what the provider forgot is dropped from the row, not only from memory.
+        Assert.Equal(savesBefore + 1, world.Saves);
     }
 
     [Fact]

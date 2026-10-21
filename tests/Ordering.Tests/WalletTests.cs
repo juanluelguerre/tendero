@@ -145,4 +145,33 @@ public sealed class WalletTests
         Assert.Equal(visa.Token, wallet.Find(visa.Id)?.Token);
         Assert.Null(wallet.Find(master.Id));
     }
+
+    [Fact]
+    public void A_card_is_kept_with_its_provider_and_its_token_or_not_at_all()
+    {
+        var (wallet, clock) = Fresh();
+
+        Assert.Throws<ArgumentException>(() => wallet.Add(clock, " ", Card("4242")));
+        Assert.Throws<ArgumentNullException>(() => wallet.Add(clock, "fake", null!));
+        Assert.Throws<ArgumentException>(() => wallet.Add(clock, "fake", Card("4242") with { Token = "" }));
+        Assert.Empty(wallet.Methods);
+    }
+
+    /// <summary>Forgetting a token that is not waiting changes nothing, not even when the wallet was last changed.</summary>
+    [Fact]
+    public void Only_a_token_that_was_waiting_moves_the_wallet_when_it_is_forgotten()
+    {
+        var (wallet, clock) = Fresh();
+        var visa = wallet.Add(clock, "fake", Card("4242"));
+        wallet.SetAsideForForgetting(clock, visa.Id);
+        var before = wallet.UpdatedAt;
+        clock.Advance(TimeSpan.FromMinutes(5));
+
+        wallet.Forgotten(clock, "tok_never_kept");
+        var untouched = wallet.UpdatedAt;
+        wallet.Forgotten(clock, visa.Token);
+
+        Assert.Equal(before, untouched);
+        Assert.Equal(clock.GetUtcNow(), wallet.UpdatedAt);
+    }
 }

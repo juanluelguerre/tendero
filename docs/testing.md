@@ -1366,6 +1366,66 @@ the geometry) and the two browser specs, `visual-search.spec.ts` and
 words field (Chromium's own beside the sheet's), has its browser test since
 2026-10-20. Report: `docs/blog/reports/2026-10-19-phase-14b-camera-search/stryker/`.
 
+### Phase 15's close: the shopper's account, scoped to what the phase changed
+
+2026-10-21, `stryker-parallel.mjs --since phase/14b-camera-search --shards 4`. Each
+project's suites ran in half a second, so each run took a minute; the cost was the
+classification, not the mutation. Neither run sets a baseline: they are scoped to
+the files the phase changed, and those files carry code older than the phase too.
+
+| Project | Mutated with | Run 1 | Survivors | Report |
+|---|---|---|---|---|
+| `src/Accounts`, 10 files | `Accounts.Tests` | 62.56 % of covered | 76 | `Accounts-scoped-run1.html` |
+| `src/Ordering`, 9 files | `Ordering.Tests` | 48.50 % of covered | 137 | `Ordering-scoped-run1.html` |
+
+**What Stryker found, and what closed it.** The real gaps were all in code the
+phase wrote, and each has a test proven by a hand mutation (`test(account)` and
+the Ordering commit after it):
+
+- `Accounts`: an address book entry without an address; a consent with no
+  wording; the customer's updated time on choosing a language, on consenting and
+  on erasure (`Touch(clock)` removed from `Erase`: red); an erased customer changing
+  preferences; the address fields' upper bounds (`MaximumLength(40)` removed from the
+  phone: red).
+- `Ordering`: the wallet's guards on adding a card; `Forgotten` moving the wallet
+  only for a token that waited (`> 0` made `>= 0`: red); a well-formed token for a
+  card the fake never kept (`||` made `&&`: red); `SavedInstrument.HasExpiredAt` at
+  its month's edges; the fake refusing a blank instrument or token; the forgetting
+  worker saving what it forgot (`SaveChangesAsync` removed: red).
+
+**Left, and what each is.**
+
+- **Older than the phase**, counted and not classified one by one: in `Customer`
+  (`Identified`, `LinkIdentity`, `UseCulture`), `LinkIdentity`'s slice, the fake's
+  capture, refund, void and webhook parsing, `OrderingServiceCollectionExtensions`
+  (24 of its survivors; the phase added two registrations) and the parts of
+  `Checkout.cs` the phase did not touch.
+- **Held by suites out of the configuration**: `Checkout.cs`'s saved-card block,
+  the four personal-data holders and `YourData.cs` — 0 killed, all no coverage —
+  are held by `Integration.Tests` against Postgres (`SavedCardCheckoutTests`,
+  `YourDataTests`), and the endpoints' policies and refusal codes by `Api.Tests`
+  (`EndpointAuthorizationTests`, the OpenAPI contract test, which fails on a
+  refusal code changed).
+- **Noise**: refusals' sentences, spans' names, validators' property names, log
+  messages.
+- **Equivalent**: `create: false` made `true` in the address book's and the
+  wallet's edit, remove and default — a book or wallet started for a change that
+  finds nothing is neither added nor saved, and answers the same empty view — and
+  the view's conditional on a started, unsaved one; `TryReadToken`'s `return false`
+  made `true`, since an empty card name is never one of the fake's.
+- **Out of Stryker's reach**: `static readonly` fields — `InstrumentForgetting.Forgotten`,
+  `PaymentVoid.Ok`, the fake's table of test cards (`-1` months made `+1`).
+
+The phase's other code is not mutated: `Persistence` (the wallet's and the book's
+configurations, `EfWalletRepository`'s SQL) has no Stryker configuration and is
+held by the integration tests; `SharedKernel` gained one interface and one record;
+`Api/Program.cs` and `Workers/WorkerServices.cs` three and five registration lines.
+The storefront's half is held by its unit tests (the address book, wallet,
+checkout, preferences and your-data stores; 471 in all) — no browser spec of the
+account yet, written down for the next run. A second scoped run waits for these
+tests to be committed: the parallel runner mutates `HEAD`. Reports:
+`docs/blog/reports/2026-10-21-phase-15-shopper-account/stryker/`.
+
 ## Property-based (CsCheck)
 
 Value objects carry the invariants worth generating inputs for:

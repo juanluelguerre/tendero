@@ -426,6 +426,35 @@ public sealed class FakePaymentProviderContractTests : PaymentProviderContractTe
         Assert.False(string.IsNullOrWhiteSpace(capture.FailureReason));
     }
 
+
+    /// <summary>A token of the fake's own shape for a card it never kept is declined, not charged.</summary>
+    [Fact]
+    public async Task A_well_formed_token_for_a_card_it_never_kept_is_declined()
+    {
+        var token = $"tok_{Guid.NewGuid():N}_card-unknown_209912";
+
+        var authorization = await Provider.AuthorizeAsync(Request(token, key: "checkout-unknown-card"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(PaymentOutcome.Declined, authorization.Outcome);
+    }
+
+    [Fact]
+    public async Task Keeping_or_forgetting_nothing_is_refused()
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => Provider.SaveInstrumentAsync(" ", ct));
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => Provider.ForgetInstrumentAsync("", ct));
+    }
+
+    /// <summary>Good through the last day of its month, expired from the first of the next: the same rule the wallet keeps.</summary>
+    [Theory]
+    [InlineData(2028, 8, 31, false)]
+    [InlineData(2028, 9, 1, true)]
+    [InlineData(2027, 12, 31, false)]
+    [InlineData(2029, 1, 1, true)]
+    public void A_kept_card_expires_at_the_end_of_its_month(int year, int month, int day, bool expired) =>
+        Assert.Equal(expired, new SavedInstrument("tok", "Visa", "4242", 8, 2028).HasExpiredAt(new DateTimeOffset(year, month, day, 12, 0, 0, TimeSpan.Zero)));
     /// <summary>
     /// A cryptographic RNG would have been the obvious choice for a reference,
     /// and it is exactly what breaks idempotency. The check lives here rather
