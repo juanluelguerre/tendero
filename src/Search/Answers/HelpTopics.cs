@@ -58,7 +58,7 @@ internal static partial class HelpTopics
         return false;
     }
 
-    private static string Fold(string text) => string.Create(text.Length, text, static (span, source) =>
+    private static string Fold(string text) => String.Create(text.Length, text, static (span, source) =>
     {
         for (var i = 0; i < source.Length; i++)
             span[i] = source[i] switch

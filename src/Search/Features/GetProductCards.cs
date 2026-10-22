@@ -2,14 +2,13 @@ using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Search.Contracts;
-using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
-namespace ElGuerre.Tendero.Search.Features.GetProductCards;
+namespace ElGuerre.Tendero.Search.Features;
 
 /// <param name="Items">
 /// One card per product that can still be shown, in the order asked — ids first,
@@ -29,21 +28,22 @@ public sealed class GetProductCardsValidator : AbstractValidator<GetProductCards
 
     public GetProductCardsValidator()
     {
-        RuleFor(query => query.Ids.Count + query.Codes.Count)
+        this.RuleFor(query => query.Ids.Count + query.Codes.Count)
             .InclusiveBetween(1, MaxCards)
             .WithMessage($"Ask for 1 to {MaxCards} products, by ids or codes.")
             .OverridePropertyName("ids");
 
-        RuleForEach(query => query.Ids).Must(id => Guid.TryParse(id, out _))
+        this.RuleForEach(query => query.Ids).Must(id => Guid.TryParse(id, out _))
             .WithMessage("A product id is a GUID, as Ordering's rows answer it.")
             .OverridePropertyName("ids");
 
-        RuleForEach(query => query.Codes)
+        this.RuleForEach(query => query.Codes)
             .Must(code => code is not null && ProductCode.IsWellFormed(ProductCode.Normalise(code)))
             .WithMessage($"A product code is {ProductCode.Length} letters and digits.")
             .OverridePropertyName("codes");
 
-        RuleFor(query => query.Culture).Must(culture => culture is "es" or "en").WithMessage("Supported cultures: es, en.");
+        this.RuleFor(query => query.Culture).Must(culture => culture is "es" or "en")
+            .WithMessage("Supported cultures: es, en.");
     }
 }
 

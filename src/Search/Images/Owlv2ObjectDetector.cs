@@ -83,7 +83,7 @@ public sealed class Owlv2ObjectDetector : IObjectDetector, IDisposable
 
         // One query a kind's alternative, each embedded once a process.
         var rows = (from kind in kinds from alternative in kind.Alternatives select (Kind: kind, Words: alternative)).ToList();
-        Embed([.. rows.Select(row => row.Words).Distinct().Where(words => !this.queries.ContainsKey(words))]);
+        this.Embed([.. rows.Select(row => row.Words).Distinct().Where(words => !this.queries.ContainsKey(words))]);
         var dimension = this.queries[rows[0].Words].Length;
         var embeds = new DenseTensor<float>([1, rows.Count, dimension]);
         for (var row = 0; row < rows.Count; row++)
@@ -130,7 +130,7 @@ public sealed class Owlv2ObjectDetector : IObjectDetector, IDisposable
     /// <summary>The patch and the logit of a kind's likeliest alternative, over logits laid out patch by patch, <paramref name="queries"/> a patch.</summary>
     internal static (int Patch, float Logit) Likeliest(ReadOnlySpan<float> logits, int queries, IReadOnlyList<int> rows)
     {
-        var (best, logit) = (0, float.NegativeInfinity);
+        var (best, logit) = (0, Single.NegativeInfinity);
         for (var patch = 0; patch < logits.Length / queries; patch++)
         {
             foreach (var row in rows)

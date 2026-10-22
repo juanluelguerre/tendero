@@ -45,7 +45,7 @@ public sealed partial class VisionModelObjectDetector(IChatClient model) : IObje
     private static string Question(IReadOnlyList<ObjectKind> kinds) =>
         $$"""
         Find the objects in this photograph. Look only for these kinds, each given as its code and what it is:
-        {{string.Join(Environment.NewLine, kinds.Select(kind => $"- {kind.Code}: {kind.Words}"))}}
+        {{String.Join(Environment.NewLine, kinds.Select(kind => $"- {kind.Code}: {kind.Words}"))}}
 
         Answer with JSON only: an array with one entry for each kind you can see, at most one entry a kind, each
         {"bbox_2d": [x1, y1, x2, y2], "label": "<code>"}, where the box encloses the object and its coordinates
@@ -98,8 +98,8 @@ public sealed partial class VisionModelObjectDetector(IChatClient model) : IObje
             if ((!root.TryGetProperty("bbox_2d", out var box) && !root.TryGetProperty("box", out box)) || box.ValueKind is not JsonValueKind.Array || box.GetArrayLength() != 4)
                 return (code, null);
 
-            var corners = box.EnumerateArray().Select(value => value.TryGetDouble(out var number) ? number : double.NaN).ToArray();
-            return (code, corners.Any(double.IsNaN) ? null : corners);
+            var corners = box.EnumerateArray().Select(value => value.TryGetDouble(out var number) ? number : Double.NaN).ToArray();
+            return (code, corners.Any(Double.IsNaN) ? null : corners);
         }
         catch (JsonException)
         {

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using ElGuerre.Tendero.Search.Contracts;
-using ElGuerre.Tendero.Search.Features.GetProductCards;
+using ElGuerre.Tendero.Search.Features;
 using ElGuerre.Tendero.Search.Features.SuggestSimilar;
 using ElGuerre.Tendero.Search.Strategies;
 using Microsoft.Extensions.Logging.Abstractions;

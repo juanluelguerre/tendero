@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 
@@ -71,7 +72,7 @@ public sealed class SearchProductsTool(IQueryDispatcher queries, ICategoryReader
     protected override async Task<(ProductsForShopper Data, int Rows, int? Total)> ReadAsync(
         SearchForShopperArguments arguments, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(arguments.Text))
+        if (String.IsNullOrWhiteSpace(arguments.Text))
             throw new ArgumentException("search_products needs what the shopper is looking for.");
 
         var filters = new SearchFilters
@@ -83,7 +84,7 @@ public sealed class SearchProductsTool(IQueryDispatcher queries, ICategoryReader
             InStock = arguments.InStock,
         };
         var culture = CultureNegotiation.Resolve(arguments.Culture, default);
-        var category = await CategoryAsync(arguments.Category, cancellationToken);
+        var category = await this.CategoryAsync(arguments.Category, cancellationToken);
         var page = await queries.SendAsync(
             new SearchProductsQuery(arguments.Text, culture, 1, MaxProducts, category, ProductSort.Relevance, filters),
             cancellationToken);
@@ -91,7 +92,7 @@ public sealed class SearchProductsTool(IQueryDispatcher queries, ICategoryReader
         var onlyNearest = page.Answer?.Match == SearchMatch.Related;
         var hits = onlyNearest && arguments.OnOffer ? [] : page.Hits;
         var onOffer = arguments.OnOffer;
-        var total = hits.Count == 0 ? 0 : (int)Math.Min(page.Total, int.MaxValue);
+        var total = hits.Count == 0 ? 0 : (int)Math.Min(page.Total, Int32.MaxValue);
 
         // Nothing like it has its own price cut — but it may be in a promotion on the
         // order, as kitchenware is in the 5 € from 40 €. Asked again without the
@@ -166,7 +167,7 @@ public sealed class SearchProductsTool(IQueryDispatcher queries, ICategoryReader
             return known.Code;
 
         return tree.All.FirstOrDefault(each => each.Name.Values.Values
-                .Any(name => string.Equals(name.Trim(), asked, StringComparison.OrdinalIgnoreCase)))?.Code
+                .Any(name => String.Equals(name.Trim(), asked, StringComparison.OrdinalIgnoreCase)))?.Code
             ?? written;
     }
 

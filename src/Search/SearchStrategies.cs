@@ -60,7 +60,7 @@ public interface ISearchHitReader
     /// </summary>
     Task<IReadOnlyList<SearchHit>> FindAsync(
         IReadOnlyCollection<string> productIds, string culture, string? category, CancellationToken ct = default) =>
-        FindAsync(productIds, culture, category, SearchFilters.None, ct);
+        this.FindAsync(productIds, culture, category, SearchFilters.None, ct);
 
     /// <summary>
     /// The same, narrowed by the shopper's filters: a product that fails them is

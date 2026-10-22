@@ -36,7 +36,7 @@ public static class ObjectDetectionServiceCollectionExtensions
 
         var objects = configuration.GetSection(Section);
         services.AddOptions<ObjectDetectionOptions>().Bind(objects);
-        var detector = objects["Detector"] ?? string.Empty;
+        var detector = objects["Detector"] ?? String.Empty;
 
         // OWLv2 runs in this process: the folder of our export is the opt-in, and
         // one half written is no detector.
@@ -48,7 +48,7 @@ public static class ObjectDetectionServiceCollectionExtensions
         string[] detectors = [Owlv2ObjectDetector.Key];
         if (detector.Length > 0 && !detectors.Contains(detector))
             throw new InvalidOperationException(
-                $"{Section}:Detector '{detector}' is no detector this shop has: {string.Join(", ", detectors)}.");
+                $"{Section}:Detector '{detector}' is no detector this shop has: {String.Join(", ", detectors)}.");
 
         services.AddSingleton<IObjectDetector>(provider =>
             detector.Length > 0 && provider.GetKeyedService<IObjectDetector>(detector) is { } chosen ? chosen : new NoObjectDetector());

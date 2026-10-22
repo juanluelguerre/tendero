@@ -96,7 +96,7 @@ internal sealed class HybridSearchStrategy(
 
     public async Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(query.Text) || query.Sort is not ProductSort.Relevance)
+        if (String.IsNullOrWhiteSpace(query.Text) || query.Sort is not ProductSort.Relevance)
             return await lexical.SearchAsync(query, ct);
 
         using var activity = Telemetry.StartActivity("search.hybrid");
@@ -127,7 +127,7 @@ internal sealed class HybridSearchStrategy(
 
         var depth = Math.Max(settings.LexicalDepth, query.Page * query.PageSize);
         var found = matches.Select(match => match.ProductId).ToList();
-        var looks = await LooksAsync(query, settings, activity, ct);
+        var looks = await this.LooksAsync(query, settings, activity, ct);
 
         // **The union** (the facets spec, "The API"). A page that lists what the
         // words matched AND what meaning found has to count both, so the lexical
@@ -183,7 +183,7 @@ internal sealed class HybridSearchStrategy(
         activity?.SetTag("search.hybrid.meaning_only", ranked.Count(hit => foundByMeaningOnly.Contains(hit.ProductId)));
 
         if (reranker.IsConfigured)
-            ranked = await RerankAsync(query, ranked, settings, activity, ct);
+            ranked = await this.RerankAsync(query, ranked, settings, activity, ct);
         else
             activity?.SetTag(SearchDegradation.NotConfiguredTag, SearchDegradation.RerankStage);
 
@@ -213,7 +213,7 @@ internal sealed class HybridSearchStrategy(
     private async Task<IReadOnlyList<string>> LooksAsync(
         ProductSearchQuery query, HybridSearchOptions settings, Activity? activity, CancellationToken ct)
     {
-        if (settings.PictureDepth <= 0 || !string.IsNullOrEmpty(query.Category) || !pictureModel.IsConfigured)
+        if (settings.PictureDepth <= 0 || !String.IsNullOrEmpty(query.Category) || !pictureModel.IsConfigured)
             return [];
 
         try

@@ -41,7 +41,7 @@ public sealed class ObjectKinds
         foreach (var (code, kind) in file.NotSold)
         {
             // Invariant 6: the line under the results is said in both languages, or the file is wrong.
-            if (string.IsNullOrWhiteSpace(kind.Es) || string.IsNullOrWhiteSpace(kind.En))
+            if (String.IsNullOrWhiteSpace(kind.Es) || String.IsNullOrWhiteSpace(kind.En))
                 throw new InvalidDataException($"The kind not sold '{code}' needs its name in es and en.");
             names[code] = LocalizedText.Both(kind.En, kind.Es);
         }

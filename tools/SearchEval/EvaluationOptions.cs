@@ -3,7 +3,7 @@ using ElGuerre.Tendero.Search.Contracts;
 namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
-/// Parsed by hand: there are a handful of options and they do not justify a
+/// Parsed by hand: there are a handful of options, and they do not justify a
 /// package (CLAUDE.md's dependency policy).
 /// </summary>
 public sealed record EvaluationOptions(
@@ -127,23 +127,21 @@ public sealed record EvaluationOptions(
     public static EvaluationOptions Parse(string[] args)
     {
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var ci = false;
-        var writeCalibration = false;
+        bool ci = false;
+        bool writeCalibration = false;
 
-        for (var index = 0; index < args.Length; index++)
+        for (int index = 0; index < args.Length; index++)
         {
-            var argument = args[index];
+            string argument = args[index];
 
-            if (argument == "--ci")
+            switch (argument)
             {
-                ci = true;
-                continue;
-            }
-
-            if (argument == "--write-calibration")
-            {
-                writeCalibration = true;
-                continue;
+                case "--ci":
+                    ci = true;
+                    continue;
+                case "--write-calibration":
+                    writeCalibration = true;
+                    continue;
             }
 
             if (!argument.StartsWith("--", StringComparison.Ordinal))
@@ -155,13 +153,13 @@ public sealed record EvaluationOptions(
             values[argument[2..]] = args[++index];
         }
 
-        var strategy = values.GetValueOrDefault("strategy", SearchStrategies.Lexical);
+        string strategy = values.GetValueOrDefault("strategy", SearchStrategies.Lexical);
         if (strategy is not (SearchStrategies.Lexical or SearchStrategies.Hybrid))
             throw new ArgumentException($"Unknown strategy '{strategy}'. Available: lexical, hybrid.");
 
         // A split is for tuning runs. The gate measures every query, and a gate that
         // could be pointed at half of them would pass on whichever half it liked.
-        var split = values.GetValueOrDefault("split");
+        string? split = values.GetValueOrDefault("split");
         if (split is not (null or "tune" or "holdout"))
             throw new ArgumentException($"Unknown split '{split}'. Available: tune, holdout.");
         if (split is not null && ci)
@@ -169,7 +167,7 @@ public sealed record EvaluationOptions(
 
         // A candidate is measured, never gated: it names what the endpoint serves,
         // so it means nothing without one.
-        var rerankerModel = values.GetValueOrDefault("reranker-model");
+        string? rerankerModel = values.GetValueOrDefault("reranker-model");
         if (rerankerModel is not null && !values.ContainsKey("reranker"))
             throw new ArgumentException("--reranker-model names the model a --reranker endpoint serves, and no --reranker was given.");
         if (rerankerModel is not null && rerankerModel.Split('@') is not [{ Length: > 0 }, { Length: > 0 }])
@@ -177,8 +175,8 @@ public sealed record EvaluationOptions(
 
         // The pictures share the words' vector store, so they are measured where it
         // is; the objects suite asks the model about parts of a photograph instead.
-        var suite = values.GetValueOrDefault("suite", "search");
-        var siglip = values.GetValueOrDefault("siglip");
+        string suite = values.GetValueOrDefault("suite", "search");
+        string? siglip = values.GetValueOrDefault("siglip");
         if (siglip is not null && strategy is not SearchStrategies.Hybrid && suite != "objects")
             throw new ArgumentException("--siglip measures the pictures in the vector store, and needs --strategy hybrid.");
 
@@ -201,7 +199,8 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("scope", Path.Combine("tools", "SearchEval", "scope")),
             values.GetValueOrDefault("categories", Path.Combine("seed", "categories.sample.json")),
             writeCalibration,
-            values.GetValueOrDefault("calibration", Path.Combine("tools", "SearchEval", "scope", "query-scope.calibration.json")),
+            values.GetValueOrDefault(
+                "calibration", Path.Combine("tools", "SearchEval", "scope", "query-scope.calibration.json")),
             values.GetValueOrDefault("extractor", "rules"),
             values.GetValueOrDefault("chat", "http://localhost:38090"),
             values.GetValueOrDefault("model"),
@@ -212,13 +211,13 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("knowledge", Path.Combine("tools", "SearchEval", "knowledge")),
             values.GetValueOrDefault("database"),
             values.GetValueOrDefault("script"),
-            int.TryParse(values.GetValueOrDefault("context"), out var context) ? context : 8192,
+            int.TryParse(values.GetValueOrDefault("context"), out int context) ? context : 8192,
             values.GetValueOrDefault("copilot", Path.Combine("tools", "SearchEval", "Copilot")),
             values.GetValueOrDefault("assistant", Path.Combine("tools", "SearchEval", "Assistant")),
             values.GetValueOrDefault("only"),
             values.GetValueOrDefault("dataset"),
             values.GetValueOrDefault("modality"),
-            int.TryParse(values.GetValueOrDefault("take"), out var take) ? take : null,
+            int.TryParse(values.GetValueOrDefault("take"), out int take) ? take : null,
             values.GetValueOrDefault("format"),
             values.GetValueOrDefault("vocabulary"),
             siglip,

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
+using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests.Ucp;

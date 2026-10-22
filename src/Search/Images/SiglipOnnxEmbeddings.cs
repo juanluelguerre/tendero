@@ -74,7 +74,7 @@ public sealed class SiglipOnnxEmbeddings : IImageEmbeddingGenerator, IDisposable
         cancellationToken.ThrowIfCancellationRequested();
 
         var pixels = new DenseTensor<float>(SiglipPicture.ToTensor(picture.Span), [1, 3, SiglipPicture.Side, SiglipPicture.Side]);
-        return ValueTask.FromResult(Run(this.vision.Value, NamedOnnxValue.CreateFromTensor("pixel_values", pixels)));
+        return ValueTask.FromResult(this.Run(this.vision.Value, NamedOnnxValue.CreateFromTensor("pixel_values", pixels)));
     }
 
     public ValueTask<ReadOnlyMemory<float>> EmbedTextAsync(string text, CancellationToken cancellationToken = default)
@@ -83,7 +83,7 @@ public sealed class SiglipOnnxEmbeddings : IImageEmbeddingGenerator, IDisposable
         cancellationToken.ThrowIfCancellationRequested();
 
         var ids = new DenseTensor<long>(this.tokenizer.Value.Encode(Normalised(text)), [1, SiglipTextTokenizer.Length]);
-        return ValueTask.FromResult(Run(this.text.Value, NamedOnnxValue.CreateFromTensor("input_ids", ids)));
+        return ValueTask.FromResult(this.Run(this.text.Value, NamedOnnxValue.CreateFromTensor("input_ids", ids)));
     }
 
     /// <summary>
@@ -101,8 +101,8 @@ public sealed class SiglipOnnxEmbeddings : IImageEmbeddingGenerator, IDisposable
     {
         using var results = session.Run([input]);
         var vector = results[0].AsEnumerable<float>().ToArray();
-        if (vector.Length != Model.Dimensions)
-            throw new InvalidOperationException($"The model answered {vector.Length} dimensions; {Model.ModelId} has {Model.Dimensions}.");
+        if (vector.Length != this.Model.Dimensions)
+            throw new InvalidOperationException($"The model answered {vector.Length} dimensions; {this.Model.ModelId} has {this.Model.Dimensions}.");
 
         // Unit length, once and here: the nearest picture is then the largest dot product.
         var norm = MathF.Sqrt(vector.Sum(value => value * value));

@@ -39,7 +39,7 @@ internal sealed class QdrantPictureVectors(
     private EmbeddingModelDescriptor Model => pictures.Model;
 
     /// <summary>The collection: <c>pictures_siglip2-base-patch16-224_75de2d5_768</c>.</summary>
-    internal string Collection => PictureCollection.NameFor(Model);
+    internal string Collection => PictureCollection.NameFor(this.Model);
 
     public Task IndexAsync(Product product, CancellationToken ct = default) =>
         GuardAsync($"embedding the pictures of {product.Id}", async () =>
@@ -47,23 +47,23 @@ internal sealed class QdrantPictureVectors(
             using var activity = Telemetry.StartActivity("search.pictures.index");
             activity?.SetTag("search.product_id", product.Id.ToString());
 
-            await EnsureCollectionAsync(ct);
+            await this.EnsureCollectionAsync(ct);
 
             var id = product.Id.ToString();
             var gallery = product.Images.Select(image => image.Id).Distinct().ToList();
-            var held = await PointsOfAsync(id, ct);
+            var held = await this.PointsOfAsync(id, ct);
             var heldImages = held.Select(point => point.Payload[PictureFields.ImageId].StringValue).ToHashSet(StringComparer.Ordinal);
 
             var embedded = 0;
             foreach (var picture in gallery.Where(picture => !heldImages.Contains(picture.Value)))
             {
                 var point = PicturePointId.For(picture);
-                var existing = await client.RetrieveAsync(Collection, [(PointId)point], withPayload: true, withVectors: false, cancellationToken: ct);
+                var existing = await client.RetrieveAsync(this.Collection, [(PointId)point], withPayload: true, withVectors: false, cancellationToken: ct);
 
                 if (existing is [var shared])
                 {
                     // Somebody's already: the same bytes are the same vector, so this product is named beside them.
-                    await SetProductsAsync(point, [.. ProductsOf(shared.Payload), id], ct);
+                    await this.SetProductsAsync(point, [.. ProductsOf(shared.Payload), id], ct);
                     continue;
                 }
 
@@ -78,8 +78,9 @@ internal sealed class QdrantPictureVectors(
                     bytes = buffer.ToArray();
                 }
 
-                var vector = Checked(await pictures.EmbedPictureAsync(bytes, ct));
-                await client.UpsertAsync(Collection,
+                var vector = this.Checked(await pictures.EmbedPictureAsync(bytes, ct));
+                await client.UpsertAsync(
+                    this.Collection,
                 [
                     new PointStruct
                     {
@@ -89,8 +90,8 @@ internal sealed class QdrantPictureVectors(
                         {
                             [PictureFields.ImageId] = picture.Value,
                             [PictureFields.Products] = new[] { id },
-                            [PointFields.ModelId] = Model.ModelId,
-                            [PointFields.ModelRevision] = Model.Revision,
+                            [PointFields.ModelId] = this.Model.ModelId,
+                            [PointFields.ModelRevision] = this.Model.Revision,
                         },
                     },
                 ], cancellationToken: ct);
@@ -100,7 +101,7 @@ internal sealed class QdrantPictureVectors(
             // And the pictures that were the product's and no longer are.
             var current = gallery.Select(picture => picture.Value).ToHashSet(StringComparer.Ordinal);
             foreach (var gone in held.Where(point => !current.Contains(point.Payload[PictureFields.ImageId].StringValue)))
-                await DetachAsync(gone, id, ct);
+                await this.DetachAsync(gone, id, ct);
 
             activity?.SetTag("search.pictures.embedded", embedded);
         });
@@ -108,40 +109,40 @@ internal sealed class QdrantPictureVectors(
     public Task RemoveAsync(ProductId productId, CancellationToken ct = default) =>
         GuardAsync($"removing the pictures of {productId}", async () =>
         {
-            if (!await client.CollectionExistsAsync(Collection, ct))
+            if (!await client.CollectionExistsAsync(this.Collection, ct))
                 return;
 
             var id = productId.ToString();
-            foreach (var point in await PointsOfAsync(id, ct))
-                await DetachAsync(point, id, ct);
+            foreach (var point in await this.PointsOfAsync(id, ct))
+                await this.DetachAsync(point, id, ct);
         });
 
     public Task RecreateAsync(CancellationToken ct = default) =>
         GuardAsync("recreating the picture collection", async () =>
         {
-            if (await client.CollectionExistsAsync(Collection, ct))
-                await client.DeleteCollectionAsync(Collection, cancellationToken: ct);
-            await EnsureCollectionAsync(ct);
+            if (await client.CollectionExistsAsync(this.Collection, ct))
+                await client.DeleteCollectionAsync(this.Collection, cancellationToken: ct);
+            await this.EnsureCollectionAsync(ct);
         });
 
     public Task<bool> IsEmptyAsync(CancellationToken ct = default) =>
         GuardAsync("counting picture vectors", async () =>
-            !await client.CollectionExistsAsync(Collection, ct)
-            || await client.CountAsync(Collection, exact: true, cancellationToken: ct) == 0);
+            !await client.CollectionExistsAsync(this.Collection, ct)
+            || await client.CountAsync(this.Collection, exact: true, cancellationToken: ct) == 0);
 
     public Task<IReadOnlyList<PictureMatch>> NearestAsync(ReadOnlyMemory<float> vector, int limit, IReadOnlyCollection<string>? among = null, CancellationToken ct = default) =>
         GuardAsync<IReadOnlyList<PictureMatch>>("picture search", async () =>
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
 
-            if (among is { Count: 0 } || !await client.CollectionExistsAsync(Collection, ct))
+            if (among is { Count: 0 } || !await client.CollectionExistsAsync(this.Collection, ct))
                 return [];
 
             // A product with four pictures can take four of the nearest places: more
             // points are asked for than products are wanted, and each product is kept once.
             var points = await client.QueryAsync(
-                Collection,
-                query: Checked(vector).ToArray(),
+                this.Collection,
+                query: this.Checked(vector).ToArray(),
                 // Narrowed by the products a point names, the one field every write already
                 // filters by and so the one indexed: no other payload is needed for it.
                 filter: among is null ? null : (Filter)Conditions.Match(PictureFields.Products, [.. among]),
@@ -153,7 +154,7 @@ internal sealed class QdrantPictureVectors(
             HashSet<string> seen = new(StringComparer.Ordinal);
             foreach (var point in points)
             {
-                AssertWrittenByThisModel(point.Payload);
+                this.AssertWrittenByThisModel(point.Payload);
                 // A shared picture names products outside the narrowing too; only those inside are answered.
                 foreach (var product in ProductsOf(point.Payload).Where(product => among is null || among.Contains(product)).Where(seen.Add))
                     nearest.Add(new PictureMatch(product, point.Payload[PictureFields.ImageId].StringValue, point.Score));
@@ -167,19 +168,18 @@ internal sealed class QdrantPictureVectors(
 
     private async Task EnsureCollectionAsync(CancellationToken ct)
     {
-        if (await client.CollectionExistsAsync(Collection, ct))
+        if (await client.CollectionExistsAsync(this.Collection, ct))
             return;
 
-        await client.CreateCollectionAsync(
-            Collection, new VectorParams { Size = (ulong)Model.Dimensions, Distance = Distance.Cosine }, cancellationToken: ct);
+        await client.CreateCollectionAsync(this.Collection, new VectorParams { Size = (ulong)this.Model.Dimensions, Distance = Distance.Cosine }, cancellationToken: ct);
         // The one field every write filters by: which products a picture is of.
-        await client.CreatePayloadIndexAsync(Collection, PictureFields.Products, PayloadSchemaType.Keyword, cancellationToken: ct);
+        await client.CreatePayloadIndexAsync(this.Collection, PictureFields.Products, PayloadSchemaType.Keyword, cancellationToken: ct);
     }
 
     private async Task<IReadOnlyList<RetrievedPoint>> PointsOfAsync(string productId, CancellationToken ct)
     {
         var page = await client.ScrollAsync(
-            Collection, filter: Conditions.MatchKeyword(PictureFields.Products, productId),
+            this.Collection, filter: Conditions.MatchKeyword(PictureFields.Products, productId),
             limit: MaxPicturesRead, payloadSelector: true, cancellationToken: ct);
         return [.. page.Result];
     }
@@ -192,14 +192,14 @@ internal sealed class QdrantPictureVectors(
     {
         string[] left = [.. ProductsOf(point.Payload).Where(product => product != productId)];
         if (left.Length == 0)
-            await client.DeleteAsync(Collection, [Guid.Parse(point.Id.Uuid)], cancellationToken: ct);
+            await client.DeleteAsync(this.Collection, [Guid.Parse(point.Id.Uuid)], cancellationToken: ct);
         else
-            await SetProductsAsync(Guid.Parse(point.Id.Uuid), left, ct);
+            await this.SetProductsAsync(Guid.Parse(point.Id.Uuid), left, ct);
     }
 
     private Task SetProductsAsync(Guid point, IEnumerable<string> products, CancellationToken ct) =>
         client.SetPayloadAsync(
-            Collection,
+            this.Collection,
             new Dictionary<string, Value> { [PictureFields.Products] = products.Distinct(StringComparer.Ordinal).ToArray() },
             point, cancellationToken: ct);
 
@@ -212,18 +212,18 @@ internal sealed class QdrantPictureVectors(
         var writtenBy = payload.TryGetValue(PointFields.ModelId, out var id) ? id.StringValue : "";
         var revision = payload.TryGetValue(PointFields.ModelRevision, out var sha) ? sha.StringValue : "";
 
-        if (writtenBy != Model.ModelId || revision != Model.Revision)
+        if (writtenBy != this.Model.ModelId || revision != this.Model.Revision)
         {
             throw new SearchUnavailableException(
                 "picture search",
-                $"a point in {Collection} was written by {writtenBy}@{revision}, not by {Model.ModelId}@{Model.Revision}; ranking it would mix two vector spaces");
+                $"a point in {this.Collection} was written by {writtenBy}@{revision}, not by {this.Model.ModelId}@{this.Model.Revision}; ranking it would mix two vector spaces");
         }
     }
 
     private ReadOnlyMemory<float> Checked(ReadOnlyMemory<float> vector) =>
-        vector.Length == Model.Dimensions
+        vector.Length == this.Model.Dimensions
             ? vector
-            : throw new SearchUnavailableException("picture embedding", $"a vector of {vector.Length} dimensions, and {Model.ModelId} has {Model.Dimensions}");
+            : throw new SearchUnavailableException("picture embedding", $"a vector of {vector.Length} dimensions, and {this.Model.ModelId} has {this.Model.Dimensions}");
 
     /// <summary>
     /// The store's and the model's own failures as the one exception the search

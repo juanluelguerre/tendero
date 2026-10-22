@@ -54,8 +54,7 @@ public sealed record GoldenQuery(
     string? Split = null,
     string? Pair = null)
 {
-    public Dictionary<string, int> ToRelevanceMap() =>
-        Judgments.ToDictionary(judgment => judgment.ExternalId, judgment => judgment.Relevance);
+    public Dictionary<string, int> ToRelevanceMap() => this.Judgments.ToDictionary(judgment => judgment.ExternalId, judgment => judgment.Relevance);
 }
 
 /// <summary>

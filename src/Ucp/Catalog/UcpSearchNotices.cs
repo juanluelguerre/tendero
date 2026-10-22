@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 
 namespace ElGuerre.Tendero.Ucp.Catalog;

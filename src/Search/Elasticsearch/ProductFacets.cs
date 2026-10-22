@@ -55,11 +55,11 @@ internal sealed class ProductFilters
     private ProductFilters(
         SearchFilters asked, IReadOnlyList<ChosenFilter> chosen, Query onOffer, Query newArrival, Query available)
     {
-        Asked = asked;
-        Chosen = chosen;
-        OnOffer = onOffer;
-        NewArrival = newArrival;
-        Available = available;
+        this.Asked = asked;
+        this.Chosen = chosen;
+        this.OnOffer = onOffer;
+        this.NewArrival = newArrival;
+        this.Available = available;
     }
 
     public SearchFilters Asked { get; }
@@ -69,7 +69,8 @@ internal sealed class ProductFilters
     public Query Available { get; }
 
     /// <summary>The attribute and axis codes chosen, in the order first asked.</summary>
-    public IReadOnlyList<string> ChosenCodes => [.. Chosen.Select(filter => filter.Facet).Where(IsAttributeCode).Distinct()];
+    public IReadOnlyList<string> ChosenCodes =>
+        [.. this.Chosen.Select(filter => filter.Facet).Where(IsAttributeCode).Distinct()];
 
     /// <param name="campaign">What the asked campaign's promotions reach now; null reads as nothing,
     /// so a campaign asked for and not looked up can never widen a listing to the whole shop.</param>
@@ -83,27 +84,30 @@ internal sealed class ProductFilters
         var chosen = new List<ChosenFilter>();
 
         if (asked.Within.Count > 0)
-            chosen.Add(new(FacetCodes.Category, AnyOf(Infer.Field<ProductSearchDocument>(d => d.CategoryCodes), asked.Within)));
+            chosen.Add(
+                new ChosenFilter(
+                    FacetCodes.Category,
+                    AnyOf(Infer.Field<ProductSearchDocument>(d => d.CategoryCodes), asked.Within)));
 
         if (asked.Brands.Count > 0)
-            chosen.Add(new(FacetCodes.Brand, AnyOf(BrandKeyword, asked.Brands)));
+            chosen.Add(new ChosenFilter(FacetCodes.Brand, AnyOf(BrandKeyword, asked.Brands)));
 
         if (asked.MinPrice is not null || asked.MaxPrice is not null)
-            chosen.Add(new(FacetCodes.Price, PriceBetween(asked.MinPrice, asked.MaxPrice)));
+            chosen.Add(new ChosenFilter(FacetCodes.Price, PriceBetween(asked.MinPrice, asked.MaxPrice)));
 
         if (asked.OnOffer)
-            chosen.Add(new(FacetCodes.Offer, onOffer));
+            chosen.Add(new ChosenFilter(FacetCodes.Offer, onOffer));
 
         if (asked.NewArrivals)
-            chosen.Add(new(FacetCodes.New, newArrival));
+            chosen.Add(new ChosenFilter(FacetCodes.New, newArrival));
 
         if (asked.InStock)
-            chosen.Add(new(FacetCodes.InStock, available));
+            chosen.Add(new ChosenFilter(FacetCodes.InStock, available));
 
         // The same clause as "on offer", over the campaign's own reach: one rule
         // for what an offer reaches, whichever promotions it is asked of.
         if (asked.Campaign is not null)
-            chosen.Add(new(FacetCodes.Campaign, OfferQuery(campaign ?? OfferScope.Nothing)));
+            chosen.Add(new ChosenFilter(FacetCodes.Campaign, OfferQuery(campaign ?? OfferScope.Nothing)));
 
         // One group per CODE, its values OR'd. Axes live on the variant document
         // and attributes on every document of the product, and a "CODE:VALUE" is
@@ -117,31 +121,33 @@ internal sealed class ProductFilters
         {
             string[] values = [.. group.Select(pair => pair.Pair).Distinct(StringComparer.Ordinal)];
 
-            chosen.Add(new(group.Key, new BoolQuery
-            {
-                Should =
-                [
-                    AnyOf(Infer.Field<ProductSearchDocument>(d => d.AxisValues), values),
-                    AnyOf(Infer.Field<ProductSearchDocument>(d => d.FacetValues), values),
-                ],
-                MinimumShouldMatch = 1,
-            }));
+            chosen.Add(
+                new ChosenFilter(
+                    group.Key, new BoolQuery
+                    {
+                        Should =
+                        [
+                            AnyOf(Infer.Field<ProductSearchDocument>(d => d.AxisValues), values),
+                            AnyOf(Infer.Field<ProductSearchDocument>(d => d.FacetValues), values),
+                        ],
+                        MinimumShouldMatch = 1,
+                    }));
         }
 
         return new ProductFilters(asked, chosen, onOffer, newArrival, available);
     }
 
     /// <summary>Every chosen filter, for the hits; null when nothing was chosen.</summary>
-    public Query? All() => Chosen.Count == 0 ? null : Conjunction(Chosen);
+    public Query? All() => this.Chosen.Count == 0 ? null : Conjunction(this.Chosen);
 
     /// <summary>Every chosen filter but the facet's own — what its counts are narrowed by.</summary>
-    public Query AllExcept(string facet) => Conjunction([.. Chosen.Where(filter => filter.Facet != facet)]);
+    public Query AllExcept(string facet) => Conjunction([.. this.Chosen.Where(filter => filter.Facet != facet)]);
 
     /// <summary>Which facets narrow <paramref name="facet"/>'s counts: the test's view of <see cref="AllExcept"/>.</summary>
     public IReadOnlyList<string> Narrowing(string facet) =>
-        [.. Chosen.Where(filter => filter.Facet != facet).Select(filter => filter.Facet)];
+        [.. this.Chosen.Where(filter => filter.Facet != facet).Select(filter => filter.Facet)];
 
-    public static bool IsAttributeCode(string facet) => facet.Length > 0 && !char.IsLower(facet[0]);
+    public static bool IsAttributeCode(string facet) => facet.Length > 0 && !Char.IsLower(facet[0]);
 
     internal static Field BrandKeyword => Infer.Field<ProductSearchDocument>(d => d.Brand!.Suffix("raw"));
 
@@ -358,7 +364,7 @@ internal static class FacetAggregations
     /// read literally.
     /// </summary>
     internal static string PrefixPattern(string code) =>
-        string.Concat(code.Select(character => char.IsAsciiLetterOrDigit(character) ? character.ToString() : $"\\{character}")) + ":.*";
+        String.Concat(code.Select(character => Char.IsAsciiLetterOrDigit(character) ? character.ToString() : $"\\{character}")) + ":.*";
 }
 
 /// <summary>A facet's counts before it is labelled: how many products it would
@@ -514,11 +520,14 @@ internal static class PriceBands
         if (cuts.Count < 2)
             cuts = Inside(min, max, [.. cuts, .. Enumerable.Range(1, 3).Select(quarter => Round(min + (max - min) * quarter / 4))]);
 
-        if (cuts.Count <= MaxBands - 1)
-            return cuts;
-
-        // More than four: keep four spread across them, the ends included.
-        return [.. Enumerable.Range(0, MaxBands - 1).Select(index => cuts[index * (cuts.Count - 1) / (MaxBands - 2)]).Distinct()];
+        return cuts.Count <= MaxBands - 1
+            ? cuts
+            :
+            // More than four: keep four spread across them, the ends included.
+            [
+                .. Enumerable.Range(0, MaxBands - 1).Select(index => cuts[index * (cuts.Count - 1) / (MaxBands - 2)])
+                    .Distinct()
+            ];
     }
 
     /// <summary>The bands between the boundaries: the lowest open below, the highest open above.</summary>
@@ -679,13 +688,13 @@ internal static class FacetAssembler
 
             AddOptions(facets, code, kind, label, codeCounts.Options, chosen,
                 pair => definition?.Options.FirstOrDefault(option =>
-                            string.Equals(option.Code, FacetValues.ValueOf(pair), StringComparison.OrdinalIgnoreCase))?.Label.In(culture)
+                            String.Equals(option.Code, FacetValues.ValueOf(pair), StringComparison.OrdinalIgnoreCase))?.Label.In(culture)
                         ?? FacetValues.ValueOf(pair),
                 options => options
-                    .OrderBy(option => order.IndexOf(option.Value) is var index and >= 0 ? index : int.MaxValue)
+                    .OrderBy(option => order.IndexOf(option.Value) is var index and >= 0 ? index : Int32.MaxValue)
                     .ThenBy(option => option.Value, StringComparer.Ordinal),
                 pair => definition?.Options.FirstOrDefault(option =>
-                            string.Equals(option.Code, FacetValues.ValueOf(pair), StringComparison.OrdinalIgnoreCase))?.Swatch);
+                            String.Equals(option.Code, FacetValues.ValueOf(pair), StringComparison.OrdinalIgnoreCase))?.Swatch);
         }
 
         return facets;
@@ -734,10 +743,10 @@ internal static class FacetAssembler
     private static int Position(AttributeDefinitions definitions, string code)
     {
         for (var index = 0; index < definitions.All.Count; index++)
-            if (string.Equals(definitions.All[index].Code, code, StringComparison.OrdinalIgnoreCase))
+            if (String.Equals(definitions.All[index].Code, code, StringComparison.OrdinalIgnoreCase))
                 return index;
 
-        return int.MaxValue;
+        return Int32.MaxValue;
     }
 
     private static LocalizedText Labels(string es, string en) =>

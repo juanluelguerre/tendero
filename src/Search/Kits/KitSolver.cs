@@ -149,9 +149,9 @@ public sealed class BranchAndBoundKitSolver : IKitSolver
     private readonly record struct Worth(int Required, int Optional, int Relevance)
     {
         public int CompareTo(Worth other) =>
-            Required != other.Required ? Required.CompareTo(other.Required)
-            : Optional != other.Optional ? Optional.CompareTo(other.Optional)
-            : Relevance.CompareTo(other.Relevance);
+            this.Required != other.Required ? this.Required.CompareTo(other.Required)
+            : this.Optional != other.Optional ? this.Optional.CompareTo(other.Optional)
+            : this.Relevance.CompareTo(other.Relevance);
     }
 
     private sealed class Search
@@ -199,14 +199,14 @@ public sealed class BranchAndBoundKitSolver : IKitSolver
                     .ThenBy(candidate => candidate.Code, StringComparer.Ordinal)
                     .ToArray()),
             ];
-            this.cheapest = [.. this.candidates.Select(of => of.Length == 0 ? decimal.MaxValue : of.Min(candidate => candidate.Price.Amount))];
+            this.cheapest = [.. this.candidates.Select(of => of.Length == 0 ? Decimal.MaxValue : of.Min(candidate => candidate.Price.Amount))];
             this.current = new KitCandidate?[this.slots.Length];
 
             // The empty kit always fits: there is an answer before the first node.
             this.best = new KitCandidate?[this.slots.Length];
         }
 
-        public void Run() => Walk(0, default, 0m);
+        public void Run() => this.Walk(0, default, 0m);
 
         private void Walk(int depth, Worth worth, decimal total)
         {
@@ -220,13 +220,13 @@ public sealed class BranchAndBoundKitSolver : IKitSolver
 
             if (depth == this.slots.Length)
             {
-                if (Better(worth, total))
+                if (this.Better(worth, total))
                     (this.best, this.bestWorth, this.bestTotal) = ([.. this.current], worth, total);
                 return;
             }
 
             var left = this.problem.Budget.Amount - total;
-            if (Reachable(depth, worth, left).CompareTo(this.bestWorth) < 0)
+            if (this.Reachable(depth, worth, left).CompareTo(this.bestWorth) < 0)
                 return;
 
             var required = this.slots[depth].Required;
@@ -236,7 +236,7 @@ public sealed class BranchAndBoundKitSolver : IKitSolver
                     continue;
 
                 this.current[depth] = candidate;
-                Walk(
+                this.Walk(
                     depth + 1,
                     required
                         ? worth with { Required = worth.Required + 1, Relevance = worth.Relevance + candidate.Relevance }
@@ -249,7 +249,7 @@ public sealed class BranchAndBoundKitSolver : IKitSolver
                     return;
             }
 
-            Walk(depth + 1, worth, total);
+            this.Walk(depth + 1, worth, total);
         }
 
         private bool Better(Worth worth, decimal total)
@@ -276,7 +276,7 @@ public sealed class BranchAndBoundKitSolver : IKitSolver
                 var prices = new List<decimal>();
                 for (var index = depth; index < this.slots.Length; index++)
                 {
-                    if (this.slots[index].Required == wanted && this.cheapest[index] != decimal.MaxValue)
+                    if (this.slots[index].Required == wanted && this.cheapest[index] != Decimal.MaxValue)
                         prices.Add(this.cheapest[index]);
                 }
 
@@ -302,7 +302,7 @@ public sealed class BranchAndBoundKitSolver : IKitSolver
             var relevance = 0;
             for (var index = depth; index < this.slots.Length; index++)
             {
-                if (this.cheapest[index] == decimal.MaxValue)
+                if (this.cheapest[index] == Decimal.MaxValue)
                     continue;
 
                 var most = left - (spent - this.cheapest[index]);
@@ -348,8 +348,7 @@ public sealed class BranchAndBoundKitSolver : IKitSolver
 
         public KitSolution Solution()
         {
-            if (this.stopped)
-                FillWhatFits();
+            if (this.stopped) this.FillWhatFits();
 
             var currency = this.problem.Budget.Currency;
             var chosen = Enumerable.Range(0, this.slots.Length).ToDictionary(index => this.slots[index].Code, index => this.best[index]);

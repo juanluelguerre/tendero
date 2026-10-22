@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Search.Contracts;
@@ -274,9 +275,9 @@ public sealed record SearchFilters
     public const int NewArrivalDays = 30;
 
     public bool IsEmpty =>
-        Brands.Count == 0 && Within.Count == 0 && Facets.Count == 0
-        && MinPrice is null && MaxPrice is null && !OnOffer && !NewArrivals && !InStock
-        && Campaign is null;
+        this.Brands.Count == 0 && this.Within.Count == 0 && this.Facets.Count == 0
+        && this.MinPrice is null && this.MaxPrice is null && !this.OnOffer && !this.NewArrivals && !this.InStock
+        && this.Campaign is null;
 }
 
 /// <summary>
@@ -583,11 +584,10 @@ public sealed record ProductSearchDocument
     /// shares — with the promotions it is in, when the reader asked Pricing for them.
     /// </summary>
     public SearchHit ToHit(double score, DealBook? deals = null) => new(
-        ProductId, Code, Name, Slug, Brand, Category, Id, Sku,
-        new Money(PriceAmount, PriceCurrency), new Money(PriceFrom, PriceCurrency), new Money(PriceTo, PriceCurrency),
-        ImageId, InStock, score)
+        this.ProductId, this.Code, this.Name, this.Slug, this.Brand, this.Category, this.Id, this.Sku,
+        new Money(this.PriceAmount, this.PriceCurrency), new Money(this.PriceFrom, this.PriceCurrency), new Money(this.PriceTo, this.PriceCurrency), this.ImageId, this.InStock, score)
     {
-        Deals = deals?.For(Sku, CategoryCodes) ?? [],
+        Deals = deals?.For(this.Sku, this.CategoryCodes) ?? [],
     };
 
     /// <summary>
@@ -619,12 +619,12 @@ public sealed record ProductSearchDocument
                 var label = definition?.Label.In(culture) ?? value.Code;
                 var rendered = value.RenderIn(culture, definition);
 
-                return string.IsNullOrWhiteSpace(rendered) ? label : $"{label} {rendered}";
+                return String.IsNullOrWhiteSpace(rendered) ? label : $"{label} {rendered}";
             })
-            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .Where(part => !String.IsNullOrWhiteSpace(part))
             .ToArray();
 
-        return parts.Length == 0 ? null : string.Join(' ', parts!);
+        return parts.Length == 0 ? null : String.Join(' ', parts!);
     }
 
     /// <summary>

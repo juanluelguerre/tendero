@@ -39,10 +39,10 @@ public static class RerankerServiceCollectionExtensions
 
         // The same rule the embedding descriptor holds: a tag or `main` names
         // whatever was pushed last, and a measurement has to name what it measured.
-        var commit = revision is { Length: 40 } && revision.All(char.IsAsciiHexDigitLower);
+        var commit = revision is { Length: 40 } && revision.All(Char.IsAsciiHexDigitLower);
         var fileHash = revision.StartsWith(RerankerModel.FileHashPrefix, StringComparison.Ordinal)
             && revision[RerankerModel.FileHashPrefix.Length..] is { Length: 64 } hash
-            && hash.All(char.IsAsciiHexDigitLower);
+            && hash.All(Char.IsAsciiHexDigitLower);
 
         return commit || fileHash
             ? services.AddReranker(endpoint, new RerankerModel(modelId, revision))
@@ -81,7 +81,7 @@ internal sealed record RerankerModel(string ModelId, string Revision)
     /// What TEI reports as the served revision: the commit, or nothing for a model
     /// loaded from a local folder, whose file hash is recorded by whoever measured it.
     /// </summary>
-    public string ServedRevision => Revision.StartsWith(FileHashPrefix, StringComparison.Ordinal) ? "" : Revision;
+    public string ServedRevision => this.Revision.StartsWith(FileHashPrefix, StringComparison.Ordinal) ? "" : this.Revision;
 }
 
 /// <summary>
@@ -107,7 +107,7 @@ internal sealed class TextEmbeddingsInferenceReranker(HttpClient http, RerankerM
         try
         {
             if (!this.verified)
-                await VerifyAsync(ct);
+                await this.VerifyAsync(ct);
 
             using var response = await http.PostAsJsonAsync(
                 new Uri("rerank", UriKind.Relative), new RerankRequest(query, texts), ct);
@@ -133,8 +133,8 @@ internal sealed class TextEmbeddingsInferenceReranker(HttpClient http, RerankerM
     {
         var served = await this.info.ReadAsync(ct);
 
-        if (!string.Equals(served.ModelId, model.ModelId, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(served.Revision, model.ServedRevision, StringComparison.OrdinalIgnoreCase))
+        if (!String.Equals(served.ModelId, model.ModelId, StringComparison.OrdinalIgnoreCase)
+            || !String.Equals(served.Revision, model.ServedRevision, StringComparison.OrdinalIgnoreCase))
         {
             throw new SearchUnavailableException(
                 "reranking",

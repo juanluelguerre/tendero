@@ -25,12 +25,12 @@ namespace ElGuerre.Tendero.Search.Contracts;
 /// </param>
 public sealed record ProductProfile(SearchHit Card, string? Category, IReadOnlyList<string> Traits)
 {
-    public string ProductId => Card.ProductId;
+    public string ProductId => this.Card.ProductId;
 
-    public string Code => Card.Code;
+    public string Code => this.Card.Code;
 
     /// <summary>Sold out is no variant that can be bought.</summary>
-    public bool InStock => Card.InStock;
+    public bool InStock => this.Card.InStock;
 
     /// <summary>
     /// The profiles of the products these variant documents belong to, one per

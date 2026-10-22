@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Search;
+using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Embeddings;

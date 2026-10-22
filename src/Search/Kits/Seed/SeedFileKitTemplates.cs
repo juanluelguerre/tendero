@@ -52,7 +52,7 @@ internal sealed class SeedFileKitTemplates(IOptions<KitSeedOptions> options) : I
 
         foreach (var kit in written)
         {
-            if (string.IsNullOrWhiteSpace(kit.Code))
+            if (String.IsNullOrWhiteSpace(kit.Code))
                 throw new InvalidDataException($"A kit of '{path}' has no code.");
 
             var slots = kit.Slots ?? [];
@@ -65,7 +65,7 @@ internal sealed class SeedFileKitTemplates(IOptions<KitSeedOptions> options) : I
                 kit.Code,
                 Both(kit.Name, $"kit '{kit.Code}'"),
                 [
-                    .. slots.Select(slot => string.IsNullOrWhiteSpace(slot.Code) || string.IsNullOrWhiteSpace(slot.Category)
+                    .. slots.Select(slot => String.IsNullOrWhiteSpace(slot.Code) || String.IsNullOrWhiteSpace(slot.Category)
                         ? throw new InvalidDataException($"A slot of kit '{kit.Code}' has no code or no category.")
                         : new KitTemplateSlot(
                             slot.Code,
@@ -85,7 +85,7 @@ internal sealed class SeedFileKitTemplates(IOptions<KitSeedOptions> options) : I
     /// <summary>Invariant 6 has no exceptions: a kit's name, a slot's, and the words it is searched with exist in es and en.</summary>
     private static LocalizedText Both(Dictionary<string, string>? text, string of)
     {
-        if (text is null || Cultures.Any(culture => !text.TryGetValue(culture, out var value) || string.IsNullOrWhiteSpace(value)))
+        if (text is null || Cultures.Any(culture => !text.TryGetValue(culture, out var value) || String.IsNullOrWhiteSpace(value)))
             throw new InvalidDataException($"The text of {of} is not written in both es and en.");
 
         return new LocalizedText(text);

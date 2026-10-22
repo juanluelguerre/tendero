@@ -66,7 +66,7 @@ public static class SimilarProducts
             [
                 .. pool
                     .Where(candidate => product.Category is not null
-                                        && string.Equals(candidate.Category, product.Category, StringComparison.Ordinal)
+                                        && String.Equals(candidate.Category, product.Category, StringComparison.Ordinal)
                                         && !seen.Contains(candidate.ProductId)
                                         && candidate.InStock)
                     .Select(candidate => new Suggestion(candidate, product.Code, SharedAttributes(product, candidate)))
@@ -89,7 +89,7 @@ public static class SimilarProducts
             [
                 .. neighbourhood.Candidates
                     .Select((candidate, position) => (Candidate: candidate, Position: position,
-                        Similarity: similarity.TryGetValue(candidate.Product.ProductId, out var value) ? value : double.NegativeInfinity))
+                        Similarity: similarity.TryGetValue(candidate.Product.ProductId, out var value) ? value : Double.NegativeInfinity))
                     .OrderByDescending(ranked => ranked.Similarity)
                     .ThenBy(ranked => ranked.Position)
                     .Select(ranked => ranked.Candidate)

@@ -161,16 +161,16 @@ public sealed partial class BuildKitValidator : AbstractValidator<BuildKitQuery>
 
     public BuildKitValidator()
     {
-        RuleFor(x => x.Template).NotEmpty().Matches("^[A-Za-z0-9_]{1,60}$")
+        this.RuleFor(x => x.Template).NotEmpty().Matches("^[A-Za-z0-9_]{1,60}$")
             .WithMessage("A kit is its code: letters, digits and underscores (KITCHEN_STARTER).");
-        RuleFor(x => x.Budget.Amount).GreaterThan(0).LessThanOrEqualTo(MaxBudget).OverridePropertyName("budget");
-        RuleFor(x => x.Budget.Currency).Equal(BuildKitHandler.Currency)
+        this.RuleFor(x => x.Budget.Amount).GreaterThan(0).LessThanOrEqualTo(MaxBudget).OverridePropertyName("budget");
+        this.RuleFor(x => x.Budget.Currency).Equal(BuildKitHandler.Currency)
             .WithMessage($"The shop sells in {BuildKitHandler.Currency}: a budget is in it.")
             .OverridePropertyName("budget");
-        RuleFor(x => x.Culture).Must(c => c is "es" or "en").WithMessage("Supported cultures: es, en.");
+        this.RuleFor(x => x.Culture).Must(c => c is "es" or "en").WithMessage("Supported cultures: es, en.");
 
-        RuleFor(x => x.Requirements.Count).LessThanOrEqualTo(MaxRequirements).OverridePropertyName("requirements");
-        RuleForEach(x => x.Requirements).Must(pair => pair is not null && CodeAndValue().IsMatch(pair))
+        this.RuleFor(x => x.Requirements.Count).LessThanOrEqualTo(MaxRequirements).OverridePropertyName("requirements");
+        this.RuleForEach(x => x.Requirements).Must(pair => pair is not null && CodeAndValue().IsMatch(pair))
             .WithMessage("A requirement is CODE:VALUE, the code in upper case (INDUCTION:true).")
             .OverridePropertyName("requirements");
     }
@@ -210,7 +210,7 @@ public sealed class BuildKitHandler(
         activity?.SetTag("kit.template", query.Template);
 
         var template = (await templates.AllAsync(cancellationToken))
-            .FirstOrDefault(kit => string.Equals(kit.Code, query.Template, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(kit => String.Equals(kit.Code, query.Template, StringComparison.OrdinalIgnoreCase));
         if (template is null)
             return new BuildKitResult(BuildKitOutcome.UnknownTemplate, null);
 
@@ -327,31 +327,31 @@ internal sealed class KitWords(string culture)
     {
         List<Message<KitSaid>> says =
         [
-            new(KitSaid.Summary, null, English
-                ? $"{kit.Name}: {Amount(kit.Total)} of {Amount(kit.Budget)}."
-                : $"{kit.Name}: {Amount(kit.Total)} de {Amount(kit.Budget)}."),
+            new(KitSaid.Summary, null, this.English
+                ? $"{kit.Name}: {this.Amount(kit.Total)} of {this.Amount(kit.Budget)}."
+                : $"{kit.Name}: {this.Amount(kit.Total)} de {this.Amount(kit.Budget)}."),
         ];
 
         foreach (var slot in kit.Slots)
-            says.Add(new Message<KitSaid>(Said(slot), slot.Code, Of(slot, kit)));
+            says.Add(new Message<KitSaid>(Said(slot), slot.Code, this.Of(slot, kit)));
 
         foreach (var unused in kit.UnusedRequirements)
         {
-            says.Add(new Message<KitSaid>(KitSaid.RequirementUnused, unused, English
+            says.Add(new Message<KitSaid>(KitSaid.RequirementUnused, unused, this.English
                 ? $"{unused} could not be required: no slot of this kit declares it."
                 : $"No se ha podido exigir {unused}: ningún hueco de este kit lo declara."));
         }
 
         if (!kit.Exact)
         {
-            says.Add(new Message<KitSaid>(KitSaid.SearchStopped, null, English
+            says.Add(new Message<KitSaid>(KitSaid.SearchStopped, null, this.English
                 ? "This is the best kit found, not necessarily the best there is: the search stopped at its limit."
                 : "Es el mejor kit encontrado, no necesariamente el mejor: la búsqueda se detuvo en su límite."));
         }
 
         if (!kit.Complete)
         {
-            says.Add(new Message<KitSaid>(KitSaid.Incomplete, null, English
+            says.Add(new Message<KitSaid>(KitSaid.Incomplete, null, this.English
                 ? "The kit is not complete: something it needs is missing."
                 : "El kit no está completo: le falta algo que necesita."));
         }
@@ -376,21 +376,21 @@ internal sealed class KitWords(string culture)
         switch (slot)
         {
             case { Product: { } product, Better: { } better }:
-                var more = Amount(Price(better.Product) - Price(product));
-                return English
-                    ? $"{slot.Name}: {product.Name}, {Amount(Price(product))}. {better.Product.Name} ranks higher and did not fit: it costs {more} more and {Amount(kit.Left)} was left."
-                    : $"{slot.Name}: {product.Name}, {Amount(Price(product))}. {better.Product.Name} está mejor valorado y no cabía: cuesta {more} más y quedaban {Amount(kit.Left)}.";
+                var more = this.Amount(Price(better.Product) - Price(product));
+                return this.English
+                    ? $"{slot.Name}: {product.Name}, {this.Amount(Price(product))}. {better.Product.Name} ranks higher and did not fit: it costs {more} more and {this.Amount(kit.Left)} was left."
+                    : $"{slot.Name}: {product.Name}, {this.Amount(Price(product))}. {better.Product.Name} está mejor valorado y no cabía: cuesta {more} más y quedaban {this.Amount(kit.Left)}.";
 
             case { Product: { } product }:
-                return $"{slot.Name}: {product.Name}, {Amount(Price(product))}.";
+                return $"{slot.Name}: {product.Name}, {this.Amount(Price(product))}.";
 
             case { Gap.Cheapest: { } cheapest }:
-                return English
-                    ? $"No {inside}: the cheapest costs {Amount(Price(cheapest))} and {Amount(kit.Left)} was left."
-                    : $"Sin {inside}: lo más barato cuesta {Amount(Price(cheapest))} y quedaban {Amount(kit.Left)}.";
+                return this.English
+                    ? $"No {inside}: the cheapest costs {this.Amount(Price(cheapest))} and {this.Amount(kit.Left)} was left."
+                    : $"Sin {inside}: lo más barato cuesta {this.Amount(Price(cheapest))} y quedaban {this.Amount(kit.Left)}.";
 
             default:
-                return English ? $"No {inside}: nothing in stock fits." : $"Sin {inside}: no hay nada en stock que encaje.";
+                return this.English ? $"No {inside}: nothing in stock fits." : $"Sin {inside}: no hay nada en stock que encaje.";
         }
     }
 
