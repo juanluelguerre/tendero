@@ -43,7 +43,7 @@ internal sealed class QdrantProductVectors(
             using var activity = Telemetry.StartActivity("search.vectors.index");
             activity?.SetTag("search.product_id", product.Id.ToString());
 
-            await EnsureAvailableAsync($"embedding {product.Id}", ct);
+            await this.EnsureAvailableAsync($"embedding {product.Id}", ct);
 
             var definitions = await attributeDefinitions.AllAsync(ct);
             var tree = await categories.AllAsync(ct);
@@ -57,7 +57,7 @@ internal sealed class QdrantProductVectors(
                 // variant can be bought, and the lexical index holds none either.
                 if (ProductSearchDocument.ForVariants(product, culture, definitions, tree).FirstOrDefault() is not { } document)
                 {
-                    await DeleteAsync(product.Id, ct);
+                    await this.DeleteAsync(product.Id, ct);
                     return;
                 }
 
@@ -93,7 +93,7 @@ internal sealed class QdrantProductVectors(
             var points = changed.Select((text, index) => new PointStruct
             {
                 Id = text.Point,
-                Vectors = Checked(embeddings[index].Vector).ToArray(),
+                Vectors = this.Checked(embeddings[index].Vector).ToArray(),
                 Payload =
                 {
                     [PointFields.ProductId] = product.Id.ToString(),
@@ -112,8 +112,8 @@ internal sealed class QdrantProductVectors(
     public Task RemoveAsync(ProductId productId, CancellationToken ct = default) =>
         GuardAsync($"removing {productId}", async () =>
         {
-            await EnsureAvailableAsync($"removing {productId}", ct);
-            await DeleteAsync(productId, ct);
+            await this.EnsureAvailableAsync($"removing {productId}", ct);
+            await this.DeleteAsync(productId, ct);
         });
 
     /// <summary>
@@ -130,13 +130,13 @@ internal sealed class QdrantProductVectors(
 
             layer.Forget();
             await layer.CreateCollectionAsync(ct);
-            await EnsureAvailableAsync("recreating the vector collection", ct);
+            await this.EnsureAvailableAsync("recreating the vector collection", ct);
         });
 
     public Task<bool> IsEmptyAsync(CancellationToken ct = default) =>
         GuardAsync("counting vectors", async () =>
         {
-            await EnsureAvailableAsync("counting vectors", ct);
+            await this.EnsureAvailableAsync("counting vectors", ct);
             return await client.CountAsync(model.CollectionName, exact: true, cancellationToken: ct) == 0;
         });
 
@@ -144,7 +144,7 @@ internal sealed class QdrantProductVectors(
         string text, string culture, string? category, int limit, CancellationToken ct = default) =>
         GuardAsync<IReadOnlyList<VectorMatch>>("vector search", async () =>
         {
-            await EnsureAvailableAsync("vector search", ct);
+            await this.EnsureAvailableAsync("vector search", ct);
 
             var query = await generator.GenerateAsync([text], cancellationToken: ct);
 
@@ -152,25 +152,25 @@ internal sealed class QdrantProductVectors(
 
             // The branch, like the lexical filter: a point carries every code
             // above its category, and matching one element of an array is a match.
-            if (!string.IsNullOrWhiteSpace(category))
+            if (!String.IsNullOrWhiteSpace(category))
                 filter &= Conditions.MatchKeyword(PointFields.CategoryCodes, category);
 
             var points = await client.QueryAsync(
                 model.CollectionName,
-                query: Checked(query[0].Vector).ToArray(),
+                query: this.Checked(query[0].Vector).ToArray(),
                 filter: filter,
                 limit: (ulong)limit,
                 payloadSelector: new[] { PointFields.ProductId, PointFields.ModelId, PointFields.ModelRevision },
                 cancellationToken: ct);
 
-            return [.. points.Select(point => new VectorMatch(ProductOf(point.Payload), point.Score))];
+            return [.. points.Select(point => new VectorMatch(this.ProductOf(point.Payload), point.Score))];
         });
 
     public Task<IReadOnlyDictionary<string, string>> TextsAsync(
         IReadOnlyCollection<string> productIds, string culture, CancellationToken ct = default) =>
         GuardAsync<IReadOnlyDictionary<string, string>>("reading embedded texts", async () =>
         {
-            await EnsureAvailableAsync("reading embedded texts", ct);
+            await this.EnsureAvailableAsync("reading embedded texts", ct);
 
             var ids = productIds
                 .Select(id => (PointId)VectorPointId.For(new ProductId(Guid.Parse(id)), culture))
@@ -180,7 +180,7 @@ internal sealed class QdrantProductVectors(
                 model.CollectionName, ids, withPayload: true, withVectors: false, cancellationToken: ct);
 
             return points.ToDictionary(
-                point => ProductOf(point.Payload),
+                point => this.ProductOf(point.Payload),
                 point => point.Payload.TryGetValue(PointFields.Text, out var value) ? value.StringValue : "",
                 StringComparer.Ordinal);
         });
@@ -195,7 +195,7 @@ internal sealed class QdrantProductVectors(
         string productId, IReadOnlyCollection<string> candidateIds, string culture, CancellationToken ct = default) =>
         GuardAsync<IReadOnlyDictionary<string, double>>("product similarity", async () =>
         {
-            await EnsureAvailableAsync("product similarity", ct);
+            await this.EnsureAvailableAsync("product similarity", ct);
 
             if (candidateIds.Count == 0)
                 return new Dictionary<string, double>(StringComparer.Ordinal);
@@ -210,7 +210,7 @@ internal sealed class QdrantProductVectors(
                 payloadSelector: new[] { PointFields.ProductId, PointFields.ModelId, PointFields.ModelRevision },
                 cancellationToken: ct);
 
-            return points.ToDictionary(point => ProductOf(point.Payload), point => (double)point.Score, StringComparer.Ordinal);
+            return points.ToDictionary(point => this.ProductOf(point.Payload), point => (double)point.Score, StringComparer.Ordinal);
         });
 
     private static Guid PointOf(string productId, string culture) =>
@@ -330,9 +330,9 @@ internal static class VectorText
     /// index — and a change to how attributes are rendered changes both.
     /// </summary>
     public static string For(ProductSearchDocument document) =>
-        string.Join(". ",
+        String.Join(". ",
             new[] { document.Name, document.Brand, document.CategoryPathText, document.AttributesText, document.Description }
-                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .Where(part => !String.IsNullOrWhiteSpace(part))
                 .Select(part => part!.Trim()));
 
     /// <summary>The text and the model that embedded it: either changing is a reason to embed again.</summary>

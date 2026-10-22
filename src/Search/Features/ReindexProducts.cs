@@ -95,7 +95,7 @@ public sealed class ReindexProductsValidator : AbstractValidator<ReindexProducts
     {
         // A closed set, answered at the door: a target nobody implements would
         // otherwise rebuild nothing and report success.
-        RuleFor(command => command.Target)
+        this.RuleFor(command => command.Target)
             .Must(target => target is ReindexTargets.Lexical or ReindexTargets.Vector or ReindexTargets.Pictures or ReindexTargets.All)
             .WithMessage(ReindexTargets.Supported);
     }
@@ -250,10 +250,10 @@ public sealed class RebuildVectorIndexAtStartupWorker(
                 // host drains the outbox that takes the money. A rebuild that fails
                 // is a warning and one more try, never a worker that is gone.
                 logger.LogWarning(exception,
-                    "The vector collection could not be checked or rebuilt; trying again in {RetryEvery}", RetryEvery);
+                    "The vector collection could not be checked or rebuilt; trying again in {RetryEvery}", this.RetryEvery);
             }
 
-            await Task.Delay(RetryEvery, clock, stoppingToken);
+            await Task.Delay(this.RetryEvery, clock, stoppingToken);
         }
     }
 }
@@ -304,10 +304,10 @@ public sealed class RebuildPictureVectorsAtStartupWorker(
                 // host drains the outbox that takes the money.
                 logger.LogWarning(
                     "The picture collection could not be checked or rebuilt ({Reason}); trying again in {RetryEvery}",
-                    exception.Message, RetryEvery);
+                    exception.Message, this.RetryEvery);
             }
 
-            await Task.Delay(RetryEvery, clock, stoppingToken);
+            await Task.Delay(this.RetryEvery, clock, stoppingToken);
         }
     }
 }

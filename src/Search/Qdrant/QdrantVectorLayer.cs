@@ -39,18 +39,18 @@ internal sealed class QdrantVectorLayer(
 
     public async Task<VectorLayerStatus> CheckAsync(CancellationToken ct = default)
     {
-        if (Fresh() is { } status)
+        if (this.Fresh() is { } status)
             return status;
 
         await this.probing.WaitAsync(ct);
         try
         {
             // Somebody else may have probed while this call waited.
-            if (Fresh() is { } probed)
+            if (this.Fresh() is { } probed)
                 return probed;
 
             var previous = this.remembered?.Status;
-            var current = await ProbeAsync(ct);
+            var current = await this.ProbeAsync(ct);
 
             if (previous?.IsAvailable != current.IsAvailable || previous.Reason != current.Reason)
             {
@@ -88,8 +88,8 @@ internal sealed class QdrantVectorLayer(
             return VectorLayerStatus.Unavailable($"the model server does not answer ({exception.Message})");
         }
 
-        if (!string.Equals(served.ModelId, model.ModelId, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(served.Revision, model.Revision, StringComparison.OrdinalIgnoreCase))
+        if (!String.Equals(served.ModelId, model.ModelId, StringComparison.OrdinalIgnoreCase)
+            || !String.Equals(served.Revision, model.Revision, StringComparison.OrdinalIgnoreCase))
         {
             return VectorLayerStatus.Unavailable(
                 $"the model server serves {Describe(served.ModelId, served.Revision)}, " +
@@ -99,7 +99,7 @@ internal sealed class QdrantVectorLayer(
         try
         {
             if (!await client.CollectionExistsAsync(model.CollectionName, ct))
-                await CreateCollectionAsync(ct);
+                await this.CreateCollectionAsync(ct);
 
             var info = await client.GetCollectionInfoAsync(model.CollectionName, ct);
             var vectors = info.Config.Params.VectorsConfig.Params;

@@ -147,7 +147,7 @@ internal sealed class ElasticsearchIndexSchema(ElasticsearchClient client) : ISe
 
     /// <summary>The version a mapping says it is; none said is the first, unversioned one.</summary>
     internal static int VersionOf(IDictionary<string, object>? meta) =>
-        meta is not null && meta.TryGetValue(SearchIndexes.VersionKey, out var value) && int.TryParse(value?.ToString(), out var version)
+        meta is not null && meta.TryGetValue(SearchIndexes.VersionKey, out var value) && Int32.TryParse(value?.ToString(), out var version)
             ? version
             : 1;
 }
@@ -253,14 +253,14 @@ internal sealed class ElasticsearchProductIndexer(
                 written.Add(document.Id);
             }
 
-            await SweepAsync(product.Id, culture, written, ct);
+            await this.SweepAsync(product.Id, culture, written, ct);
         }
     }
 
     public async Task RemoveAsync(ProductId productId, CancellationToken ct = default)
     {
         foreach (var culture in SearchCultures.Supported)
-            await SweepAsync(productId, culture, [], ct);
+            await this.SweepAsync(productId, culture, [], ct);
     }
 
     /// <summary>
@@ -484,7 +484,7 @@ internal sealed partial class ElasticsearchLexicalSearch(
         // on the page to ask, the shop's.
         var currency = hits.Select(hit => hit.Price.Currency).FirstOrDefault() ?? ShopOptions.DefaultCurrency;
 
-        var (bands, bandsTook) = await PriceBandsAsync(query, filters, counts.Price, currency, ct);
+        var (bands, bandsTook) = await this.PriceBandsAsync(query, filters, counts.Price, currency, ct);
         var facets = FacetAssembler.Build(
             counts, bands, filters, query.Culture, await attributes.AllAsync(ct), await categories.AllAsync(ct), currency);
 
@@ -519,7 +519,7 @@ internal sealed partial class ElasticsearchLexicalSearch(
             {
                 // `Must` takes an action rather than returning a clause, so
                 // this is an if and not the ternary it wants to be.
-                if (string.IsNullOrWhiteSpace(query.Text))
+                if (String.IsNullOrWhiteSpace(query.Text))
                 {
                     m.MatchAll(_ => { });
                     return;
@@ -597,7 +597,7 @@ internal sealed partial class ElasticsearchLexicalSearch(
 
         var buckets = response.Aggregations?.GetFilter(FacetAggregations.Bands)?.Aggregations?
             .GetFilters(FacetAggregations.Bands)?.Buckets
-            .ToDictionary(bucket => bucket.Key ?? string.Empty, bucket => FacetCounts.ProductsIn(bucket.Aggregations), StringComparer.Ordinal)
+            .ToDictionary(bucket => bucket.Key ?? String.Empty, bucket => FacetCounts.ProductsIn(bucket.Aggregations), StringComparer.Ordinal)
             ?? [];
 
         long[] counts =
@@ -647,7 +647,7 @@ internal sealed partial class ElasticsearchLexicalSearch(
     /// reads the body the client really writes.
     /// </summary>
     internal static Action<QueryDescriptor<ProductSearchDocument>>[] ActiveInBranch(string? category) =>
-        string.IsNullOrWhiteSpace(category)
+        String.IsNullOrWhiteSpace(category)
             ? [Active]
             // The branch, not the leaf: `CategoryCodes` holds the whole ancestry, so
             // one term reaches everything under it.
@@ -681,7 +681,7 @@ internal sealed class ElasticsearchFullMatch(ElasticsearchClient client, IRunnin
 {
     public async Task<bool> AnyAsync(ProductSearchQuery query, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(query.Text))
+        if (String.IsNullOrWhiteSpace(query.Text))
             return false;
 
         var filters = query.Filters ?? SearchFilters.None;

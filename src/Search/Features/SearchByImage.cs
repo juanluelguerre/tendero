@@ -26,10 +26,10 @@ public sealed class SearchByImageValidator : AbstractValidator<SearchByImageQuer
 {
     public SearchByImageValidator()
     {
-        RuleFor(query => query.Culture).Must(culture => culture is "es" or "en").WithMessage("Supported cultures: es, en.");
-        RuleFor(query => query.Limit).InclusiveBetween(1, VisualSearch.MaxLimit).OverridePropertyName("limit");
-        RuleFor(query => query.Words).MaximumLength(200).OverridePropertyName("q");
-        RuleFor(query => query.Category).MaximumLength(64).OverridePropertyName("category");
+        this.RuleFor(query => query.Culture).Must(culture => culture is "es" or "en").WithMessage("Supported cultures: es, en.");
+        this.RuleFor(query => query.Limit).InclusiveBetween(1, VisualSearch.MaxLimit).OverridePropertyName("limit");
+        this.RuleFor(query => query.Words).MaximumLength(200).OverridePropertyName("q");
+        this.RuleFor(query => query.Category).MaximumLength(64).OverridePropertyName("category");
     }
 }
 

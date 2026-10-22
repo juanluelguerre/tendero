@@ -21,9 +21,9 @@ public sealed class SearchPicturesByTextValidator : AbstractValidator<SearchPict
         // The same door as the search box: one character matches so much that the
         // answer is noise. Unlike it, nothing typed is not a browse — there is no
         // "every picture" to show.
-        RuleFor(query => query.Q).NotEmpty().MinimumLength(2).MaximumLength(200).OverridePropertyName("q");
-        RuleFor(query => query.Culture).Must(culture => culture is "es" or "en").WithMessage("Supported cultures: es, en.");
-        RuleFor(query => query.Limit).InclusiveBetween(1, VisualSearch.MaxLimit).OverridePropertyName("limit");
+        this.RuleFor(query => query.Q).NotEmpty().MinimumLength(2).MaximumLength(200).OverridePropertyName("q");
+        this.RuleFor(query => query.Culture).Must(culture => culture is "es" or "en").WithMessage("Supported cultures: es, en.");
+        this.RuleFor(query => query.Limit).InclusiveBetween(1, VisualSearch.MaxLimit).OverridePropertyName("limit");
     }
 }
 

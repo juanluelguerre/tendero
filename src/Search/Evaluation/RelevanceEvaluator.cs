@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 
 namespace ElGuerre.Tendero.Search.Evaluation;
@@ -35,7 +36,7 @@ public sealed record EvaluationThresholds(
     }
 
     public CultureThresholds For(string strategy, string culture) =>
-        ByStrategy.TryGetValue(strategy, out var cultures) && cultures.TryGetValue(culture, out var thresholds)
+        this.ByStrategy.TryGetValue(strategy, out var cultures) && cultures.TryGetValue(culture, out var thresholds)
             ? thresholds
             : throw new InvalidDataException($"No committed thresholds for the {strategy} strategy in culture '{culture}'.");
 }
@@ -43,7 +44,7 @@ public sealed record EvaluationThresholds(
 public sealed record CultureThresholds(double NdcgAt10, double RecallAt50)
 {
     public bool AreMetBy(CultureScore score) =>
-        score.MeanNdcgAt10 >= NdcgAt10 && score.MeanRecallAt50 >= RecallAt50;
+        score.MeanNdcgAt10 >= this.NdcgAt10 && score.MeanRecallAt50 >= this.RecallAt50;
 }
 
 /// <summary>
@@ -72,13 +73,13 @@ public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Quer
     // The mean over the scoreable queries. A query with no relevant judgments
     // does not score: counting it as 0 would punish the engine for a half-written
     // annotation.
-    public double MeanNdcgAt10 => Mean(Queries.Select(query => query.NdcgAt10));
-    public double MeanRecallAt50 => Mean(Queries.Select(query => query.RecallAt50));
+    public double MeanNdcgAt10 => Mean(this.Queries.Select(query => query.NdcgAt10));
+    public double MeanRecallAt50 => Mean(this.Queries.Select(query => query.RecallAt50));
 
     /// <summary>How much of what this strategy put in its first ten the ruler can see at all.</summary>
-    public double MeanJudgedAt10 => Mean(Queries.Select(query => query.JudgedAt10));
-    public int ScoredQueries => Queries.Count(query => query.NdcgAt10 is not null);
-    public double MeanMilliseconds => Queries.Count == 0 ? 0 : Queries.Average(query => query.Milliseconds);
+    public double MeanJudgedAt10 => Mean(this.Queries.Select(query => query.JudgedAt10));
+    public int ScoredQueries => this.Queries.Count(query => query.NdcgAt10 is not null);
+    public double MeanMilliseconds => this.Queries.Count == 0 ? 0 : this.Queries.Average(query => query.Milliseconds);
 
     /// <summary>
     /// For queries with nothing to find: the share whose page admits it — the closest
@@ -89,7 +90,7 @@ public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Quer
     {
         get
         {
-            var noAnswer = Queries.Where(query => QueryKinds.IsNoAnswer(query.Kind)).ToList();
+            var noAnswer = this.Queries.Where(query => QueryKinds.IsNoAnswer(query.Kind)).ToList();
             if (noAnswer.Count == 0 || noAnswer.All(query => query.Match is null))
                 return null;
 
@@ -101,8 +102,7 @@ public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Quer
     }
 
     /// <summary>For scored queries: how often one with real answers is told nothing matches exactly. Reported, not gated.</summary>
-    public double NoticeRate =>
-        ScoredQueries == 0 ? 0 : Queries.Count(query => query.NdcgAt10 is not null && query.Match == SearchMatch.Related) / (double)ScoredQueries;
+    public double NoticeRate => this.ScoredQueries == 0 ? 0 : this.Queries.Count(query => query.NdcgAt10 is not null && query.Match == SearchMatch.Related) / (double)this.ScoredQueries;
 
     private static double Mean(IEnumerable<double?> values)
     {

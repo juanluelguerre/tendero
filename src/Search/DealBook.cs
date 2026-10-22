@@ -15,5 +15,5 @@ public sealed class DealBook(Func<string, string?, IReadOnlyList<ProductDeal>> r
     /// <param name="sku">The variant on the card.</param>
     /// <param name="branch">Its category branch, root first: ["HOME", "KITCHEN", "COOKWARE"].</param>
     public IReadOnlyList<ProductDeal> For(string sku, IReadOnlyList<string> branch) =>
-        reaching(sku, branch.Count == 0 ? null : string.Join('/', branch));
+        reaching(sku, branch.Count == 0 ? null : String.Join('/', branch));
 }

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
+using ElGuerre.Tendero.Search.Contracts;
 
-namespace ElGuerre.Tendero.Search.Contracts;
+namespace ElGuerre.Tendero.Search.Answers;
 
 /// <summary>
 /// What kind of answer a search page is (ADR 0032). No model decides this: both

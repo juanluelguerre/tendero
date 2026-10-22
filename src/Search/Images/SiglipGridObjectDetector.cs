@@ -53,8 +53,7 @@ public sealed class SiglipGridObjectDetector(IImageEmbeddingGenerator embeddings
             var alternatives = new List<ReadOnlyMemory<float>>();
             foreach (var alternative in kind.Alternatives)
             {
-                if (!asked.TryGetValue(alternative, out var embedded))
-                    asked[alternative] = embedded = await embeddings.EmbedTextAsync(Asked(alternative), cancellationToken);
+                if (!this.asked.TryGetValue(alternative, out var embedded)) this.asked[alternative] = embedded = await embeddings.EmbedTextAsync(Asked(alternative), cancellationToken);
                 alternatives.Add(embedded);
             }
 
@@ -63,7 +62,7 @@ public sealed class SiglipGridObjectDetector(IImageEmbeddingGenerator embeddings
 
         // The cell is chosen by the cosine, and only the winner's is turned into a
         // probability: the sigmoid saturates, and two cells at 1.0 would tie.
-        var best = Enumerable.Repeat((Box: default(PictureBox), Cosine: double.NegativeInfinity), kinds.Count).ToArray();
+        var best = Enumerable.Repeat((Box: default(PictureBox), Cosine: Double.NegativeInfinity), kinds.Count).ToArray();
         foreach (var cell in Cells(width, height))
         {
             cancellationToken.ThrowIfCancellationRequested();

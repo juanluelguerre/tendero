@@ -50,15 +50,15 @@ public sealed class SuggestSimilarValidator : AbstractValidator<SuggestSimilarQu
 
     public SuggestSimilarValidator()
     {
-        RuleFor(query => query.Codes).NotEmpty().OverridePropertyName("codes");
-        RuleFor(query => query.Codes.Count).LessThanOrEqualTo(MaxViewed).OverridePropertyName("codes");
-        RuleForEach(query => query.Codes)
+        this.RuleFor(query => query.Codes).NotEmpty().OverridePropertyName("codes");
+        this.RuleFor(query => query.Codes.Count).LessThanOrEqualTo(MaxViewed).OverridePropertyName("codes");
+        this.RuleForEach(query => query.Codes)
             .Must(code => code is not null && ProductCode.IsWellFormed(ProductCode.Normalise(code)))
             .WithMessage($"A product is its public code: {ProductCode.Length} letters and digits.")
             .OverridePropertyName("codes");
 
-        RuleFor(query => query.Culture).Must(culture => culture is "es" or "en").WithMessage("Supported cultures: es, en.");
-        RuleFor(query => query.Limit).InclusiveBetween(1, MaxLimit).OverridePropertyName("limit");
+        this.RuleFor(query => query.Culture).Must(culture => culture is "es" or "en").WithMessage("Supported cultures: es, en.");
+        this.RuleFor(query => query.Limit).InclusiveBetween(1, MaxLimit).OverridePropertyName("limit");
     }
 }
 
@@ -110,7 +110,7 @@ public sealed class SuggestSimilarHandler(
         // In the trail's order — most recent first, as the page sends it — and a
         // code the index does not hold (withdrawn since it was viewed) left out.
         var viewed = codes
-            .Select(code => found.FirstOrDefault(profile => string.Equals(profile.Code, code, StringComparison.Ordinal)))
+            .Select(code => found.FirstOrDefault(profile => String.Equals(profile.Code, code, StringComparison.Ordinal)))
             .OfType<ProductProfile>()
             .ToList();
 
@@ -122,7 +122,7 @@ public sealed class SuggestSimilarHandler(
         var pool = await profiles.InCategoriesAsync(
             [.. viewed.Select(product => product.Category).OfType<string>().Distinct(StringComparer.Ordinal)], query.Culture, ct);
 
-        var (neighbourhoods, rankedBy) = await RerankAsync(SimilarProducts.Neighbourhoods(viewed, pool), query.Culture, activity, ct);
+        var (neighbourhoods, rankedBy) = await this.RerankAsync(SimilarProducts.Neighbourhoods(viewed, pool), query.Culture, activity, ct);
         var row = SimilarProducts.Spread(neighbourhoods, query.Limit);
 
         activity?.SetTag("search.similar.ranked_by", rankedBy.ToString());

@@ -48,12 +48,12 @@ public sealed class WarmHybridSearchAtStartupWorker(
             {
                 var search = scope.ServiceProvider.GetRequiredKeyedService<ISearchStrategy>(SearchStrategies.Hybrid);
                 foreach (var (culture, word) in Warmed)
-                    await WarmAsync(search, culture, word, stoppingToken);
+                    await this.WarmAsync(search, culture, word, stoppingToken);
                 return;
             }
 
             if (attempt < attempts)
-                await Task.Delay(wait, clock, stoppingToken);
+                await Task.Delay(this.wait, clock, stoppingToken);
         }
 
         logger.LogWarning("The vector layer did not answer at startup; the first searches may be answered lexically");

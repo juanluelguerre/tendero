@@ -21,14 +21,14 @@ public sealed record EmbeddingModelDescriptor
         ArgumentException.ThrowIfNullOrWhiteSpace(modelId);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(dimensions);
 
-        if (revision is not { Length: 40 } || !revision.All(char.IsAsciiHexDigitLower))
+        if (revision is not { Length: 40 } || !revision.All(Char.IsAsciiHexDigitLower))
             throw new ArgumentException(
                 $"'{revision}' is not a full lowercase commit SHA. A model is pinned to the revision that was checked, never to a tag or a branch.",
                 nameof(revision));
 
-        ModelId = modelId;
-        Revision = revision;
-        Dimensions = dimensions;
+        this.ModelId = modelId;
+        this.Revision = revision;
+        this.Dimensions = dimensions;
     }
 
     /// <summary>
@@ -64,11 +64,11 @@ public sealed record EmbeddingModelDescriptor
     /// so a mixed vector space is impossible rather than merely unlikely.
     /// </summary>
     public string CollectionName =>
-        $"products_{NameOf(ModelId)}_{Revision[..7]}_{Dimensions}";
+        $"products_{NameOf(this.ModelId)}_{this.Revision[..7]}_{this.Dimensions}";
 
     private static string NameOf(string modelId)
     {
         var name = modelId[(modelId.LastIndexOf('/') + 1)..].ToLowerInvariant();
-        return string.Concat(name.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-'));
+        return String.Concat(name.Select(c => Char.IsAsciiLetterOrDigit(c) ? c : '-'));
     }
 }

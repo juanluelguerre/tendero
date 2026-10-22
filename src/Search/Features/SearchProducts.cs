@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics.Metrics;
 using Carter;
+using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -27,21 +28,21 @@ public sealed class SearchProductsValidator : AbstractValidator<SearchProductsQu
         // is still a query, and still one that matches so much the answer is
         // noise, which is the rule the storefront has enforced on its own side
         // since the first slice.
-        RuleFor(x => x.Q).MinimumLength(2).MaximumLength(200)
-            .When(x => !string.IsNullOrEmpty(x.Q));
+        this.RuleFor(x => x.Q).MinimumLength(2).MaximumLength(200)
+            .When(x => !String.IsNullOrEmpty(x.Q));
 
-        RuleFor(x => x.Category).MaximumLength(60);
+        this.RuleFor(x => x.Category).MaximumLength(60);
 
         // A closed set, because a sort the index cannot honour is a promise
         // broken at run time rather than at the door.
-        RuleFor(x => x.Sort).IsInEnum()
-            .WithMessage($"Supported sorts: {string.Join(", ", Enum.GetNames<ProductSort>())}.");
-        RuleFor(x => x.Culture).Must(c => c is "es" or "en")
+        this.RuleFor(x => x.Sort).IsInEnum()
+            .WithMessage($"Supported sorts: {String.Join(", ", Enum.GetNames<ProductSort>())}.");
+        this.RuleFor(x => x.Culture).Must(c => c is "es" or "en")
             .WithMessage("Supported cultures: es, en.");
-        RuleFor(x => x.Page).GreaterThanOrEqualTo(1);
-        RuleFor(x => x.PageSize).InclusiveBetween(1, 50);
+        this.RuleFor(x => x.Page).GreaterThanOrEqualTo(1);
+        this.RuleFor(x => x.PageSize).InclusiveBetween(1, 50);
 
-        RuleFor(x => x.Filters!).SetValidator(new SearchFiltersValidator()).When(x => x.Filters is not null);
+        this.RuleFor(x => x.Filters!).SetValidator(new SearchFiltersValidator()).When(x => x.Filters is not null);
     }
 }
 
@@ -56,29 +57,29 @@ public sealed partial class SearchFiltersValidator : AbstractValidator<SearchFil
 
     public SearchFiltersValidator()
     {
-        RuleFor(x => x.Brands.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("brand");
-        RuleForEach(x => x.Brands).NotEmpty().MaximumLength(100).OverridePropertyName("brand");
+        this.RuleFor(x => x.Brands.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("brand");
+        this.RuleForEach(x => x.Brands).NotEmpty().MaximumLength(100).OverridePropertyName("brand");
 
-        RuleFor(x => x.Within.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("within");
-        RuleForEach(x => x.Within).NotEmpty().MaximumLength(60).OverridePropertyName("within");
+        this.RuleFor(x => x.Within.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("within");
+        this.RuleForEach(x => x.Within).NotEmpty().MaximumLength(60).OverridePropertyName("within");
 
         // "CODE:VALUE", the code as the catalogue writes it — upper case, digits
         // and underscores — which is also what keeps it from ever meeting one of
         // the built-in facets' lower-case codes.
-        RuleFor(x => x.Facets.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("f");
-        RuleForEach(x => x.Facets).Must(pair => pair is not null && CodeAndValue().IsMatch(pair))
+        this.RuleFor(x => x.Facets.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("f");
+        this.RuleForEach(x => x.Facets).Must(pair => pair is not null && CodeAndValue().IsMatch(pair))
             .WithMessage("A filter is CODE:VALUE, the code in upper case (COLOR:BLACK, SIZE:42, INDUCTION:true).")
             .OverridePropertyName("f");
 
-        RuleFor(x => x.MinPrice).GreaterThanOrEqualTo(0).OverridePropertyName("minPrice");
-        RuleFor(x => x.MaxPrice).GreaterThanOrEqualTo(0).OverridePropertyName("maxPrice");
-        RuleFor(x => x.MaxPrice).GreaterThanOrEqualTo(x => x.MinPrice!.Value)
+        this.RuleFor(x => x.MinPrice).GreaterThanOrEqualTo(0).OverridePropertyName("minPrice");
+        this.RuleFor(x => x.MaxPrice).GreaterThanOrEqualTo(0).OverridePropertyName("maxPrice");
+        this.RuleFor(x => x.MaxPrice).GreaterThanOrEqualTo(x => x.MinPrice!.Value)
             .When(x => x.MinPrice is not null && x.MaxPrice is not null)
             .WithMessage("maxPrice cannot be below minPrice.")
             .OverridePropertyName("maxPrice");
 
         // A campaign's code as Pricing writes it (TENDERO_DAYS), in any case.
-        RuleFor(x => x.Campaign).Matches("^[A-Za-z0-9_]{1,40}$")
+        this.RuleFor(x => x.Campaign).Matches("^[A-Za-z0-9_]{1,40}$")
             .When(x => x.Campaign is not null)
             .WithMessage("A campaign is its code: letters, digits and underscores (TENDERO_DAYS).")
             .OverridePropertyName("campaign");
@@ -118,7 +119,7 @@ public sealed class SearchProductsEndpoint : ICarterModule
                     OnOffer = onOffer ?? false,
                     NewArrivals = newArrivals ?? false,
                     InStock = inStock ?? false,
-                    Campaign = string.IsNullOrWhiteSpace(campaign) ? null : campaign.Trim(),
+                    Campaign = String.IsNullOrWhiteSpace(campaign) ? null : campaign.Trim(),
                 };
 
                 // Culture: explicit query parameter > Accept-Language > "es"
@@ -129,7 +130,7 @@ public sealed class SearchProductsEndpoint : ICarterModule
 
                 var result = await dispatcher.SendAsync(
                     new SearchProductsQuery(
-                        q ?? string.Empty, resolved, page ?? 1, pageSize ?? 20, category, sort?.Value ?? ProductSort.Relevance,
+                        q ?? String.Empty, resolved, page ?? 1, pageSize ?? 20, category, sort?.Value ?? ProductSort.Relevance,
                         filters.IsEmpty ? null : filters), ct);
 
                 // The other half of the negotiation: the client asks, the server
@@ -193,7 +194,7 @@ internal static class SearchRequests
             actor.KindLabel,
             actor.SurfaceLabel,
             // Nothing typed is a browse: a category page, a home-page row.
-            new("mode", string.IsNullOrWhiteSpace(query.Q) ? "browse" : "query"),
+            new("mode", String.IsNullOrWhiteSpace(query.Q) ? "browse" : "query"),
             new("category", query.Category is not null),
             new("result", page.Hits.Count > 0 ? "found" : "empty"));
 }

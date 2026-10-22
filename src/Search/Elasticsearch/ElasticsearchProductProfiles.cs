@@ -29,14 +29,17 @@ internal sealed class ElasticsearchProductProfiles(ElasticsearchClient client, I
 
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
-    public Task<IReadOnlyList<ProductProfile>> ByIdsAsync(IReadOnlyCollection<string> productIds, string culture, CancellationToken ct = default) =>
-        ReadAsync("ids", d => d.ProductId, productIds, culture, ct);
+    public Task<IReadOnlyList<ProductProfile>> ByIdsAsync(
+        IReadOnlyCollection<string> productIds, string culture, CancellationToken ct = default) =>
+        this.ReadAsync("ids", d => d.ProductId, productIds, culture, ct);
 
-    public Task<IReadOnlyList<ProductProfile>> ByCodesAsync(IReadOnlyCollection<string> codes, string culture, CancellationToken ct = default) =>
-        ReadAsync("codes", d => d.Code, codes, culture, ct);
+    public Task<IReadOnlyList<ProductProfile>> ByCodesAsync(
+        IReadOnlyCollection<string> codes, string culture, CancellationToken ct = default) =>
+        this.ReadAsync("codes", d => d.Code, codes, culture, ct);
 
-    public Task<IReadOnlyList<ProductProfile>> InCategoriesAsync(IReadOnlyCollection<string> categories, string culture, CancellationToken ct = default) =>
-        ReadAsync("categories", d => d.Category, categories, culture, ct);
+    public Task<IReadOnlyList<ProductProfile>> InCategoriesAsync(
+        IReadOnlyCollection<string> categories, string culture, CancellationToken ct = default) => this.ReadAsync(
+        "categories", d => d.Category, categories, culture, ct);
 
     private async Task<IReadOnlyList<ProductProfile>> ReadAsync(
         string by, System.Linq.Expressions.Expression<Func<ProductSearchDocument, object?>> field,

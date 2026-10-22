@@ -73,12 +73,14 @@ public sealed class VisualSearch(IPictureSearch pictures, IProductProfileReader 
     /// </summary>
     public async Task<IReadOnlyCollection<string>?> AmongAsync(string? text, string? category, string culture, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(text) && string.IsNullOrWhiteSpace(category))
+        if (String.IsNullOrWhiteSpace(text) && String.IsNullOrWhiteSpace(category))
             return null;
         if (words is null)
             throw new InvalidOperationException("Narrowing a picture by words needs the lexical search, and none was given.");
 
-        var page = await words.SearchAsync(new ProductSearchQuery(text?.Trim() ?? string.Empty, culture, Page: 1, PageSize: NarrowingDepth, Category: category), ct);
+        var page = await words.SearchAsync(
+            new ProductSearchQuery(
+                text?.Trim() ?? String.Empty, culture, Page: 1, PageSize: NarrowingDepth, Category: category), ct);
         return page.Hits.Select(hit => hit.ProductId).ToHashSet(StringComparer.Ordinal);
     }
 

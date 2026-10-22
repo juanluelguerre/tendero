@@ -46,7 +46,7 @@ public sealed record ObjectKind(string Code, string Words, bool Sold)
     /// keeps the best — as one query, "bed or chest of drawers" matched neither
     /// well (2026-10-19, OWLv2 on ABO).
     /// </summary>
-    public IReadOnlyList<string> Alternatives => Words.Split(" or ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    public IReadOnlyList<string> Alternatives => this.Words.Split(" or ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 }
 
 /// <summary>A rectangle of a picture, in its pixels, from its top left corner.</summary>
@@ -55,10 +55,10 @@ public readonly record struct PictureBox(int Left, int Top, int Width, int Heigh
     /// <summary>The part of this box inside a picture of that size, or null when none of it is.</summary>
     public PictureBox? ClippedTo(int pictureWidth, int pictureHeight)
     {
-        var left = Math.Max(0, Left);
-        var top = Math.Max(0, Top);
-        var right = Math.Min(pictureWidth, Left + Width);
-        var bottom = Math.Min(pictureHeight, Top + Height);
+        var left = Math.Max(0, this.Left);
+        var top = Math.Max(0, this.Top);
+        var right = Math.Min(pictureWidth, this.Left + this.Width);
+        var bottom = Math.Min(pictureHeight, this.Top + this.Height);
         return right > left && bottom > top ? new PictureBox(left, top, right - left, bottom - top) : null;
     }
 }
