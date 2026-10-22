@@ -1,0 +1,5 @@
+{
+    "appHost": {
+        "path": "src\\AppHost\\ElGuerre.Tendero.AppHost.csproj"
+    }
+}
