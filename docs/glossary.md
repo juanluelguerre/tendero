@@ -55,6 +55,12 @@ the fuzziness that `cross_fields` cannot.
 
 **A score from 0 to 1 on the *order* of the first ten results.**
 
+Normalized Discounted Cumulative Gain, proposed by Kalervo Järvelin and Jaana
+Kekäläinen (SIGIR 2000; ACM TOIS 20(4), 2002) for graded relevance. Their gain was
+the grade itself; the `2^grade - 1` gain Tendero uses is the later web-search form
+(Burges et al., 2005), and the log discount is the one shown to keep telling good
+rankings from bad (Wang et al., COLT 2013).
+
 BM25 produces a list; NDCG grades it. Three letters, three ideas:
 
 - **G — gain.** A person annotated each product for each query beforehand:
@@ -122,6 +128,12 @@ query's `AND`, not the words: an OR fallback beside it took recall to 0.939 /
 
 **The annotated answer key: queries, and the products a human says are the right
 answers to them.**
+
+Fixed while the code changes, written by a person and never by the system it
+grades, and kept in the repository under review. The idea is the Cranfield
+experiments' (Cyril Cleverdon, 1960s) and TREC's since 1992, which calls the
+judgments *qrels*; elsewhere it is a *gold standard*, a *test collection* or a
+*judgment list*. Tendero always says *golden set* (defined for readers in article 03).
 
 60 queries per culture — 52 scored and 8 with nothing to find — against a hundred
 products. Each query carries its Baymard query type, its split (`tune` or
