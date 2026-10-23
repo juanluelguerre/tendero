@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 
-namespace ElGuerre.Tendero.Catalog.Connectors.Shopify;
+namespace ElGuerre.Tendero.Shopify;
 
 /// <summary>
 /// The store's Admin API token, by the client-credentials grant: the app's id

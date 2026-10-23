@@ -10,7 +10,7 @@ Root namespace: `ElGuerre.Tendero.*` (`ElGuerre.Tendero.Catalog`,
 `ElGuerre.Tendero.Pricing`, `ElGuerre.Tendero.Inventory`,
 `ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Accounts`,
 `ElGuerre.Tendero.Search`, `ElGuerre.Tendero.Assist`, `ElGuerre.Tendero.AI`, `ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Mcp`,
-`ElGuerre.Tendero.Ucp`). Project file name,
+`ElGuerre.Tendero.Ucp`, `ElGuerre.Tendero.Shopify`). Project file name,
 assembly name and root namespace are the same string; the folders under `src/`
 drop the prefix (`src/Catalog/ElGuerre.Tendero.Catalog.csproj`). The npm scope in
 `frontend/` stays `@tendero/*` — npm scopes and .NET namespaces do not have to
@@ -207,7 +207,11 @@ node tools/api-map.mjs --schema CartView
 > a consistency boundary genuinely its own — and **a context with no writer is
 > not a context yet**: `Pricing` reads committed files and owns no table.
 > `Mcp`, `Ucp` and `AI` are not contexts; they own no state (`AI` is the model
-> port every context reaches a model through — ADR 0053). `Assist` became one in
+> port every context reaches a model through — ADR 0053). `Shopify` is not one
+> either: an external system's adapters in a project of their own (phase 16,
+> P16-8), implementing the catalogue's and the stock's ports, composed by the
+> host with `AddShopify` beside `AddCatalog`, and never reaching a domain (an
+> architecture rule). `Assist` became one in
 > phase 12 (ADR 0052): a proposal has a lifecycle, a writer and actors of its own.
 
 ## Conventions

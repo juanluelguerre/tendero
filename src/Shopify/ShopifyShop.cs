@@ -1,4 +1,4 @@
-namespace ElGuerre.Tendero.Catalog.Connectors.Shopify;
+namespace ElGuerre.Tendero.Shopify;
 
 /// <summary>
 /// What the store says about itself that the import needs: the currency its

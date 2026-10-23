@@ -17,6 +17,7 @@
     <ProjectReference Include="../Accounts/ElGuerre.Tendero.Accounts.csproj" />
     <ProjectReference Include="../Assist/ElGuerre.Tendero.Assist.csproj" />
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Shopify/ElGuerre.Tendero.Shopify.csproj" />
     <ProjectReference Include="../DevIssuer/ElGuerre.Tendero.DevIssuer.csproj" />
     <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../Mcp/ElGuerre.Tendero.Mcp.csproj" />

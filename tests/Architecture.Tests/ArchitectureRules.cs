@@ -894,6 +894,38 @@ public sealed class ArchitectureRules
         }
     }
 
+    /// <summary>
+    /// An external system's adapters implement ports and never reach a context's
+    /// domain (phase 16, P16-8): a Shopify adapter speaks the port's values —
+    /// <c>ExternalProduct</c>, a SKU and a quantity — never a <c>Product</c>, so
+    /// changing an aggregate never changes how a store is read. The domains are
+    /// computed from the contexts, as the transports' rule computes them.
+    /// </summary>
+    [Fact]
+    public void An_adapter_never_reaches_a_domain()
+    {
+        var domains = Solution.Contexts
+            .SelectMany(assembly => assembly.GetTypes())
+            .Select(type => type.Namespace)
+            .OfType<string>()
+            .Where(@namespace => @namespace.EndsWith(DomainSuffix, StringComparison.Ordinal)
+                                 || @namespace.Contains(DomainSuffix + ".", StringComparison.Ordinal))
+            .Distinct()
+            .Order()
+            .ToArray();
+
+        Assert.NotEmpty(domains);
+
+        foreach (var adapter in Solution.Adapters)
+        {
+            var result = Types.InAssembly(adapter)
+                .ShouldNot().HaveDependencyOnAny(domains)
+                .GetResult();
+
+            Assert.True(result.IsSuccessful, Describe(adapter, result));
+        }
+    }
+
     private static string Describe(Assembly assembly, TestResult result) =>
         result.IsSuccessful
             ? string.Empty

@@ -1,4 +1,4 @@
-namespace ElGuerre.Tendero.Catalog.Connectors.Shopify;
+namespace ElGuerre.Tendero.Shopify;
 
 /// <summary>
 /// Every query the adapter sends, in one place, so the day Shopify's schema

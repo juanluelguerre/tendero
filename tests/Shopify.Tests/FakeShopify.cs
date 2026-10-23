@@ -2,7 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 
-namespace ElGuerre.Tendero.Catalog.Tests.Shopify;
+namespace ElGuerre.Tendero.Shopify.Tests;
 
 /// <summary>
 /// A Shopify store as the Admin API answers, from recorded fixtures (phase 16,
@@ -91,7 +91,7 @@ internal sealed class FakeShopify : HttpMessageHandler
     }
 
     public static string Fixture(string name) =>
-        Path.Combine(AppContext.BaseDirectory, "Shopify", "Fixtures", name);
+        Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
 
     private static HttpResponseMessage Json(string json) => Text(json, "application/json");
 

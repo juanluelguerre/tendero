@@ -1,4 +1,4 @@
-namespace ElGuerre.Tendero.Catalog.Connectors.Shopify;
+namespace ElGuerre.Tendero.Shopify;
 
 /// <summary>
 /// One Shopify store to import from (phase 16). The app is created in Shopify's

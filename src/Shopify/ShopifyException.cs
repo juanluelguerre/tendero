@@ -1,4 +1,4 @@
-namespace ElGuerre.Tendero.Catalog.Connectors.Shopify;
+namespace ElGuerre.Tendero.Shopify;
 
 /// <summary>What went wrong talking to a store, as a closed set the import can name.</summary>
 public enum ShopifyFailure

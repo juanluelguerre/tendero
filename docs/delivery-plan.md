@@ -1097,6 +1097,17 @@ does not bring, and noted when they cannot be (a store selling in several EU
 countries needs rates by destination, see the backlog's *Tax by product code and
 destination*). Spec [`docs/specs/shopify-leave.md`](specs/shopify-leave.md), proposed 2026-10-23: nine decisions, the first splitting S2 into S2a (the shop's goods: tax class, stock and warehouses, redirects, bulk publication, the rehearsal, a merchant's own token) and S2b (customers, orders, discounts, gift cards).
 
+S2a's tasks (spec, *Tasks*):
+
+- [x] `P16-8` Where Shopify's adapters live: `src/Shopify`, a project of its own for the client and every Shopify adapter (decision for the author) — **S** · *Done 2026-10-23* (the author chose the project): S1's client and adapter moved with `git mv` to `src/Shopify` (`ElGuerre.Tendero.Shopify`) and their tests to `tests/Shopify.Tests`; the catalogue no longer registers Shopify — the host composes `AddShopify` beside `AddCatalog` (API, SearchEval, the round trip); the catalogue sources' contract suite became a shared file (`tests/CatalogSourceConnectorContract.cs`) linked into both test projects; an architecture rule, *an adapter never reaches a domain*; 38 + 328 tests as before, the round trip green
+- [ ] `P16-9` Tax class per variant from Shopify's `taxable`, and a note for tax overrides — **S**
+- [ ] `P16-10` Stock and warehouses: `IStockSourceConnector` in Inventory with its contract suite, the Shopify adapter, `ImportStock` through the ledger's stocktake, a proposed warehouses file — **M**
+- [ ] `P16-11` Redirects: `/products/<handle>` and `/collections/<handle>` answered with a 301 to the storefront — **M**
+- [ ] `P16-12` Bulk publication of what one migration brought, audited (ADR 0012 amended) — **S**
+- [ ] `P16-13` The rehearsal: imports with nothing written, reporting what would come — **S**
+- [ ] `P16-14` A merchant's own store: `Shopify:AccessToken` and `tools/shopify-connect/` — **M**
+- [ ] `P16-15` The seed's stock in two locations, the round trip grown, S2a's close — **M**
+
 **S3 · Shopify as a channel** (case B, without the theme): an outbound
 sales-channel port, catalogue, stock and prices published through the outbox,
 orders received by idempotent webhooks, a stock margin against overselling, and

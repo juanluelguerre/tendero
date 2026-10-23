@@ -2,6 +2,7 @@ using System.Text.Json;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Shopify;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -73,7 +74,9 @@ public sealed class ShopifyRoundTripTests
         };
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddCatalog(new ConfigurationBuilder().AddInMemoryCollection(settings).Build());
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        services.AddCatalog(configuration);
+        services.AddShopify(configuration);
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
 

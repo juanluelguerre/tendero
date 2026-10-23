@@ -4,9 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace ElGuerre.Tendero.Catalog.Connectors.Shopify;
+namespace ElGuerre.Tendero.Shopify;
 
-internal static class ShopifyServiceCollectionExtensions
+public static class ShopifyServiceCollectionExtensions
 {
     private const string Client = "shopify";
 
@@ -16,7 +16,9 @@ internal static class ShopifyServiceCollectionExtensions
     /// source at all, asking for it is the import's ordinary 400 naming the ones
     /// that are, and a fresh clone runs exactly as before.
     /// </summary>
-    public static IServiceCollection AddShopifySource(this IServiceCollection services, IConfiguration configuration)
+    /// <remarks>Composed by the host beside <c>AddCatalog</c>: Shopify is an
+    /// adapter of the catalogue's port, and the catalogue does not know it.</remarks>
+    public static IServiceCollection AddShopify(this IServiceCollection services, IConfiguration configuration)
     {
         var section = configuration.GetSection(ShopifyOptions.Section);
         if (section.Get<ShopifyOptions>() is not { IsConfigured: true })

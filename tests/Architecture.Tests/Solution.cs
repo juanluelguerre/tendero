@@ -54,9 +54,18 @@ internal static class Solution
     /// </summary>
     public static readonly Assembly[] Transports = [Mcp, Ucp];
 
+    /// <summary>
+    /// An external system's adapters, kept in a project of their own (phase 16,
+    /// P16-8): Shopify implements the catalogue's and the stock's ports, owns no
+    /// state and declares no domain.
+    /// </summary>
+    public static readonly Assembly Shopify = typeof(ElGuerre.Tendero.Shopify.ShopifyOptions).Assembly;
+
+    public static readonly Assembly[] Adapters = [Shopify];
+
     public static readonly Assembly[] All =
     [
         SharedKernel, AI, Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search,
-        Mcp, Ucp, Persistence, ServiceDefaults, Api, Workers, SearchEval
+        Mcp, Ucp, Shopify, Persistence, ServiceDefaults, Api, Workers, SearchEval
     ];
 }

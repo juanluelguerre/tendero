@@ -1,9 +1,9 @@
-using ElGuerre.Tendero.Catalog.Connectors.Shopify;
+using ElGuerre.Tendero.Shopify;
 using ElGuerre.Tendero.Tests;
 using Microsoft.Extensions.Options;
 using Xunit;
 
-namespace ElGuerre.Tendero.Catalog.Tests.Shopify;
+namespace ElGuerre.Tendero.Shopify.Tests;
 
 /// <summary>
 /// The Admin API client (phase 16, P16-3): a token by the client-credentials

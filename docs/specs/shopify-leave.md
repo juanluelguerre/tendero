@@ -195,6 +195,46 @@ Each has a proposal.
 9. **The lab store's data for S2 is seeded by the same script, grown**, and the
    author adds the scopes in a new version. *Proposed: yes.*
 
-## Tasks
+## Tasks (S2a, the shop's goods)
 
-Written when the decisions are taken, one list per half if decision 1 holds.
+Written 2026-10-23, with the store's scopes for it already granted (inventory,
+locations, publications, navigation).
+
+- `P16-8` **Where Shopify's adapters live** (a decision for the author). S1's
+  client and adapter sit in `Catalog/Connectors/Shopify`. Stock needs an
+  adapter of an `Inventory` port. `Inventory` may reference the SharedKernel
+  alone (an architecture rule), so that adapter cannot live there, and putting
+  it in `Catalog` would make one context implement another's port. *Proposed:*
+  a project of its own, `src/Shopify` (`ElGuerre.Tendero.Shopify`), holding the
+  client and every Shopify adapter (catalogue source, stock source, later
+  orders and customers), referencing the ports it implements. It follows
+  invariant 3: an external system reached through adapters, one place to read
+  Shopify. S1's code moves there unchanged, with its tests — **S**
+- `P16-9` **Tax class per variant**: `ExternalVariant` gains `TaxClass`, the
+  adapter maps Shopify's `taxable` (true → `standard`, false → `exempt`), and
+  the mapper sets the variant's class. A note (`TaxOverrideAtSource`) when the
+  store's tax overrides cannot be expressed — **S**
+- `P16-10` **Stock and warehouses**: an inbound port in `Inventory`
+  (`IStockSourceConnector`: locations, then levels per SKU and location), with
+  its contract suite and a fake; the Shopify adapter (bulk read of inventory
+  levels); an `ImportStock` slice that enters each level through the ledger's
+  stocktake (`AdjustAsync`) and writes the store's locations as a **proposed
+  warehouses file** for a person to commit — **M**
+- `P16-11` **Redirects**: the API answers `/products/<handle>` and
+  `/collections/<handle>` with a 301 to the storefront's `/p/<slug>/<code>` and
+  `/c/<code>`, from the handles S1 keeps and the store's collections mapped to a
+  category (one whose products share it; otherwise a note). The storefront's
+  development server forwards those paths to the API; a production host does
+  the same — **M**
+- `P16-12` **Bulk publication**: a person publishes what one migration
+  brought, in one audited operation (ADR 0012 amended) — **S**
+- `P16-13` **The rehearsal**: the import and the stock import run with nothing
+  written, reporting what would come and the notes — **S**
+- `P16-14` **A merchant's own store**: `Shopify:AccessToken` accepted beside
+  the client credentials, and `tools/shopify-connect/` running the
+  authorization-code install once — **M**
+- `P16-15` The seeding script grows (two locations, MAD and BCN, and the seed's
+  stock), the round trip grows (stock per SKU and location, tax classes,
+  redirects), the notebook, S2a's close — **M**
+
+S2b's tasks are written when S2a closes.

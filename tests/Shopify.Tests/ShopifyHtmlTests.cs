@@ -1,7 +1,7 @@
-using ElGuerre.Tendero.Catalog.Connectors.Shopify;
+using ElGuerre.Tendero.Shopify;
 using Xunit;
 
-namespace ElGuerre.Tendero.Catalog.Tests.Shopify;
+namespace ElGuerre.Tendero.Shopify.Tests;
 
 /// <summary>
 /// A store's HTML description as the catalogue's plain text (spec decision 3):

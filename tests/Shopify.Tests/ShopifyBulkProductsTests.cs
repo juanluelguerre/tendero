@@ -1,8 +1,8 @@
 using System.Text.Json;
-using ElGuerre.Tendero.Catalog.Connectors.Shopify;
+using ElGuerre.Tendero.Shopify;
 using Xunit;
 
-namespace ElGuerre.Tendero.Catalog.Tests.Shopify;
+namespace ElGuerre.Tendero.Shopify.Tests;
 
 /// <summary>
 /// A bulk operation's file, read as products (phase 16, P16-3). Asked for with

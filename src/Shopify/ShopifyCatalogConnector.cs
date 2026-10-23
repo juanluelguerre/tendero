@@ -1,7 +1,8 @@
 using System.Runtime.CompilerServices;
+using ElGuerre.Tendero.Catalog.Connectors;
 using Microsoft.Extensions.Options;
 
-namespace ElGuerre.Tendero.Catalog.Connectors.Shopify;
+namespace ElGuerre.Tendero.Shopify;
 
 /// <summary>
 /// The inbound port's Shopify adapter (phase 16, docs/specs/shopify-import.md).

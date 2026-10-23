@@ -34,6 +34,7 @@ using ElGuerre.Tendero.Search.Health;
 using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Shopify;
 using ElGuerre.Tendero.Ucp;
 using ElGuerre.Tendero.Ucp.Catalog;
 using ElGuerre.Tendero.Ucp.Checkout;
@@ -63,6 +64,8 @@ builder.Services.AddAccounts();
 builder.Services.Configure<PrivacyOptions>(builder.Configuration.GetSection(PrivacyOptions.SectionName));
 
 builder.Services.AddCatalog(builder.Configuration);
+// A Shopify store as a catalogue source, only when its credentials are set (phase 16).
+builder.Services.AddShopify(builder.Configuration);
 
 builder.Services.AddPricing(builder.Configuration);
 

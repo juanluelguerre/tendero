@@ -12,6 +12,7 @@ using ElGuerre.Tendero.Search.Reranking;
 using ElGuerre.Tendero.Search.Strategies;
 using ElGuerre.Tendero.SearchEval.Diagnostics;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Shopify;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -85,6 +86,7 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
             builder.Services.AddSingleton<IImageStore>(held);
 
         builder.Services.AddCatalog(builder.Configuration);
+        builder.Services.AddShopify(builder.Configuration);
         builder.Services.AddLexicalSearch(options.Elasticsearch);
         builder.Services.AddSearchIndexInitializer();
 

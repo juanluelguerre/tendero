@@ -1,13 +1,14 @@
+using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Connectors;
-using ElGuerre.Tendero.Catalog.Connectors.Shopify;
 using ElGuerre.Tendero.Catalog.Tests.Connectors;
+using ElGuerre.Tendero.Shopify;
 using ElGuerre.Tendero.Tests;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Xunit;
 
-namespace ElGuerre.Tendero.Catalog.Tests.Shopify;
+namespace ElGuerre.Tendero.Shopify.Tests;
 
 /// <summary>
 /// The Shopify adapter of the inbound port (phase 16, P16-4) passes the same
@@ -32,7 +33,9 @@ public sealed class ShopifySourceRegistrationTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddCatalog(new ConfigurationBuilder().AddInMemoryCollection(settings).Build());
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        services.AddCatalog(configuration);
+        services.AddShopify(configuration);
         return services.BuildServiceProvider().CreateScope().ServiceProvider
             .GetRequiredService<ElGuerre.Tendero.Catalog.Ports.ICatalogSourceRegistry>().Sources;
     }
@@ -59,7 +62,9 @@ public sealed class ShopifySourceRegistrationTests
             Assert.Equal(["seed", "shopify"], Sources(settings));
 
             var services = new ServiceCollection();
-            services.AddCatalog(new ConfigurationBuilder().AddInMemoryCollection(settings).Build());
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+            services.AddCatalog(configuration);
+            services.AddShopify(configuration);
             var options = services.BuildServiceProvider().GetRequiredService<IOptions<ShopifyOptions>>().Value;
             Assert.Equal("COFFEE_MAKER", options.Categories["gid://shopify/TaxonomyCategory/hg-11-1-3"]);
         }

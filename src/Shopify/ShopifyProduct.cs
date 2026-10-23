@@ -1,4 +1,4 @@
-namespace ElGuerre.Tendero.Catalog.Connectors.Shopify;
+namespace ElGuerre.Tendero.Shopify;
 
 /// <summary>
 /// A product as the store says it, before it is ours: what one bulk file holds
