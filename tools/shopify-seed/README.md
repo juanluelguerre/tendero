@@ -55,6 +55,12 @@ dotnet user-secrets set "Parameters:shopify-client-secret" "<client secret>" --p
   item is a `MenuItem` to the menus and a `Link` to translations.
 - `filters.mjs`: metafield definitions for colour, material, gender and
   induction, so the Search & Discovery app can offer them as filters.
+- `stock.mjs` (S2a, P16-15): the seed's two warehouses as the store's
+  locations — its first location renamed for Madrid, Barcelona added — and
+  each variant's units on hand in each from `seed/stock.sample.json`
+  (`write_inventory`, `write_locations`). Repeatable: it writes only what
+  differs. It writes `locations.json`, location → warehouse code, which the
+  stock import reads through `Shopify:LocationsFile`.
 
 The store's look in Tendero's style is `tools/shopify-theme/`.
 

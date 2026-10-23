@@ -2,6 +2,7 @@ using System.Text.Json;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Shopify;
 using Microsoft.Extensions.Configuration;
@@ -137,12 +138,68 @@ public sealed class ShopifyRoundTripTests
         Assert.True(wrong.Count == 0, string.Join('\n', wrong));
     }
 
+    /// <summary>
+    /// The seed's stock read back from the store (P16-15): tools/shopify-seed/stock.mjs
+    /// set each SKU's units on hand in Madrid and Barcelona from
+    /// seed/stock.sample.json, and the stock source must hand back the same
+    /// counts under the same SKUs and warehouse codes, with nothing to note. A
+    /// level the seed does not have is zero on either side: Shopify keeps a level
+    /// of nothing where a variant was once stocked, and a count of zero says the
+    /// same as no shelf.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task The_seeds_stock_read_back_from_the_store_is_the_seeds_stock()
+    {
+        var secrets = StoreSecrets();
+        Assert.SkipWhen(secrets is null, "needs a Shopify development store's credentials in the AppHost's user secrets");
+        var ct = TestContext.Current.CancellationToken;
+
+        await using var provider = Services(secrets!);
+        await using var scope = provider.CreateAsyncScope();
+
+        // The SKUs the import would give the store's variants, as the catalogue would answer them.
+        var catalogue = scope.ServiceProvider.GetRequiredKeyedService<ICatalogSourceConnector>("shopify");
+        foreach (var product in await All(catalogue, ct))
+            foreach (var variant in product.Variants ?? [])
+                provider.GetRequiredService<StoreSkus>().Known[variant.ExternalId!] = variant.Sku ?? ExternalProductMapper.SkuOf(product, variant);
+
+        var seed = JsonSerializer.Deserialize<List<SeedLevel>>(File.ReadAllText(Seed(Path.Combine("seed", "stock.sample.json"))), Json)!
+            .ToDictionary(level => (level.Sku.ToUpperInvariant(), level.Warehouse), level => level.OnHand);
+        var source = scope.ServiceProvider.GetRequiredKeyedService<IStockSourceConnector>("shopify");
+        var store = new Dictionary<(string, string), int>();
+        await foreach (var level in source.StreamLevelsAsync(ct))
+            store[(level.Sku.ToUpperInvariant(), level.WarehouseCode)] = level.OnHand;
+
+        var differences = seed.Keys.Union(store.Keys)
+            .Where(key => seed.GetValueOrDefault(key) != store.GetValueOrDefault(key))
+            .Select(key => $"{key.Item1} {key.Item2}: seed {seed.GetValueOrDefault(key)}, store {store.GetValueOrDefault(key)}")
+            .ToList();
+        Assert.True(differences.Count == 0, $"{differences.Count} differences over {seed.Count} levels:\n{string.Join('\n', differences)}");
+        Assert.Empty(source.SourceNotes);
+    }
+
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    private sealed record SeedLevel(string Sku, string Warehouse, int OnHand);
+
+    /// <summary>The catalogue's answer for the store's variants, filled from what the store's catalogue says.</summary>
+    private sealed class StoreSkus : ISourceVariantSkus
+    {
+        public Dictionary<string, string> Known { get; } = new(StringComparer.Ordinal);
+
+        public Task<IReadOnlyDictionary<string, string>> SkusOfAsync(string source, IReadOnlyCollection<string> externalVariantIds, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyDictionary<string, string>>(
+                externalVariantIds.Where(Known.ContainsKey).ToDictionary(id => id, id => Known[id]));
+    }
+
     /// <summary>The catalogue and the Shopify source, configured as the API is, over the seed's files.</summary>
     private static ServiceProvider Services(Dictionary<string, string> secrets)
     {
         var settings = new Dictionary<string, string?>(secrets.ToDictionary(pair => pair.Key, pair => (string?)pair.Value))
         {
             ["Shopify:CategoriesFile"] = Seed(Path.Combine("tools", "shopify-seed", "categories.json")),
+            ["Shopify:LocationsFile"] = Seed(Path.Combine("tools", "shopify-seed", "locations.json")),
             ["Catalog:Connectors:Seed:FilePath"] = Seed(Path.Combine("seed", "products.sample.json")),
             ["Catalog:Attributes:FilePath"] = Seed(Path.Combine("seed", "attributes.sample.json")),
             ["Catalog:Categories:FilePath"] = Seed(Path.Combine("seed", "categories.sample.json")),
@@ -152,6 +209,8 @@ public sealed class ShopifyRoundTripTests
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         services.AddCatalog(configuration);
         services.AddShopify(configuration);
+        services.AddSingleton<StoreSkus>();
+        services.AddSingleton<ISourceVariantSkus>(provider => provider.GetRequiredService<StoreSkus>());
         return services.BuildServiceProvider();
     }
 

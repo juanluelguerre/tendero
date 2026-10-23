@@ -1028,8 +1028,12 @@ if (builder.Configuration["Parameters:shopify-store"] is { Length: > 0 } shopify
     }
     else if (appCredentials)
     {
+        // The development store, whose locations tools/shopify-seed/stock.mjs made
+        // and mapped. A merchant's store has locations of its own, and a person
+        // writes their file; until then each is proposed as a warehouse.
         api.WithEnvironment("Shopify__ClientId", builder.AddParameter("shopify-client-id", secret: true))
-            .WithEnvironment("Shopify__ClientSecret", builder.AddParameter("shopify-client-secret", secret: true));
+            .WithEnvironment("Shopify__ClientSecret", builder.AddParameter("shopify-client-secret", secret: true))
+            .WithEnvironment("Shopify__LocationsFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "locations.json"));
     }
 
     if (merchantsToken || appCredentials)

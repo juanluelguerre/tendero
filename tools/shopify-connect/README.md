@@ -52,5 +52,11 @@ dotnet user-secrets remove Parameters:shopify-access-token --project src/AppHost
 dotnet user-secrets set Parameters:shopify-store tendero-dev.myshopify.com --project src/AppHost
 ```
 
+A merchant's locations are their own: the development store's
+`tools/shopify-seed/locations.json` is not given to the API with a merchant's
+token. Rehearse the stock import first — each location comes back as a
+proposed warehouse — and write the merchant's mapping (location id →
+warehouse code) to a file of its own, given as `Shopify:LocationsFile`.
+
 Then rehearse before you import: `POST /api/catalog/import` and
 `POST /api/inventory/import` with `"rehearse": true`.
