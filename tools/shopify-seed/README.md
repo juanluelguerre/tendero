@@ -42,6 +42,12 @@ dotnet user-secrets set "Parameters:shopify-client-secret" "<client secret>" --p
 
   A product whose handle (its item id, lowercased) exists is skipped.
   `--limit N` seeds the first N; `--delete-all` empties the store first.
+- `publish.mjs`: publishes every product to the Online Store channel
+  (`write_publications`), so the store's own storefront shows the catalogue.
+  It also sets each product's `publishedAt`, which the importer reads as
+  *available from*.
+
+The store's look in Tendero's style is `tools/shopify-theme/`.
 
 ## The round trip
 

@@ -1,0 +1,38 @@
+<!doctype html>
+<!--
+  The hero's background in the Shopify store, in Tendero's look (phase 16, case
+  B): the page's warm stone under a band of the awning's stripes, and the floor.
+  A theme lays a hero's picture across the whole screen while its content keeps
+  to the page's width, so the shop front is not here: it is an image block in
+  the hero's content, on the right, lined up with the products below
+  (tools/shopify-theme/build.mjs). Rendered at 2400×1000 by hero.mjs; the colours
+  are the tokens' values (design/theme.css): stone-100, stone-200, clay-500, clay-50.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 2400px; height: 1000px; overflow: hidden; }
+  body {
+    background: #F3F1ED;
+    position: relative;
+  }
+  .awning {
+    position: absolute; inset: 0 0 auto 0; height: 36px;
+    background: repeating-linear-gradient(90deg, #D85A30 0 60px, #FBEEE8 60px 120px);
+  }
+  .awning::after {
+    content: ""; position: absolute; inset: auto 0 -10px 0; height: 10px;
+    background: radial-gradient(circle at 30px 0, #D85A30 0 30px, transparent 31px) 0 0 / 120px 10px repeat-x;
+  }
+  .floor {
+    position: absolute; inset: auto 0 0 0; height: 90px;
+    background: #E4E0D9;
+  }
+</style>
+</head>
+<body>
+  <div class="awning"></div>
+  <div class="floor"></div>
+</body>
+</html>
