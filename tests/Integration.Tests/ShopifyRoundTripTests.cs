@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -67,6 +68,8 @@ public sealed class ShopifyRoundTripTests
         {
             ["Shopify:CategoriesFile"] = Seed(Path.Combine("tools", "shopify-seed", "categories.json")),
             ["Catalog:Connectors:Seed:FilePath"] = Seed(Path.Combine("seed", "products.sample.json")),
+            ["Catalog:Attributes:FilePath"] = Seed(Path.Combine("seed", "attributes.sample.json")),
+            ["Catalog:Categories:FilePath"] = Seed(Path.Combine("seed", "categories.sample.json")),
         };
         var services = new ServiceCollection();
         services.AddLogging();
@@ -74,6 +77,7 @@ public sealed class ShopifyRoundTripTests
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
 
+        var definitions = await scope.ServiceProvider.GetRequiredService<IAttributeDefinitionReader>().AllAsync(ct);
         var seed = await All(scope.ServiceProvider.GetRequiredKeyedService<ICatalogSourceConnector>("seed"), ct);
         var shopify = scope.ServiceProvider.GetRequiredKeyedService<ICatalogSourceConnector>("shopify");
         var store = (await All(shopify, ct)).ToDictionary(product => product.Handle!.ToUpperInvariant());
@@ -87,7 +91,7 @@ public sealed class ShopifyRoundTripTests
                 continue;
             }
 
-            Compare(differences, expected, actual);
+            Compare(differences, expected, actual, definitions);
         }
 
         Assert.True(differences.Count == 0,
@@ -95,7 +99,12 @@ public sealed class ShopifyRoundTripTests
         Assert.Empty(shopify.SourceNotes);
     }
 
-    private static void Compare(List<string> differences, ExternalProduct seed, ExternalProduct store)
+    /// <summary>
+    /// Attributes are compared as the catalogue resolves them: the store holds each
+    /// option's label and "sí" where the seed has the supplier's word and "si"
+    /// (tools/shopify-seed/attributes.mjs), and both are the same option.
+    /// </summary>
+    private static void Compare(List<string> differences, ExternalProduct seed, ExternalProduct store, AttributeDefinitions definitions)
     {
         void Same(string field, object? expected, object? actual)
         {
@@ -112,8 +121,8 @@ public sealed class ShopifyRoundTripTests
         Same("brand", seed.Brand, store.Brand);
         Same("category", seed.Category, store.Category);
         Same("price", seed.Price, store.Price);
-        Same("attributes", Flat(seed.Attributes), Flat(store.Attributes));
-        Same("variants", Variants(seed), Variants(store));
+        Same("attributes", Flat(ExternalProductMapper.Coordinates(seed.Attributes, definitions)), Flat(ExternalProductMapper.Coordinates(store.Attributes, definitions)));
+        Same("variants", Variants(seed, definitions), Variants(store, definitions));
         Same("pictures", seed.Images.Count, store.Images.Count);
         Same("pictures shown", Shown(seed), Shown(store));
         Same("notes", null, store.Notes is { Count: > 0 } notes ? string.Join("; ", notes) : null);
@@ -122,13 +131,13 @@ public sealed class ShopifyRoundTripTests
     /// <summary>Each variant as the catalogue will sell it: its SKU, what it varies by, its price.</summary>
     /// A product sold one way is the seed's default variant on one side and
     /// Shopify's "Default Title" variant, which varies by nothing, on the other.
-    private static string Variants(ExternalProduct product) =>
+    private static string Variants(ExternalProduct product, AttributeDefinitions definitions) =>
         product.Variants is not { Count: > 0 } variants
             ? $"{product.ExternalId}-DEFAULT [] {product.PriceAmount:0.00}"
             : string.Join(" | ", variants
                 .Select(variant =>
                     $"{(variant.Sku ?? ExternalProductMapper.SkuOf(product, variant)).ToUpperInvariant()} " +
-                    $"[{Flat(variant.Attributes)}] {variant.PriceAmount ?? product.PriceAmount:0.00}")
+                    $"[{Flat(ExternalProductMapper.Coordinates(variant.Attributes, definitions))}] {variant.PriceAmount ?? product.PriceAmount:0.00}")
                 .Order(StringComparer.Ordinal));
 
     private static string Flat(IReadOnlyDictionary<string, string> values) =>

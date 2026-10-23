@@ -1,7 +1,7 @@
 // Fills the development store from Tendero's own seed (phase 16, P16-6), so the
 // Shopify importer can read it back and the round trip can be compared field by
 // field. Run from the repository root:
-//   node tools/shopify-seed/seed.mjs [--limit N] [--delete-all]
+//   node tools/shopify-seed/seed.mjs [--limit N] [--delete-all] [--refresh-attributes]
 //
 // Each seed product becomes one Shopify product:
 //   - its Spanish name and description (the store's language), and the English
@@ -10,16 +10,19 @@
 //     through categories.json (the mapping a person approved) and as the
 //     product type;
 //   - its attributes as metafields under the `tendero` namespace, which the
-//     importer reads back as attributes (spec decision 6, amended);
+//     importer reads back as attributes (spec decision 6, amended), each
+//     value as the catalogue says it (attributes.mjs), so a filter lists it once;
 //   - its variants with the SKUs the catalogue already gives them
 //     (B13BAG0711-OLIVE, B073WXYZ01-DEFAULT), so the import keeps them;
 //   - its pictures uploaded, each one a variant's when the seed says it shows
 //     that variant.
 //
 // A product whose handle (its item id, lowercased) already exists is skipped,
-// so a run can be repeated; --delete-all empties the store first.
+// so a run can be repeated; --delete-all empties the store first, and
+// --refresh-attributes rewrites the metafields of the products already there.
 import fs from 'node:fs';
 import path from 'node:path';
+import { cleanValue } from './attributes.mjs';
 import { connect } from './shopify.mjs';
 
 const NAMESPACE = 'tendero';
@@ -33,6 +36,10 @@ const categories = Object.fromEntries(
 const { graphql } = await connect();
 
 if (args.includes('--delete-all')) await deleteAll();
+if (args.includes('--refresh-attributes')) {
+  await refreshAttributes();
+  process.exit(0);
+}
 
 let created = 0;
 let skipped = 0;
@@ -115,7 +122,7 @@ async function create(product, handle, pictures) {
       namespace: NAMESPACE,
       key,
       type: 'single_line_text_field',
-      value: String(value),
+      value: cleanValue(key, value),
     })),
     variants: variants.map((variant) => ({
       sku: variant.sku,
@@ -160,6 +167,27 @@ async function translate(id, product) {
     { id, translations },
   );
   refuseOn(answer.translationsRegister.userErrors, product.item_id);
+}
+
+/** The seed's attributes, cleaned, written again on the products already in the store. */
+async function refreshAttributes() {
+  let refreshed = 0;
+  for (const product of products) {
+    const handle = product.item_id.toLowerCase();
+    const found = await graphql(`query ($handle: String!) { productByIdentifier(identifier: { handle: $handle }) { id } }`, { handle });
+    const ownerId = found.productByIdentifier?.id;
+    const metafields = Object.entries(product.attributes ?? {}).map(([key, value]) => ({
+      ownerId, namespace: NAMESPACE, key, type: 'single_line_text_field', value: cleanValue(key, value),
+    }));
+    if (!ownerId || metafields.length === 0) continue;
+    const answer = await graphql(
+      `mutation ($metafields: [MetafieldsSetInput!]!) { metafieldsSet(metafields: $metafields) { userErrors { field message } } }`,
+      { metafields },
+    );
+    refuseOn(answer.metafieldsSet.userErrors, product.item_id);
+    refreshed++;
+  }
+  console.log(`${refreshed} products' attributes rewritten.`);
 }
 
 async function deleteAll() {
