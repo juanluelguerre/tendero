@@ -97,6 +97,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `src/Pricing` | `Pricing.Tests` | 86.25 % | 66.67 % | 2026-10-14 · phase 13c's close, one run; 83.23 % since 2026-10-13 |
 | `src/Assist` | `Assist.Tests` | 87.13 % | 79.92 % | 2026-10-14 · phase 13c's close, third run (83.63 %, then 85.33 % with the kit reader's tests, then its static fields made properties); 86.31 % since 2026-10-09 |
 | `src/AI` | `AI.Tests` | 89.10 % | 71.93 % | 2026-10-17 · phase 14's close, the parallel method with coverage per mutant (75.00 % since 2026-10-09, measured per test) |
+| `src/Shopify` | `Shopify.Tests` | 92.64 % | 86.29 % | 2026-10-24 · phase 16 S2a's close, first baseline, third run, coverage per mutant (81.63 % on run 1) |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -1430,6 +1431,100 @@ red (`toBeChecked`). The second scoped run, on the commit
 that carried the tests (the parallel runner mutates `HEAD`), killed ten more in
 Accounts and fifteen more in Ordering; what survives is what the list above says. Reports:
 `docs/blog/reports/2026-10-21-phase-15-shopper-account/stryker/`.
+
+### Phase 16 S2a's close: leaving Shopify, its goods (S1 and S2a)
+
+2026-10-24. Phase 16's S1 never had a Stryker close, so this one measures the whole
+phase so far: the files changed since the commit before phase 16 opened (`aabfa1be`,
+*Merge docs: Shopify revisited*), not since `phase/15-shopper-account`, which would
+have brought in Tino's cards and a Visual Studio clean-up of Search that belong to
+no phase. Run 1 was `stryker-parallel.mjs --since aabfa1be` for Catalog, Inventory
+and SharedKernel; `src/Shopify` is a new project, so it got its configuration and
+was mutated whole. Runs 2 and 3 went through the serial runner, in the working
+tree, with `coverage-analysis: all` set for the run: the parallel runner mutates
+`HEAD`, and the tests that closed the gaps were not committed yet.
+
+| Project | Mutated with | Run 1 | Run 3 | Survivors | Reports |
+|---|---|---|---|---|---|
+| `src/Shopify`, whole (new) | `Shopify.Tests` | 81.63 % of covered | **92.64 %** (86.29 % of total) | 54 → 24 | `shopify-run1.html` … `-run3.html` |
+| `src/Catalog`, 18 files | `Catalog.Tests` | 70.35 % of covered | **81.16 %** | 137 → 91 | `catalog-run1.html` … `-run3.html` |
+| `src/Inventory`, 5 files | `Inventory.Tests` | 82.14 % of covered | **73.77 %**, then one more killed by hand | 10 → 15 | `inventory-run1.html` … `-run3.html` |
+| `src/SharedKernel`, `Slugs.cs` | — | could not build | — | — | — |
+
+Shopify's run 3 sets its first baseline. Catalog's and Inventory's are scoped and
+set none. Inventory's fall from run 1 to run 3 is the runner, not the tests: the
+serial runner mutates with the unit suite alone, and the module's registrations
+(nine survivors in `InventoryServiceCollectionExtensions`, one line the phase's)
+are held by the API's composition tests; run 1 did not count them.
+
+**What Stryker found, and what closed it.** Each gap has its test, proven by the
+next run killing that mutant or by a hand mutation:
+
+- **Only a change is a change** (`SourceFactsChangeTests`): every "did it change?"
+  answer of the source's facts — a variant's tax class, barcode and source id, the
+  product's handle — survived, so a re-import of an unchanged store could have set
+  the indexing worker rewriting every document. The first version of the test
+  counted events in total and let `!existing.Follow(handle)` made `existing.Follow`
+  survive run 2 (two events either way); it now says which step changed.
+- **A run and its publication**: `ImportRun.Start` unchecked and its initialiser
+  emptied; bulk publication saving and counting with nothing published.
+- **The import**: the save that keeps the run's last products and the collections
+  (`SaveRunAsync` removed); a re-import that updates nothing (`ApplyTo` removed);
+  a new variant, or one without a SKU, said as a rename; a product the catalogue
+  refuses not counted as failed; the notes' source label on both imports' metrics
+  (Inventory's proven by hand: the label emptied, red).
+- **The notes' sentences** (`ImportNotesTests`, and the stock import's theory):
+  which language and the "about" prefix survived everywhere. **And a bug the test
+  found**: a stock note about no SKU in particular — Shopify's variant the
+  catalogue lacks, `About` null — began in lowercase ("the source counts variant
+  44999…"). Both imports' sentences now start with a capital (`Sentences.StartingUpper`).
+- **The mapper's fallbacks**: a variant without a source id found again by its own
+  SKU, and by ours from before the source gave any.
+- **Shopify**: the token request's form; a store that stays throttled said after
+  five tries (`attempt++` made `--`: an endless loop); a store that is down, a
+  query it rejects and a bulk operation it will not start; every way a bulk
+  operation ends without a file; a picture showing what its variants share
+  (`products-pictures.jsonl`); notes said once when the store is read twice; the
+  catalogue asked 250 variants at a time; ungrouped stock and collection files
+  refused; `AddShopify` composed with and without a store; paragraphs kept; the
+  primary language wherever Shopify lists it.
+- **A method Stryker could not mutate**: `StreamCollectionsAsync` held a nullable
+  tuple with a list inside, and every mutation in it was a compile error (CS0170):
+  120 mutants. It now reads into a small class; run 2 mutated it.
+
+**Left, and what each is.**
+
+- **Out of Stryker's reach**: instrument names and `ShopifyLanguage.Spoken` in
+  `static readonly` fields; **SharedKernel as a whole** — its `closed` records are
+  C# 15, which Stryker's embedded Roslyn compiles as an unsupported preview
+  feature (CS8652), so the build fails before any mutant. `Slugs.cs`, moved from
+  `Product`, is proven by hand: the fold disabled, two of the slug tests red.
+- **Equivalent**: the mapper's lookup by the source's SKU (`AddVariant` returns the
+  variant a SKU already names, so the lookup is redundant); `Pending--` in a
+  rehearsal and `tree =` for `tree ??=`; `Any`/`All` over Shopify's one THROTTLED
+  error; `Sum`/`Max` over the one `on_hand` quantity asked for; the bulk reader's
+  `"/Metafield/"` and `"/MediaImage/"` and its translation filter, for the shapes
+  Shopify's lines have; `<` made `<=` at a token's exact expiry.
+- **Unreachable**: a Shopify product with no variant, a store with no primary
+  language, a mapping file holding `null`, `count > 0` in `ProductsPublished`
+  (both callers pass one or more).
+- **Noise**: exception messages, waits whose interval the tests set to zero,
+  `LoadIntoBufferAsync` over the fake's in-memory content.
+- **A gap written down**: the two `Clear()` calls when a batch is lost. They matter
+  only when another batch is saved after a lost one, and a batch is 200 products;
+  the import's tests read one.
+- **Older than the phase**, counted: `Product.cs` (most of its survivors),
+  `Category.cs`'s definition, `Variant`'s price guards, the mapper's older steps.
+- **Held by suites out of the configuration**: `FollowSourceAddress`'s endpoint
+  and metric (`Api.Tests`, `SourceAddressEndpointTests`), `EfSourceAddresses` and
+  `EfImportRunRepository` (Postgres, `ProductSourceReferencesTests`), the stock
+  and collections round trips against the real store (`ShopifyRoundTripTests`).
+
+`Persistence`, `Api` and `AppHost` have no Stryker configuration; their phase code
+is proven by the hand mutations in its commits (the source filter in
+`SkusOfAsync`, the product on sale preferred over a draft, the permanent redirect,
+one more unit per stock level read back). Reports:
+`docs/blog/reports/2026-10-24-phase-16-s2a/stryker/`.
 
 ## Property-based (CsCheck)
 
