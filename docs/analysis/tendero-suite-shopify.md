@@ -1,6 +1,6 @@
 # Tendero and Shopify: leaving it, selling through it, or a suite on it
 
-**Revisited 2026-10-23** (sections 9 to 16), at the author's request, once phase
+**Revisited 2026-10-23** (sections 9 to 16; S1 to S3 became phase 16 the same day, S1 specified in [`../specs/shopify-import.md`](../specs/shopify-import.md)), at the author's request, once phase
 10 had long closed — the trigger §8 set. The author widened the question from
 *a suite on top of Shopify* to the cases a real merchant brings, for the blog
 series: *"real cases that can happen, for our series; always useful cases, and
@@ -180,6 +180,7 @@ closes the Shopify store. It is the inbound port's natural use, at its fullest.
 | **Order history** | high | imported **already closed**, lines snapshotted as `OrderLine` already does. It meets invariant 5 (*a status changes only through `TransitionTo`*): an imported order does not change status, it is **born** in one — an ADR of its own, so that the exception is named and narrow |
 | **Discounts** | high | translated into the promotion engine only where they fit; the rest listed for the merchant |
 | **Gift cards** | high | the full code is **returned once, at creation**; afterwards the API gives only its last characters ([Shopify REST reference](https://shopify.dev/docs/api/admin-rest/2024-04/resources/gift-card), [Shopify staff](https://community.shopify.dev/t/need-to-access-full-gift-card-codes-for-physical-gift-card-fulfillment/20947)). Balances can move, codes cannot: new codes, sent to their holders |
+| **Tax class per variant** | medium | added 2026-10-23: Shopify's `taxable` flag and its tax overrides per collection and country, mapped to `Variant.TaxClass` (standard, reduced, super-reduced, exempt). S1 does not bring it. A store selling in several EU countries needs rates by destination, which Tendero does not have yet (the board's backlog, *Tax by product code and destination*) |
 | **URLs and SEO** | **critical** | 301 redirects from `/products/<handle>`, `/collections/<handle>`, `/pages/…` and `/blogs/…` to Tendero's routes. Without them the store loses its search ranking on the day it switches — the step most migrations forget |
 | Reviews | out of scope at first | they live in third-party apps, not in Shopify |
 
