@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Inventory.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -27,11 +28,8 @@ public static class ShopifyServiceCollectionExtensions
         services.Configure<ShopifyOptions>(section);
         services.PostConfigure<ShopifyOptions>(options =>
         {
-            if (options.CategoriesFile is { Length: > 0 } file)
-            {
-                foreach (var (shopify, code) in JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(file)) ?? [])
-                    options.Categories[shopify] = code;
-            }
+            Merge(options.CategoriesFile, options.Categories);
+            Merge(options.LocationsFile, options.Locations);
         });
 
         services.AddHttpClient(Client);
@@ -46,7 +44,18 @@ public static class ShopifyServiceCollectionExtensions
             provider.GetRequiredService<IOptions<ShopifyOptions>>(),
             provider.GetRequiredService<TimeProvider>()));
         services.AddKeyedScoped<ICatalogSourceConnector, ShopifyCatalogConnector>(ShopifyCatalogConnector.Key);
+        services.AddKeyedScoped<IStockSourceConnector, ShopifyStockConnector>(ShopifyStockConnector.Key);
 
         return services;
+    }
+
+    /// <summary>A mapping a person wrote, from its file into the options.</summary>
+    private static void Merge(string? file, Dictionary<string, string> into)
+    {
+        if (file is not { Length: > 0 })
+            return;
+
+        foreach (var (shopify, code) in JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(file)) ?? [])
+            into[shopify] = code;
     }
 }

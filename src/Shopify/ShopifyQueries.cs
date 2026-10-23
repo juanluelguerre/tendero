@@ -36,6 +36,29 @@ internal static class ShopifyQueries
             """;
     }
 
+    /// <summary>
+    /// Every variant's levels as one bulk operation (S2a, P16-10): two connections,
+    /// the variants and their inventory item's levels, each level a line whose
+    /// parent is its variant — the inventory item is an object, not a connection,
+    /// so it has no line of its own. Only <c>on_hand</c>: a migration is a
+    /// stocktake, and what is reserved or committed is the old shop's business.
+    /// </summary>
+    public const string InventoryLevels =
+        """
+        mutation {
+          bulkOperationRunQuery(
+            groupObjects: true
+            query: "{ productVariants { edges { node { id inventoryItem { inventoryLevels { edges { node { location { id } quantities(names: [\"on_hand\"]) { name quantity } } } } } } } } }"
+          ) {
+            bulkOperation { id status }
+            userErrors { field message }
+          }
+        }
+        """;
+
+    /// <summary>The store's locations; a store has a handful, so a page of 250 is all of them.</summary>
+    public const string Locations = "{ locations(first: 250, includeInactive: true) { nodes { id name isActive } } }";
+
     public static string BulkOperation(string id) =>
         $$"""{ node(id: "{{id}}") { ... on BulkOperation { status errorCode objectCount url } } }""";
 

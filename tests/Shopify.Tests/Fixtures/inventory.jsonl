@@ -1,0 +1,8 @@
+{"id":"gid://shopify/ProductVariant/44001"}
+{"location":{"id":"gid://shopify/Location/71"},"quantities":[{"name":"on_hand","quantity":4}],"__parentId":"gid://shopify/ProductVariant/44001"}
+{"location":{"id":"gid://shopify/Location/72"},"quantities":[{"name":"on_hand","quantity":2}],"__parentId":"gid://shopify/ProductVariant/44001"}
+{"id":"gid://shopify/ProductVariant/44002"}
+{"location":{"id":"gid://shopify/Location/71"},"quantities":[{"name":"on_hand","quantity":0}],"__parentId":"gid://shopify/ProductVariant/44002"}
+{"location":{"id":"gid://shopify/Location/73"},"quantities":[{"name":"on_hand","quantity":9}],"__parentId":"gid://shopify/ProductVariant/44002"}
+{"id":"gid://shopify/ProductVariant/44999"}
+{"location":{"id":"gid://shopify/Location/71"},"quantities":[{"name":"on_hand","quantity":5}],"__parentId":"gid://shopify/ProductVariant/44999"}

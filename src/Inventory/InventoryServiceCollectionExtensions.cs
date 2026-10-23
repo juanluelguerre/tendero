@@ -39,6 +39,10 @@ public static class InventoryServiceCollectionExtensions
         // Scoped: it writes through the unit of work, which is the DbContext.
         services.AddScoped<IStockLedger, StockLedger>();
 
+        // The stock sources (phase 16, S2a): each registers keyed by its name,
+        // from the host (AddShopify); the registry lists what is there.
+        services.TryAddScoped<IStockSourceRegistry, KeyedStockSourceRegistry>();
+
         // What Steward may read of the stock (phase 12, ADR 0054).
         services.AddScoped<IReadTool, StockToRestockTool>();
 

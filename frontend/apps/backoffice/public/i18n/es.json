@@ -59,6 +59,7 @@
       "EndCampaignCommand": "Terminar una campaña",
       "ForgetBrowsingCommand": "Quitar una entrada del historial de navegación",
       "ImportProductsCommand": "Importar productos",
+      "ImportStockCommand": "Importar existencias",
       "LinkIdentityCommand": "Vincular un inicio de sesión a un cliente",
       "MergeBrowsingCommand": "Conservar el historial de un invitado al iniciar sesión",
       "MoveOrderCommand": "Avanzar un pedido",

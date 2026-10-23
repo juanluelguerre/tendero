@@ -48,6 +48,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IProductRepository>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IProductReader>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IProductCatalogReader>(services => services.GetRequiredService<EfProductRepository>());
+        services.AddScoped<ISourceVariantSkus>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
         // The catalogue facts pricing needs. Registered here rather than in

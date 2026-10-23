@@ -32,6 +32,12 @@ internal sealed class FakeShopify : HttpMessageHandler
 
     public string ResultsFixture { get; set; } = "products.jsonl";
 
+    public string InventoryFixture { get; set; } = "inventory.jsonl";
+
+    /// <summary>The store's locations: Madrid and Barcelona mapped, Bilbao not.</summary>
+    public string Locations { get; set; } =
+        """[{"id":"gid://shopify/Location/71","name":"Almacén central (Madrid)","isActive":true},{"id":"gid://shopify/Location/72","name":"Almacén norte (Barcelona)","isActive":true},{"id":"gid://shopify/Location/73","name":"Tienda de Bilbao","isActive":true}]""";
+
     public string? LastBulkQuery { get; private set; }
 
     /// <summary>The store's published languages, primary first.</summary>
@@ -44,7 +50,11 @@ internal sealed class FakeShopify : HttpMessageHandler
         var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
 
         if (request.RequestUri == ResultsFile)
-            return Text(File.ReadAllText(Fixture(ResultsFixture)), "application/jsonl");
+        {
+            // The file the last bulk query wrote: the stock's, or the catalogue's.
+            var fixture = LastBulkQuery?.Contains("productVariants", StringComparison.Ordinal) == true ? InventoryFixture : ResultsFixture;
+            return Text(File.ReadAllText(Fixture(fixture)), "application/jsonl");
+        }
 
         if (request.RequestUri!.AbsolutePath == "/admin/oauth/access_token")
         {
@@ -83,6 +93,9 @@ internal sealed class FakeShopify : HttpMessageHandler
             var code = error is null ? "null" : $"\"{error}\"";
             return Json("{\"data\":{\"node\":{\"status\":\"" + status + "\",\"errorCode\":" + code + ",\"objectCount\":\"7\",\"url\":" + url + "}}}");
         }
+
+        if (query.Contains("locations(", StringComparison.Ordinal))
+            return Json("{\"data\":{\"locations\":{\"nodes\":" + Locations + "}}}");
 
         if (query.Contains("shopLocales", StringComparison.Ordinal))
             return Json("{\"data\":{\"shop\":{\"currencyCode\":\"EUR\"},\"shopLocales\":" + ShopLocales + "}}");

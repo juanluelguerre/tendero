@@ -3342,6 +3342,96 @@
         ]
       }
     },
+    "/api/inventory/import": {
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "ImportStock",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportStockCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportStockResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/knowledge/claims/approve": {
       "post": {
         "tags": [
@@ -13972,6 +14062,52 @@
           }
         }
       },
+      "ImportStockCommand": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          }
+        }
+      },
+      "ImportStockResult": {
+        "required": [
+          "counted",
+          "skipped",
+          "proposedWarehouses",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "counted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "proposedWarehouses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposedWarehouse"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfStockNoteCode"
+            }
+          }
+        }
+      },
       "JsonElement": {},
       "KeepCardRequest": {
         "required": [
@@ -14790,6 +14926,28 @@
         "properties": {
           "code": {
             "$ref": "#/components/schemas/ProductNote"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "MessageOfStockNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/StockNoteCode"
           },
           "about": {
             "type": [
@@ -16776,6 +16934,25 @@
           "failed": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ProposedWarehouse": {
+        "required": [
+          "code",
+          "name",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
           }
         }
       },
@@ -19154,6 +19331,13 @@
             }
           }
         }
+      },
+      "StockNoteCode": {
+        "enum": [
+          "LocationNotMapped",
+          "VariantNotInCatalogue",
+          "WarehouseUnknown"
+        ]
       },
       "StockRowView": {
         "required": [

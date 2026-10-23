@@ -22,6 +22,7 @@
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
     <Compile Include="../OrderBuilder.cs" Link="OrderBuilder.cs" />
+    <Compile Include="../StockSourceConnectorContract.cs" Link="StockSourceConnectorContract.cs" />
   </ItemGroup>
 
   <ItemGroup>

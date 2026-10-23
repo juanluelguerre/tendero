@@ -223,7 +223,17 @@ locations, publications, navigation).
   its contract suite and a fake; the Shopify adapter (bulk read of inventory
   levels); an `ImportStock` slice that enters each level through the ledger's
   stocktake (`AdjustAsync`) and writes the store's locations as a **proposed
-  warehouses file** for a person to commit — **M**
+  warehouses file** for a person to commit — **M**. *As built (2026-10-23)*:
+  each level is a **count** (`IStockLedger.CountAsync`), not an adjustment — a
+  migration is a stocktake, and only a count can say zero; the proposed
+  warehouses come in the answer (`ProposedWarehouses`) rather than as a file
+  written beside it, for a person to add to `warehouses.json`. A location is a
+  warehouse through `Shopify:LocationsFile`, written by a person as the
+  categories are; a variant is the SKU the catalogue sells it under, asked of
+  the catalogue through a new port (`ISourceVariantSkus`), since the store's SKU
+  is ours only when no sibling shared it. An unmapped location, a variant never
+  imported and a level in a warehouse the shop does not operate are notes, and
+  their stock is not entered.
 - `P16-11` **Redirects**: the API answers `/products/<handle>` and
   `/collections/<handle>` with a 301 to the storefront's `/p/<slug>/<code>` and
   `/c/<code>`, from the handles S1 keeps and the store's collections mapped to a

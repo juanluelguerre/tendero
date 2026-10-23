@@ -1,7 +1,10 @@
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace ElGuerre.Tendero.Integration.Tests;
@@ -62,5 +65,47 @@ public sealed class ProductSourceReferencesTests(PostgresFixture postgres)
             Assert.Equal([new ExternalReference("shopify", "44001")], variant.ExternalReferences);
             Assert.Same(variant, read.VariantFromSource("shopify", "44001"));
         }
+    }
+
+    /// <summary>
+    /// A source's stock names its own variants; the catalogue says which SKU
+    /// each is sold under here (S2a, P16-10), so Inventory counts by SKU without
+    /// knowing the catalogue. A variant of another source, or one never imported,
+    /// is not answered.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_sources_variants_are_answered_with_the_skus_they_are_sold_under_here()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("catalog_source_variant_skus");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var product = Product.Create(Clock, LocalizedText.From("es", "Cafetera").With("en", "Coffee maker"), Price);
+        product.LinkExternal(Clock, "shopify", "8001");
+        product.AddVariant(Clock, "MOKA-OLV", Price);
+        product.LinkVariantExternal(Clock, "MOKA-OLV", "shopify", "44001");
+        product.AddVariant(Clock, "8001-44002", Price);
+        product.LinkVariantExternal(Clock, "8001-44002", "shopify", "44002");
+        product.AddVariant(Clock, "SEED-ONLY", Price);
+        product.LinkVariantExternal(Clock, "SEED-ONLY", "medusa", "44003");
+
+        await using (var context = factory.Create())
+        {
+            context.Products.Add(product);
+            await context.SaveChangesAsync(ct);
+        }
+
+        var services = new ServiceCollection();
+        services.AddTenderoPersistence(factory.ConnectionString);
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+
+        var skus = await scope.ServiceProvider.GetRequiredService<ISourceVariantSkus>()
+            .SkusOfAsync("shopify", ["44001", "44002", "44003", "99999"], ct);
+
+        Assert.Equal(new Dictionary<string, string> { ["44001"] = "MOKA-OLV", ["44002"] = "8001-44002" }, skus);
     }
 }

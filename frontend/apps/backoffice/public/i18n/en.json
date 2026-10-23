@@ -59,6 +59,7 @@
       "EndCampaignCommand": "End a campaign",
       "ForgetBrowsingCommand": "Remove an entry from a browsing history",
       "ImportProductsCommand": "Import products",
+      "ImportStockCommand": "Import stock",
       "LinkIdentityCommand": "Link a sign-in to a customer",
       "MergeBrowsingCommand": "Keep a guest's browsing history on signing in",
       "MoveOrderCommand": "Move an order along",

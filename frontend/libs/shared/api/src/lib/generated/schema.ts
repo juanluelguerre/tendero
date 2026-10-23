@@ -580,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inventory/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ImportStock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/knowledge/claims/approve": {
         parameters: {
             query?: never;
@@ -2428,6 +2444,19 @@ export interface components {
             elapsedSeconds: number;
             notes: components["schemas"]["MessageOfImportNoteCode"][];
         };
+        ImportStockCommand: {
+            source: string;
+            /** @default es */
+            culture: string;
+        };
+        ImportStockResult: {
+            /** Format: int32 */
+            counted: number;
+            /** Format: int32 */
+            skipped: number;
+            proposedWarehouses: components["schemas"]["ProposedWarehouse"][];
+            notes: components["schemas"]["MessageOfStockNoteCode"][];
+        };
         JsonElement: unknown;
         KeepCardRequest: {
             instrument: null | string;
@@ -2616,6 +2645,11 @@ export interface components {
         };
         MessageOfProductNote: {
             code: components["schemas"]["ProductNote"];
+            about: null | string;
+            text: string;
+        };
+        MessageOfStockNoteCode: {
+            code: components["schemas"]["StockNoteCode"];
             about: null | string;
             text: string;
         };
@@ -3113,6 +3147,11 @@ export interface components {
             skipped: number;
             /** Format: int32 */
             failed: number;
+        };
+        ProposedWarehouse: {
+            code: string;
+            name: string;
+            isActive: boolean;
         };
         /** @enum {unknown} */
         PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
@@ -3712,6 +3751,8 @@ export interface components {
             fastest: components["schemas"]["SkuSellThrough"][];
             slowest: components["schemas"]["SkuSellThrough"][];
         };
+        /** @enum {unknown} */
+        StockNoteCode: "LocationNotMapped" | "VariantNotInCatalogue" | "WarehouseUnknown";
         StockRowView: {
             sku: string;
             warehouseCode: string;
@@ -5721,6 +5762,56 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "UnknownWarehouse";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ImportStock: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportStockCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportStockResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
                     } & components["schemas"]["Problem"];
                 };
             };

@@ -50,6 +50,16 @@ public sealed class ShopifyOptions
     public string? CategoriesFile { get; set; }
 
     /// <summary>
+    /// A store's location to the code of the warehouse it is here (S2a, P16-10),
+    /// written by a person like <see cref="Categories"/>. A location not in it is
+    /// proposed as a warehouse, and its stock is not read until it is mapped.
+    /// </summary>
+    public Dictionary<string, string> Locations { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>The JSON file <see cref="Locations"/> is read from, for the same reason as the categories'.</summary>
+    public string? LocationsFile { get; set; }
+
+    /// <summary>
     /// The metafield namespace a product's attributes are read from (spec decision
     /// 6, amended 2026-10-23): a merchant keeps them in metafields, and the round
     /// trip writes the seed's there. Each key is an attribute, in the store's words.
