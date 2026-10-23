@@ -106,6 +106,7 @@ public sealed class ImportStockHandler(
         }
 
         notes.AddRange(source.SourceNotes);
+        ImportStockMetrics.Record(source.Source, counted, skipped, notes);
         var english = command.Culture == "en";
 
         return new ImportStockResult(counted, skipped, proposed, [.. notes.Select(note => ImportStockNotes.Said(note, english))]);

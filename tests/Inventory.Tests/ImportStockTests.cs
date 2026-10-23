@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Inventory.Features.ImportStock;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Inventory.Tests.Sources;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Tests;
 using Xunit;
 
 namespace ElGuerre.Tendero.Inventory.Tests;
@@ -99,6 +100,30 @@ public sealed class ImportStockTests
 
         var note = spanish.Notes.Single(each => each.Code == StockNoteCode.LocationNotMapped);
         Assert.StartsWith("La ubicación «Tienda de Bilbao»", note.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// How much of a store's stock comes across (spec, *Evidence of use*; ADR
+    /// 0036): levels counted by source and outcome, and the notes by code, as
+    /// the catalogue's import counts its products.
+    /// </summary>
+    [Fact]
+    public async Task An_import_counts_its_levels_by_outcome_and_its_notes_by_code()
+    {
+        using var recorder = new InstrumentRecorder("tendero.inventory.import.levels", "tendero.inventory.import.notes");
+        var (handler, _, source) = AnImport();
+        source.Notes.Add(new StockNote(StockNoteCode.LocationNotMapped, null, "Tienda de Bilbao"));
+
+        await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key), Ct);
+
+        Assert.Equal(
+            [("fake", "counted"), ("fake", "skipped")],
+            recorder.Of("tendero.inventory.import.levels")
+                .Select(tags => ((string)tags["catalog.source"]!, (string)tags["inventory.import.outcome"]!)));
+        Assert.Equal(3, recorder.Sum("tendero.inventory.import.levels"));
+        Assert.Equal(
+            ["WarehouseUnknown", "LocationNotMapped"],
+            recorder.Of("tendero.inventory.import.notes").Select(tags => (string)tags["inventory.import.note"]!));
     }
 
     private sealed class OneStockSource(IStockSourceConnector source) : IStockSourceRegistry
