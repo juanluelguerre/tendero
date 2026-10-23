@@ -163,6 +163,34 @@ if (hero) {
   fs.writeFileSync(indexFile, indexHeader + JSON.stringify(index, null, 2) + '\n');
 }
 
+// ---------- no department cards ----------
+// Tried on 2026-10-23 and taken out by the author: the menu above already leads
+// to the three departments, so cards repeating it under the hero were noise.
+// Their collections keep the department art (tools/shopify-theme/departments.mjs)
+// for the collection pages.
+const home = JSON.parse(fs.readFileSync(indexFile, 'utf8').slice(indexHeader.length));
+delete home.sections.tendero_departments;
+home.order = home.order.filter((key) => key !== 'tendero_departments');
+fs.writeFileSync(indexFile, indexHeader + JSON.stringify(home, null, 2) + '\n');
+
+// ---------- no announcement bar ----------
+// Horizon opens every page with "Welcome to our store", which says nothing the
+// store does not; the author asked for it gone (2026-10-23). Disabled rather
+// than deleted, so the merchant can bring it back from the editor.
+const headerGroupFile = path.join(THEME, 'sections', 'header-group.json');
+const headerGroupRaw = fs.readFileSync(headerGroupFile, 'utf8');
+const headerGroupHeader = headerGroupRaw.match(/^\/\*[\s\S]*?\*\/\s*/)?.[0] ?? '';
+const headerGroup = JSON.parse(headerGroupRaw.slice(headerGroupHeader.length));
+for (const section of Object.values(headerGroup.sections))
+  if (section.type === 'header-announcements') section.disabled = true;
+
+// The awning rule is drawn by tendero.css inside the header's own section, so
+// it stays under the menu when the page scrolls. A section of its own, tried
+// first, scrolled away beneath a sticky header.
+delete headerGroup.sections.tendero_awning;
+headerGroup.order = headerGroup.order.filter((key) => key !== 'tendero_awning');
+fs.writeFileSync(headerGroupFile, headerGroupHeader + JSON.stringify(headerGroup, null, 2) + '\n');
+
 // ---------- what the settings cannot say ----------
 const ownCss = `/* Tendero's look on Horizon, written by tools/shopify-theme/build.mjs from
    design/theme.css. Prices speak the receipt's voice: JetBrains Mono. */
@@ -184,6 +212,23 @@ product-price,
 
 a:hover {
   color: var(--tendero-accent-hover);
+}
+
+/* The signature: the awning rule under the store's menu, as under our
+   storefront's (design/theme.css, .awning-rule) — the system's one decorative
+   device, a rule and never a background fill. It is the last thing inside the
+   header's own section, which is what Horizon makes sticky, so it stays under
+   the menu as the page scrolls. (On #header-group it drew nothing: a sticky
+   header turns that wrapper into display: contents.) */
+.header-section::after {
+  content: "";
+  display: block;
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    ${token('color-clay-500')} 0 14px,
+    ${token('color-clay-100')} 14px 28px
+  );
 }
 `;
 fs.writeFileSync(path.join(THEME, 'assets', 'tendero.css'), ownCss);
