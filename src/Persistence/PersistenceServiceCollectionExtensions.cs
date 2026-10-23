@@ -55,6 +55,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<EfSourceAddresses>();
         services.AddScoped<ISourceCollections>(services => services.GetRequiredService<EfSourceAddresses>());
         services.AddScoped<ISourceAddresses>(services => services.GetRequiredService<EfSourceAddresses>());
+        services.AddScoped<IImportRunRepository, EfImportRunRepository>();
 
         // The catalogue facts pricing needs. Registered here rather than in
         // AddPricing because this is the only project that knows both contexts.

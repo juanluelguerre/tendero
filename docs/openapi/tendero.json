@@ -2143,6 +2143,110 @@
         ]
       }
     },
+    "/api/catalog/imports/{id}/publish": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "PublishImport",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishImportResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is nothing at this address.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NotFound"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/catalog/products": {
       "get": {
         "tags": [
@@ -14035,7 +14139,8 @@
           "updated",
           "failed",
           "elapsedSeconds",
-          "notes"
+          "notes",
+          "importId"
         ],
         "type": "object",
         "properties": {
@@ -14060,6 +14165,9 @@
             "items": {
               "$ref": "#/components/schemas/MessageOfImportNoteCode"
             }
+          },
+          "importId": {
+            "type": "string"
           }
         }
       },
@@ -16954,6 +17062,33 @@
           },
           "isActive": {
             "type": "boolean"
+          }
+        }
+      },
+      "PublishImportResponse": {
+        "required": [
+          "published",
+          "alreadyActive",
+          "withdrawn",
+          "archived"
+        ],
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyActive": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "withdrawn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "archived": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

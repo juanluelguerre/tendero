@@ -268,12 +268,33 @@ public sealed class ImportProductsTests
         Assert.Contains("Ofertas", note.Text, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Each import is a run, and its answer names it (P16-12): what a person
+    /// publishes in one go once the notes are read. Only what the run created —
+    /// a product it updated was already the shop's, and its status a person's.
+    /// </summary>
+    [Fact]
+    public async Task An_import_is_a_run_that_names_the_products_it_created()
+    {
+        var shop = new Shop();
+
+        await shop.ImportAsync();
+        await shop.ImportAsync();
+
+        Assert.Equal(2, shop.Runs.Added.Count);
+        Assert.Equal([shop.Product.Id], shop.Runs.Added[0].Products);
+        Assert.Empty(shop.Runs.Added[1].Products);
+        Assert.Equal(shop.Runs.Added[1].Id.ToString(), shop.Result.ImportId);
+    }
+
     private sealed class Shop
     {
         private readonly InMemoryProductRepository repository = new();
         private readonly OneProductConnector connector = new();
 
         public KeptCollections Collections { get; } = new();
+
+        public RecordedRuns Runs { get; } = new();
 
         public Product Product { get; private set; } = null!;
 
@@ -307,6 +328,7 @@ public sealed class ImportProductsTests
                 new NoAttributeDefinitions(),
                 new KitchenCategories(),
                 this.Collections,
+                this.Runs,
                 Clock,
                 NullLogger<ImportProductsHandler>.Instance);
 
@@ -419,6 +441,16 @@ public sealed class ImportProductsTests
             Kept.Add((source, handle, categoryCode));
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class RecordedRuns : IImportRunRepository
+    {
+        public List<ImportRun> Added { get; } = [];
+
+        public void Add(ImportRun run) => Added.Add(run);
+
+        public Task<ImportRun?> FindAsync(ImportRunId id, CancellationToken ct) =>
+            Task.FromResult(Added.SingleOrDefault(run => run.Id == id));
     }
 
     private sealed class NoAttributeDefinitions : IAttributeDefinitionReader

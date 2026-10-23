@@ -372,6 +372,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/imports/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublishImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products": {
         parameters: {
             query?: never;
@@ -2443,6 +2459,7 @@ export interface components {
             /** Format: double */
             elapsedSeconds: number;
             notes: components["schemas"]["MessageOfImportNoteCode"][];
+            importId: string;
         };
         ImportStockCommand: {
             source: string;
@@ -3152,6 +3169,16 @@ export interface components {
             code: string;
             name: string;
             isActive: boolean;
+        };
+        PublishImportResponse: {
+            /** Format: int32 */
+            published: number;
+            /** Format: int32 */
+            alreadyActive: number;
+            /** Format: int32 */
+            withdrawn: number;
+            /** Format: int32 */
+            archived: number;
         };
         /** @enum {unknown} */
         PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
@@ -5143,6 +5170,64 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "ProductArchived";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    PublishImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishImportResponse"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
                     } & components["schemas"]["Problem"];
                 };
             };

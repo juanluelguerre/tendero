@@ -262,7 +262,13 @@ locations, publications, navigation).
   `tendero.catalog.source_addresses` counts what is asked and whether it led
   somewhere.
 - `P16-12` **Bulk publication**: a person publishes what one migration
-  brought, in one audited operation (ADR 0012 amended) — **S**
+  brought, in one audited operation (ADR 0012 amended) — **S**. *As built
+  (2026-10-23)*: the import records a run (`ImportRun`) with the products it
+  created and answers with its id; `POST /api/catalog/imports/{id}/publish`
+  publishes the ones still in Draft, in one save and one audit row, and counts
+  the rest. A product that was on sale and was withdrawn is left in Draft —
+  `Product.FirstPublishedAt` tells it from one never reviewed (ADR 0012,
+  amendment).
 - `P16-13` **The rehearsal**: the import and the stock import run with nothing
   written, reporting what would come and the notes — **S**
 - `P16-14` **A merchant's own store**: `Shopify:AccessToken` accepted beside

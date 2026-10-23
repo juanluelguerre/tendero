@@ -77,3 +77,32 @@ redesign's walkthrough needed drafts and the laboratory had none: a draft could
 only come from importing something new. It answers to
 `tendero.catalog.products.withdrawn`. The backoffice has no button for it yet,
 and R-3 decides where one goes.
+
+## Amendment (2026-10-23): what one migration brought is published at once
+
+A shop leaving Shopify imports its whole catalogue, and a hundred and twenty
+review-queue clicks to open it is not review, it is attrition
+(docs/specs/shopify-leave.md, decision 8). **The import still never publishes**;
+what changes is that a person may publish *what one import run created*, in one
+audited operation, once they have read the run's answer — its counts and notes.
+
+- **Each import is a run** (`ImportRun`), recorded with the products it
+  **created**, as their batches are saved. Its id is in the import's answer. A
+  product the run updated is not the run's: it was already the shop's, and its
+  status somebody else's decision.
+- **`POST /api/catalog/imports/{id}/publish`** (`PublishImport`, Shopkeeper)
+  publishes each of the run's products still in Draft, in one save, and counts
+  the rest: already active, archived, and **withdrawn**.
+- **A withdrawn product is left in Draft.** Withdrawing puts a live product back
+  in Draft, so Draft alone cannot tell "never reviewed" from "a person took it
+  off sale". `Product.FirstPublishedAt`, set by the first `Publish` and kept
+  through every withdrawal, tells them apart; bulk publication only moves the
+  products that have never been on sale. Products published before the column
+  existed have no date, which only matters for a run older than the column —
+  and there is none.
+- One audit row for the operation, its counts in the reason; each publication
+  still raises its own `ProductUpserted`, and `tendero.catalog.products.published`
+  counts every product either path moves.
+
+The single-product slice is unchanged: it is still how the review queue and an
+approved proposal publish.

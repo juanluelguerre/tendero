@@ -19,8 +19,10 @@ public sealed record ImportProductsCommand(string Source, string Culture = "es")
 
 /// <param name="Notes">What the source could not hand over cleanly, a note per thing
 /// (phase 16, P16-5): a person reads them instead of the logs.</param>
+/// <param name="ImportId">This run, for publishing what it created in one operation once
+/// a person has read the notes (P16-12): <c>POST /api/catalog/imports/{id}/publish</c>.</param>
 public sealed record ImportProductsResult(
-    int Created, int Updated, int Failed, double ElapsedSeconds, IReadOnlyList<Message<ImportNoteCode>> Notes);
+    int Created, int Updated, int Failed, double ElapsedSeconds, IReadOnlyList<Message<ImportNoteCode>> Notes, string ImportId);
 
 public sealed class ImportProductsValidator : AbstractValidator<ImportProductsCommand>
 {
@@ -72,6 +74,7 @@ public sealed class ImportProductsHandler(
     IAttributeDefinitionReader attributeDefinitions,
     ICategoryReader categories,
     ISourceCollections collections,
+    IImportRunRepository runs,
     TimeProvider clock,
     ILogger<ImportProductsHandler> logger)
     : ICommandHandler<ImportProductsCommand, ImportProductsResult>
@@ -91,7 +94,9 @@ public sealed class ImportProductsHandler(
         activity?.SetTag("catalog.source", connector.Source);
 
         var stopwatch = Stopwatch.StartNew();
-        var tally = new ImportTally();
+        var run = ImportRun.Start(connector.Source, clock.GetUtcNow());
+        runs.Add(run);
+        var tally = new ImportTally(run);
 
         // Once per import, not per product: resolving "azul marino" to NAVY_BLUE
         // needs the whole definition catalogue, and asking for it per product
@@ -121,6 +126,7 @@ public sealed class ImportProductsHandler(
 
         await FlushAsync(tally, cancellationToken);
         await KeepCollectionsAsync(connector, tally, cancellationToken);
+        await SaveRunAsync(connector.Source, cancellationToken);
 
         stopwatch.Stop();
         activity?.SetTag("catalog.import.created", tally.Created);
@@ -137,7 +143,8 @@ public sealed class ImportProductsHandler(
 
         return new ImportProductsResult(
             tally.Created, tally.Updated, tally.Failed, stopwatch.Elapsed.TotalSeconds,
-            [.. tally.Notes.Select(note => ImportNotes.Said(note, english))]);
+            [.. tally.Notes.Select(note => ImportNotes.Said(note, english))],
+            run.Id.ToString());
     }
 
     /// <summary>
@@ -163,6 +170,7 @@ public sealed class ImportProductsHandler(
             var product = external.ToNewProduct(source, clock, definitions);
             await IngestImagesAsync(product, external, definitions, tally, cancellationToken);
             repository.Add(product);
+            tally.PendingCreated.Add(product.Id);
             tally.PendingCategories[external.ExternalId] = product.Category;
             tally.Created++;
         }
@@ -286,14 +294,11 @@ public sealed class ImportProductsHandler(
     /// note: sending its old address to a category close by would be a guess.
     ///
     /// Read once the products are in, because a collection is read against
-    /// what was saved, not what was streamed. If its batch cannot be saved, the
-    /// products are already in and the answer still says so; the collections
-    /// wait for the next import, which keeps them again.
+    /// what was saved, not what was streamed. Saved with the run, at the end.
     /// </summary>
     private async Task KeepCollectionsAsync(ICatalogSourceConnector connector, ImportTally tally, CancellationToken cancellationToken)
     {
         CategoryTree? tree = null;
-        var kept = 0;
 
         await foreach (var collection in connector.StreamCollectionsAsync(cancellationToken))
         {
@@ -303,7 +308,6 @@ public sealed class ImportProductsHandler(
             if (tree.SharedBy(saved) is { } category)
             {
                 await collections.KeepAsync(connector.Source, collection.Handle, category, cancellationToken);
-                kept++;
             }
             else
             {
@@ -311,16 +315,23 @@ public sealed class ImportProductsHandler(
             }
         }
 
-        if (kept == 0)
-            return;
+    }
 
+    /// <summary>
+    /// The run, with the products its last batch created, and the collections
+    /// kept (P16-11, P16-12). If it cannot be saved the products are already in
+    /// and the answer still says so; the run cannot then be published in one go,
+    /// and the next import records another.
+    /// </summary>
+    private async Task SaveRunAsync(string source, CancellationToken cancellationToken)
+    {
         try
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            logger.LogError(exception, "The {Count} collections of {Source} could not be saved", kept, connector.Source);
+            logger.LogError(exception, "The import run of {Source} and its collections could not be saved", source);
         }
     }
 
@@ -344,7 +355,7 @@ public sealed class ImportProductsHandler(
     /// flush has to be able to CORRECT them: until the batch is in Postgres,
     /// "created" is an intention and not a fact.
     /// </summary>
-    private sealed class ImportTally
+    private sealed class ImportTally(ImportRun run)
     {
         private int createdWhenLastFlushed;
         private int updatedWhenLastFlushed;
@@ -356,6 +367,9 @@ public sealed class ImportProductsHandler(
 
         /// <summary>Each product saved, by its external id, with its category: what a collection is read against.</summary>
         public Dictionary<string, string?> Categories { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>The batch's new products, until it is saved: only then has the run brought them.</summary>
+        public List<ProductId> PendingCreated { get; } = [];
 
         /// <summary>The batch's products, until it is saved.</summary>
         public Dictionary<string, string?> PendingCategories { get; } = new(StringComparer.Ordinal);
@@ -370,6 +384,9 @@ public sealed class ImportProductsHandler(
             foreach (var (id, category) in PendingCategories)
                 Categories[id] = category;
             PendingCategories.Clear();
+            foreach (var id in PendingCreated)
+                run.Brought(id);
+            PendingCreated.Clear();
             Pending = 0;
         }
 
@@ -379,6 +396,7 @@ public sealed class ImportProductsHandler(
             Created = this.createdWhenLastFlushed;
             Updated = this.updatedWhenLastFlushed;
             PendingCategories.Clear();
+            PendingCreated.Clear();
             Pending = 0;
         }
     }

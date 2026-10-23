@@ -69,6 +69,7 @@
       "ProposeActionsCommand": "Propose changes",
       "ProposeAltTextCommand": "Propose alt text for pictures",
       "ProposeClaimsCommand": "Propose claims from a description or from a picture's reading",
+      "PublishImportCommand": "Publish what an import brought",
       "PublishProductCommand": "Publish a product",
       "ReadPicturesCommand": "Read product pictures",
       "RecordBrowsingCommand": "Record a product viewed or a search",

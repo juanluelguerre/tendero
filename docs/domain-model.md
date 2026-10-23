@@ -93,6 +93,16 @@ classDiagram
         +string ExternalId
         +string? Handle
     }
+    class ImportRun {
+        +ImportRunId Id
+        +string Source
+        +DateTimeOffset StartedAt
+        +ProductId[] Products
+    }
+    class ImportRunId {
+        <<record>>
+        +Guid Value
+    }
     class Product {
         <<aggregate>>
         +ProductId Id
@@ -107,6 +117,7 @@ classDiagram
         +ProductStatus Status
         +DateTimeOffset CreatedAt
         +DateTimeOffset UpdatedAt
+        +DateTimeOffset? FirstPublishedAt
         +ProductImage[] Images
         +ProductImage? PrimaryImage
         +AttributeValue[] Attributes
@@ -151,6 +162,7 @@ classDiagram
     }
     AttributeDefinition "1" --> "*" AttributeOption : Options
     CategoryTree "1" --> "*" Category : All
+    ImportRun --> ImportRunId : Id
     Product "1" --> "*" ProductImage : Images
     Product --> ProductImage : PrimaryImage
     Product "1" --> "*" AttributeValue : Attributes

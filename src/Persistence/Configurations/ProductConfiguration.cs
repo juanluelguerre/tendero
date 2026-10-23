@@ -70,6 +70,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.CreatedAt);
         builder.Property(p => p.UpdatedAt);
+        builder.Property(p => p.FirstPublishedAt);
 
         // Images are not queried separately: a complex collection in a JSON
         // column. EF knows the shape, so it is still a model and not a blob.

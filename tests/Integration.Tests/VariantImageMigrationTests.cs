@@ -50,12 +50,15 @@ public sealed class VariantImageMigrationTests(PostgresFixture postgres)
         await using (var context = factory.Create())
         {
             // The model is also AHEAD of the schema at `Before` by what later
-            // migrations added to the rows it writes here: a variant's barcode
-            // (phase 16). The column stands in for the save and leaves before
-            // migrating, so the later migration adds it as it would on a real
-            // database. A column added to variants or products later joins it.
+            // migrations added to the rows it writes here: a variant's barcode and
+            // a product's first publication (phase 16). The columns stand in for
+            // the save and leave before migrating, so the later migrations add
+            // them as they would on a real database. A column added to variants
+            // or products later joins them.
             await context.Database.ExecuteSqlRawAsync(
                 "alter table catalog.variants add column barcode character varying(64)", ct);
+            await context.Database.ExecuteSqlRawAsync(
+                "alter table catalog.products add column first_published_at timestamp with time zone", ct);
 
             // The model no longer knows the column; the table still has it.
             context.Products.AddRange(shoe, mug);
@@ -77,6 +80,7 @@ public sealed class VariantImageMigrationTests(PostgresFixture postgres)
                  """, ct);
 
             await context.Database.ExecuteSqlRawAsync("alter table catalog.variants drop column barcode", ct);
+            await context.Database.ExecuteSqlRawAsync("alter table catalog.products drop column first_published_at", ct);
         }
 
         await using (var migrate = factory.Create())

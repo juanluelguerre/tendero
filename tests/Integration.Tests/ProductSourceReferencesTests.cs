@@ -161,4 +161,55 @@ public sealed class ProductSourceReferencesTests(PostgresFixture postgres)
             Assert.Null(await addresses.CategoryAsync("unknown", ct));
         }
     }
+
+    /// <summary>
+    /// An import run and the products it created, saved as the import saves them
+    /// — the run first, its products added batch by batch — and read back whole
+    /// (P16-12); and a product's first publication, kept through a withdrawal.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task An_import_run_keeps_the_products_it_created_and_a_product_its_first_publication()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("catalog_import_runs");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var (one, other) = (Product.Create(Clock, LocalizedText.From("es", "Cafetera"), Price), Product.Create(Clock, LocalizedText.From("es", "Taza"), Price));
+        one.Publish(Clock);
+        one.Withdraw(Clock);
+        var run = ImportRun.Start("shopify", Clock.GetUtcNow());
+
+        var services = new ServiceCollection();
+        services.AddSingleton<TimeProvider>(Clock);
+        services.AddTenderoPersistence(factory.ConnectionString);
+        await using var provider = services.BuildServiceProvider();
+
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var runs = scope.ServiceProvider.GetRequiredService<IImportRunRepository>();
+            var products = scope.ServiceProvider.GetRequiredService<IProductRepository>();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            runs.Add(run);
+            products.Add(one);
+            await unitOfWork.SaveChangesAsync(ct);
+            run.Brought(one.Id);
+            products.Add(other);
+            await unitOfWork.SaveChangesAsync(ct);
+            run.Brought(other.Id);
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var read = await scope.ServiceProvider.GetRequiredService<IImportRunRepository>().FindAsync(run.Id, ct);
+            Assert.Equal("shopify", read!.Source);
+            Assert.Equal([one.Id, other.Id], read.Products);
+
+            var withdrawn = await scope.ServiceProvider.GetRequiredService<IProductRepository>().FindByIdAsync(one.Id, ct);
+            Assert.Equal((ProductStatus.Draft, true), (withdrawn!.Status, withdrawn.FirstPublishedAt is not null));
+        }
+    }
 }

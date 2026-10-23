@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261023191350_SourceCollectionsAndHandleIndex";
+    public override string LastMigrationId => "20261023201624_ImportRunsAndFirstPublication";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -430,6 +430,33 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("action_proposals", "assist");
             });
 
+        modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.ImportRun", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<string>("Source")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)")
+                    .HasColumnName("source");
+
+                b.Property<DateTimeOffset>("StartedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("started_at");
+
+                b.PrimitiveCollection<Guid[]>("products")
+                    .IsRequired()
+                    .HasColumnType("uuid[]")
+                    .HasColumnName("products");
+
+                b.HasKey("Id")
+                    .HasName("pk_import_runs");
+
+                b.ToTable("import_runs", "catalog");
+            });
+
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>
             {
                 b.Property<Guid>("Id")
@@ -464,6 +491,10 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Description")
                     .HasColumnType("jsonb")
                     .HasColumnName("description");
+
+                b.Property<DateTimeOffset?>("FirstPublishedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("first_published_at");
 
                 b.Property<string>("Name")
                     .IsRequired()

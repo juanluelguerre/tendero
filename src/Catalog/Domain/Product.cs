@@ -140,6 +140,14 @@ public sealed class Product : AggregateRoot
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    /// <summary>
+    /// When it first went on sale, kept through every withdrawal (phase 16, P16-12):
+    /// a draft that was once published is in draft because a person put it there,
+    /// and publishing a migration in bulk must not undo that. Null for a product
+    /// never published, and for those published before it was kept.
+    /// </summary>
+    public DateTimeOffset? FirstPublishedAt { get; private set; }
+
     public IReadOnlyList<ProductImage> Images => this.images;
 
     /// <summary>
@@ -665,6 +673,7 @@ public sealed class Product : AggregateRoot
         if (Status == ProductStatus.Archived)
             throw new InvalidOperationException("Cannot publish an archived product.");
         Status = ProductStatus.Active;
+        FirstPublishedAt ??= clock.GetUtcNow();
         Touch(clock);
     }
 
