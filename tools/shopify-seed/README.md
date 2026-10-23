@@ -47,6 +47,15 @@ dotnet user-secrets set "Parameters:shopify-client-secret" "<client secret>" --p
   It also sets each product's `publishedAt`, which the importer reads as
   *available from*.
 
+- `collections.mjs`: one automated collection per category of our taxonomy, its
+  rule the product type (our category code); a department gathers the codes
+  under it. Spanish titles, English as translations, published.
+- `menu.mjs`: the main menu as our storefront's, department → section →
+  category, every item a collection (`write_online_store_navigation`). A menu
+  item is a `MenuItem` to the menus and a `Link` to translations.
+- `filters.mjs`: metafield definitions for colour, material, gender and
+  induction, so the Search & Discovery app can offer them as filters.
+
 The store's look in Tendero's style is `tools/shopify-theme/`.
 
 ## The round trip
