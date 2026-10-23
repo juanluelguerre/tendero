@@ -12,7 +12,9 @@ namespace ElGuerre.Tendero.Inventory.Features.ImportStock;
 
 /// <param name="Culture">The language the notes are said in, picked as every
 /// endpoint picks it (ADR 0013).</param>
-public sealed record ImportStockCommand(string Source, string Culture = "es") : ICommand<ImportStockResult>;
+/// <param name="Rehearse">Read the source and answer what would be counted, skipped and
+/// proposed, with nothing entered in the ledger (phase 16, P16-13).</param>
+public sealed record ImportStockCommand(string Source, string Culture = "es", bool Rehearse = false) : ICommand<ImportStockResult>;
 
 /// <summary>A place of the source the shop does not operate, for a person to add to the warehouses file.</summary>
 public sealed record ProposedWarehouse(string Code, string Name, bool IsActive);
@@ -45,7 +47,7 @@ public sealed class ImportStockEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // POST /api/inventory/import  { "source": "shopify" }
+        // POST /api/inventory/import  { "source": "shopify" }, or with "rehearse": true
         app.MapPost("/api/inventory/import",
                 async Task<Ok<ImportStockResult>> (
                     ImportStockCommand command, string? culture, HttpContext http,
@@ -94,7 +96,8 @@ public sealed class ImportStockHandler(
                 continue;
             }
 
-            await ledger.CountAsync(level.Sku, code, level.OnHand, cancellationToken);
+            if (!command.Rehearse)
+                await ledger.CountAsync(level.Sku, code, level.OnHand, cancellationToken);
             counted++;
         }
 
@@ -106,7 +109,9 @@ public sealed class ImportStockHandler(
         }
 
         notes.AddRange(source.SourceNotes);
-        ImportStockMetrics.Record(source.Source, counted, skipped, notes);
+        // A rehearsal entered nothing: the metrics count what an import did.
+        if (!command.Rehearse)
+            ImportStockMetrics.Record(source.Source, counted, skipped, notes);
         var english = command.Culture == "en";
 
         return new ImportStockResult(counted, skipped, proposed, [.. notes.Select(note => ImportStockNotes.Said(note, english))]);

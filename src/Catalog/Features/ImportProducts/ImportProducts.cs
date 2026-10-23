@@ -15,14 +15,18 @@ namespace ElGuerre.Tendero.Catalog.Features.ImportProducts;
 
 /// <param name="Culture">The language the notes are said in: the endpoint's <c>?culture=</c> or
 /// <c>Accept-Language</c>, as every endpoint picks it (ADR 0013).</param>
-public sealed record ImportProductsCommand(string Source, string Culture = "es") : ICommand<ImportProductsResult>;
+/// <param name="Rehearse">Run the import with nothing written — no product, picture, run or
+/// collection — and answer what would come and the notes (phase 16, P16-13): what a
+/// merchant reads before a migration, rather than after.</param>
+public sealed record ImportProductsCommand(string Source, string Culture = "es", bool Rehearse = false) : ICommand<ImportProductsResult>;
 
 /// <param name="Notes">What the source could not hand over cleanly, a note per thing
 /// (phase 16, P16-5): a person reads them instead of the logs.</param>
 /// <param name="ImportId">This run, for publishing what it created in one operation once
-/// a person has read the notes (P16-12): <c>POST /api/catalog/imports/{id}/publish</c>.</param>
+/// a person has read the notes (P16-12): <c>POST /api/catalog/imports/{id}/publish</c>. Null
+/// for a rehearsal, which records no run.</param>
 public sealed record ImportProductsResult(
-    int Created, int Updated, int Failed, double ElapsedSeconds, IReadOnlyList<Message<ImportNoteCode>> Notes, string ImportId);
+    int Created, int Updated, int Failed, double ElapsedSeconds, IReadOnlyList<Message<ImportNoteCode>> Notes, string? ImportId);
 
 public sealed class ImportProductsValidator : AbstractValidator<ImportProductsCommand>
 {
@@ -47,7 +51,7 @@ public sealed class ImportProductsEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // POST /api/catalog/import  { "source": "seed" }
+        // POST /api/catalog/import  { "source": "seed" }, or { "source": "shopify", "rehearse": true }
         app.MapPost("/api/catalog/import",
             async Task<Ok<ImportProductsResult>> (
                    ImportProductsCommand command, string? culture, HttpContext http,
@@ -92,11 +96,13 @@ public sealed class ImportProductsHandler(
 
         using var activity = Telemetry.StartActivity("catalog.import");
         activity?.SetTag("catalog.source", connector.Source);
+        activity?.SetTag("catalog.import.rehearsal", command.Rehearse);
 
         var stopwatch = Stopwatch.StartNew();
         var run = ImportRun.Start(connector.Source, clock.GetUtcNow());
-        runs.Add(run);
-        var tally = new ImportTally(run);
+        if (!command.Rehearse)
+            runs.Add(run);
+        var tally = new ImportTally(run, command.Rehearse);
 
         // Once per import, not per product: resolving "azul marino" to NAVY_BLUE
         // needs the whole definition catalogue, and asking for it per product
@@ -126,7 +132,8 @@ public sealed class ImportProductsHandler(
 
         await FlushAsync(tally, cancellationToken);
         await KeepCollectionsAsync(connector, tally, cancellationToken);
-        await SaveRunAsync(connector.Source, cancellationToken);
+        if (!command.Rehearse)
+            await SaveRunAsync(connector.Source, cancellationToken);
 
         stopwatch.Stop();
         activity?.SetTag("catalog.import.created", tally.Created);
@@ -138,13 +145,15 @@ public sealed class ImportProductsHandler(
             connector.Source, tally.Created, tally.Updated, tally.Failed, stopwatch.Elapsed.TotalSeconds);
 
         tally.Notes.AddRange(connector.SourceNotes);
-        ImportMetrics.Record(connector.Source, tally.Created, tally.Updated, tally.Failed, tally.Notes);
+        // A rehearsal brought nothing in: the metrics count what an import did.
+        if (!command.Rehearse)
+            ImportMetrics.Record(connector.Source, tally.Created, tally.Updated, tally.Failed, tally.Notes);
         var english = command.Culture == "en";
 
         return new ImportProductsResult(
             tally.Created, tally.Updated, tally.Failed, stopwatch.Elapsed.TotalSeconds,
             [.. tally.Notes.Select(note => ImportNotes.Said(note, english))],
-            run.Id.ToString());
+            command.Rehearse ? null : run.Id.ToString());
     }
 
     /// <summary>
@@ -164,6 +173,23 @@ public sealed class ImportProductsHandler(
             tally.Notes.AddRange(notes);
         if (existing is not null)
             tally.Notes.AddRange(RenamedSkus(existing, external, source));
+
+        if (tally.Rehearsal)
+        {
+            // What the import would build, built and kept by nobody: a product
+            // the mapping refuses fails here as it would there. A product the
+            // shop has is mapped afresh rather than changed, so nothing it holds
+            // is touched; its pictures are read, not stored.
+            var rehearsed = external.ToNewProduct(source, clock, definitions);
+            await ReadImagesAsync(external, tally, cancellationToken);
+            tally.PendingCategories[external.ExternalId] = rehearsed.Category;
+            if (existing is null)
+                tally.Created++;
+            else
+                tally.Updated++;
+            tally.Pending++;
+            return;
+        }
 
         if (existing is null)
         {
@@ -198,6 +224,12 @@ public sealed class ImportProductsHandler(
     {
         if (tally.Pending == 0)
             return;
+
+        if (tally.Rehearsal)
+        {
+            tally.MarkFlushed();
+            return;
+        }
 
         try
         {
@@ -288,6 +320,24 @@ public sealed class ImportProductsHandler(
     }
 
     /// <summary>
+    /// The rehearsal's pictures (P16-13): each opened, as the import would, so an
+    /// unreadable one is said now, and closed again unstored.
+    /// </summary>
+    private async Task ReadImagesAsync(ExternalProduct external, ImportTally tally, CancellationToken cancellationToken)
+    {
+        foreach (var image in external.Images)
+        {
+            if (await imageReader.OpenAsync(image, cancellationToken) is not { } content)
+            {
+                tally.Notes.Add(new SourceNote(ImportNoteCode.ImageUnreadable, external.ExternalId, image.Location.ToString()));
+                continue;
+            }
+
+            await content.Content.DisposeAsync();
+        }
+    }
+
+    /// <summary>
     /// The source's collections as categories (phase 16, P16-11): each is the
     /// category its saved products share, kept by its handle for the redirects.
     /// One whose products share none — or none of whose products came in — is a
@@ -307,7 +357,8 @@ public sealed class ImportProductsHandler(
 
             if (tree.SharedBy(saved) is { } category)
             {
-                await collections.KeepAsync(connector.Source, collection.Handle, category, cancellationToken);
+                if (!tally.Rehearsal)
+                    await collections.KeepAsync(connector.Source, collection.Handle, category, cancellationToken);
             }
             else
             {
@@ -355,8 +406,11 @@ public sealed class ImportProductsHandler(
     /// flush has to be able to CORRECT them: until the batch is in Postgres,
     /// "created" is an intention and not a fact.
     /// </summary>
-    private sealed class ImportTally(ImportRun run)
+    private sealed class ImportTally(ImportRun run, bool rehearsal)
     {
+        /// <summary>Nothing is written: products, pictures, the run and the collections are counted and dropped.</summary>
+        public bool Rehearsal { get; } = rehearsal;
+
         private int createdWhenLastFlushed;
         private int updatedWhenLastFlushed;
 

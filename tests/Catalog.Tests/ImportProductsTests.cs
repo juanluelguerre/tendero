@@ -287,9 +287,64 @@ public sealed class ImportProductsTests
         Assert.Equal(shop.Runs.Added[1].Id.ToString(), shop.Result.ImportId);
     }
 
+    /// <summary>
+    /// The rehearsal (P16-13): the import run with nothing written — no product,
+    /// no picture, no run, no collection — saying what would come and the notes.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_says_what_would_come_and_writes_nothing()
+    {
+        var shop = new Shop { Rehearse = true };
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId]), new ExternalCollection("ofertas", "Ofertas", [])];
+
+        await shop.ImportAsync(Illustration, Missing);
+
+        Assert.Equal((1, 0, 0), (shop.Result.Created, shop.Result.Updated, shop.Result.Failed));
+        Assert.Equal([ImportNoteCode.ImageUnreadable, ImportNoteCode.CollectionNotMapped], shop.Result.Notes.Select(note => note.Code));
+        Assert.Null(shop.Product);
+        Assert.Null(shop.Result.ImportId);
+        Assert.Equal((0, 0), (shop.Saves, shop.PicturesStored));
+        Assert.Empty(shop.Runs.Added);
+        Assert.Empty(shop.Collections.Kept);
+    }
+
+    /// <summary>
+    /// What the rehearsal says is what the import then does (spec, *Measures*):
+    /// the same counts and the same notes, for a new product and for one the shop
+    /// already has.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_says_what_the_import_then_does()
+    {
+        var shop = new Shop();
+        shop.Source.Collections = [new ExternalCollection("ofertas", "Ofertas", [])];
+
+        foreach (var _ in new[] { "new", "known" })
+        {
+            shop.Rehearse = true;
+            await shop.ImportAsync(Illustration, Missing);
+            var said = shop.Result;
+            shop.Rehearse = false;
+            await shop.ImportAsync(Illustration, Missing);
+
+            Assert.Equal((said.Created, said.Updated, said.Failed), (shop.Result.Created, shop.Result.Updated, shop.Result.Failed));
+            Assert.Equal(said.Notes, shop.Result.Notes);
+        }
+    }
+
     private sealed class Shop
     {
         private readonly InMemoryProductRepository repository = new();
+        private readonly ContentAddressedStore store = new();
+        private readonly CountingUnitOfWork unitOfWork = new();
+
+        /// <summary>The next import is a rehearsal.</summary>
+        public bool Rehearse { get; set; }
+
+        public int Saves => this.unitOfWork.SaveCount;
+
+        public int PicturesStored => this.store.Saved;
         private readonly OneProductConnector connector = new();
 
         public KeptCollections Collections { get; } = new();
@@ -322,9 +377,9 @@ public sealed class ImportProductsTests
             var handler = new ImportProductsHandler(
                 new OneSourceRegistry(this.connector),
                 this.repository,
-                new CountingUnitOfWork(),
+                this.unitOfWork,
                 new ReadableImages(),
-                new ContentAddressedStore(),
+                this.store,
                 new NoAttributeDefinitions(),
                 new KitchenCategories(),
                 this.Collections,
@@ -332,7 +387,7 @@ public sealed class ImportProductsTests
                 Clock,
                 NullLogger<ImportProductsHandler>.Instance);
 
-            Result = await handler.HandleAsync(new ImportProductsCommand(OneProductConnector.Key, Culture), Ct);
+            Result = await handler.HandleAsync(new ImportProductsCommand(OneProductConnector.Key, Culture, Rehearse), Ct);
 
             Product = (await this.repository.FindByExternalReferenceAsync(
                 OneProductConnector.Key, OneProductConnector.ExternalId, Ct))!;
@@ -412,8 +467,11 @@ public sealed class ImportProductsTests
 
     private sealed class ContentAddressedStore : IImageStore
     {
+        public int Saved { get; private set; }
+
         public async Task<ImageId> SaveAsync(Stream content, string contentType, CancellationToken ct = default)
         {
+            Saved++;
             using var reader = new StreamReader(content);
             return new ImageId(Convert.ToHexStringLower(Encoding.UTF8.GetBytes(await reader.ReadToEndAsync(ct))));
         }

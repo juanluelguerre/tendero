@@ -126,6 +126,26 @@ public sealed class ImportStockTests
             recorder.Of("tendero.inventory.import.notes").Select(tags => (string)tags["inventory.import.note"]!));
     }
 
+    /// <summary>
+    /// The rehearsal (P16-13): what would be counted, skipped and proposed, and
+    /// the notes, with nothing entered in the ledger and nothing counted as done.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_says_what_would_be_counted_and_enters_nothing()
+    {
+        using var recorder = new InstrumentRecorder("tendero.inventory.import.levels");
+        var (handler, ledger, _) = AnImport();
+
+        var rehearsal = await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, Rehearse: true), Ct);
+        var import = await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key), Ct);
+
+        Assert.Equal(
+            (import.Counted, import.Skipped, import.ProposedWarehouses.Count, import.Notes.Count),
+            (rehearsal.Counted, rehearsal.Skipped, rehearsal.ProposedWarehouses.Count, rehearsal.Notes.Count));
+        Assert.Equal(2, ledger.Counts.Count);
+        Assert.Equal(import.Counted + import.Skipped, recorder.Sum("tendero.inventory.import.levels"));
+    }
+
     private sealed class OneStockSource(IStockSourceConnector source) : IStockSourceRegistry
     {
         public IReadOnlyCollection<string> Sources => [source.Source];

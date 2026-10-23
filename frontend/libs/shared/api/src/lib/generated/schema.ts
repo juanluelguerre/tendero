@@ -2448,6 +2448,8 @@ export interface components {
             source: string;
             /** @default es */
             culture: string;
+            /** @default false */
+            rehearse: boolean;
         };
         ImportProductsResult: {
             /** Format: int32 */
@@ -2459,12 +2461,14 @@ export interface components {
             /** Format: double */
             elapsedSeconds: number;
             notes: components["schemas"]["MessageOfImportNoteCode"][];
-            importId: string;
+            importId: null | string;
         };
         ImportStockCommand: {
             source: string;
             /** @default es */
             culture: string;
+            /** @default false */
+            rehearse: boolean;
         };
         ImportStockResult: {
             /** Format: int32 */

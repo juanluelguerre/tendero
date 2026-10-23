@@ -270,7 +270,17 @@ locations, publications, navigation).
   `Product.FirstPublishedAt` tells it from one never reviewed (ADR 0012,
   amendment).
 - `P16-13` **The rehearsal**: the import and the stock import run with nothing
-  written, reporting what would come and the notes — **S**
+  written, reporting what would come and the notes — **S**. *As built
+  (2026-10-23)*: both commands take `rehearse`. The catalogue's maps every
+  product as the import would, so one the mapping refuses fails here too; a
+  product the shop already has is mapped afresh rather than changed; pictures
+  are opened and closed unstored, so an unreadable one is said; collections are
+  judged and not kept; no run is recorded (`importId` is null). The stock's
+  enters nothing in the ledger. Neither counts in the metrics. Held by a test
+  that rehearses and then imports, for a new product and a known one, and
+  compares counts and notes. One difference is accepted: a known product whose
+  update the domain would refuse (a variant change, say) passes the rehearsal,
+  which maps it afresh.
 - `P16-14` **A merchant's own store**: `Shopify:AccessToken` accepted beside
   the client credentials, and `tools/shopify-connect/` running the
   authorization-code install once — **M**
