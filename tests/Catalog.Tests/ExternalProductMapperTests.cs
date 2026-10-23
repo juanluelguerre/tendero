@@ -349,6 +349,28 @@ public sealed class ExternalProductMapperTests
     }
 
     /// <summary>
+    /// A variant is taxed in the class its source says (phase 16, S2a, P16-9): a
+    /// store that marks something not taxable makes it <c>exempt</c>, and a
+    /// re-import follows the source. A source that says nothing leaves the class
+    /// as it is — the seed's variants keep theirs, which is none, read as
+    /// standard (ADR 0028).
+    /// </summary>
+    [Fact]
+    public void A_variant_is_taxed_in_the_class_its_source_says_and_keeps_its_own_when_the_source_is_silent()
+    {
+        var store = InTwoColoursFromAStore();
+        store = store with { Variants = [store.Variants![0] with { TaxClass = "exempt" }, store.Variants[1] with { TaxClass = "standard" }] };
+        var product = store.ToNewProduct("shopify", Clock, Colours.Defined());
+        Assert.Equal(["exempt", "standard"], product.Variants.Select(variant => variant.TaxClass));
+
+        var changed = store with { Variants = [store.Variants[0] with { TaxClass = "standard" }, store.Variants[1] with { TaxClass = null }] };
+        changed.ApplyTo(product, Clock, Colours.Defined(), "shopify");
+
+        Assert.Equal(["standard", "standard"], product.Variants.Select(variant => variant.TaxClass));
+        Assert.Null(Assert.Single(AnExternalProduct().ToNewProduct("seed", Clock).Variants).TaxClass);
+    }
+
+    /// <summary>
     /// The store's handle — the product's name in its URLs — is kept beside the
     /// id, so leaving the store can redirect its old addresses with no second
     /// import (spec decision 4). It follows the source; the link stays one.

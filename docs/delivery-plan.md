@@ -1100,7 +1100,7 @@ destination*). Spec [`docs/specs/shopify-leave.md`](specs/shopify-leave.md), pro
 S2a's tasks (spec, *Tasks*):
 
 - [x] `P16-8` Where Shopify's adapters live: `src/Shopify`, a project of its own for the client and every Shopify adapter (decision for the author) — **S** · *Done 2026-10-23* (the author chose the project): S1's client and adapter moved with `git mv` to `src/Shopify` (`ElGuerre.Tendero.Shopify`) and their tests to `tests/Shopify.Tests`; the catalogue no longer registers Shopify — the host composes `AddShopify` beside `AddCatalog` (API, SearchEval, the round trip); the catalogue sources' contract suite became a shared file (`tests/CatalogSourceConnectorContract.cs`) linked into both test projects; an architecture rule, *an adapter never reaches a domain*; 38 + 328 tests as before, the round trip green
-- [ ] `P16-9` Tax class per variant from Shopify's `taxable`, and a note for tax overrides — **S**
+- [x] `P16-9` Tax class per variant from Shopify's `taxable`, and a note for tax overrides — **S** · *Done 2026-10-23*: `ExternalVariant.TaxClass`, `Product.SetVariantTaxClass`, taxed → standard and untaxed → exempt; no overrides note, since the Admin API's product carries none; the round trip compares classes against the real store
 - [ ] `P16-10` Stock and warehouses: `IStockSourceConnector` in Inventory with its contract suite, the Shopify adapter, `ImportStock` through the ledger's stocktake, a proposed warehouses file — **M**
 - [ ] `P16-11` Redirects: `/products/<handle>` and `/collections/<handle>` answered with a 301 to the storefront — **M**
 - [ ] `P16-12` Bulk publication of what one migration brought, audited (ADR 0012 amended) — **S**

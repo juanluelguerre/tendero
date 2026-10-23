@@ -36,7 +36,8 @@ internal sealed record ShopifyVariant(
     string? Barcode,
     decimal Price,
     IReadOnlyList<ShopifyOption> Options,
-    string? ImageUrl);
+    string? ImageUrl,
+    bool Taxable = true);
 
 internal sealed record ShopifyOption(string Name, string Value);
 

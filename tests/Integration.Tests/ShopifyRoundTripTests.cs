@@ -133,14 +133,17 @@ public sealed class ShopifyRoundTripTests
 
     /// <summary>Each variant as the catalogue will sell it: its SKU, what it varies by, its price.</summary>
     /// A product sold one way is the seed's default variant on one side and
-    /// Shopify's "Default Title" variant, which varies by nothing, on the other.
+    /// Shopify's "Default Title" variant, which varies by nothing, on the other;
+    /// each with its tax class (S2a).
     private static string Variants(ExternalProduct product, AttributeDefinitions definitions) =>
         product.Variants is not { Count: > 0 } variants
-            ? $"{product.ExternalId}-DEFAULT [] {product.PriceAmount:0.00}"
+            ? $"{product.ExternalId}-DEFAULT [] {product.PriceAmount:0.00} standard"
             : string.Join(" | ", variants
                 .Select(variant =>
                     $"{(variant.Sku ?? ExternalProductMapper.SkuOf(product, variant)).ToUpperInvariant()} " +
-                    $"[{Flat(ExternalProductMapper.Coordinates(variant.Attributes, definitions))}] {variant.PriceAmount ?? product.PriceAmount:0.00}")
+                    $"[{Flat(ExternalProductMapper.Coordinates(variant.Attributes, definitions))}] {variant.PriceAmount ?? product.PriceAmount:0.00} " +
+                    // No class is the standard one (ADR 0028), which is what a store taxes.
+                    $"{variant.TaxClass ?? "standard"}")
                 .Order(StringComparer.Ordinal));
 
     private static string Flat(IReadOnlyDictionary<string, string> values) =>

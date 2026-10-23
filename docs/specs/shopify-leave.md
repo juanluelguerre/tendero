@@ -213,7 +213,11 @@ locations, publications, navigation).
 - `P16-9` **Tax class per variant**: `ExternalVariant` gains `TaxClass`, the
   adapter maps Shopify's `taxable` (true → `standard`, false → `exempt`), and
   the mapper sets the variant's class. A note (`TaxOverrideAtSource`) when the
-  store's tax overrides cannot be expressed — **S**
+  store's tax overrides cannot be expressed — **S** · *Done 2026-10-23*: no note,
+  because the store's overrides by collection or country are not in the Admin
+  API's product, and Shopify has no flag for a reduced rate: `taxable` is all
+  there is. A source that says nothing leaves the variant's class as it is, so
+  the seed is unchanged; the round trip compares classes, none read as standard
 - `P16-10` **Stock and warehouses**: an inbound port in `Inventory`
   (`IStockSourceConnector`: locations, then levels per SKU and location), with
   its contract suite and a fake; the Shopify adapter (bulk read of inventory

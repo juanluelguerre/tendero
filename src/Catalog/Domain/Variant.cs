@@ -107,6 +107,17 @@ public sealed class Variant
         return true;
     }
 
+    internal bool SetTaxClass(string taxClass)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(taxClass);
+        var trimmed = taxClass.Trim();
+        if (TaxClass == trimmed)
+            return false;
+
+        TaxClass = trimmed;
+        return true;
+    }
+
     internal bool SetBarcode(string? barcode)
     {
         var trimmed = string.IsNullOrWhiteSpace(barcode) ? null : barcode.Trim();

@@ -253,6 +253,21 @@ public sealed class ShopifyCatalogConnectorTests
     }
 
     /// <summary>
+    /// Shopify says per variant whether it is taxed; the catalogue says in which
+    /// class (S2a, P16-9). Taxed is the standard rate, untaxed is exempt — the
+    /// store's overrides by collection or country are not in the Admin API's
+    /// product, and the reduced rates a European shop needs have no flag there.
+    /// </summary>
+    [Fact]
+    public async Task A_variant_the_store_taxes_is_standard_and_one_it_does_not_is_exempt()
+    {
+        var products = await Imported(AConnector().Connector);
+
+        Assert.Equal(["standard", "standard"], products[0].Variants!.Select(variant => variant.TaxClass));
+        Assert.Equal("exempt", Assert.Single(products[1].Variants!).TaxClass);
+    }
+
+    /// <summary>
     /// A product sold one way has Shopify's "Default Title" variant: it comes as
     /// one variant that varies by nothing, with the store's id for it, so even a
     /// product with no options is found again by id.

@@ -112,7 +112,7 @@ public static class ExternalProductMapper
     /// product stops having exactly one way of being bought the moment the
     /// source says it has two. Re-importing adds nothing: a variant is found by
     /// the source's id for it when there is one, by its SKU otherwise, and only
-    /// its price and barcode follow the source. Its SKU never does (phase 16).
+    /// its price, barcode and tax class follow the source. Its SKU never does (phase 16).
     /// </summary>
     private static void EnsureVariants(
         ExternalProduct external, Product product, TimeProvider clock, AttributeDefinitions? definitions,
@@ -146,6 +146,9 @@ public static class ExternalProductMapper
 
             product.SetVariantPrice(clock, sku, price);
             product.SetVariantBarcode(clock, sku, variant.Barcode);
+            // A source that says nothing of tax leaves the variant's class as it is.
+            if (variant.TaxClass is { Length: > 0 } taxClass)
+                product.SetVariantTaxClass(clock, sku, taxClass);
             if (source is not null && variant.ExternalId is { } id)
                 product.LinkVariantExternal(clock, sku, source, id);
         }

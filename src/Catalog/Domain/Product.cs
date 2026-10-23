@@ -540,6 +540,13 @@ public sealed class Product : AggregateRoot
             Touch(clock);
     }
 
+    /// <summary>The variant's tax class, as its source says it (phase 16, S2a).</summary>
+    public void SetVariantTaxClass(TimeProvider clock, string sku, string taxClass)
+    {
+        if (Required(sku).SetTaxClass(taxClass))
+            Touch(clock);
+    }
+
     /// <summary>The variant's barcode, as its source says it; null clears it.</summary>
     public void SetVariantBarcode(TimeProvider clock, string sku, string? barcode)
     {

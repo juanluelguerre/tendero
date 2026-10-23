@@ -27,7 +27,7 @@ internal static class ShopifyQueries
             mutation {
               bulkOperationRunQuery(
                 groupObjects: true
-                query: "{ products { edges { node { id handle title descriptionHtml vendor publishedAt category { id fullName }{{translations}} media { edges { node { ... on MediaImage { id image { url altText } } } } } metafields(namespace: \"{{attributesNamespace}}\") { edges { node { id key value } } } variants { edges { node { id sku barcode price selectedOptions { name value } image { url } } } } } } } }"
+                query: "{ products { edges { node { id handle title descriptionHtml vendor publishedAt category { id fullName }{{translations}} media { edges { node { ... on MediaImage { id image { url altText } } } } } metafields(namespace: \"{{attributesNamespace}}\") { edges { node { id key value } } } variants { edges { node { id sku barcode price taxable selectedOptions { name value } image { url } } } } } } } }"
               ) {
                 bulkOperation { id status }
                 userErrors { field message }

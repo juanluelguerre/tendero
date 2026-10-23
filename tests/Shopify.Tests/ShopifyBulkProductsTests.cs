@@ -46,6 +46,7 @@ public sealed class ShopifyBulkProductsTests
             [("44001", "MOKA-OLV", "8400000000011", 29.90m), ("44002", "MOKA-BLK", "8400000000028", 32.50m)],
             moka.Variants.Select(variant => (variant.Id, variant.Sku, variant.Barcode, variant.Price)));
         Assert.Equal([("Color", "Oliva")], moka.Variants[0].Options.Select(option => (option.Name, option.Value)));
+        Assert.All(moka.Variants, variant => Assert.True(variant.Taxable));
         Assert.Equal("https://cdn.shopify.com/s/files/1/moka-negro.jpg", moka.Variants[1].ImageUrl);
         Assert.Equal(
             [("https://cdn.shopify.com/s/files/1/moka-oliva.jpg", "Cafetera Moka en oliva"), ("https://cdn.shopify.com/s/files/1/moka-negro.jpg", "Cafetera Moka en negro")],
@@ -66,6 +67,7 @@ public sealed class ShopifyBulkProductsTests
 
         var variant = Assert.Single(mug.Variants);
         Assert.Equal(("44003", null, null, 9.00m, null), (variant.Id, variant.Sku, variant.Barcode, variant.Price, variant.ImageUrl));
+        Assert.False(variant.Taxable);
         Assert.Empty(mug.Images);
         Assert.Null(mug.PublishedAt);
         Assert.Null(mug.Category);

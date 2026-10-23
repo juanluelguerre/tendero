@@ -139,13 +139,17 @@ public sealed record ExternalProduct(
 /// <param name="Barcode">The source's barcode (EAN, UPC), when it has one.</param>
 /// <param name="PriceAmount">What the source sells this variant for, in the
 /// product's currency, or null when it prices the product alone.</param>
+/// <param name="TaxClass">The tax class the source puts it in (<c>standard</c>,
+/// <c>exempt</c>…), or null when it says nothing and the variant keeps its own
+/// (phase 16, S2a).</param>
 public sealed record ExternalVariant(
     string Key,
     IReadOnlyDictionary<string, string> Attributes,
     string? ExternalId = null,
     string? Sku = null,
     string? Barcode = null,
-    decimal? PriceAmount = null);
+    decimal? PriceAmount = null,
+    string? TaxClass = null);
 
 /// <summary>
 /// An image as the source offers it. <see cref="Location"/> is a Uri on purpose:

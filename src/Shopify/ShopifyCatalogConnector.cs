@@ -126,7 +126,10 @@ internal sealed class ShopifyCatalogConnector(ShopifyAdmin admin, IOptions<Shopi
         ExternalId: variant.Id,
         Sku: variant.Sku,
         Barcode: variant.Barcode,
-        PriceAmount: variant.Price);
+        PriceAmount: variant.Price,
+        // Shopify says whether a variant is taxed, not at which rate: taxed is the
+        // standard class, untaxed exempt. Reduced rates have no flag in its product.
+        TaxClass: variant.Taxable ? "standard" : "exempt");
 
     /// <summary>What a variant varies by, in the store's words; nothing for "Default Title".</summary>
     private static Dictionary<string, string> OptionsOf(ShopifyVariant variant) =>

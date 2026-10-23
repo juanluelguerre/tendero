@@ -98,7 +98,9 @@ internal static class ShopifyBulkProducts
             decimal.Parse(Text(line, "price") ?? "0", CultureInfo.InvariantCulture),
             [.. line.GetProperty("selectedOptions").EnumerateArray()
                 .Select(option => new ShopifyOption(Text(option, "name") ?? "", Text(option, "value") ?? ""))],
-            line.TryGetProperty("image", out var image) && image.ValueKind == JsonValueKind.Object ? Text(image, "url") : null);
+            line.TryGetProperty("image", out var image) && image.ValueKind == JsonValueKind.Object ? Text(image, "url") : null,
+            // Absent means taxed: Shopify's own default for a variant.
+            !line.TryGetProperty("taxable", out var taxable) || taxable.ValueKind != JsonValueKind.False);
 
         /// <summary>The <c>t_en</c> aliases: each locale's translated title and description.</summary>
         private static Dictionary<string, ShopifyTexts> Translations(JsonElement product)
