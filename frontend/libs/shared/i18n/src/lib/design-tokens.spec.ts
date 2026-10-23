@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -38,8 +39,6 @@ describe('the design tokens', () => {
   /** `#fff`, `#ffffff`, `#ffffffff`. */
   const HEX = /#[0-9a-f]{3,8}\b/gi;
 
-  const SKIP = new Set(['node_modules', 'dist', '.angular', '.git', 'bin', 'obj', 'coverage']);
-
   /**
    * Found by walking up to the file the rule is about, rather than by counting
    * `..` segments.
@@ -62,15 +61,22 @@ describe('the design tokens', () => {
     return directory;
   })();
 
+  /**
+   * The repository's stylesheets as git sees them: tracked, or new and not
+   * ignored. Walking the disk read ignored folders too — Shopify's Horizon theme,
+   * pulled into `artifacts/` and never versioned for its licence (phase 16),
+   * failed this rule on the machine that had it and passed in CI, which checks
+   * out only what is versioned. The rule is about what the repository holds.
+   */
   function stylesheets(directory: string): string[] {
-    return readdirSync(directory).flatMap((entry) => {
-      const path = join(directory, entry);
-
-      if (SKIP.has(entry)) return [];
-      if (statSync(path).isDirectory()) return stylesheets(path);
-
-      return path.endsWith('.css') ? [path] : [];
-    });
+    return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', '*.css'], {
+      cwd: directory,
+      encoding: 'utf8',
+    })
+      .split('\0')
+      .filter(Boolean)
+      .map((path) => join(directory, path))
+      .filter((path) => existsSync(path));
   }
 
   it('are the only place a colour is written down', () => {

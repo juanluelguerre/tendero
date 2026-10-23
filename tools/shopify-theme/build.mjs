@@ -11,7 +11,8 @@
 //   - writes assets/tendero.css for what the settings cannot say (prices in the
 //     receipt's mono face), and links it from layout/theme.liquid.
 //
-// Run from the repository root:
+// Where to get Horizon, what to install and the order of the steps:
+// tools/shopify-theme/README.md. Run from the repository root:
 //   shopify theme pull --store <store> --theme <id> --path artifacts/shopify-theme
 //   node tools/shopify-theme/build.mjs
 //   shopify theme push --unpublished --theme Tendero --path artifacts/shopify-theme --store <store>
