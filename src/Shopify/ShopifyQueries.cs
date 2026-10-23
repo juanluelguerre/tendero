@@ -56,6 +56,24 @@ internal static class ShopifyQueries
         }
         """;
 
+    /// <summary>
+    /// Every collection with its products' ids, as one bulk operation (P16-11):
+    /// two connections, each product a line whose parent is its collection. The
+    /// title is the store's own language, for a person reading a note.
+    /// </summary>
+    public const string Collections =
+        """
+        mutation {
+          bulkOperationRunQuery(
+            groupObjects: true
+            query: "{ collections { edges { node { id handle title products { edges { node { id } } } } } } }"
+          ) {
+            bulkOperation { id status }
+            userErrors { field message }
+          }
+        }
+        """;
+
     /// <summary>The store's locations; a store has a handful, so a page of 250 is all of them.</summary>
     public const string Locations = "{ locations(first: 250, includeInactive: true) { nodes { id name isActive } } }";
 

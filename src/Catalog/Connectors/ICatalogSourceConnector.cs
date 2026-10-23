@@ -26,7 +26,22 @@ public interface ICatalogSourceConnector
     /// nothing, which is the default.
     /// </summary>
     IReadOnlyList<SourceNote> SourceNotes => [];
+
+    /// <summary>
+    /// The source's collections, read after its products (phase 16, P16-11): what
+    /// a store groups its products under, each with the name in its URLs, so a
+    /// shop leaving it can send the old address to the category the products
+    /// share. A source without collections has none, which is the default.
+    /// </summary>
+    IAsyncEnumerable<ExternalCollection> StreamCollectionsAsync(CancellationToken cancellationToken = default) =>
+        AsyncEnumerable.Empty<ExternalCollection>();
 }
+
+/// <summary>A group of products at the source, by the name in its URLs.</summary>
+/// <param name="Handle">The collection's name in the source's URLs: <c>menaje</c>.</param>
+/// <param name="Title">What the source calls it, for a person reading a note.</param>
+/// <param name="ProductExternalIds">Its products, by the ids they were imported under.</param>
+public sealed record ExternalCollection(string Handle, string Title, IReadOnlyList<string> ProductExternalIds);
 
 /// <summary>
 /// What did not come across cleanly from a source, as a closed set the import's
@@ -55,6 +70,9 @@ public enum ImportNoteCode
 
     /// <summary>A picture could not be read; the product came without it.</summary>
     ImageUnreadable,
+
+    /// <summary>A collection's products share no category here; its old address has nowhere to go.</summary>
+    CollectionNotMapped,
 }
 
 /// <summary>

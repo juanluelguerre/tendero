@@ -108,4 +108,57 @@ public sealed class ProductSourceReferencesTests(PostgresFixture postgres)
 
         Assert.Equal(new Dictionary<string, string> { ["44001"] = "MOKA-OLV", ["44002"] = "8001-44002" }, skus);
     }
+
+    /// <summary>
+    /// A store's old addresses (P16-11): a product by the handle the import kept
+    /// — the one on sale when two sources used the same handle — and a
+    /// collection by the category the import kept it as, which a re-import may
+    /// move, in one row.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_sources_old_addresses_lead_to_the_product_on_sale_and_to_the_category_kept()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("catalog_source_addresses");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var draft = Product.Create(Clock, LocalizedText.From("es", "Cafetera vieja"), Price);
+        draft.LinkExternal(Clock, "medusa", "m-1", "moka");
+        var onSale = Product.Create(Clock, LocalizedText.From("es", "Cafetera moka").With("en", "Moka coffee maker"), Price);
+        onSale.LinkExternal(Clock, "shopify", "8001", "moka");
+        onSale.Publish(Clock);
+
+        await using (var context = factory.Create())
+        {
+            context.Products.AddRange(draft, onSale);
+            await context.SaveChangesAsync(ct);
+        }
+
+        var services = new ServiceCollection();
+        services.AddSingleton<TimeProvider>(Clock);
+        services.AddTenderoPersistence(factory.ConnectionString);
+        await using var provider = services.BuildServiceProvider();
+
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var collections = scope.ServiceProvider.GetRequiredService<ISourceCollections>();
+            await collections.KeepAsync("shopify", "Menaje", "KITCHEN", ct);
+            await collections.KeepAsync("shopify", "menaje", "cookware", ct);
+            await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
+        }
+
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var addresses = scope.ServiceProvider.GetRequiredService<ISourceAddresses>();
+
+            var product = await addresses.ProductAsync("moka", ct);
+            Assert.Equal((onSale.Code, "moka-coffee-maker", ProductStatus.Active), (product!.Code, product.Slug.In("en"), product.Status));
+            Assert.Equal("COOKWARE", await addresses.CategoryAsync("menaje", ct));
+            Assert.Null(await addresses.ProductAsync("unknown", ct));
+            Assert.Null(await addresses.CategoryAsync("unknown", ct));
+        }
+    }
 }

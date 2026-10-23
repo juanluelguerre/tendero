@@ -34,6 +34,9 @@ internal sealed class FakeShopify : HttpMessageHandler
 
     public string InventoryFixture { get; set; } = "inventory.jsonl";
 
+    /// <summary>Two collections: "cocina" with both products, "ofertas" with none.</summary>
+    public string CollectionsFixture { get; set; } = "collections.jsonl";
+
     /// <summary>The store's locations: Madrid and Barcelona mapped, Bilbao not.</summary>
     public string Locations { get; set; } =
         """[{"id":"gid://shopify/Location/71","name":"Almacén central (Madrid)","isActive":true},{"id":"gid://shopify/Location/72","name":"Almacén norte (Barcelona)","isActive":true},{"id":"gid://shopify/Location/73","name":"Tienda de Bilbao","isActive":true}]""";
@@ -51,8 +54,13 @@ internal sealed class FakeShopify : HttpMessageHandler
 
         if (request.RequestUri == ResultsFile)
         {
-            // The file the last bulk query wrote: the stock's, or the catalogue's.
-            var fixture = LastBulkQuery?.Contains("productVariants", StringComparison.Ordinal) == true ? InventoryFixture : ResultsFixture;
+            // The file the last bulk query wrote: the stock's, the collections', or the catalogue's.
+            var fixture = LastBulkQuery switch
+            {
+                { } bulk when bulk.Contains("productVariants", StringComparison.Ordinal) => InventoryFixture,
+                { } bulk when bulk.Contains("{ collections", StringComparison.Ordinal) => CollectionsFixture,
+                _ => ResultsFixture,
+            };
             return Text(File.ReadAllText(Fixture(fixture)), "application/jsonl");
         }
 

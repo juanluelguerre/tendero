@@ -128,6 +128,12 @@ classDiagram
         Active
         Archived
     }
+    class SourceCollection {
+        +string Source
+        +string Handle
+        +string CategoryCode
+        +DateTimeOffset UpdatedAt
+    }
     class Variant {
         +VariantId Id
         +string Sku

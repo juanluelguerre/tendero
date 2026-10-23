@@ -1,0 +1,4 @@
+{"id":"gid://shopify/Collection/301","handle":"cocina","title":"Cocina"}
+{"id":"gid://shopify/Product/8001","__parentId":"gid://shopify/Collection/301"}
+{"id":"gid://shopify/Product/8002","__parentId":"gid://shopify/Collection/301"}
+{"id":"gid://shopify/Collection/302","handle":"ofertas","title":"Ofertas"}

@@ -118,6 +118,8 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             reference.Property(r => r.Handle).HasMaxLength(255);
             reference.HasKey("ProductId", nameof(ExternalReference.Source), nameof(ExternalReference.ExternalId));
             reference.HasIndex(r => new { r.Source, r.ExternalId }).IsUnique();
+            // An old address names a handle and not its source (P16-11).
+            reference.HasIndex(r => r.Handle);
         });
 
         builder.Navigation(p => p.ExternalReferences).AutoInclude();

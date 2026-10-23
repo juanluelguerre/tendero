@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-50 features: **45** answered by a signal emitted today,
+51 features: **46** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -40,6 +40,7 @@ everything here that is not *planned* is emitted.
 | Speak to the shop | Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send? | If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop. | `voice_input_heard`, `voice_transcript_used` | emitted |
 | Kits | Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit? | A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant. | `kit_built`, `kit_added_to_cart`, `kit_sentence_read` | emitted |
 | The shopper's account | Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used? | If almost every signed-in order still types its address, the book is not reachable enough at checkout, and checkout changes before the account grows another section; if checkout fills the book, the account's own form stays plain; a high share of saved cards declined means the wallet warns before expiry, not at the till. Erasure changes nothing in the product: it is the evidence the operation is real, and the number the article quotes. | `checkout_prefilled`, `address_kept_at_checkout`, `saved_method_declined`, `tendero.accounts.erased` | emitted |
+| A store's old addresses | After a shop leaves its store, are the store's old addresses still visited, and do they still lead somewhere? | When redirected requests fall to nothing the table of collections can go; a high share of missing ones says which handles or collections the import did not keep (docs/specs/shopify-leave.md, decision 7). | `tendero.catalog.source_addresses` | emitted |
 
 ### Backoffice
 
@@ -736,7 +737,20 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `catalog.source` | string | — | The source imported from. |
-| `catalog.import.note` | string | `CategoryNotMapped`, `LocaleIgnored`, `DescriptionHadLayout`, `VariantWithoutSku`, `SkuSharedAtSource`, `SkuChangedAtSource`, `ImageUnreadable` | The note's code (ImportNoteCode). |
+| `catalog.import.note` | string | `CategoryNotMapped`, `LocaleIgnored`, `DescriptionHadLayout`, `VariantWithoutSku`, `SkuSharedAtSource`, `SkuChangedAtSource`, `ImageUnreadable`, `CollectionNotMapped` | The note's code (ImportNoteCode). |
+
+### `tendero.catalog.source_addresses`
+
+counter, unit `{request}`. A store's old addresses asked for, by kind and whether they led somewhere.
+
+Answers:
+
+- **A store's old addresses** — After a shop leaves its store, are the store's old addresses still visited, and do they still lead somewhere?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.address.kind` | string | `product`, `collection` | What the old address named: /products/<handle>, or /collections/<handle>. |
+| `catalog.address.outcome` | string | `redirected`, `missing` | Answered with a 301 to a page on sale, or with a 404. |
 
 ### `tendero.inventory.import.levels`
 

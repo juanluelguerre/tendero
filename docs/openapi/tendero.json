@@ -14010,7 +14010,8 @@
           "VariantWithoutSku",
           "SkuSharedAtSource",
           "SkuChangedAtSource",
-          "ImageUnreadable"
+          "ImageUnreadable",
+          "CollectionNotMapped"
         ]
       },
       "ImportProductsCommand": {

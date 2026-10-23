@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261023111953_VariantExternalReferencesAndHandles";
+    public override string LastMigrationId => "20261023191350_SourceCollectionsAndHandleIndex";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -546,6 +546,37 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDatabaseName("ux_products_code");
 
                 b.ToTable("products", "catalog");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.SourceCollection", b =>
+            {
+                b.Property<string>("Source")
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)")
+                    .HasColumnName("source");
+
+                b.Property<string>("Handle")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)")
+                    .HasColumnName("handle");
+
+                b.Property<string>("CategoryCode")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("category_code");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.HasKey("Source", "Handle")
+                    .HasName("pk_source_collections");
+
+                b.HasIndex("Handle")
+                    .HasDatabaseName("ix_source_collections_handle");
+
+                b.ToTable("source_collections", "catalog");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Variant", b =>
@@ -2017,6 +2048,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
 
                         b1.HasKey("ProductId", "Source", "ExternalId")
                             .HasName("pk_product_external_references");
+
+                        b1.HasIndex("Handle")
+                            .HasDatabaseName("ix_product_external_references_handle");
 
                         b1.HasIndex("Source", "ExternalId")
                             .IsUnique()

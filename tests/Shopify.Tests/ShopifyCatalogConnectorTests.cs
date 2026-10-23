@@ -282,4 +282,25 @@ public sealed class ShopifyCatalogConnectorTests
         Assert.Empty(variant.Attributes);
         Assert.Equal("Gres esmaltado\n350 ml", mug.Descriptions!["es"]);
     }
+
+    /// <summary>
+    /// The store's collections, each with its handle and its products by the ids
+    /// they were imported under (P16-11): what the import turns into categories
+    /// for the redirects. An empty collection comes too, and the import says it
+    /// leads nowhere.
+    /// </summary>
+    [Fact]
+    public async Task The_stores_collections_come_with_their_handles_and_products()
+    {
+        var (connector, store) = AConnector();
+
+        var collections = new List<ExternalCollection>();
+        await foreach (var collection in connector.StreamCollectionsAsync(Ct))
+            collections.Add(collection);
+
+        Assert.Equal(
+            [("cocina", "Cocina", "8001,8002"), ("ofertas", "Ofertas", "")],
+            collections.Select(collection => (collection.Handle, collection.Title, string.Join(',', collection.ProductExternalIds))));
+        Assert.Contains("groupObjects: true", store.LastBulkQuery, StringComparison.Ordinal);
+    }
 }

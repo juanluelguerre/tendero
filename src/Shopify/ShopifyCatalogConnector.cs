@@ -57,6 +57,44 @@ internal sealed class ShopifyCatalogConnector(ShopifyAdmin admin, IOptions<Shopi
             yield return Map(product, shop.Currency, language, languages);
     }
 
+    /// <summary>
+    /// The store's collections, each with its products' ids (P16-11), read from
+    /// a bulk file of its own once the products' has been read: a store runs one
+    /// bulk operation at a time. Grouped, so a collection's products follow it.
+    /// </summary>
+    public async IAsyncEnumerable<ExternalCollection> StreamCollectionsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var file = await admin.RunBulkAsync(ShopifyQueries.Collections, cancellationToken);
+        if (file is null)
+            yield break;
+
+        (string Id, string Handle, string Title, List<string> Products)? reading = null;
+        await foreach (var line in admin.ReadLinesAsync(file, cancellationToken))
+        {
+            var id = ShopifyBulkProducts.IdOf(line.GetProperty("id").GetString());
+            if (!line.TryGetProperty("__parentId", out var parent))
+            {
+                if (reading is { } done)
+                    yield return new ExternalCollection(done.Handle, done.Title, done.Products);
+
+                reading = (id, line.GetProperty("handle").GetString()!, line.GetProperty("title").GetString()!, []);
+                continue;
+            }
+
+            if (reading is not { } collection || ShopifyBulkProducts.IdOf(parent.GetString()) != collection.Id)
+            {
+                throw new ShopifyException(
+                    ShopifyFailure.UngroupedBulkFile,
+                    $"A product of {parent.GetString()} came while reading {reading?.Id ?? "nothing"}: the bulk file is not grouped.");
+            }
+
+            collection.Products.Add(id);
+        }
+
+        if (reading is { } last)
+            yield return new ExternalCollection(last.Handle, last.Title, last.Products);
+    }
+
     private ExternalProduct Map(ShopifyProduct product, string currency, string language, IReadOnlySet<string> translated)
     {
         var names = new Dictionary<string, string> { [language] = product.Title };

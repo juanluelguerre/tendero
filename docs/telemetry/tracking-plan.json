@@ -484,6 +484,15 @@
         "tendero.inventory.import.levels",
         "tendero.inventory.import.notes"
       ]
+    },
+    {
+      "name": "A store's old addresses",
+      "area": "storefront",
+      "question": "After a shop leaves its store, are the store's old addresses still visited, and do they still lead somewhere?",
+      "decision": "When redirected requests fall to nothing the table of collections can go; a high share of missing ones says which handles or collections the import did not keep (docs/specs/shopify-leave.md, decision 7).",
+      "signals": [
+        "tendero.catalog.source_addresses"
+      ]
     }
   ],
   "events": [
@@ -1648,9 +1657,34 @@
             "VariantWithoutSku",
             "SkuSharedAtSource",
             "SkuChangedAtSource",
-            "ImageUnreadable"
+            "ImageUnreadable",
+            "CollectionNotMapped"
           ],
           "description": "The note's code (ImportNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.catalog.source_addresses",
+      "instrument": "counter",
+      "unit": "{request}",
+      "description": "A store's old addresses asked for, by kind and whether they led somewhere.",
+      "attributes": {
+        "catalog.address.kind": {
+          "type": "string",
+          "values": [
+            "product",
+            "collection"
+          ],
+          "description": "What the old address named: /products/<handle>, or /collections/<handle>."
+        },
+        "catalog.address.outcome": {
+          "type": "string",
+          "values": [
+            "redirected",
+            "missing"
+          ],
+          "description": "Answered with a 301 to a page on sale, or with a 404."
         }
       }
     },

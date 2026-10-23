@@ -239,7 +239,28 @@ locations, publications, navigation).
   `/c/<code>`, from the handles S1 keeps and the store's collections mapped to a
   category (one whose products share it; otherwise a note). The storefront's
   development server forwards those paths to the API; a production host does
-  the same — **M**
+  the same — **M**. *As built (2026-10-23)*: the source's port gained
+  `StreamCollectionsAsync` (empty by default), and Shopify reads every
+  collection with its products in a bulk operation of its own. The import keeps
+  each collection as the **deepest category all its saved products are in**
+  (`CategoryTree.SharedBy`) — a department's collection becomes the department,
+  or the subcategory when all its products are in one — in
+  `catalog.source_collections`; a collection with no category in common, or
+  none of whose products came in, is a `CollectionNotMapped` note. The API
+  answers `/products/<handle>`, `/collections/<c>/products/<handle>` and
+  `/collections/<handle>`, each also under `/es/` or `/en/` as a store with two
+  languages writes them, with a 301 to `/<culture>/p/<slug>/<code>` or
+  `/<culture>/c/<code>` — the culture from the path, else the browser's. **A
+  product redirects only when it is on sale**: before publication, or after a
+  withdrawal, the answer is 404, because a permanent redirect to a page that
+  answers 404 is cached by every browser and crawler. The endpoints are outside
+  the OpenAPI document (addresses for browsers, not a client's API).
+  Measured against the store: all 30 seeded collections lead to a page, 27 to
+  their own category and 3 to a subcategory holding all their products. Not
+  covered: a store's *translated* handles (`/en/products/<english-handle>`),
+  which the import does not read; the base handle under `/en/` works.
+  `tendero.catalog.source_addresses` counts what is asked and whether it led
+  somewhere.
 - `P16-12` **Bulk publication**: a person publishes what one migration
   brought, in one audited operation (ADR 0012 amended) — **S**
 - `P16-13` **The rehearsal**: the import and the stock import run with nothing

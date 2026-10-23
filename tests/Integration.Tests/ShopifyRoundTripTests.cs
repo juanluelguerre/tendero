@@ -2,6 +2,7 @@ using System.Text.Json;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Shopify;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,19 +66,7 @@ public sealed class ShopifyRoundTripTests
         Assert.SkipWhen(secrets is null, "needs a Shopify development store's credentials in the AppHost's user secrets");
         var ct = TestContext.Current.CancellationToken;
 
-        var settings = new Dictionary<string, string?>(secrets!.ToDictionary(pair => pair.Key, pair => (string?)pair.Value))
-        {
-            ["Shopify:CategoriesFile"] = Seed(Path.Combine("tools", "shopify-seed", "categories.json")),
-            ["Catalog:Connectors:Seed:FilePath"] = Seed(Path.Combine("seed", "products.sample.json")),
-            ["Catalog:Attributes:FilePath"] = Seed(Path.Combine("seed", "attributes.sample.json")),
-            ["Catalog:Categories:FilePath"] = Seed(Path.Combine("seed", "categories.sample.json")),
-        };
-        var services = new ServiceCollection();
-        services.AddLogging();
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
-        services.AddCatalog(configuration);
-        services.AddShopify(configuration);
-        await using var provider = services.BuildServiceProvider();
+        await using var provider = Services(secrets!);
         await using var scope = provider.CreateAsyncScope();
 
         var definitions = await scope.ServiceProvider.GetRequiredService<IAttributeDefinitionReader>().AllAsync(ct);
@@ -100,6 +89,70 @@ public sealed class ShopifyRoundTripTests
         Assert.True(differences.Count == 0,
             $"{differences.Count} differences over {seed.Count} products:\n{string.Join('\n', differences)}");
         Assert.Empty(shopify.SourceNotes);
+    }
+
+    /// <summary>
+    /// The store's collections as the categories the import keeps for the
+    /// redirects (P16-11; spec, *Measures*: every known address leads to a live
+    /// page). tools/shopify-seed/collections.mjs made one per category that has
+    /// products, named for its Spanish name; each must become that category, or
+    /// one below it when all its products are in one subcategory — the page
+    /// shows the same products. A collection the seeding did not make (Shopify's
+    /// own, say) is reported, not judged.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task Each_collection_seeded_into_the_store_leads_to_its_category()
+    {
+        var secrets = StoreSecrets();
+        Assert.SkipWhen(secrets is null, "needs a Shopify development store's credentials in the AppHost's user secrets");
+        var ct = TestContext.Current.CancellationToken;
+
+        await using var provider = Services(secrets!);
+        await using var scope = provider.CreateAsyncScope();
+
+        var tree = await scope.ServiceProvider.GetRequiredService<ICategoryReader>().AllAsync(ct);
+        var seeded = tree.All.ToDictionary(category => Slugs.Of(category.Name.In("es")), category => category.Code);
+        var shopify = scope.ServiceProvider.GetRequiredKeyedService<ICatalogSourceConnector>("shopify");
+        var categoryOf = (await All(shopify, ct)).ToDictionary(product => product.ExternalId, product => product.Category);
+
+        var wrong = new List<string>();
+        var exact = 0;
+        var collections = 0;
+        await foreach (var collection in shopify.StreamCollectionsAsync(ct))
+        {
+            if (!seeded.TryGetValue(collection.Handle, out var expected))
+                continue;
+
+            collections++;
+            var kept = tree.SharedBy(collection.ProductExternalIds.Select(id => categoryOf.GetValueOrDefault(id)));
+            if (kept == expected)
+                exact++;
+            else if (kept is null || !tree.ByCode(kept)!.Ancestry.Contains(expected))
+                wrong.Add($"{collection.Handle}: expected {expected}, kept {kept ?? "nothing"}");
+        }
+
+        TestContext.Current.SendDiagnosticMessage($"{exact} of {collections} collections lead to their own category; the rest to one below it.");
+        Assert.True(collections > 0, "the store has none of the seeded collections: run tools/shopify-seed/collections.mjs");
+        Assert.True(wrong.Count == 0, string.Join('\n', wrong));
+    }
+
+    /// <summary>The catalogue and the Shopify source, configured as the API is, over the seed's files.</summary>
+    private static ServiceProvider Services(Dictionary<string, string> secrets)
+    {
+        var settings = new Dictionary<string, string?>(secrets.ToDictionary(pair => pair.Key, pair => (string?)pair.Value))
+        {
+            ["Shopify:CategoriesFile"] = Seed(Path.Combine("tools", "shopify-seed", "categories.json")),
+            ["Catalog:Connectors:Seed:FilePath"] = Seed(Path.Combine("seed", "products.sample.json")),
+            ["Catalog:Attributes:FilePath"] = Seed(Path.Combine("seed", "attributes.sample.json")),
+            ["Catalog:Categories:FilePath"] = Seed(Path.Combine("seed", "categories.sample.json")),
+        };
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        services.AddCatalog(configuration);
+        services.AddShopify(configuration);
+        return services.BuildServiceProvider();
     }
 
     /// <summary>

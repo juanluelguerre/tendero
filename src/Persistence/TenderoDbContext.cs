@@ -26,6 +26,10 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<AddressBook> AddressBooks => Set<AddressBook>();
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<Product> Products => Set<Product>();
+
+    /// <summary>A source's collections as the categories they are here: the redirects' table (phase 16, P16-11).</summary>
+    public DbSet<SourceCollection> SourceCollections => Set<SourceCollection>();
+
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CheckoutSession> CheckoutSessions => Set<CheckoutSession>();
@@ -73,6 +77,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new AddressBookConfiguration());
         modelBuilder.ApplyConfiguration(new WalletConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
+        modelBuilder.ApplyConfiguration(new SourceCollectionConfiguration());
         modelBuilder.ApplyConfiguration(new VariantConfiguration());
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
         modelBuilder.ApplyConfiguration(new CartConfiguration());

@@ -2427,7 +2427,7 @@ export interface components {
         /** @enum {unknown} */
         ImageShowsOutcome: "Shown" | "Unchanged" | "NoSuchImage" | "NotSold" | "Archived" | "NotFound";
         /** @enum {unknown} */
-        ImportNoteCode: "CategoryNotMapped" | "LocaleIgnored" | "DescriptionHadLayout" | "VariantWithoutSku" | "SkuSharedAtSource" | "SkuChangedAtSource" | "ImageUnreadable";
+        ImportNoteCode: "CategoryNotMapped" | "LocaleIgnored" | "DescriptionHadLayout" | "VariantWithoutSku" | "SkuSharedAtSource" | "SkuChangedAtSource" | "ImageUnreadable" | "CollectionNotMapped";
         ImportProductsCommand: {
             source: string;
             /** @default es */

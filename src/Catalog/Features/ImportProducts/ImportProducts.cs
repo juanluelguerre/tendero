@@ -70,6 +70,8 @@ public sealed class ImportProductsHandler(
     IExternalImageReader imageReader,
     IImageStore imageStore,
     IAttributeDefinitionReader attributeDefinitions,
+    ICategoryReader categories,
+    ISourceCollections collections,
     TimeProvider clock,
     ILogger<ImportProductsHandler> logger)
     : ICommandHandler<ImportProductsCommand, ImportProductsResult>
@@ -118,6 +120,7 @@ public sealed class ImportProductsHandler(
         }
 
         await FlushAsync(tally, cancellationToken);
+        await KeepCollectionsAsync(connector, tally, cancellationToken);
 
         stopwatch.Stop();
         activity?.SetTag("catalog.import.created", tally.Created);
@@ -160,12 +163,14 @@ public sealed class ImportProductsHandler(
             var product = external.ToNewProduct(source, clock, definitions);
             await IngestImagesAsync(product, external, definitions, tally, cancellationToken);
             repository.Add(product);
+            tally.PendingCategories[external.ExternalId] = product.Category;
             tally.Created++;
         }
         else
         {
             external.ApplyTo(existing, clock, definitions, source);
             await IngestImagesAsync(existing, external, definitions, tally, cancellationToken);
+            tally.PendingCategories[external.ExternalId] = existing.Category;
             tally.Updated++;
         }
 
@@ -275,6 +280,51 @@ public sealed class ImportProductsHandler(
     }
 
     /// <summary>
+    /// The source's collections as categories (phase 16, P16-11): each is the
+    /// category its saved products share, kept by its handle for the redirects.
+    /// One whose products share none — or none of whose products came in — is a
+    /// note: sending its old address to a category close by would be a guess.
+    ///
+    /// Read once the products are in, because a collection is read against
+    /// what was saved, not what was streamed. If its batch cannot be saved, the
+    /// products are already in and the answer still says so; the collections
+    /// wait for the next import, which keeps them again.
+    /// </summary>
+    private async Task KeepCollectionsAsync(ICatalogSourceConnector connector, ImportTally tally, CancellationToken cancellationToken)
+    {
+        CategoryTree? tree = null;
+        var kept = 0;
+
+        await foreach (var collection in connector.StreamCollectionsAsync(cancellationToken))
+        {
+            tree ??= await categories.AllAsync(cancellationToken);
+            var saved = collection.ProductExternalIds.Where(tally.Categories.ContainsKey).Select(id => tally.Categories[id]);
+
+            if (tree.SharedBy(saved) is { } category)
+            {
+                await collections.KeepAsync(connector.Source, collection.Handle, category, cancellationToken);
+                kept++;
+            }
+            else
+            {
+                tally.Notes.Add(new SourceNote(ImportNoteCode.CollectionNotMapped, collection.Handle, collection.Title));
+            }
+        }
+
+        if (kept == 0)
+            return;
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(exception, "The {Count} collections of {Source} could not be saved", kept, connector.Source);
+        }
+    }
+
+    /// <summary>
     /// A SKU the source renamed on a variant this shop already sells. Ours stays —
     /// Inventory, the cart and every order speak it — and a person is told
     /// (phase 16, spec *Re-importing*, corrected).
@@ -304,6 +354,12 @@ public sealed class ImportProductsHandler(
         public int Failed { get; set; }
         public int Pending { get; set; }
 
+        /// <summary>Each product saved, by its external id, with its category: what a collection is read against.</summary>
+        public Dictionary<string, string?> Categories { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>The batch's products, until it is saved.</summary>
+        public Dictionary<string, string?> PendingCategories { get; } = new(StringComparer.Ordinal);
+
         /// <summary>What did not come across cleanly. Kept when a batch is lost: it is about the source.</summary>
         public List<SourceNote> Notes { get; } = [];
 
@@ -311,6 +367,9 @@ public sealed class ImportProductsHandler(
         {
             this.createdWhenLastFlushed = Created;
             this.updatedWhenLastFlushed = Updated;
+            foreach (var (id, category) in PendingCategories)
+                Categories[id] = category;
+            PendingCategories.Clear();
             Pending = 0;
         }
 
@@ -319,6 +378,7 @@ public sealed class ImportProductsHandler(
             Failed += Created - this.createdWhenLastFlushed + (Updated - this.updatedWhenLastFlushed);
             Created = this.createdWhenLastFlushed;
             Updated = this.updatedWhenLastFlushed;
+            PendingCategories.Clear();
             Pending = 0;
         }
     }

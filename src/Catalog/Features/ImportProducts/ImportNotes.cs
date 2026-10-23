@@ -41,6 +41,9 @@ internal static class ImportNotes
             ImportNoteCode.ImageUnreadable => english
                 ? $"{about}a picture could not be read ({detail}); the product was imported without it."
                 : $"{about}no se ha podido leer una imagen ({detail}); el producto se ha importado sin ella.",
+            ImportNoteCode.CollectionNotMapped => english
+                ? $"{about}the collection “{detail}” holds products that share no category here; its old address will not be redirected."
+                : $"{about}la colección «{detail}» agrupa productos que no comparten ninguna categoría aquí; su dirección antigua no se redirigirá.",
         };
     }
 }

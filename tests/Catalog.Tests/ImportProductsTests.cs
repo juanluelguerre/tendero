@@ -229,10 +229,51 @@ public sealed class ImportProductsTests
         Assert.Equal(2, recorder.Sum("tendero.catalog.import.notes"));
     }
 
+    /// <summary>
+    /// A store's collection becomes the category its products share, so its old
+    /// address can be sent to the category's page (phase 16, P16-11). Kept by
+    /// the source's handle, the name in its URLs.
+    /// </summary>
+    [Fact]
+    public async Task A_collection_is_kept_as_the_category_its_products_share()
+    {
+        var shop = new Shop();
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId])];
+
+        await shop.ImportAsync();
+
+        Assert.Equal([("test", "menaje", "COOKWARE")], shop.Collections.Kept);
+        Assert.Empty(shop.Result.Notes);
+    }
+
+    /// <summary>
+    /// A collection that is no category's page — its products share none, or
+    /// none of them came in — is said, not sent somewhere close.
+    /// </summary>
+    [Theory]
+    [InlineData(null, OneProductConnector.ExternalId)]
+    [InlineData("COOKWARE", "NEVER_IMPORTED")]
+    public async Task A_collection_that_is_no_category_is_said(string? category, string member)
+    {
+        var shop = new Shop { Culture = "en" };
+        shop.Source.Category = category;
+        shop.Source.Collections = [new ExternalCollection("ofertas", "Ofertas", [member])];
+
+        await shop.ImportAsync();
+
+        Assert.Empty(shop.Collections.Kept);
+        var note = Assert.Single(shop.Result.Notes);
+        Assert.Equal((ImportNoteCode.CollectionNotMapped, "ofertas"), (note.Code, note.About));
+        Assert.Contains("Ofertas", note.Text, StringComparison.Ordinal);
+    }
+
     private sealed class Shop
     {
         private readonly InMemoryProductRepository repository = new();
         private readonly OneProductConnector connector = new();
+
+        public KeptCollections Collections { get; } = new();
 
         public Product Product { get; private set; } = null!;
 
@@ -264,6 +305,8 @@ public sealed class ImportProductsTests
                 new ReadableImages(),
                 new ContentAddressedStore(),
                 new NoAttributeDefinitions(),
+                new KitchenCategories(),
+                this.Collections,
                 Clock,
                 NullLogger<ImportProductsHandler>.Instance);
 
@@ -295,7 +338,19 @@ public sealed class ImportProductsTests
 
         public IReadOnlyList<SourceNote> SourceNotes { get; set; } = [];
 
+        public string? Category { get; set; }
+
+        public IReadOnlyList<ExternalCollection> Collections { get; set; } = [];
+
         public string Source => Key;
+
+        public async IAsyncEnumerable<ExternalCollection> StreamCollectionsAsync(
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.CompletedTask;
+            foreach (var collection in Collections)
+                yield return collection;
+        }
 
         public async IAsyncEnumerable<ExternalProduct> StreamProductsAsync(
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -307,7 +362,7 @@ public sealed class ImportProductsTests
                 new Dictionary<string, string> { ["es"] = "Cafetera de goteo", ["en"] = "Drip coffee maker" },
                 Descriptions: null,
                 Brand: "Kuisina",
-                Category: null,
+                Category: Category,
                 PriceAmount: 49.90m,
                 PriceCurrency: "EUR",
                 [.. Images.Select(location => new ExternalImage(location, Shows: Shows.GetValueOrDefault(location)))],
@@ -343,6 +398,27 @@ public sealed class ImportProductsTests
 
         public Task<StoredImage?> OpenAsync(ImageId id, CancellationToken ct = default) =>
             Task.FromResult<StoredImage?>(null);
+    }
+
+    private sealed class KitchenCategories : ICategoryReader
+    {
+        public Task<CategoryTree> AllAsync(CancellationToken cancellationToken = default)
+        {
+            var kitchen = Category.Define(Clock, "KITCHEN", LocalizedText.From("es", "Cocina"));
+            return Task.FromResult(new CategoryTree([kitchen, Category.Define(Clock, "COOKWARE", LocalizedText.From("es", "Menaje"), kitchen)]));
+        }
+    }
+
+    /// <summary>The collections an import kept, as (source, handle, category).</summary>
+    private sealed class KeptCollections : ISourceCollections
+    {
+        public List<(string Source, string Handle, string Category)> Kept { get; } = [];
+
+        public Task KeepAsync(string source, string handle, string categoryCode, CancellationToken ct)
+        {
+            Kept.Add((source, handle, categoryCode));
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class NoAttributeDefinitions : IAttributeDefinitionReader
