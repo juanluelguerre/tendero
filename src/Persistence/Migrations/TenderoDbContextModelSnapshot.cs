@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261020232809_WalletsPreferencesAndErasure";
+    public override string LastMigrationId => "20261023111953_VariantExternalReferencesAndHandles";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -553,6 +553,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("uuid")
                     .HasColumnName("id");
+
+                b.Property<string>("Barcode")
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("barcode");
 
                 b.Property<Guid?>("ProductId")
                     .HasColumnType("uuid")
@@ -2005,6 +2010,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .HasColumnType("character varying(400)")
                             .HasColumnName("external_id");
 
+                        b1.Property<string>("Handle")
+                            .HasMaxLength(255)
+                            .HasColumnType("character varying(255)")
+                            .HasColumnName("handle");
+
                         b1.HasKey("ProductId", "Source", "ExternalId")
                             .HasName("pk_product_external_references");
 
@@ -2029,6 +2039,38 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("ProductId")
                     .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("fk_variants_products_product_id");
+
+                b.OwnsMany("ElGuerre.Tendero.Catalog.Domain.ExternalReference", "ExternalReferences", b1 =>
+                    {
+                        b1.Property<Guid>("VariantId")
+                            .HasColumnType("uuid")
+                            .HasColumnName("variant_id");
+
+                        b1.Property<string>("Source")
+                            .HasMaxLength(50)
+                            .HasColumnType("character varying(50)")
+                            .HasColumnName("source");
+
+                        b1.Property<string>("ExternalId")
+                            .HasMaxLength(400)
+                            .HasColumnType("character varying(400)")
+                            .HasColumnName("external_id");
+
+                        b1.HasKey("VariantId", "Source", "ExternalId")
+                            .HasName("pk_variant_external_references");
+
+                        b1.HasIndex("Source", "ExternalId")
+                            .IsUnique()
+                            .HasDatabaseName("ix_variant_external_references_source_external_id");
+
+                        b1.ToTable("variant_external_references", "catalog");
+
+                        b1.WithOwner()
+                            .HasForeignKey("VariantId")
+                            .HasConstraintName("fk_variant_external_references_variants_variant_id");
+                    });
+
+                b.Navigation("ExternalReferences");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>

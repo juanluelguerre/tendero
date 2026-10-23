@@ -13,9 +13,14 @@ using Microsoft.Extensions.Logging;
 
 namespace ElGuerre.Tendero.Catalog.Features.ImportProducts;
 
-public sealed record ImportProductsCommand(string Source) : ICommand<ImportProductsResult>;
+/// <param name="Culture">The language the notes are said in: the endpoint's <c>?culture=</c> or
+/// <c>Accept-Language</c>, as every endpoint picks it (ADR 0013).</param>
+public sealed record ImportProductsCommand(string Source, string Culture = "es") : ICommand<ImportProductsResult>;
 
-public sealed record ImportProductsResult(int Created, int Updated, int Failed, double ElapsedSeconds);
+/// <param name="Notes">What the source could not hand over cleanly, a note per thing
+/// (phase 16, P16-5): a person reads them instead of the logs.</param>
+public sealed record ImportProductsResult(
+    int Created, int Updated, int Failed, double ElapsedSeconds, IReadOnlyList<Message<ImportNoteCode>> Notes);
 
 public sealed class ImportProductsValidator : AbstractValidator<ImportProductsCommand>
 {
@@ -43,9 +48,13 @@ public sealed class ImportProductsEndpoint : ICarterModule
         // POST /api/catalog/import  { "source": "seed" }
         app.MapPost("/api/catalog/import",
             async Task<Ok<ImportProductsResult>> (
-                   ImportProductsCommand command, ICommandDispatcher dispatcher, CancellationToken ct) =>
+                   ImportProductsCommand command, string? culture, HttpContext http,
+                   ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
-                var result = await dispatcher.SendAsync(command, ct);
+                var language = CultureNegotiation.Resolve(culture, http.Request.Headers.AcceptLanguage);
+                var result = await dispatcher.SendAsync(command with { Culture = language }, ct);
+                http.Response.Headers.ContentLanguage = language;
+                http.Response.Headers.Vary = "Accept-Language";
                 return TypedResults.Ok(result);
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
@@ -119,8 +128,13 @@ public sealed class ImportProductsHandler(
             "Import from {Source}: {Created} created, {Updated} updated, {Failed} failed in {Elapsed:0.0}s",
             connector.Source, tally.Created, tally.Updated, tally.Failed, stopwatch.Elapsed.TotalSeconds);
 
+        tally.Notes.AddRange(connector.SourceNotes);
+        ImportMetrics.Record(connector.Source, tally.Created, tally.Updated, tally.Failed, tally.Notes);
+        var english = command.Culture == "en";
+
         return new ImportProductsResult(
-            tally.Created, tally.Updated, tally.Failed, stopwatch.Elapsed.TotalSeconds);
+            tally.Created, tally.Updated, tally.Failed, stopwatch.Elapsed.TotalSeconds,
+            [.. tally.Notes.Select(note => ImportNotes.Said(note, english))]);
     }
 
     /// <summary>
@@ -136,17 +150,22 @@ public sealed class ImportProductsHandler(
         var existing = await repository.FindByExternalReferenceAsync(
             source, external.ExternalId, cancellationToken);
 
+        if (external.Notes is { } notes)
+            tally.Notes.AddRange(notes);
+        if (existing is not null)
+            tally.Notes.AddRange(RenamedSkus(existing, external, source));
+
         if (existing is null)
         {
             var product = external.ToNewProduct(source, clock, definitions);
-            await IngestImagesAsync(product, external, definitions, cancellationToken);
+            await IngestImagesAsync(product, external, definitions, tally, cancellationToken);
             repository.Add(product);
             tally.Created++;
         }
         else
         {
-            external.ApplyTo(existing, clock, definitions);
-            await IngestImagesAsync(existing, external, definitions, cancellationToken);
+            external.ApplyTo(existing, clock, definitions, source);
+            await IngestImagesAsync(existing, external, definitions, tally, cancellationToken);
             tally.Updated++;
         }
 
@@ -209,7 +228,8 @@ public sealed class ImportProductsHandler(
     /// source's mistake costs the tag, never the product.
     /// </summary>
     private async Task IngestImagesAsync(
-        Product product, ExternalProduct external, AttributeDefinitions definitions, CancellationToken cancellationToken)
+        Product product, ExternalProduct external, AttributeDefinitions definitions, ImportTally tally,
+        CancellationToken cancellationToken)
     {
         var ingested = new List<(ImageId Id, LocalizedText? Alt)>(external.Images.Count);
         var shown = new List<(ImageId Id, IReadOnlyDictionary<string, string> Shows)>();
@@ -218,7 +238,10 @@ public sealed class ImportProductsHandler(
         {
             var content = await imageReader.OpenAsync(image, cancellationToken);
             if (content is null)
+            {
+                tally.Notes.Add(new SourceNote(ImportNoteCode.ImageUnreadable, external.ExternalId, image.Location.ToString()));
                 continue;
+            }
 
             await using var stream = content.Content;
             var id = await imageStore.SaveAsync(stream, content.ContentType, cancellationToken);
@@ -252,6 +275,21 @@ public sealed class ImportProductsHandler(
     }
 
     /// <summary>
+    /// A SKU the source renamed on a variant this shop already sells. Ours stays —
+    /// Inventory, the cart and every order speak it — and a person is told
+    /// (phase 16, spec *Re-importing*, corrected).
+    /// </summary>
+    private static IEnumerable<SourceNote> RenamedSkus(Product existing, ExternalProduct external, string source) =>
+        (external.Variants ?? [])
+            .Where(variant => variant is { ExternalId: not null, Sku.Length: > 0 })
+            // A SKU its siblings share was never ours to keep, and is noted as shared.
+            .Where(variant => external.Variants!.Count(sibling =>
+                string.Equals(sibling.Sku?.Trim(), variant.Sku!.Trim(), StringComparison.OrdinalIgnoreCase)) == 1)
+            .Select(variant => (Ours: existing.VariantFromSource(source, variant.ExternalId!)?.Sku, Theirs: variant.Sku!.Trim()))
+            .Where(skus => skus.Ours is not null && !string.Equals(skus.Ours, skus.Theirs, StringComparison.OrdinalIgnoreCase))
+            .Select(skus => new SourceNote(ImportNoteCode.SkuChangedAtSource, external.ExternalId, $"{skus.Ours} → {skus.Theirs}"));
+
+    /// <summary>
     /// The import's counters. A type and not four local variables, because the
     /// flush has to be able to CORRECT them: until the batch is in Postgres,
     /// "created" is an intention and not a fact.
@@ -265,6 +303,9 @@ public sealed class ImportProductsHandler(
         public int Updated { get; set; }
         public int Failed { get; set; }
         public int Pending { get; set; }
+
+        /// <summary>What did not come across cleanly. Kept when a batch is lost: it is about the source.</summary>
+        public List<SourceNote> Notes { get; } = [];
 
         public void MarkFlushed()
         {

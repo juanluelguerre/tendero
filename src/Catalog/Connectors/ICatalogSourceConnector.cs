@@ -17,7 +17,52 @@ public interface ICatalogSourceConnector
     /// catalogue of 150k products must not be loaded whole into memory.
     /// </summary>
     IAsyncEnumerable<ExternalProduct> StreamProductsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// What the source as a whole did not hand over cleanly, known once the
+    /// stream has been read — a language the shop does not speak, say (phase 16,
+    /// P16-5). What concerns one product travels on it, in
+    /// <see cref="ExternalProduct.Notes"/>. A source with nothing to say says
+    /// nothing, which is the default.
+    /// </summary>
+    IReadOnlyList<SourceNote> SourceNotes => [];
 }
+
+/// <summary>
+/// What did not come across cleanly from a source, as a closed set the import's
+/// answer names (phase 16, docs/specs/shopify-import.md, *What the import says
+/// beside its counts*).
+/// </summary>
+public enum ImportNoteCode
+{
+    /// <summary>The source's category has no category here; the product came without one.</summary>
+    CategoryNotMapped,
+
+    /// <summary>The source publishes a language the shop does not speak; its texts were not read.</summary>
+    LocaleIgnored,
+
+    /// <summary>A description held a table or a list, kept as plain lines.</summary>
+    DescriptionHadLayout,
+
+    /// <summary>A variant had no SKU at the source and was given ours.</summary>
+    VariantWithoutSku,
+
+    /// <summary>Several variants shared one SKU at the source; each was given ours.</summary>
+    SkuSharedAtSource,
+
+    /// <summary>The source renamed a variant's SKU; ours, which stock and orders speak, stays.</summary>
+    SkuChangedAtSource,
+
+    /// <summary>A picture could not be read; the product came without it.</summary>
+    ImageUnreadable,
+}
+
+/// <summary>
+/// One note from a source: its code, what it is about (a product's external id,
+/// or null for the source as a whole), and the source's own detail — the
+/// category's name, the locale, the variant's id.
+/// </summary>
+public sealed record SourceNote(ImportNoteCode Code, string? About, string? Detail);
 
 /// <summary>
 /// The contract's DTO, multilingual from the source: texts arrive as culture ->
@@ -55,7 +100,18 @@ public sealed record ExternalProduct(
     /// size — or null when it draws no such distinction and the product is
     /// bought one way (ADR 0015: it then gets its default variant).
     /// </summary>
-    IReadOnlyList<ExternalVariant>? Variants = null)
+    IReadOnlyList<ExternalVariant>? Variants = null,
+
+    /// <summary>
+    /// The product's name in the source's own URLs — a Shopify handle,
+    /// <c>moka-coffee-maker</c> — or null when the source has none. Kept beside
+    /// the id, which never changes while this may, so that a shop leaving the
+    /// source can redirect its old addresses (phase 16, spec decision 4).
+    /// </summary>
+    string? Handle = null,
+
+    /// <summary>What the source could not hand over cleanly about this product (phase 16, P16-5).</summary>
+    IReadOnlyList<SourceNote>? Notes = null)
 {
     public Money Price => new(PriceAmount, PriceCurrency);
 
@@ -74,7 +130,22 @@ public sealed record ExternalProduct(
 /// <param name="Attributes">What it varies by, in the source's words — the same
 /// keys and values a product's attributes arrive in (<c>color: negro</c>), and
 /// resolved against the same definitions.</param>
-public sealed record ExternalVariant(string Key, IReadOnlyDictionary<string, string> Attributes);
+/// <param name="ExternalId">The source's own id for the variant, when it has one
+/// (a Shopify store's do; the seed's do not). A variant is found again by it, so
+/// a SKU renamed at the source adds no second variant (phase 16).</param>
+/// <param name="Sku">The source's SKU, when it has one. It becomes ours when no
+/// sibling shares it (spec decision 1); otherwise ours is the product's id and
+/// <paramref name="Key"/>.</param>
+/// <param name="Barcode">The source's barcode (EAN, UPC), when it has one.</param>
+/// <param name="PriceAmount">What the source sells this variant for, in the
+/// product's currency, or null when it prices the product alone.</param>
+public sealed record ExternalVariant(
+    string Key,
+    IReadOnlyDictionary<string, string> Attributes,
+    string? ExternalId = null,
+    string? Sku = null,
+    string? Barcode = null,
+    decimal? PriceAmount = null);
 
 /// <summary>
 /// An image as the source offers it. <see cref="Location"/> is a Uri on purpose:

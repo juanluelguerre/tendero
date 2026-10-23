@@ -251,4 +251,116 @@ public sealed class ExternalProductMapperTests
         var field = typeof(Product).GetField("attributes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
         ((List<AttributeValue>)field.GetValue(product)!).Add(value);
     }
+
+    // ---------- a source whose variants have identities of their own (phase 16, P16-2) ----------
+
+    private static ExternalProduct InTwoColoursFromAStore(
+        string? oliveSku = "MOKA-OLV", string? blackSku = "MOKA-BLK", decimal? blackPrice = 32.50m) =>
+        AnExternalProduct() with
+        {
+            Attributes = new Dictionary<string, string>(),
+            Handle = "moka-coffee-maker",
+            Variants =
+            [
+                new ExternalVariant("44001", new Dictionary<string, string> { ["color"] = "oliva" },
+                    ExternalId: "44001", Sku: oliveSku, Barcode: "8400000000011"),
+                new ExternalVariant("44002", new Dictionary<string, string> { ["color"] = "negro" },
+                    ExternalId: "44002", Sku: blackSku, Barcode: "8400000000028", PriceAmount: blackPrice),
+            ],
+        };
+
+    /// <summary>
+    /// A merchant who leaves a store keeps the SKUs printed on their labels: a
+    /// variant the source gives a SKU is sold under it here (spec decision 1).
+    /// </summary>
+    [Fact]
+    public void A_variant_keeps_the_sku_its_source_gave_it()
+    {
+        var product = InTwoColoursFromAStore().ToNewProduct("shopify", Clock, Colours.Defined());
+
+        Assert.Equal(["MOKA-OLV", "MOKA-BLK"], product.Variants.Select(variant => variant.Sku));
+    }
+
+    /// <summary>
+    /// Without one, or with one two variants share, the SKU is ours as before:
+    /// the product's id and the source's key. A shared SKU would make two
+    /// variants one in every other context.
+    /// </summary>
+    [Fact]
+    public void A_variant_with_no_sku_or_a_shared_one_gets_ours()
+    {
+        var withoutOne = InTwoColoursFromAStore(oliveSku: null).ToNewProduct("shopify", Clock, Colours.Defined());
+        var shared = InTwoColoursFromAStore(oliveSku: "MOKA", blackSku: "MOKA").ToNewProduct("shopify", Clock, Colours.Defined());
+
+        Assert.Equal(["B073WXYZ01-44001", "MOKA-BLK"], withoutOne.Variants.Select(variant => variant.Sku));
+        Assert.Equal(["B073WXYZ01-44001", "B073WXYZ01-44002"], shared.Variants.Select(variant => variant.Sku));
+    }
+
+    /// <summary>
+    /// A variant the source prices costs that; one it does not costs the
+    /// product's price, which is all the seed ever says (spec decision 2).
+    /// </summary>
+    [Fact]
+    public void A_variant_costs_its_own_price_when_the_source_gives_one()
+    {
+        var product = InTwoColoursFromAStore().ToNewProduct("shopify", Clock, Colours.Defined());
+
+        Assert.Equal(
+            [("MOKA-OLV", 29.90m), ("MOKA-BLK", 32.50m)],
+            product.Variants.Select(variant => (variant.Sku, variant.Price.Amount)));
+    }
+
+    /// <summary>
+    /// The barcode is the source's, and follows it on every import.
+    /// </summary>
+    [Fact]
+    public void The_barcode_is_kept_and_follows_the_source()
+    {
+        var product = InTwoColoursFromAStore().ToNewProduct("shopify", Clock, Colours.Defined());
+
+        var relabelled = InTwoColoursFromAStore();
+        relabelled = relabelled with
+        {
+            Variants = [relabelled.Variants![0] with { Barcode = "8400000000035" }, relabelled.Variants[1]],
+        };
+        relabelled.ApplyTo(product, Clock, Colours.Defined(), "shopify");
+
+        Assert.Equal(["8400000000035", "8400000000028"], product.Variants.Select(variant => variant.Barcode));
+    }
+
+    /// <summary>
+    /// A variant is found again by the source's id for it, so a SKU renamed in
+    /// the store adds no second variant. And ours is never renamed: Inventory,
+    /// the cart and every order speak it (spec, *Re-importing*, corrected).
+    /// </summary>
+    [Fact]
+    public void A_variant_is_found_by_its_source_id_and_keeps_its_sku_when_the_source_renames_it()
+    {
+        var product = InTwoColoursFromAStore().ToNewProduct("shopify", Clock, Colours.Defined());
+
+        InTwoColoursFromAStore(oliveSku: "MOKA-OLIVE-V2", blackPrice: 30m).ApplyTo(product, Clock, Colours.Defined(), "shopify");
+
+        Assert.Equal(
+            [("MOKA-OLV", 29.90m), ("MOKA-BLK", 30m)],
+            product.Variants.Select(variant => (variant.Sku, variant.Price.Amount)));
+        Assert.Equal(
+            [new ExternalReference("shopify", "44001")],
+            product.Variants[0].ExternalReferences);
+    }
+
+    /// <summary>
+    /// The store's handle — the product's name in its URLs — is kept beside the
+    /// id, so leaving the store can redirect its old addresses with no second
+    /// import (spec decision 4). It follows the source; the link stays one.
+    /// </summary>
+    [Fact]
+    public void The_sources_handle_is_kept_beside_its_id_and_follows_it()
+    {
+        var product = InTwoColoursFromAStore().ToNewProduct("shopify", Clock, Colours.Defined());
+
+        (InTwoColoursFromAStore() with { Handle = "moka-coffee-maker-olive" }).ApplyTo(product, Clock, Colours.Defined(), "shopify");
+
+        var reference = Assert.Single(product.ExternalReferences);
+        Assert.Equal(("shopify", "B073WXYZ01", "moka-coffee-maker-olive"), (reference.Source, reference.ExternalId, reference.Handle));
+    }
 }

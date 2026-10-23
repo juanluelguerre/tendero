@@ -113,6 +113,9 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             reference.WithOwner().HasForeignKey("ProductId");
             reference.Property(r => r.Source).HasMaxLength(50).IsRequired();
             reference.Property(r => r.ExternalId).HasMaxLength(400).IsRequired();
+            // The source's name for it in its URLs (phase 16), for the redirects
+            // a shop leaving the source needs.
+            reference.Property(r => r.Handle).HasMaxLength(255);
             reference.HasKey("ProductId", nameof(ExternalReference.Source), nameof(ExternalReference.ExternalId));
             reference.HasIndex(r => new { r.Source, r.ExternalId }).IsUnique();
         });

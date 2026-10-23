@@ -2371,6 +2371,15 @@
           "Catalog"
         ],
         "operationId": "ImportProducts",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5135,6 +5144,55 @@
         }
       }
     },
+    "/api/search/cards": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "operationId": "GetProductCards",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "codes",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCardsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dashboard/search-status": {
       "get": {
         "tags": [
@@ -5749,55 +5807,6 @@
             ]
           }
         ]
-      }
-    },
-    "/api/search/cards": {
-      "get": {
-        "tags": [
-          "Search"
-        ],
-        "operationId": "GetProductCards",
-        "parameters": [
-          {
-            "name": "ids",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "codes",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "culture",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductCardsResult"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/search/by-image/objects": {
@@ -13903,6 +13912,17 @@
           "NotFound"
         ]
       },
+      "ImportNoteCode": {
+        "enum": [
+          "CategoryNotMapped",
+          "LocaleIgnored",
+          "DescriptionHadLayout",
+          "VariantWithoutSku",
+          "SkuSharedAtSource",
+          "SkuChangedAtSource",
+          "ImageUnreadable"
+        ]
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -13911,6 +13931,10 @@
         "properties": {
           "source": {
             "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
           }
         }
       },
@@ -13919,7 +13943,8 @@
           "created",
           "updated",
           "failed",
-          "elapsedSeconds"
+          "elapsedSeconds",
+          "notes"
         ],
         "type": "object",
         "properties": {
@@ -13938,6 +13963,12 @@
           "elapsedSeconds": {
             "type": "number",
             "format": "double"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfImportNoteCode"
+            }
           }
         }
       },
@@ -14702,6 +14733,28 @@
             "items": {
               "$ref": "#/components/schemas/PastSearch"
             }
+          }
+        }
+      },
+      "MessageOfImportNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ImportNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
           }
         }
       },

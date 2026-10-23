@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Catalog.Adapters;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Connectors.Seed;
+using ElGuerre.Tendero.Catalog.Connectors.Shopify;
 using ElGuerre.Tendero.Catalog.Features.CatalogueGaps;
 using ElGuerre.Tendero.Catalog.Features.ListProducts;
 using ElGuerre.Tendero.Catalog.Features.SetImageAltText;
@@ -24,6 +25,7 @@ public static class CatalogServiceCollectionExtensions
     {
         services.Configure<SeedConnectorOptions>(configuration.GetSection(SeedConnectorOptions.SectionName));
         services.AddKeyedScoped<ICatalogSourceConnector, SeedCatalogConnector>(SeedCatalogConnector.Key);
+        services.AddShopifySource(configuration);
 
         // Registration is the only thing that talks to the container: slices
         // receive the port, not the IServiceProvider.

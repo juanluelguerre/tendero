@@ -1,0 +1,141 @@
+using ElGuerre.Tendero.Catalog.Connectors.Shopify;
+using ElGuerre.Tendero.Tests;
+using Microsoft.Extensions.Options;
+using Xunit;
+
+namespace ElGuerre.Tendero.Catalog.Tests.Shopify;
+
+/// <summary>
+/// The Admin API client (phase 16, P16-3): a token by the client-credentials
+/// grant, kept until it is about to expire; queries to the pinned version; a
+/// bulk operation started, polled and its file read as a stream; and what a
+/// store answers when it is busy, refuses the token or fails the operation.
+/// </summary>
+public sealed class ShopifyAdminTests
+{
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    private static (ShopifyAdmin Admin, FakeShopify Store, TestClock Clock) AStore()
+    {
+        var store = new FakeShopify();
+        var clock = new TestClock();
+        var options = Options.Create(new ShopifyOptions
+        {
+            Store = FakeShopify.Store,
+            ClientId = "client-id",
+            ClientSecret = "client-secret",
+            BulkPollInterval = TimeSpan.Zero,
+            ThrottleBackoff = TimeSpan.Zero,
+        });
+        var http = new HttpClient(store);
+        return (new ShopifyAdmin(http, new ShopifyAccessTokens(http, options, clock), options, clock), store, clock);
+    }
+
+    [Fact]
+    public async Task A_query_goes_to_the_pinned_version_with_the_token()
+    {
+        var (admin, store, _) = AStore();
+
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+
+        var query = store.Requests.Last();
+        Assert.Equal($"https://{FakeShopify.Store}/admin/api/{ShopifyOptions.PinnedApiVersion}/graphql.json", query.RequestUri!.ToString());
+        Assert.Equal(["token-1"], query.Headers.GetValues("X-Shopify-Access-Token"));
+    }
+
+    /// <summary>
+    /// A token lasts 24 hours; it is asked for once and kept, and asked for again
+    /// a few minutes before it would expire rather than after a refusal.
+    /// </summary>
+    [Fact]
+    public async Task A_token_is_asked_for_once_and_again_just_before_it_expires()
+    {
+        var (admin, store, clock) = AStore();
+
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+        clock.Advance(TimeSpan.FromHours(23) + TimeSpan.FromMinutes(56));
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+
+        Assert.Equal(2, store.TokensIssued);
+    }
+
+    [Fact]
+    public async Task A_refused_token_is_asked_for_again_once()
+    {
+        var (admin, store, _) = AStore();
+        store.RefuseFirst = 1;
+
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+
+        Assert.Equal(2, store.TokensIssued);
+    }
+
+    [Fact]
+    public async Task A_store_that_keeps_refusing_says_so()
+    {
+        var (admin, store, _) = AStore();
+        store.RefuseFirst = 2;
+
+        var refused = await Assert.ThrowsAsync<ShopifyException>(() => admin.QueryAsync("{ shop { currencyCode } }", Ct));
+
+        Assert.Equal(ShopifyFailure.Unauthorized, refused.Failure);
+    }
+
+    /// <summary>A busy store answers THROTTLED; the query waits and is asked again.</summary>
+    [Fact]
+    public async Task A_throttled_query_is_asked_again()
+    {
+        var (admin, store, _) = AStore();
+        store.ThrottleFirst = 2;
+
+        var data = await admin.QueryAsync(ShopifyQueries.Shop, Ct);
+
+        Assert.Equal("EUR", data.GetProperty("shop").GetProperty("currencyCode").GetString());
+    }
+
+    /// <summary>
+    /// One bulk operation reads the whole catalogue: started, polled until it
+    /// finishes, and its file read line by line. The file is a signed link and
+    /// is fetched without the store's token.
+    /// </summary>
+    [Fact]
+    public async Task A_bulk_operation_is_run_polled_and_its_file_read_without_the_token()
+    {
+        var (admin, store, _) = AStore();
+
+        var file = await admin.RunBulkAsync(ShopifyQueries.Products(["en"]), Ct);
+        var lines = new List<string>();
+        await foreach (var line in admin.ReadLinesAsync(file!, Ct))
+            lines.Add(line.GetProperty("id").GetString()!);
+
+        Assert.Equal(FakeShopify.ResultsFile, file);
+        Assert.Equal(9, lines.Count);
+        Assert.Contains("groupObjects: true", store.LastBulkQuery, StringComparison.Ordinal);
+        Assert.Contains("metafields(namespace: \\\"tendero\\\")", store.LastBulkQuery, StringComparison.Ordinal);
+        Assert.False(store.Requests.Last().Headers.Contains("X-Shopify-Access-Token"));
+    }
+
+    [Fact]
+    public async Task A_failed_bulk_operation_says_why()
+    {
+        var (admin, store, _) = AStore();
+        store.BulkEnd = ("FAILED", "ACCESS_DENIED");
+
+        var failed = await Assert.ThrowsAsync<ShopifyException>(() => admin.RunBulkAsync(ShopifyQueries.Products([]), Ct));
+
+        Assert.Equal(ShopifyFailure.BulkOperationFailed, failed.Failure);
+        Assert.Contains("ACCESS_DENIED", failed.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_shop_says_its_currency_its_language_and_the_ones_it_publishes()
+    {
+        var (admin, _, _) = AStore();
+
+        var shop = await ShopifyShop.ReadAsync(admin, Ct);
+
+        Assert.Equal(("EUR", "es"), (shop.Currency, shop.PrimaryLocale));
+        Assert.Equal(["es", "en", "fr"], shop.Locales);
+    }
+}

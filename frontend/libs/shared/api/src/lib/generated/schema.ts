@@ -948,6 +948,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetProductCards"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/search-status": {
         parameters: {
             query?: never;
@@ -1054,22 +1070,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ReindexProducts"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/search/cards": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["GetProductCards"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2410,8 +2410,12 @@ export interface components {
         ImageAltOutcome: "Described" | "Unchanged" | "NoSuchImage" | "Archived" | "NotFound";
         /** @enum {unknown} */
         ImageShowsOutcome: "Shown" | "Unchanged" | "NoSuchImage" | "NotSold" | "Archived" | "NotFound";
+        /** @enum {unknown} */
+        ImportNoteCode: "CategoryNotMapped" | "LocaleIgnored" | "DescriptionHadLayout" | "VariantWithoutSku" | "SkuSharedAtSource" | "SkuChangedAtSource" | "ImageUnreadable";
         ImportProductsCommand: {
             source: string;
+            /** @default es */
+            culture: string;
         };
         ImportProductsResult: {
             /** Format: int32 */
@@ -2422,6 +2426,7 @@ export interface components {
             failed: number;
             /** Format: double */
             elapsedSeconds: number;
+            notes: components["schemas"]["MessageOfImportNoteCode"][];
         };
         JsonElement: unknown;
         KeepCardRequest: {
@@ -2598,6 +2603,11 @@ export interface components {
         MergeHistoryRequest: {
             views: null | components["schemas"]["ViewedProduct"][];
             searches: null | components["schemas"]["PastSearch"][];
+        };
+        MessageOfImportNoteCode: {
+            code: components["schemas"]["ImportNoteCode"];
+            about: null | string;
+            text: string;
         };
         MessageOfKitSaid: {
             code: components["schemas"]["KitSaid"];
@@ -5216,7 +5226,9 @@ export interface operations {
     };
     ImportProducts: {
         parameters: {
-            query?: never;
+            query?: {
+                culture?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -6753,6 +6765,30 @@ export interface operations {
             };
         };
     };
+    GetProductCards: {
+        parameters: {
+            query?: {
+                ids?: string[];
+                codes?: string[];
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductCardsResult"];
+                };
+            };
+        };
+    };
     GetSearchStatus: {
         parameters: {
             query?: never;
@@ -7041,30 +7077,6 @@ export interface operations {
                         /** @enum {string} */
                         code?: "Forbidden";
                     } & components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    GetProductCards: {
-        parameters: {
-            query?: {
-                ids?: string[];
-                codes?: string[];
-                culture?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductCardsResult"];
                 };
             };
         };

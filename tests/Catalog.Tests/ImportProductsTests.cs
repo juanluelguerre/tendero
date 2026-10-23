@@ -147,12 +147,101 @@ public sealed class ImportProductsTests
         Assert.Equal(3, shop.Product.Variants.Count);
     }
 
+    // ---------- what the import says beside its counts (phase 16, P16-5) ----------
+
+    /// <summary>
+    /// What the source could not hand over cleanly comes back with the counts, a
+    /// note per thing: its code, the product it is about (or none, for the source
+    /// as a whole), and the sentence in the language asked, which an operator
+    /// reads instead of the logs.
+    /// </summary>
+    [Fact]
+    public async Task What_the_source_could_not_hand_over_comes_back_in_the_language_asked()
+    {
+        var shop = new Shop { Culture = "en" };
+        shop.Source.Notes = [new SourceNote(ImportNoteCode.CategoryNotMapped, OneProductConnector.ExternalId, "Coffee Makers")];
+        shop.Source.SourceNotes = [new SourceNote(ImportNoteCode.LocaleIgnored, null, "fr")];
+
+        await shop.ImportAsync();
+
+        Assert.Equal(
+            [(ImportNoteCode.CategoryNotMapped, OneProductConnector.ExternalId), (ImportNoteCode.LocaleIgnored, null)],
+            shop.Result.Notes.Select(note => (note.Code, note.About)));
+        Assert.Contains("“Coffee Makers”", shop.Result.Notes[0].Text, StringComparison.Ordinal);
+        Assert.StartsWith("The store publishes fr", shop.Result.Notes[1].Text, StringComparison.Ordinal);
+
+        shop.Culture = "es";
+        await shop.ImportAsync();
+        Assert.StartsWith("La tienda publica fr", shop.Result.Notes[1].Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_picture_that_could_not_be_read_is_said()
+    {
+        var shop = new Shop();
+
+        await shop.ImportAsync(Missing, Illustration);
+
+        var note = Assert.Single(shop.Result.Notes);
+        Assert.Equal((ImportNoteCode.ImageUnreadable, OneProductConnector.ExternalId), (note.Code, note.About));
+        Assert.Contains(Missing.ToString(), note.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A SKU the source renames is said, and ours stays: Inventory, the cart and
+    /// every order speak it (spec, *Re-importing*, corrected).
+    /// </summary>
+    [Fact]
+    public async Task A_sku_renamed_at_the_source_is_said_and_ours_stays()
+    {
+        var shop = new Shop { Variants = [new ExternalVariant("44001", new Dictionary<string, string>(), ExternalId: "44001", Sku: "MOKA-OLV")] };
+        await shop.ImportAsync();
+
+        shop.Variants = [new ExternalVariant("44001", new Dictionary<string, string>(), ExternalId: "44001", Sku: "MOKA-OLIVE")];
+        await shop.ImportAsync();
+
+        Assert.Equal("MOKA-OLV", Assert.Single(shop.Product.Variants).Sku);
+        var note = Assert.Single(shop.Result.Notes);
+        Assert.Equal(ImportNoteCode.SkuChangedAtSource, note.Code);
+        Assert.Contains("MOKA-OLV → MOKA-OLIVE", note.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The proof the source is used and how much of a store comes across clean
+    /// (spec, *Evidence of use*; ADR 0036): products counted by source and
+    /// outcome, and the notes by code.
+    /// </summary>
+    [Fact]
+    public async Task An_import_counts_its_products_by_outcome_and_its_notes_by_code()
+    {
+        using var recorder = new InstrumentRecorder("tendero.catalog.import.products", "tendero.catalog.import.notes");
+        var shop = new Shop();
+        shop.Source.Notes = [new SourceNote(ImportNoteCode.CategoryNotMapped, OneProductConnector.ExternalId, "Coffee Makers")];
+
+        await shop.ImportAsync();
+        await shop.ImportAsync();
+
+        Assert.Equal(
+            [("test", "created"), ("test", "updated")],
+            recorder.Of("tendero.catalog.import.products").Select(tags => ((string)tags["catalog.source"]!, (string)tags["catalog.import.outcome"]!)));
+        Assert.Equal(2, recorder.Sum("tendero.catalog.import.products"));
+        Assert.All(recorder.Of("tendero.catalog.import.notes"), tags => Assert.Equal("CategoryNotMapped", tags["catalog.import.note"]));
+        Assert.Equal(2, recorder.Sum("tendero.catalog.import.notes"));
+    }
+
     private sealed class Shop
     {
         private readonly InMemoryProductRepository repository = new();
         private readonly OneProductConnector connector = new();
 
         public Product Product { get; private set; } = null!;
+
+        public ImportProductsResult Result { get; private set; } = null!;
+
+        /// <summary>The language the import's notes are asked in.</summary>
+        public string Culture { get; set; } = "es";
+
+        public OneProductConnector Source => this.connector;
 
         /// <summary>The ways the source sells it, from the next import on.</summary>
         public IReadOnlyList<ExternalVariant>? Variants
@@ -178,7 +267,7 @@ public sealed class ImportProductsTests
                 Clock,
                 NullLogger<ImportProductsHandler>.Instance);
 
-            await handler.HandleAsync(new ImportProductsCommand(OneProductConnector.Key), Ct);
+            Result = await handler.HandleAsync(new ImportProductsCommand(OneProductConnector.Key, Culture), Ct);
 
             Product = (await this.repository.FindByExternalReferenceAsync(
                 OneProductConnector.Key, OneProductConnector.ExternalId, Ct))!;
@@ -191,7 +280,7 @@ public sealed class ImportProductsTests
             new(Convert.ToHexStringLower(Encoding.UTF8.GetBytes(location.AbsolutePath)));
     }
 
-    private sealed class OneProductConnector : ICatalogSourceConnector
+    internal sealed class OneProductConnector : ICatalogSourceConnector
     {
         public const string Key = "test";
         public const string ExternalId = "B000000001";
@@ -201,6 +290,10 @@ public sealed class ImportProductsTests
         public IReadOnlyList<ExternalVariant>? Variants { get; set; }
 
         public Dictionary<Uri, IReadOnlyDictionary<string, string>> Shows { get; } = [];
+
+        public IReadOnlyList<SourceNote>? Notes { get; set; }
+
+        public IReadOnlyList<SourceNote> SourceNotes { get; set; } = [];
 
         public string Source => Key;
 
@@ -219,7 +312,8 @@ public sealed class ImportProductsTests
                 PriceCurrency: "EUR",
                 [.. Images.Select(location => new ExternalImage(location, Shows: Shows.GetValueOrDefault(location)))],
                 new Dictionary<string, string>(),
-                Variants: Variants);
+                Variants: Variants,
+                Notes: Notes);
         }
     }
 

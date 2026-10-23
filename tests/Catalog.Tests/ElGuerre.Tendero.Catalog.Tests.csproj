@@ -22,6 +22,12 @@
     </Content>
   </ItemGroup>
 
+  <!-- A Shopify store's answers, recorded (phase 16): the adapter is tested on
+       them with no network, the same way on every run. -->
+  <ItemGroup>
+    <Content Include="Shopify/Fixtures/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />

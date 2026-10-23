@@ -472,6 +472,16 @@
         "saved_method_declined",
         "tendero.accounts.erased"
       ]
+    },
+    {
+      "name": "Importing a store",
+      "area": "backoffice",
+      "question": "Is the Shopify source used, and how much of a store comes across clean?",
+      "decision": "A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md).",
+      "signals": [
+        "tendero.catalog.import.products",
+        "tendero.catalog.import.notes"
+      ]
     }
   ],
   "events": [
@@ -1593,6 +1603,52 @@
             "agent"
           ],
           "description": "Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036)."
+        }
+      }
+    },
+    {
+      "name": "tendero.catalog.import.products",
+      "instrument": "counter",
+      "unit": "{product}",
+      "description": "Products an import created, updated or failed, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from: seed, shopify (phase 16)."
+        },
+        "catalog.import.outcome": {
+          "type": "string",
+          "values": [
+            "created",
+            "updated",
+            "failed"
+          ],
+          "description": "What happened to the product, counted once its batch is saved."
+        }
+      }
+    },
+    {
+      "name": "tendero.catalog.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What a source did not hand over cleanly, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "catalog.import.note": {
+          "type": "string",
+          "values": [
+            "CategoryNotMapped",
+            "LocaleIgnored",
+            "DescriptionHadLayout",
+            "VariantWithoutSku",
+            "SkuSharedAtSource",
+            "SkuChangedAtSource",
+            "ImageUnreadable"
+          ],
+          "description": "The note's code (ImportNoteCode)."
         }
       }
     },

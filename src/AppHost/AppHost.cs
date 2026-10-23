@@ -1005,6 +1005,23 @@ var browserTelemetry = builder.AddParameter("browser-telemetry",
     builder.Configuration["Parameters:browser-telemetry"] ?? "otel");
 api.WithEnvironment("Telemetry__Browser__Adapter", browserTelemetry);
 
+// A SHOPIFY STORE TO IMPORT FROM (phase 16, docs/specs/shopify-import.md), only
+// when its three secrets are in the AppHost's user secrets:
+// `Parameters:shopify-store` (tendero-dev.myshopify.com), `Parameters:shopify-client-id`
+// and `Parameters:shopify-client-secret`, from the app in Shopify's Dev Dashboard.
+// Without them nothing is declared and `shopify` is not a source at all — a fresh
+// clone neither asks for them nor changes. The category mapping is a committed
+// file beside the seeding script.
+if (builder.Configuration["Parameters:shopify-store"] is { Length: > 0 } shopifyStore
+    && builder.Configuration["Parameters:shopify-client-id"] is { Length: > 0 }
+    && builder.Configuration["Parameters:shopify-client-secret"] is { Length: > 0 })
+{
+    api.WithEnvironment("Shopify__Store", shopifyStore)
+        .WithEnvironment("Shopify__ClientId", builder.AddParameter("shopify-client-id", secret: true))
+        .WithEnvironment("Shopify__ClientSecret", builder.AddParameter("shopify-client-secret", secret: true))
+        .WithEnvironment("Shopify__CategoriesFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "categories.json"));
+}
+
 // SIMULATED TRAFFIC (ADR 0037), listed and never started by itself.
 //
 // A shop with no customers gets simulated ones: people in headless browsers

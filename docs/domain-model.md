@@ -91,6 +91,7 @@ classDiagram
         <<record>>
         +string Source
         +string ExternalId
+        +string? Handle
     }
     class Product {
         <<aggregate>>
@@ -134,6 +135,8 @@ classDiagram
         +Map~string, string~ AxisValues
         +string? TaxClass
         +VariantStatus Status
+        +string? Barcode
+        +ExternalReference[] ExternalReferences
     }
     class VariantStatus {
         <<enumeration>>
@@ -148,6 +151,7 @@ classDiagram
     Product "1" --> "*" ExternalReference : ExternalReferences
     Product "1" --> "*" Variant : Variants
     ProductImage "1" --> "*" AxisValue : Shows
+    Variant "1" --> "*" ExternalReference : ExternalReferences
 ```
 
 ### Events

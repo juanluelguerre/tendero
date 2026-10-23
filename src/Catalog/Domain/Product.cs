@@ -62,7 +62,30 @@ public sealed record ProductImage(ImageId Id, LocalizedText? Alt, int SortOrder)
 }
 
 // The key across N connectors: (source, external id). E.g. ("shopify", "gid://shopify/Product/123")
-public sealed record ExternalReference(string Source, string ExternalId);
+// The handle is the source's name for it in its own URLs (phase 16): it may
+// change while the id does not, so it rides along and is never the key. It is
+// changed in place rather than by swapping the reference: EF tracks an owned row
+// by its key, and a new instance under the same key is a second tracked entity.
+public sealed record ExternalReference(string Source, string ExternalId)
+{
+    public ExternalReference(string source, string externalId, string? handle)
+        : this(source, externalId) => Handle = handle;
+
+    public string? Handle { get; private set; }
+
+    internal bool Follow(string? handle)
+    {
+        if (Handle == handle)
+            return false;
+
+        Handle = handle;
+        return true;
+    }
+
+    public bool Is(string source, string externalId) =>
+        string.Equals(Source, source, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(ExternalId, externalId, StringComparison.Ordinal);
+}
 
 // The event the indexing worker consumes (Elasticsearch + Qdrant) via the Outbox.
 public sealed record ProductUpserted(ProductId ProductId, DateTimeOffset OccurredAt) : IDomainEvent;
@@ -168,6 +191,10 @@ public sealed class Product : AggregateRoot
     public Variant? VariantBySku(string sku) =>
         this.variants.FirstOrDefault(variant =>
             string.Equals(variant.Sku, sku, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>The variant a source knows by its own id, if one was linked to it.</summary>
+    public Variant? VariantFromSource(string source, string externalId) =>
+        this.variants.FirstOrDefault(variant => variant.IsKnownTo(source, externalId));
 
     private Product() { } // EF Core
 
@@ -486,17 +513,38 @@ public sealed class Product : AggregateRoot
     }
 
     // Idempotent: re-importing from the same source does not duplicate references.
-    public void LinkExternal(TimeProvider clock, string source, string externalId)
+    // The handle follows the source, on the same reference.
+    public void LinkExternal(TimeProvider clock, string source, string externalId, string? handle = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(source);
         ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
 
-        var reference = new ExternalReference(source.ToLowerInvariant(), externalId);
-        if (!this.externalReferences.Contains(reference))
-        {
-            this.externalReferences.Add(reference);
+        var existing = this.externalReferences.FirstOrDefault(reference => reference.Is(source, externalId));
+
+        if (existing is null)
+            this.externalReferences.Add(new ExternalReference(source.ToLowerInvariant(), externalId, handle));
+        else if (!existing.Follow(handle))
+            return;
+
+        Touch(clock);
+    }
+
+    /// <summary>
+    /// Tells the catalogue which of the source's variants a SKU is (phase 16):
+    /// the variant is then found again by that id, whatever SKU the source
+    /// gives it next. Idempotent.
+    /// </summary>
+    public void LinkVariantExternal(TimeProvider clock, string sku, string source, string externalId)
+    {
+        if (Required(sku).LinkExternal(source, externalId))
             Touch(clock);
-        }
+    }
+
+    /// <summary>The variant's barcode, as its source says it; null clears it.</summary>
+    public void SetVariantBarcode(TimeProvider clock, string sku, string? barcode)
+    {
+        if (Required(sku).SetBarcode(barcode))
+            Touch(clock);
     }
 
     /// <summary>
