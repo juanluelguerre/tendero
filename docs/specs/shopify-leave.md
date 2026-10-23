@@ -1,7 +1,11 @@
 # Spec: leaving Shopify (phase 16, stage S2)
 
-**Status**: proposed 2026-10-23, waiting on the author's *Decisions* at the
-end. Nothing is built until they are taken.
+**Status**: accepted 2026-10-23, all nine decisions as proposed. S2a comes
+first. One correction came from reading the code before writing S2a's tasks:
+**warehouses are a file nothing writes**, as promotions are. So a store's
+locations become a *proposed warehouses file* that a person commits, while
+stock enters through the ledger's stocktake (`IStockLedger.AdjustAsync`),
+which is what a migration is.
 **Branch**: `feature/shopify`, the same long-lived branch as S1.
 **Context**:
 - [`docs/analysis/tendero-suite-shopify.md`](../analysis/tendero-suite-shopify.md)
