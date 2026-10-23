@@ -138,4 +138,39 @@ public sealed class ShopifyAdminTests
         Assert.Equal(("EUR", "es"), (shop.Currency, shop.PrimaryLocale));
         Assert.Equal(["es", "en", "fr"], shop.Locales);
     }
+
+    /// <summary>
+    /// A merchant's own store (P16-14): the install gives an offline token, which
+    /// a custom app's does not expire, and it is used as it is — never exchanged,
+    /// and with no client credentials beside it.
+    /// </summary>
+    [Fact]
+    public async Task A_merchants_own_token_is_used_as_it_is_and_never_exchanged()
+    {
+        var store = new FakeShopify();
+        var clock = new TestClock();
+        var options = Options.Create(new ShopifyOptions { Store = FakeShopify.Store, AccessToken = "shpat_merchant" });
+        var http = new HttpClient(store);
+        var admin = new ShopifyAdmin(http, new ShopifyAccessTokens(http, options, clock), options, clock);
+
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+        clock.Advance(TimeSpan.FromDays(30));
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+
+        Assert.All(store.Requests, request => Assert.Equal(["shpat_merchant"], request.Headers.GetValues("X-Shopify-Access-Token")));
+        Assert.Equal(0, store.TokensIssued);
+    }
+
+    /// <summary>A store with either way in is a source; a store with neither is not.</summary>
+    [Theory]
+    [InlineData("shpat_merchant", null, null, true)]
+    [InlineData(null, "client-id", "client-secret", true)]
+    [InlineData(null, "client-id", null, false)]
+    [InlineData(null, null, null, false)]
+    public void A_store_is_configured_by_its_own_token_or_by_the_apps_credentials(string? token, string? id, string? secret, bool configured)
+    {
+        var options = new ShopifyOptions { Store = FakeShopify.Store, AccessToken = token, ClientId = id, ClientSecret = secret };
+
+        Assert.Equal(configured, options.IsConfigured);
+    }
 }

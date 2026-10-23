@@ -11,6 +11,10 @@ namespace ElGuerre.Tendero.Shopify;
 /// It is kept and asked for again a few minutes before it would expire, so a
 /// long import does not meet a refusal halfway; a refusal still makes it ask
 /// once more (<see cref="Forget"/>).
+///
+/// A merchant's own store gives its token instead (<see cref="ShopifyOptions.AccessToken"/>,
+/// P16-14), and it is used as it is: there is nothing to exchange, and nothing
+/// to ask again when the store refuses it.
 /// </summary>
 internal sealed class ShopifyAccessTokens(HttpClient http, IOptions<ShopifyOptions> options, TimeProvider clock)
 {
@@ -22,6 +26,9 @@ internal sealed class ShopifyAccessTokens(HttpClient http, IOptions<ShopifyOptio
 
     public async ValueTask<string> CurrentAsync(CancellationToken ct)
     {
+        if (options.Value.AccessToken is { Length: > 0 } merchants)
+            return merchants;
+
         if (Valid() is { } token)
             return token;
 

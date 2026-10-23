@@ -27,6 +27,17 @@ public sealed class ShopifyOptions
 
     public string? ClientSecret { get; set; }
 
+    /// <summary>
+    /// A merchant's own store (S2a, P16-14): the offline token
+    /// <c>tools/shopify-connect</c> obtains by installing the app once, with the
+    /// authorization-code grant. Used as it is, instead of the client credentials,
+    /// which only reach stores in the app's own organisation. A custom app's
+    /// offline token does not expire — Shopify requires expiring ones of public
+    /// apps only (changelog, 2026-04-01 and 2027-01-01) — so it is a secret like
+    /// the others and nothing is kept in the database (spec decision 2).
+    /// </summary>
+    public string? AccessToken { get; set; }
+
     public string ApiVersion { get; set; } = PinnedApiVersion;
 
     /// <summary>How long to wait between two looks at a running bulk operation.</summary>
@@ -68,8 +79,9 @@ public sealed class ShopifyOptions
 
     public const string DefaultAttributesNamespace = "tendero";
 
+    /// <summary>A store, and a way in: its own token, or the app's credentials.</summary>
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(Store) &&
-        !string.IsNullOrWhiteSpace(ClientId) &&
-        !string.IsNullOrWhiteSpace(ClientSecret);
+        (!string.IsNullOrWhiteSpace(AccessToken) ||
+         (!string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret)));
 }

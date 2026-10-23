@@ -283,7 +283,18 @@ locations, publications, navigation).
   which maps it afresh.
 - `P16-14` **A merchant's own store**: `Shopify:AccessToken` accepted beside
   the client credentials, and `tools/shopify-connect/` running the
-  authorization-code install once — **M**
+  authorization-code install once — **M**. *As built (2026-10-23)*: the
+  token is used as it is and never exchanged; the AppHost passes
+  `Parameters:shopify-access-token` instead of the app's credentials when it is
+  there. `tools/shopify-connect/connect.mjs` listens on localhost, prints the
+  install address, checks the answer (state, Shopify's HMAC, the store) before
+  spending the code, asks only read scopes, and writes the store and the token
+  to user secrets without printing the token. Decision 2 checked against
+  Shopify's 2026 change: offline tokens now expire after an hour (with a
+  90-day refresh token that rotates) — but that is required of **public** apps
+  only (new ones from 2026-04-01, all from 2027-01-01); a custom app's offline
+  token still does not expire, so it can be a secret. The script refuses an
+  expiring one. Not yet run against a store outside the organisation.
 - `P16-15` The seeding script grows (two locations, MAD and BCN, and the seed's
   stock), the round trip grows (stock per SKU and location, tax classes,
   redirects), the notebook, S2a's close — **M**

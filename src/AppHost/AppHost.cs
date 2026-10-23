@@ -1012,14 +1012,31 @@ api.WithEnvironment("Telemetry__Browser__Adapter", browserTelemetry);
 // Without them nothing is declared and `shopify` is not a source at all — a fresh
 // clone neither asks for them nor changes. The category mapping is a committed
 // file beside the seeding script.
-if (builder.Configuration["Parameters:shopify-store"] is { Length: > 0 } shopifyStore
-    && builder.Configuration["Parameters:shopify-client-id"] is { Length: > 0 }
-    && builder.Configuration["Parameters:shopify-client-secret"] is { Length: > 0 })
+//
+// A merchant's own store (S2a, P16-14) comes with `Parameters:shopify-access-token`
+// instead of the app's two, the offline token `tools/shopify-connect` installs
+// the app for; it wins when both are there.
+if (builder.Configuration["Parameters:shopify-store"] is { Length: > 0 } shopifyStore)
 {
-    api.WithEnvironment("Shopify__Store", shopifyStore)
-        .WithEnvironment("Shopify__ClientId", builder.AddParameter("shopify-client-id", secret: true))
-        .WithEnvironment("Shopify__ClientSecret", builder.AddParameter("shopify-client-secret", secret: true))
-        .WithEnvironment("Shopify__CategoriesFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "categories.json"));
+    var merchantsToken = builder.Configuration["Parameters:shopify-access-token"] is { Length: > 0 };
+    var appCredentials = builder.Configuration["Parameters:shopify-client-id"] is { Length: > 0 }
+        && builder.Configuration["Parameters:shopify-client-secret"] is { Length: > 0 };
+
+    if (merchantsToken)
+    {
+        api.WithEnvironment("Shopify__AccessToken", builder.AddParameter("shopify-access-token", secret: true));
+    }
+    else if (appCredentials)
+    {
+        api.WithEnvironment("Shopify__ClientId", builder.AddParameter("shopify-client-id", secret: true))
+            .WithEnvironment("Shopify__ClientSecret", builder.AddParameter("shopify-client-secret", secret: true));
+    }
+
+    if (merchantsToken || appCredentials)
+    {
+        api.WithEnvironment("Shopify__Store", shopifyStore)
+            .WithEnvironment("Shopify__CategoriesFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "categories.json"));
+    }
 }
 
 // SIMULATED TRAFFIC (ADR 0037), listed and never started by itself.
