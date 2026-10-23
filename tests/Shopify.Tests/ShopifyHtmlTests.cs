@@ -18,6 +18,7 @@ public sealed class ShopifyHtmlTests
     [InlineData("<p>Para <strong>diez</strong>   tazas &amp; m&aacute;s</p>", "Para diez tazas & más")]
     [InlineData("<h2>Medidas</h2><p>20 cm</p>", "Medidas\n\n20 cm")]
     [InlineData("Texto sin etiquetas", "Texto sin etiquetas")]
+    [InlineData("<p>Uno</p>\n\n\n<p>Dos</p>", "Uno\n\nDos")]
     [InlineData("", "")]
     public void Html_becomes_plain_text_with_its_paragraphs(string html, string text) =>
         Assert.Equal(text, ShopifyHtml.ToText(html));

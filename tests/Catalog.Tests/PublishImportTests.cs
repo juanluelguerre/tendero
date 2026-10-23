@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.PublishImport;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Catalog.Tests.Features;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
@@ -15,6 +16,7 @@ namespace ElGuerre.Tendero.Catalog.Tests;
 /// decided on since: a product that was published and withdrawn is in draft
 /// because a person put it there, and stays.
 /// </summary>
+[Collection(PublishMetricsCollection.Name)]
 public sealed class PublishImportTests
 {
     private static readonly TestClock Clock = new();
@@ -61,6 +63,41 @@ public sealed class PublishImportTests
 
         Assert.Equal((1, 1, 1, 1), (result.Published, result.AlreadyActive, result.Withdrawn, result.Archived));
         Assert.Equal(ProductStatus.Draft, withdrawn.Status);
+    }
+
+    /// <summary>
+    /// Every product published counts on the publishing metric, as one by one
+    /// would; a run with nothing left to publish writes nothing and counts nothing.
+    /// </summary>
+    [Fact]
+    public async Task Each_product_published_is_counted_and_a_run_with_nothing_to_publish_writes_nothing()
+    {
+        using var heard = new InstrumentRecorder("tendero.catalog.products.published");
+        var (draft, active) = (AProduct(), AProduct());
+        active.Publish(Clock);
+        var run = ImportRun.Start("shopify", Clock.GetUtcNow());
+        run.Brought(draft.Id);
+        var done = ImportRun.Start("shopify", Clock.GetUtcNow());
+        done.Brought(active.Id);
+        var unitOfWork = new CountingUnitOfWork();
+
+        await Handler(run, unitOfWork, draft).HandleAsync(new PublishImportCommand(run.Id), Ct);
+        await Handler(done, unitOfWork, active).HandleAsync(new PublishImportCommand(done.Id), Ct);
+
+        Assert.Equal(1, heard.Sum("tendero.catalog.products.published"));
+        Assert.Equal(1, unitOfWork.SaveCount);
+    }
+
+    /// <summary>A run is its source's, in lowercase, under an id of its own.</summary>
+    [Fact]
+    public void A_run_starts_with_an_id_of_its_own_and_its_source_in_lowercase()
+    {
+        var (one, other) = (ImportRun.Start("Shopify", Clock.GetUtcNow()), ImportRun.Start("shopify", Clock.GetUtcNow()));
+
+        Assert.Equal(("shopify", Clock.GetUtcNow()), (one.Source, one.StartedAt));
+        Assert.NotEqual(default, one.Id);
+        Assert.NotEqual(one.Id, other.Id);
+        Assert.Throws<ArgumentException>(() => ImportRun.Start(" ", Clock.GetUtcNow()));
     }
 
     [Fact]

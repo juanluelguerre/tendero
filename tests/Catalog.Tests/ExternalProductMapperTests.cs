@@ -254,6 +254,32 @@ public sealed class ExternalProductMapperTests
 
     // ---------- a source whose variants have identities of their own (phase 16, P16-2) ----------
 
+    /// <summary>
+    /// A source with no ids for its variants finds them again by SKU: the one it
+    /// gives them, and failing that ours from before it gave any (a variant
+    /// imported before the store had SKUs keeps the one it was sold under). Found
+    /// by phase 16's Stryker close: neither fallback had a test.
+    /// </summary>
+    [Fact]
+    public void A_variant_without_a_source_id_is_found_again_by_its_sku_or_by_ours()
+    {
+        var bySourceSku = InTwoColoursFromAStore().ToNewProduct("shopify", Clock, Colours.Defined());
+        InTwoColoursFromAStore().ApplyTo(bySourceSku, Clock, Colours.Defined());
+
+        var byOurs = InTwoColours().ToNewProduct("seed", Clock, Colours.Defined());
+        (InTwoColours() with
+        {
+            Variants =
+            [
+                new ExternalVariant("OLIVE", new Dictionary<string, string> { ["color"] = "oliva" }, Sku: "MOKA-OLV"),
+                new ExternalVariant("BLACK", new Dictionary<string, string> { ["color"] = "negro" }, Sku: "MOKA-BLK"),
+            ],
+        }).ApplyTo(byOurs, Clock, Colours.Defined());
+
+        Assert.Equal(["MOKA-OLV", "MOKA-BLK"], bySourceSku.Variants.Select(variant => variant.Sku));
+        Assert.Equal(["B073WXYZ01-OLIVE", "B073WXYZ01-BLACK"], byOurs.Variants.Select(variant => variant.Sku));
+    }
+
     private static ExternalProduct InTwoColoursFromAStore(
         string? oliveSku = "MOKA-OLV", string? blackSku = "MOKA-BLK", decimal? blackPrice = 32.50m) =>
         AnExternalProduct() with

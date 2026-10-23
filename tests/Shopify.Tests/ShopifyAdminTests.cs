@@ -60,6 +60,67 @@ public sealed class ShopifyAdminTests
         Assert.Equal(2, store.TokensIssued);
     }
 
+    /// <summary>
+    /// The token is the client-credentials grant's: the app's id and secret,
+    /// posted as a form; and while it is valid it is not asked for again.
+    /// Found by phase 16's Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task A_token_is_asked_for_with_the_apps_credentials_and_kept_while_valid()
+    {
+        var (admin, store, _) = AStore();
+
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+        await admin.QueryAsync("{ shop { currencyCode } }", Ct);
+
+        var form = System.Web.HttpUtility.ParseQueryString(Assert.Single(store.TokenRequests));
+        Assert.Equal(("client_credentials", "client-id", "client-secret"), (form["grant_type"], form["client_id"], form["client_secret"]));
+    }
+
+    /// <summary>A store that stays busy is said to be, after a few tries, rather than asked forever.</summary>
+    [Fact]
+    public async Task A_store_that_stays_throttled_says_so()
+    {
+        var (admin, store, _) = AStore();
+        store.ThrottleFirst = 50;
+
+        var throttled = await Assert.ThrowsAsync<ShopifyException>(() => admin.QueryAsync(ShopifyQueries.Shop, Ct));
+
+        Assert.Equal(ShopifyFailure.Throttled, throttled.Failure);
+        Assert.Equal(45, store.ThrottleFirst);
+    }
+
+    /// <summary>A store that is down fails the call, for its query and for its bulk file alike.</summary>
+    [Fact]
+    public async Task A_store_that_is_down_fails_the_call()
+    {
+        var (admin, store, _) = AStore();
+        var file = await admin.RunBulkAsync(ShopifyQueries.Products([]), Ct);
+        store.FailWith = System.Net.HttpStatusCode.InternalServerError;
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => admin.QueryAsync(ShopifyQueries.Shop, Ct));
+        await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        {
+            await foreach (var _ in admin.ReadLinesAsync(file!, Ct)) { }
+        });
+    }
+
+    /// <summary>A query the store finds wrong, and a bulk operation it will not start, are said with the store's words.</summary>
+    [Fact]
+    public async Task What_the_store_rejects_is_said_with_its_words()
+    {
+        var (admin, store, _) = AStore();
+
+        var wrong = await Assert.ThrowsAsync<ShopifyException>(() => admin.QueryAsync("{ wrong }", Ct));
+        store.RefuseBulk = true;
+        var busy = await Assert.ThrowsAsync<ShopifyException>(() => admin.RunBulkAsync(ShopifyQueries.Products([]), Ct));
+
+        Assert.Equal(ShopifyFailure.Rejected, wrong.Failure);
+        Assert.Contains("doesn't exist", wrong.Message, StringComparison.Ordinal);
+        Assert.Contains("already in progress", busy.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task A_refused_token_is_asked_for_again_once()
     {
@@ -114,6 +175,21 @@ public sealed class ShopifyAdminTests
         Assert.Contains("groupObjects: true", store.LastBulkQuery, StringComparison.Ordinal);
         Assert.Contains("metafields(namespace: \\\"tendero\\\")", store.LastBulkQuery, StringComparison.Ordinal);
         Assert.False(store.Requests.Last().Headers.Contains("X-Shopify-Access-Token"));
+    }
+
+    /// <summary>Every way a bulk operation can end without a file is a failure, not a wait.</summary>
+    [Theory]
+    [InlineData("CANCELED")]
+    [InlineData("CANCELING")]
+    [InlineData("EXPIRED")]
+    public async Task A_bulk_operation_that_ends_without_a_file_fails(string status)
+    {
+        var (admin, store, _) = AStore();
+        store.BulkEnd = (status, null);
+
+        var failed = await Assert.ThrowsAsync<ShopifyException>(() => admin.RunBulkAsync(ShopifyQueries.Products([]), Ct));
+
+        Assert.Contains(status, failed.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -172,5 +248,17 @@ public sealed class ShopifyAdminTests
         var options = new ShopifyOptions { Store = FakeShopify.Store, AccessToken = token, ClientId = id, ClientSecret = secret };
 
         Assert.Equal(configured, options.IsConfigured);
+    }
+
+    /// <summary>The store's own language is the one it marks primary, wherever Shopify lists it.</summary>
+    [Fact]
+    public async Task The_shops_language_is_the_one_marked_primary()
+    {
+        var (admin, store, _) = AStore();
+        store.ShopLocales = """[{"locale":"fr","primary":false},{"locale":"es","primary":true}]""";
+
+        var shop = await ShopifyShop.ReadAsync(admin, Ct);
+
+        Assert.Equal("es", shop.PrimaryLocale);
     }
 }

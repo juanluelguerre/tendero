@@ -207,6 +207,57 @@ public sealed class ImportProductsTests
     }
 
     /// <summary>
+    /// What is not a rename is not said as one: a variant the shop has never
+    /// sold (no SKU of ours yet), and one the source gives no SKU at all. Found by
+    /// phase 16's Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task A_new_variant_or_one_without_a_sku_at_the_source_is_no_rename()
+    {
+        var shop = new Shop { Variants = [new ExternalVariant("44001", new Dictionary<string, string>(), ExternalId: "44001", Sku: "MOKA-OLV")] };
+        await shop.ImportAsync();
+
+        shop.Variants =
+        [
+            new ExternalVariant("44001", new Dictionary<string, string>(), ExternalId: "44001", Sku: ""),
+            new ExternalVariant("44002", new Dictionary<string, string>(), ExternalId: "44002", Sku: "MOKA-BLK"),
+        ];
+        await shop.ImportAsync();
+
+        Assert.DoesNotContain(shop.Result.Notes, note => note.Code == ImportNoteCode.SkuChangedAtSource);
+    }
+
+    /// <summary>A product the shop already has is updated by what the source says now.</summary>
+    [Fact]
+    public async Task A_reimport_updates_what_the_source_says_now()
+    {
+        var shop = new Shop();
+        await shop.ImportAsync();
+
+        shop.Source.SpanishName = "Cafetera de goteo programable";
+        await shop.ImportAsync();
+
+        Assert.Equal("Cafetera de goteo programable", shop.Product.Name.In("es"));
+    }
+
+    /// <summary>
+    /// The run's last products and the collections are saved at the end, after
+    /// the batch: without that save the run would be recorded with no products
+    /// and no collection kept. Found by phase 16's Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task The_run_and_the_collections_are_saved_after_the_last_batch()
+    {
+        var shop = new Shop();
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId])];
+
+        await shop.ImportAsync();
+
+        Assert.Equal(2, shop.Saves);
+    }
+
+    /// <summary>
     /// The proof the source is used and how much of a store comes across clean
     /// (spec, *Evidence of use*; ADR 0036): products counted by source and
     /// outcome, and the notes by code.
@@ -225,7 +276,7 @@ public sealed class ImportProductsTests
             [("test", "created"), ("test", "updated")],
             recorder.Of("tendero.catalog.import.products").Select(tags => ((string)tags["catalog.source"]!, (string)tags["catalog.import.outcome"]!)));
         Assert.Equal(2, recorder.Sum("tendero.catalog.import.products"));
-        Assert.All(recorder.Of("tendero.catalog.import.notes"), tags => Assert.Equal("CategoryNotMapped", tags["catalog.import.note"]));
+        Assert.All(recorder.Of("tendero.catalog.import.notes"), tags => Assert.Equal(("CategoryNotMapped", "test"), (tags["catalog.import.note"], tags["catalog.source"])));
         Assert.Equal(2, recorder.Sum("tendero.catalog.import.notes"));
     }
 
@@ -333,6 +384,22 @@ public sealed class ImportProductsTests
         }
     }
 
+    /// <summary>A product the catalogue refuses is counted as failed, by its source. Found by phase 16's Stryker close.</summary>
+    [Fact]
+    public async Task A_product_the_catalogue_refuses_is_counted_as_failed()
+    {
+        using var recorder = new InstrumentRecorder("tendero.catalog.import.products");
+        var shop = new Shop();
+        shop.Source.Price = -1m;
+
+        await shop.ImportAsync();
+
+        Assert.Equal(1, shop.Result.Failed);
+        Assert.Equal(
+            [("test", "failed")],
+            recorder.Of("tendero.catalog.import.products").Select(tags => ((string)tags["catalog.source"]!, (string)tags["catalog.import.outcome"]!)));
+    }
+
     private sealed class Shop
     {
         private readonly InMemoryProductRepository repository = new();
@@ -417,6 +484,11 @@ public sealed class ImportProductsTests
 
         public string? Category { get; set; }
 
+        public string SpanishName { get; set; } = "Cafetera de goteo";
+
+        /// <summary>What it costs; a negative price is a product the catalogue refuses.</summary>
+        public decimal Price { get; set; } = 49.90m;
+
         public IReadOnlyList<ExternalCollection> Collections { get; set; } = [];
 
         public string Source => Key;
@@ -436,11 +508,11 @@ public sealed class ImportProductsTests
 
             yield return new ExternalProduct(
                 ExternalId,
-                new Dictionary<string, string> { ["es"] = "Cafetera de goteo", ["en"] = "Drip coffee maker" },
+                new Dictionary<string, string> { ["es"] = SpanishName, ["en"] = "Drip coffee maker" },
                 Descriptions: null,
                 Brand: "Kuisina",
                 Category: Category,
-                PriceAmount: 49.90m,
+                PriceAmount: Price,
                 PriceCurrency: "EUR",
                 [.. Images.Select(location => new ExternalImage(location, Shows: Shows.GetValueOrDefault(location)))],
                 new Dictionary<string, string>(),

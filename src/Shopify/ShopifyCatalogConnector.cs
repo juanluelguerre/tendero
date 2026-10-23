@@ -68,31 +68,41 @@ internal sealed class ShopifyCatalogConnector(ShopifyAdmin admin, IOptions<Shopi
         if (file is null)
             yield break;
 
-        (string Id, string Handle, string Title, List<string> Products)? reading = null;
+        CollectionReading? reading = null;
         await foreach (var line in admin.ReadLinesAsync(file, cancellationToken))
         {
             var id = ShopifyBulkProducts.IdOf(line.GetProperty("id").GetString());
             if (!line.TryGetProperty("__parentId", out var parent))
             {
-                if (reading is { } done)
-                    yield return new ExternalCollection(done.Handle, done.Title, done.Products);
+                if (reading is not null)
+                    yield return reading.Complete();
 
-                reading = (id, line.GetProperty("handle").GetString()!, line.GetProperty("title").GetString()!, []);
+                reading = new CollectionReading(id, line.GetProperty("handle").GetString()!, line.GetProperty("title").GetString()!);
                 continue;
             }
 
-            if (reading is not { } collection || ShopifyBulkProducts.IdOf(parent.GetString()) != collection.Id)
+            if (reading is null || ShopifyBulkProducts.IdOf(parent.GetString()) != reading.Id)
             {
                 throw new ShopifyException(
                     ShopifyFailure.UngroupedBulkFile,
                     $"A product of {parent.GetString()} came while reading {reading?.Id ?? "nothing"}: the bulk file is not grouped.");
             }
 
-            collection.Products.Add(id);
+            reading.Products.Add(id);
         }
 
-        if (reading is { } last)
-            yield return new ExternalCollection(last.Handle, last.Title, last.Products);
+        if (reading is not null)
+            yield return reading.Complete();
+    }
+
+    /// <summary>A collection while its products are read, as the bulk file groups them.</summary>
+    private sealed class CollectionReading(string id, string handle, string title)
+    {
+        public string Id { get; } = id;
+
+        public List<string> Products { get; } = [];
+
+        public ExternalCollection Complete() => new(handle, title, Products);
     }
 
     private ExternalProduct Map(ShopifyProduct product, string currency, string language, IReadOnlySet<string> translated)

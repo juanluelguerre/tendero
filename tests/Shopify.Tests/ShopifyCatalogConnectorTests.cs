@@ -303,4 +303,62 @@ public sealed class ShopifyCatalogConnectorTests
             collections.Select(collection => (collection.Handle, collection.Title, string.Join(',', collection.ProductExternalIds))));
         Assert.Contains("groupObjects: true", store.LastBulkQuery, StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// What a picture shows is what every variant naming it has in common: the
+    /// olive picture, named by olive in 38 and in 39, shows olive; a picture two
+    /// variants of nothing in common name shows nothing; and one no variant names
+    /// shows the product. A product with no description comes without one.
+    /// Found by phase 16's Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task A_picture_shows_what_the_variants_naming_it_share()
+    {
+        var shoe = Assert.Single(await Imported(AConnector(store => store.ResultsFixture = "products-pictures.jsonl").Connector));
+
+        Assert.Equal(
+            ["Color=Oliva", "-", "-"],
+            shoe.Images.Select(image => image.Shows is { } shows ? string.Join(',', shows.Select(pair => $"{pair.Key}={pair.Value}")) : "-"));
+        Assert.Null(shoe.Descriptions);
+    }
+
+    /// <summary>Reading the store twice says each of its notes once.</summary>
+    [Fact]
+    public async Task Reading_the_store_again_says_its_notes_once()
+    {
+        var (connector, _) = AConnector();
+
+        await Imported(connector);
+        await Imported(connector);
+
+        Assert.Single(connector.SourceNotes);
+    }
+
+    /// <summary>A product line away from its collection means the file was not grouped: refused, never guessed.</summary>
+    [Fact]
+    public async Task A_collections_product_away_from_it_is_refused()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"collections-{Guid.NewGuid():N}.jsonl");
+        File.WriteAllLines(file,
+        [
+            """{"id":"gid://shopify/Collection/301","handle":"cocina","title":"Cocina"}""",
+            """{"id":"gid://shopify/Collection/302","handle":"ofertas","title":"Ofertas"}""",
+            """{"id":"gid://shopify/Product/8001","__parentId":"gid://shopify/Collection/301"}""",
+        ]);
+        try
+        {
+            var (connector, _) = AConnector(store => store.CollectionsFixture = file);
+
+            var refused = await Assert.ThrowsAsync<ShopifyException>(async () =>
+            {
+                await foreach (var _ in connector.StreamCollectionsAsync(Ct)) { }
+            });
+
+            Assert.Equal(ShopifyFailure.UngroupedBulkFile, refused.Failure);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
 }

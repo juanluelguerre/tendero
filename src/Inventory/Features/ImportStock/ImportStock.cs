@@ -122,7 +122,7 @@ public sealed class ImportStockHandler(
 internal static class ImportStockNotes
 {
     public static Message<StockNoteCode> Said(StockNote note, bool english) =>
-        new(note.Code, note.About, Sentence(note, english));
+        new(note.Code, note.About, Sentences.StartingUpper(Sentence(note, english)));
 
     private static string Sentence(StockNote note, bool english)
     {

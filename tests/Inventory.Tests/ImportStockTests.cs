@@ -124,6 +124,7 @@ public sealed class ImportStockTests
         Assert.Equal(
             ["WarehouseUnknown", "LocationNotMapped"],
             recorder.Of("tendero.inventory.import.notes").Select(tags => (string)tags["inventory.import.note"]!));
+        Assert.All(recorder.Of("tendero.inventory.import.notes"), tags => Assert.Equal("fake", tags["catalog.source"]));
     }
 
     /// <summary>
@@ -144,6 +145,37 @@ public sealed class ImportStockTests
             (rehearsal.Counted, rehearsal.Skipped, rehearsal.ProposedWarehouses.Count, rehearsal.Notes.Count));
         Assert.Equal(2, ledger.Counts.Count);
         Assert.Equal(import.Counted + import.Skipped, recorder.Sum("tendero.inventory.import.levels"));
+    }
+
+    /// <summary>
+    /// Every note says its sentence in the language asked, with the source's detail,
+    /// and starts with what it is about when it is about a SKU. Found by phase 16's
+    /// Stryker close: the language and the prefix survived every mutation.
+    /// </summary>
+    [Theory]
+    [InlineData(StockNoteCode.LocationNotMapped)]
+    [InlineData(StockNoteCode.VariantNotInCatalogue)]
+    [InlineData(StockNoteCode.WarehouseUnknown)]
+    public async Task A_note_is_said_in_the_language_asked_and_starts_with_its_sku(StockNoteCode code)
+    {
+        var (handler, _, source) = AnImport();
+        source.Levels.Clear();
+        source.Notes.Add(new StockNote(code, "SKU-9", "Tienda de Bilbao"));
+
+        var spanish = Assert.Single((await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, "es", Rehearse: true), Ct)).Notes);
+        var english = Assert.Single((await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, "en", Rehearse: true), Ct)).Notes);
+
+        Assert.NotEqual(spanish.Text, english.Text);
+        Assert.All([spanish.Text, english.Text], text => Assert.Contains("Tienda de Bilbao", text, StringComparison.Ordinal));
+        // A location is no SKU's: its note has nothing in front.
+        Assert.Equal(code != StockNoteCode.LocationNotMapped, english.Text.StartsWith("SKU-9: ", StringComparison.Ordinal));
+
+        // A note about no SKU in particular — Shopify's variant the catalogue lacks — has nothing in front either.
+        source.Notes.Clear();
+        source.Notes.Add(new StockNote(code, null, "Tienda de Bilbao"));
+        var aboutNothing = Assert.Single((await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, "en", Rehearse: true), Ct)).Notes);
+        var expected = code == StockNoteCode.LocationNotMapped ? english.Text : Sentences.StartingUpper(english.Text["SKU-9: ".Length..]);
+        Assert.Equal(expected, aboutNothing.Text);
     }
 
     private sealed class OneStockSource(IStockSourceConnector source) : IStockSourceRegistry

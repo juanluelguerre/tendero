@@ -11,7 +11,7 @@ namespace ElGuerre.Tendero.Catalog.Features.ImportProducts;
 internal static class ImportNotes
 {
     public static Message<ImportNoteCode> Said(SourceNote note, bool english) =>
-        new(note.Code, note.About, Sentence(note, english));
+        new(note.Code, note.About, Sentences.StartingUpper(Sentence(note, english)));
 
     private static string Sentence(SourceNote note, bool english)
     {

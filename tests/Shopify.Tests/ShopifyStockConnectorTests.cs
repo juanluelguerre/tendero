@@ -24,7 +24,9 @@ public sealed class ShopifyStockConnectorTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    internal static (ShopifyStockConnector Connector, FakeShopify Store) AConnector()
+    internal static (ShopifyStockConnector Connector, FakeShopify Store) AConnector() => AConnector(new CatalogueSkus());
+
+    private static (ShopifyStockConnector Connector, FakeShopify Store) AConnector(ISourceVariantSkus catalogue)
     {
         var store = new FakeShopify();
         var clock = new TestClock();
@@ -43,7 +45,7 @@ public sealed class ShopifyStockConnectorTests
         });
         var http = new HttpClient(store);
         var admin = new ShopifyAdmin(http, new ShopifyAccessTokens(http, options, clock), options, clock);
-        return (new ShopifyStockConnector(admin, options, new CatalogueSkus()), store);
+        return (new ShopifyStockConnector(admin, options, catalogue), store);
     }
 
     private static async Task<List<SourceStockLevel>> Levels(ShopifyStockConnector connector)
@@ -101,6 +103,85 @@ public sealed class ShopifyStockConnectorTests
                 new SourceWarehouse("TIENDA-DE-BILBAO", "Tienda de Bilbao", true),
             ],
             warehouses);
+    }
+
+    /// <summary>Reading the store twice says each of its notes once.</summary>
+    [Fact]
+    public async Task Reading_the_store_again_says_its_notes_once()
+    {
+        var (connector, _) = AConnector();
+
+        await Levels(connector);
+        await Levels(connector);
+
+        Assert.Equal(2, connector.SourceNotes.Count);
+    }
+
+    /// <summary>
+    /// The catalogue is asked a batch of variants at a time, not one by one and not
+    /// all at once: 251 variants are two questions. Found by phase 16's Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task The_catalogue_is_asked_in_batches_of_250()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"inventory-{Guid.NewGuid():N}.jsonl");
+        File.WriteAllLines(file, Enumerable.Range(1, 251).SelectMany(n => new[]
+        {
+            $$"""{"id":"gid://shopify/ProductVariant/{{n}}"}""",
+            $$"""{"location":{"id":"gid://shopify/Location/71"},"quantities":[{"name":"on_hand","quantity":1}],"__parentId":"gid://shopify/ProductVariant/{{n}}"}""",
+        }));
+        try
+        {
+            var catalogue = new EveryVariantKnown();
+            var (connector, store) = AConnector(catalogue);
+            store.InventoryFixture = file;
+
+            var levels = await Levels(connector);
+
+            Assert.Equal((251, 2), (levels.Count, catalogue.Asked));
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    /// <summary>A level that does not follow its variant means the file was not grouped: refused, never guessed.</summary>
+    [Fact]
+    public async Task A_level_away_from_its_variant_is_refused()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"inventory-{Guid.NewGuid():N}.jsonl");
+        File.WriteAllLines(file,
+        [
+            """{"id":"gid://shopify/ProductVariant/44001"}""",
+            """{"id":"gid://shopify/ProductVariant/44002"}""",
+            """{"location":{"id":"gid://shopify/Location/71"},"quantities":[{"name":"on_hand","quantity":4}],"__parentId":"gid://shopify/ProductVariant/44001"}""",
+        ]);
+        try
+        {
+            var (connector, store) = AConnector();
+            store.InventoryFixture = file;
+
+            var refused = await Assert.ThrowsAsync<ShopifyException>(() => Levels(connector));
+
+            Assert.Equal(ShopifyFailure.UngroupedBulkFile, refused.Failure);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    /// <summary>A catalogue that sells every variant under its id, counting how often it is asked.</summary>
+    private sealed class EveryVariantKnown : ISourceVariantSkus
+    {
+        public int Asked { get; private set; }
+
+        public Task<IReadOnlyDictionary<string, string>> SkusOfAsync(string source, IReadOnlyCollection<string> externalVariantIds, CancellationToken ct)
+        {
+            Asked++;
+            return Task.FromResult<IReadOnlyDictionary<string, string>>(externalVariantIds.ToDictionary(id => id, id => $"SKU-{id}"));
+        }
     }
 
     /// <summary>The catalogue's answer, as the store's catalogue was imported: 44999 never was.</summary>

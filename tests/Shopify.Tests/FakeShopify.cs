@@ -21,6 +21,15 @@ internal sealed class FakeShopify : HttpMessageHandler
 
     public int TokensIssued { get; private set; }
 
+    /// <summary>What each token request posted, as the form it sent.</summary>
+    public List<string> TokenRequests { get; } = [];
+
+    /// <summary>A status every GraphQL call answers with instead, when set: a store that is down.</summary>
+    public HttpStatusCode? FailWith { get; set; }
+
+    /// <summary>Whether starting a bulk operation is refused with a user error.</summary>
+    public bool RefuseBulk { get; set; }
+
     /// <summary>How many GraphQL answers say THROTTLED before the real one.</summary>
     public int ThrottleFirst { get; set; }
 
@@ -54,6 +63,9 @@ internal sealed class FakeShopify : HttpMessageHandler
 
         if (request.RequestUri == ResultsFile)
         {
+            if (FailWith is { } down)
+                return new HttpResponseMessage(down);
+
             // The file the last bulk query wrote: the stock's, the collections', or the catalogue's.
             var fixture = LastBulkQuery switch
             {
@@ -67,8 +79,12 @@ internal sealed class FakeShopify : HttpMessageHandler
         if (request.RequestUri!.AbsolutePath == "/admin/oauth/access_token")
         {
             TokensIssued++;
+            TokenRequests.Add(body);
             return Json($$"""{"access_token":"token-{{TokensIssued}}","scope":"read_products,read_translations,read_locales","expires_in":86399}""");
         }
+
+        if (FailWith is { } failing)
+            return new HttpResponseMessage(failing);
 
         if (RefuseFirst > 0)
         {
@@ -83,6 +99,13 @@ internal sealed class FakeShopify : HttpMessageHandler
         }
 
         var query = JsonDocument.Parse(body).RootElement.GetProperty("query").GetString()!;
+
+        // A query the store finds wrong: GraphQL answers 200 with errors.
+        if (query.Contains("{ wrong }", StringComparison.Ordinal))
+            return Json("""{"errors":[{"message":"Field 'wrong' doesn't exist on type 'QueryRoot'"}]}""");
+
+        if (query.Contains("bulkOperationRunQuery", StringComparison.Ordinal) && RefuseBulk)
+            return Json("""{"data":{"bulkOperationRunQuery":{"bulkOperation":null,"userErrors":[{"field":["query"],"message":"A bulk query operation for this app and shop is already in progress"}]}}}""");
 
         if (query.Contains("bulkOperationRunQuery", StringComparison.Ordinal))
         {

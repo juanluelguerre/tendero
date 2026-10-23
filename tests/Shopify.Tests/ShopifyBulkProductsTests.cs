@@ -31,6 +31,13 @@ public sealed class ShopifyBulkProductsTests
         return products;
     }
 
+    /// <summary>A Shopify id is its number; a missing one is nothing, never an error.</summary>
+    [Theory]
+    [InlineData("gid://shopify/Product/8001", "8001")]
+    [InlineData(null, "")]
+    public void A_shopify_id_is_its_number(string? gid, string id) =>
+        Assert.Equal(id, ShopifyBulkProducts.IdOf(gid));
+
     [Fact]
     public async Task Each_products_variants_and_pictures_are_gathered_under_it()
     {
