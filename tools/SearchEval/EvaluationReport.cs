@@ -22,10 +22,23 @@ public static class EvaluationReport
     private const string Lexical = "lexical";
     private const string Hybrid = "hybrid";
 
-    public static string Render(IReadOnlyList<StrategyScores> results, EvaluationThresholds thresholds, bool rerank = false)
+    /// <param name="goldenSet">The fingerprint of the judgments the run scored against
+    /// (<see cref="GoldenSet.Fingerprint"/>), said first: scores measured against other
+    /// judgments than the thresholds' are not comparable with them.</param>
+    public static string Render(
+        IReadOnlyList<StrategyScores> results, EvaluationThresholds thresholds, bool rerank = false, string? goldenSet = null)
     {
         var report = new StringBuilder();
         report.AppendLine("# Search relevance report").AppendLine();
+
+        if (goldenSet is not null)
+        {
+            report.AppendLine(goldenSet == thresholds.GoldenSet
+                ? $"Golden set `{goldenSet}`, the one the thresholds were set against."
+                : $"Golden set `{goldenSet}`, but **the thresholds were set against `{thresholds.GoldenSet ?? "an unnamed one"}`: " +
+                  "these scores are not comparable with them.** Re-derive the thresholds against these judgments, " +
+                  "and record this fingerprint beside them.").AppendLine();
+        }
 
         if (results.Any(result => result.Strategy == Hybrid))
             report.AppendLine(CultureInfo.InvariantCulture, $"Hybrid is fused by rank{(rerank ? " and reranked" : ", not reranked")}.").AppendLine();

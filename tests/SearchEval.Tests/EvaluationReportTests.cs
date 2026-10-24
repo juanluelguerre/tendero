@@ -116,6 +116,26 @@ public sealed class EvaluationReportTests
         Assert.Contains("| use-case | 1 | 1.000 | regalo abuela |", report);
     }
 
+    /// <summary>
+    /// The report says which judgments it scored against, so two reports can be
+    /// told comparable or not at a glance; and when the thresholds were set
+    /// against other judgments, it says so before any number is read.
+    /// </summary>
+    [Fact]
+    public void The_report_names_the_golden_set_it_scored_against()
+    {
+        IReadOnlyList<StrategyScores> results = [new("lexical", [Culture(Query("mochila", 1.0, judged: 1.0))])];
+        var thresholds = Thresholds with { GoldenSet = "0123456789ab" };
+
+        var same = EvaluationReport.Render(results, thresholds, goldenSet: "0123456789ab");
+        var other = EvaluationReport.Render(results, thresholds, goldenSet: "ba9876543210");
+
+        Assert.Contains("Golden set `0123456789ab`, the one the thresholds were set against.", same);
+        Assert.DoesNotContain("not comparable", same);
+        Assert.Contains("Golden set `ba9876543210`", other);
+        Assert.Contains("the thresholds were set against `0123456789ab`: these scores are not comparable with them", other);
+    }
+
     private static QueryScore Noticed(string text, string kind, SearchMatch match) =>
         new(text, 0.5, 1, 10, 1, 1, [], kind, Match: match);
 

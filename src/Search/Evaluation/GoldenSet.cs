@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -21,6 +23,46 @@ public sealed record GoldenSet(
         ReadCommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true
     };
+
+    /// <summary>
+    /// Which judgments a score is measured against, as twelve hex characters
+    /// (2026-10-24): if a pull request changes the code and the golden set
+    /// together, a moved score cannot tell which of the two moved it, so the
+    /// committed thresholds name the fingerprint they were set against.
+    ///
+    /// It is taken over what the gate scores and nothing else: each culture and
+    /// source, each query's words, and each judgment's product and grade, in a
+    /// canonical order. A reason (<see cref="Judgment.Why"/>), a query's kind,
+    /// split or pair, the order of queries and the file's layout move no score,
+    /// so they move no fingerprint.
+    /// </summary>
+    public static string Fingerprint(IEnumerable<GoldenSet> sets)
+    {
+        var canonical = sets
+            .OrderBy(set => set.Culture, StringComparer.Ordinal)
+            .ThenBy(set => set.Source, StringComparer.Ordinal)
+            .Select(set => new
+            {
+                set.Culture,
+                set.Source,
+                Queries = set.Queries
+                    .Select(query => new
+                    {
+                        query.Query,
+                        Judgments = query.Judgments
+                            .OrderBy(judgment => judgment.ExternalId, StringComparer.Ordinal)
+                            .ThenBy(judgment => judgment.Relevance)
+                            .Select(judgment => new { judgment.ExternalId, judgment.Relevance })
+                            .ToArray(),
+                    })
+                    .OrderBy(query => query.Query, StringComparer.Ordinal)
+                    .ThenBy(query => JsonSerializer.Serialize(query.Judgments), StringComparer.Ordinal)
+                    .ToArray(),
+            });
+
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(canonical)));
+        return Convert.ToHexStringLower(hash)[..12];
+    }
 
     public static async Task<GoldenSet> LoadAsync(string path, CancellationToken cancellationToken)
     {
