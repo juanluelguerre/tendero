@@ -355,8 +355,12 @@ decision S2b-2.
 
 **Discounts.** Each store discount is translated into a proposed entry of the
 promotions file (decision 5), with a note when the engine cannot express it: a
-customer segment, a usage limit, a product-level target, a schedule. A person
-reads the proposal and commits it. The proposal *is* the migration.
+customer segment, a usage limit, a target that is not one category or one SKU.
+A schedule is not among them: a promotion has `validFrom` and `validTo`. A
+proposal is narrowed, never widened (P16-19): a discount whose restriction the
+engine cannot hold is not proposed at all, since without it the shop would give
+away more than the store did. A person reads the proposal and commits it. The
+proposal *is* the migration.
 
 **Gift cards.** Each card is listed with its last four characters, its balance
 and its expiry, for the merchant to reissue (decision 6). Shopify returns a full

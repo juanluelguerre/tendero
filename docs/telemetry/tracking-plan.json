@@ -486,7 +486,9 @@
         "tendero.accounts.import.customers",
         "tendero.accounts.import.notes",
         "tendero.ordering.import.orders",
-        "tendero.ordering.import.notes"
+        "tendero.ordering.import.notes",
+        "tendero.pricing.import.discounts",
+        "tendero.pricing.import.notes"
       ]
     },
     {
@@ -1820,6 +1822,53 @@
             "RefundNotExpressed"
           ],
           "description": "The note's code (OrderNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.pricing.import.discounts",
+      "instrument": "counter",
+      "unit": "{discount}",
+      "description": "Discounts a proposal turned into promotions or left out, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from; the same label as the other imports."
+        },
+        "pricing.import.outcome": {
+          "type": "string",
+          "values": [
+            "proposed",
+            "left"
+          ],
+          "description": "Written to the proposal of promotions, or left out with a note saying why."
+        }
+      }
+    },
+    {
+      "name": "tendero.pricing.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What a discount source could not hand over as the store ran it, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "pricing.import.note": {
+          "type": "string",
+          "values": [
+            "Expired",
+            "AlreadyHere",
+            "LimitNotExpressible",
+            "CustomersNotExpressible",
+            "ConditionNotExpressible",
+            "TargetNotExpressible",
+            "EffectNotExpressible",
+            "CombinationNarrowed",
+            "CodesNarrowed"
+          ],
+          "description": "The note's code (DiscountNoteCode)."
         }
       }
     },

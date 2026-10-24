@@ -34,6 +34,11 @@ public static class PricingServiceCollectionExtensions
         services.TryAddSingleton<IPriceListReader, SeedFilePriceListReader>();
         services.TryAddSingleton<IPromotionReader, SeedFilePromotionReader>();
 
+        // A store's discounts as a proposal beside the committed file (phase 16, P16-19):
+        // the sources are keyed adapters other projects register, Shopify's first.
+        services.TryAddSingleton<IPromotionProposals, SeedFilePromotionProposals>();
+        services.TryAddScoped<IDiscountSourceRegistry, KeyedDiscountSourceRegistry>();
+
         // Pure functions, so a singleton holds no state worth worrying about.
         services.TryAddSingleton<IPriceResolver, PriceListResolver>();
         services.TryAddSingleton<IPromotionEngine, CombiningPromotionEngine>();

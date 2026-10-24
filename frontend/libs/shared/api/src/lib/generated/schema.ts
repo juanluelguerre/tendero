@@ -932,6 +932,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/promotions/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProposePromotions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pricing/campaign-images": {
         parameters: {
             query?: never;
@@ -2425,6 +2441,8 @@ export interface components {
             items: components["schemas"]["SkuDescriptionView"][];
         };
         /** @enum {unknown} */
+        DiscountNoteCode: "Expired" | "AlreadyHere" | "LimitNotExpressible" | "CustomersNotExpressible" | "ConditionNotExpressible" | "TargetNotExpressible" | "EffectNotExpressible" | "CombinationNarrowed" | "CodesNarrowed";
+        /** @enum {unknown} */
         DiscountOutcome: "Applied" | "Suppressed";
         DiscountRequirement: {
             minimumSubtotal: null | components["schemas"]["Money"];
@@ -2723,6 +2741,11 @@ export interface components {
         };
         MessageOfCustomerNoteCode: {
             code: components["schemas"]["CustomerNoteCode"];
+            about: null | string;
+            text: string;
+        };
+        MessageOfDiscountNoteCode: {
+            code: components["schemas"]["DiscountNoteCode"];
             about: null | string;
             text: string;
         };
@@ -3247,6 +3270,40 @@ export interface components {
             skipped: number;
             /** Format: int32 */
             failed: number;
+        };
+        ProposePromotionsCommand: {
+            source: string;
+            /** @default es */
+            culture: string;
+            /** @default false */
+            rehearse: boolean;
+        };
+        ProposePromotionsResult: {
+            proposed: components["schemas"]["ProposedPromotionView"][];
+            /** Format: int32 */
+            left: number;
+            file: null | string;
+            notes: components["schemas"]["MessageOfDiscountNoteCode"][];
+        };
+        ProposedPromotionView: {
+            code: string;
+            name: {
+                [key: string]: string;
+            };
+            effect: string;
+            combination: components["schemas"]["CombinationPolicy"];
+            /** Format: int32 */
+            priority: number;
+            couponCode: null | string;
+            categoryCode: null | string;
+            sku: null | string;
+            minimumSubtotal: null | components["schemas"]["Money"];
+            /** Format: int32 */
+            minimumQuantity: null | number;
+            /** Format: date-time */
+            validFrom: null | string;
+            /** Format: date-time */
+            validTo: null | string;
         };
         ProposedWarehouse: {
             code: string;
@@ -6943,6 +7000,56 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "MixedCurrencies" | "UnknownSkus";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ProposePromotions: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposePromotionsCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposePromotionsResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
                     } & components["schemas"]["Problem"];
                 };
             };

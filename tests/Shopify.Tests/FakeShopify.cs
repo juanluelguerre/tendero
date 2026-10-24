@@ -136,6 +136,9 @@ internal sealed class FakeShopify : HttpMessageHandler
             return Json(File.ReadAllText(Fixture(page)));
         }
 
+        if (query.Contains("{ discountNodes(", StringComparison.Ordinal))
+            return Json(File.ReadAllText(Fixture("discounts.json")));
+
         if (query.Contains("locations(", StringComparison.Ordinal))
             return Json("{\"data\":{\"locations\":{\"nodes\":" + Locations + "}}}");
 

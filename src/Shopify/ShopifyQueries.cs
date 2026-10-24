@@ -135,6 +135,47 @@ internal static class ShopifyQueries
             """;
     }
 
+    /// <summary>
+    /// A page of discounts, every kind the store runs (S2b, P16-19), with what the
+    /// promotions engine needs and every restriction it cannot hold, so the
+    /// translation can say what it would lose. Paged rather than bulk: a discount
+    /// is a union whose members carry connections of their own. What a discount
+    /// reaches is asked for two at most of each kind, because the engine expresses
+    /// one category or one SKU, and a second is all it takes to say it cannot.
+    /// A percentage comes as a fraction (0.15 is 15 %); a quantity as a string.
+    /// </summary>
+    public static string Discounts(string? after)
+    {
+        var cursor = after is null ? "" : $", after: {JsonSerializer.Serialize(after)}";
+        const string combines = "combinesWith { orderDiscounts productDiscounts shippingDiscounts }";
+        const string context = "context { __typename }";
+        const string codes = "codes(first: 5) { nodes { code } }";
+        const string minimum = "minimumRequirement { ... on DiscountMinimumSubtotal { greaterThanOrEqualToSubtotal { amount currencyCode } } ... on DiscountMinimumQuantity { greaterThanOrEqualToQuantity } }";
+        const string items = "items { ... on AllDiscountItems { allItems } ... on DiscountProducts { products(first: 2) { nodes { id variants(first: 2) { nodes { id } } } } productVariants(first: 2) { nodes { id } } } ... on DiscountCollections { collections(first: 2) { nodes { handle } } } }";
+        const string gets = $"customerGets {{ appliesOnOneTimePurchase {items} value {{ ... on DiscountPercentage {{ percentage }} ... on DiscountAmount {{ amount {{ amount currencyCode }} appliesOnEachItem }} ... on DiscountOnQuantity {{ quantity {{ quantity }} effect {{ ... on DiscountPercentage {{ percentage }} }} }} }} }}";
+        const string buys = $"customerBuys {{ {items} value {{ ... on DiscountQuantity {{ quantity }} }} }}";
+        const string shipping = "appliesOnOneTimePurchase destinationSelection { __typename } maximumShippingPrice { amount currencyCode }";
+        const string when = "title status startsAt endsAt";
+        const string limits = "usageLimit appliesOncePerCustomer";
+
+        return
+            $$"""
+            { discountNodes(first: 25{{cursor}}) {
+                pageInfo { hasNextPage endCursor }
+                nodes { id discount { __typename
+                  ... on DiscountCodeBasic { {{when}} {{limits}} {{combines}} {{context}} {{codes}} {{minimum}} {{gets}} }
+                  ... on DiscountAutomaticBasic { {{when}} {{combines}} {{context}} {{minimum}} {{gets}} }
+                  ... on DiscountCodeBxgy { {{when}} {{limits}} usesPerOrderLimit {{combines}} {{context}} {{codes}} {{buys}} {{gets}} }
+                  ... on DiscountAutomaticBxgy { {{when}} usesPerOrderLimit {{combines}} {{context}} {{buys}} {{gets}} }
+                  ... on DiscountCodeFreeShipping { {{when}} {{limits}} {{combines}} {{context}} {{codes}} {{minimum}} {{shipping}} }
+                  ... on DiscountAutomaticFreeShipping { {{when}} {{combines}} {{context}} {{minimum}} {{shipping}} }
+                  ... on DiscountCodeApp { {{when}} }
+                  ... on DiscountAutomaticApp { {{when}} }
+                } }
+              } }
+            """;
+    }
+
     /// <summary>The store's locations; a store has a handful, so a page of 250 is all of them.</summary>
     public const string Locations = "{ locations(first: 250, includeInactive: true) { nodes { id name isActive } } }";
 

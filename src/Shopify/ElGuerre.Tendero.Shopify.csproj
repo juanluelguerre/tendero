@@ -3,8 +3,9 @@
   <!-- Shopify, an external system reached only through adapters (invariant 3,
        phase 16): the Admin API client and every adapter of a port Shopify can
        stand behind — the catalogue's source (Catalog.Connectors), the stock's
-       source (Inventory.Ports), the customers' (Accounts.Ports) and the
-       orders' (Ordering.Ports). One place to read how Tendero talks to Shopify.
+       source (Inventory.Ports), the customers' (Accounts.Ports), the orders'
+       (Ordering.Ports) and the discounts' (Pricing.Ports). One place to read
+       how Tendero talks to Shopify.
 
        It is not a context: it owns no state and declares no domain. It
        references the ports it implements and never a context's domain, which
@@ -24,6 +25,7 @@
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
+    <ProjectReference Include="../Pricing/ElGuerre.Tendero.Pricing.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 

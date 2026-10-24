@@ -71,6 +71,7 @@
       "ProposeActionsCommand": "Proponer cambios",
       "ProposeAltTextCommand": "Proponer texto alternativo para imágenes",
       "ProposeClaimsCommand": "Proponer afirmaciones de una descripción o de la lectura de una imagen",
+      "ProposePromotionsCommand": "Proponer promociones a partir de los descuentos de una tienda",
       "PublishImportCommand": "Publicar lo que trajo una importación",
       "PublishProductCommand": "Publicar un producto",
       "ReadPicturesCommand": "Leer imágenes de productos",

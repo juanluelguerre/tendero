@@ -40,6 +40,7 @@ public sealed class ShopifyRegistrationTests
             Assert.Equal("shopify", scope.ServiceProvider.GetRequiredKeyedService<IStockSourceConnector>("shopify").Source);
             Assert.Equal("shopify", scope.ServiceProvider.GetRequiredKeyedService<ElGuerre.Tendero.Accounts.Ports.ICustomerSourceConnector>("shopify").Source);
             Assert.Equal("shopify", scope.ServiceProvider.GetRequiredKeyedService<ElGuerre.Tendero.Ordering.Ports.IOrderSourceConnector>("shopify").Source);
+            Assert.Equal("shopify", scope.ServiceProvider.GetRequiredKeyedService<ElGuerre.Tendero.Pricing.Ports.IDiscountSourceConnector>("shopify").Source);
             var options = provider.GetRequiredService<IOptions<ShopifyOptions>>().Value;
             Assert.Equal("COFFEE_MAKER", options.Categories["gid://shopify/TaxonomyCategory/hg-11-1-3"]);
             Assert.Equal("MAD", options.Locations["gid://shopify/Location/71"]);
@@ -80,6 +81,7 @@ public sealed class ShopifyRegistrationTests
         var services = new ServiceCollection();
         services.AddSingleton<TimeProvider>(new TestClock());
         services.AddSingleton<ISourceVariantSkus, NoSkus>();
+        services.AddSingleton<ISourceAddresses, NoAddresses>();
         services.AddShopify(new ConfigurationBuilder().AddInMemoryCollection(settings).Build());
         return services.BuildServiceProvider();
     }
@@ -88,5 +90,12 @@ public sealed class ShopifyRegistrationTests
     {
         public Task<IReadOnlyDictionary<string, string>> SkusOfAsync(string source, IReadOnlyCollection<string> externalVariantIds, CancellationToken ct) =>
             Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>());
+    }
+
+    private sealed class NoAddresses : ISourceAddresses
+    {
+        public Task<ProductAddress?> ProductAsync(string handle, CancellationToken ct) => Task.FromResult<ProductAddress?>(null);
+
+        public Task<string?> CategoryAsync(string collectionHandle, CancellationToken ct) => Task.FromResult<string?>(null);
     }
 }

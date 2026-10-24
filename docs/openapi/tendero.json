@@ -5230,6 +5230,96 @@
         }
       }
     },
+    "/api/pricing/promotions/proposal": {
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "ProposePromotions",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposePromotionsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposePromotionsResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/pricing/campaign-images": {
       "post": {
         "tags": [
@@ -14065,6 +14155,19 @@
           }
         }
       },
+      "DiscountNoteCode": {
+        "enum": [
+          "Expired",
+          "AlreadyHere",
+          "LimitNotExpressible",
+          "CustomersNotExpressible",
+          "ConditionNotExpressible",
+          "TargetNotExpressible",
+          "EffectNotExpressible",
+          "CombinationNarrowed",
+          "CodesNarrowed"
+        ]
+      },
       "DiscountOutcome": {
         "enum": [
           "Applied",
@@ -15295,6 +15398,28 @@
         "properties": {
           "code": {
             "$ref": "#/components/schemas/CustomerNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "MessageOfDiscountNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/DiscountNoteCode"
           },
           "about": {
             "type": [
@@ -17400,6 +17525,145 @@
           "failed": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ProposePromotionsCommand": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ProposePromotionsResult": {
+        "required": [
+          "proposed",
+          "left",
+          "file",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "proposed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposedPromotionView"
+            }
+          },
+          "left": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "file": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfDiscountNoteCode"
+            }
+          }
+        }
+      },
+      "ProposedPromotionView": {
+        "required": [
+          "code",
+          "name",
+          "effect",
+          "combination",
+          "priority",
+          "couponCode",
+          "categoryCode",
+          "sku",
+          "minimumSubtotal",
+          "minimumQuantity",
+          "validFrom",
+          "validTo"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "effect": {
+            "type": "string"
+          },
+          "combination": {
+            "$ref": "#/components/schemas/CombinationPolicy"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "couponCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categoryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sku": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minimumSubtotal": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Money"
+              }
+            ]
+          },
+          "minimumQuantity": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "validFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "validTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
