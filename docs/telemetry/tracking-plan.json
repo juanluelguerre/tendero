@@ -482,7 +482,9 @@
         "tendero.catalog.import.products",
         "tendero.catalog.import.notes",
         "tendero.inventory.import.levels",
-        "tendero.inventory.import.notes"
+        "tendero.inventory.import.notes",
+        "tendero.accounts.import.customers",
+        "tendero.accounts.import.notes"
       ]
     },
     {
@@ -1726,6 +1728,51 @@
             "WarehouseUnknown"
           ],
           "description": "The note's code (StockNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.accounts.import.customers",
+      "instrument": "counter",
+      "unit": "{customer}",
+      "description": "Customers an import created, found already imported or linked, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from; the same label as the catalogue and stock imports."
+        },
+        "accounts.import.outcome": {
+          "type": "string",
+          "values": [
+            "created",
+            "already_imported",
+            "linked"
+          ],
+          "description": "Made here, brought by an earlier import, or a person the shop already had, linked through their identity."
+        }
+      }
+    },
+    {
+      "name": "tendero.accounts.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What a customer source did not hand over cleanly, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "accounts.import.note": {
+          "type": "string",
+          "values": [
+            "FieldRedacted",
+            "NoEmail",
+            "AlreadyHere",
+            "IdentityNotProvisioned",
+            "AddressUnreadable",
+            "Erased"
+          ],
+          "description": "The note's code (CustomerNoteCode)."
         }
       }
     },

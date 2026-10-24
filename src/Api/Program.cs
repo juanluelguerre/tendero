@@ -60,6 +60,7 @@ builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
 
 builder.Services.AddAccounts();
+builder.Services.AddKeycloakProvisioning(builder.Configuration);
 // How long the orders an erased account leaves behind are kept (P15-9).
 builder.Services.Configure<PrivacyOptions>(builder.Configuration.GetSection(PrivacyOptions.SectionName));
 

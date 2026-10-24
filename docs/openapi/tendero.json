@@ -287,6 +287,96 @@
         ]
       }
     },
+    "/api/accounts/import": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ImportCustomers",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportCustomersCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportCustomersResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/dashboard/agent-denials": {
       "get": {
         "tags": [
@@ -11818,6 +11908,7 @@
       "AccountData": {
         "required": [
           "displayName",
+          "email",
           "culture",
           "cultureChosen",
           "marketingGiven",
@@ -11828,6 +11919,12 @@
         "type": "object",
         "properties": {
           "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
             "type": [
               "null",
               "string"
@@ -13645,6 +13742,16 @@
           }
         }
       },
+      "CustomerNoteCode": {
+        "enum": [
+          "FieldRedacted",
+          "NoEmail",
+          "AlreadyHere",
+          "IdentityNotProvisioned",
+          "AddressUnreadable",
+          "Erased"
+        ]
+      },
       "DashboardPeriod": {
         "enum": [
           "Day",
@@ -14105,6 +14212,54 @@
           "Archived",
           "NotFound"
         ]
+      },
+      "ImportCustomersCommand": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ImportCustomersResult": {
+        "required": [
+          "created",
+          "alreadyImported",
+          "linked",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyImported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "linked": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfCustomerNoteCode"
+            }
+          }
+        }
       },
       "ImportNoteCode": {
         "enum": [
@@ -14989,6 +15144,28 @@
             "items": {
               "$ref": "#/components/schemas/PastSearch"
             }
+          }
+        }
+      },
+      "MessageOfCustomerNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/CustomerNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
           }
         }
       },

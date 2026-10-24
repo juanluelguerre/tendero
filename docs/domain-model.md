@@ -973,6 +973,8 @@ classDiagram
         +string Culture
         +bool CultureChosen
         +MarketingConsent? Marketing
+        +string? Email
+        +CustomerOrigin? ImportedFrom
         +DateTimeOffset? ErasedAt
         +bool IsErased
         +bool MayBeSentMarketing
@@ -981,6 +983,11 @@ classDiagram
         +DateTimeOffset CreatedAt
         +DateTimeOffset UpdatedAt
         +bool IsGuest
+    }
+    class CustomerOrigin {
+        <<record>>
+        +string Source
+        +string ExternalId
     }
     class MarketingConsent {
         <<record>>
@@ -998,6 +1005,7 @@ classDiagram
     AddressBook --> AddressEntryId : BillingDefault
     AddressEntry --> AddressEntryId : Id
     Customer --> MarketingConsent : Marketing
+    Customer --> CustomerOrigin : ImportedFrom
 ```
 
 ### Events

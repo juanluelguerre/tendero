@@ -58,6 +58,7 @@
       "DefineVariantsCommand": "Definir variantes",
       "EndCampaignCommand": "Terminar una campaña",
       "ForgetBrowsingCommand": "Quitar una entrada del historial de navegación",
+      "ImportCustomersCommand": "Importar clientes",
       "ImportProductsCommand": "Importar productos",
       "ImportStockCommand": "Importar existencias",
       "LinkIdentityCommand": "Vincular un inicio de sesión a un cliente",

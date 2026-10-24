@@ -58,6 +58,7 @@
       "DefineVariantsCommand": "Define variants",
       "EndCampaignCommand": "End a campaign",
       "ForgetBrowsingCommand": "Remove an entry from a browsing history",
+      "ImportCustomersCommand": "Import customers",
       "ImportProductsCommand": "Import products",
       "ImportStockCommand": "Import stock",
       "LinkIdentityCommand": "Link a sign-in to a customer",

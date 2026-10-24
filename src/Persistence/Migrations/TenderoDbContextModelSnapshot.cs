@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261024104151_ImportedOrders";
+    public override string LastMigrationId => "20261024105812_ImportedCustomers";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -266,6 +266,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(200)
                     .HasColumnType("character varying(200)")
                     .HasColumnName("display_name");
+
+                b.Property<string>("Email")
+                    .HasMaxLength(320)
+                    .HasColumnType("character varying(320)")
+                    .HasColumnName("email");
 
                 b.Property<DateTimeOffset?>("ErasedAt")
                     .HasColumnType("timestamp with time zone")
@@ -2071,6 +2076,43 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasName("pk_keys");
 
                 b.ToTable("keys", "idempotency");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.Customer", b =>
+            {
+                b.OwnsOne("ElGuerre.Tendero.Accounts.Domain.CustomerOrigin", "ImportedFrom", b1 =>
+                    {
+                        b1.Property<Guid>("Id")
+                            .HasColumnType("uuid")
+                            .HasColumnName("id");
+
+                        b1.Property<string>("ExternalId")
+                            .IsRequired()
+                            .HasMaxLength(200)
+                            .HasColumnType("character varying(200)")
+                            .HasColumnName("imported_external_id");
+
+                        b1.Property<string>("Source")
+                            .IsRequired()
+                            .HasMaxLength(50)
+                            .HasColumnType("character varying(50)")
+                            .HasColumnName("imported_source");
+
+                        b1.HasKey("Id")
+                            .HasName("pk_customers");
+
+                        b1.HasIndex("Source", "ExternalId")
+                            .IsUnique()
+                            .HasDatabaseName("ux_customers_imported_from");
+
+                        b1.ToTable("customers", "accounts");
+
+                        b1.WithOwner()
+                            .HasForeignKey("Id")
+                            .HasConstraintName("fk_customers_customers_id");
+                    });
+
+                b.Navigation("ImportedFrom");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>

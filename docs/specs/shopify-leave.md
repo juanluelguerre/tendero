@@ -423,7 +423,7 @@ store.
   (reading the protected-data errors), an `ImportCustomers` slice with its
   rehearsal and notes, the email on `Customer` (an erasable personal-data holder),
   and decision S2b-1's sign-in road. With A: a provisioning port with a
-  contract suite, its Keycloak and dev-issuer adapters, the ADR, Keycloak's SMTP
+  contract suite, its Keycloak adapter (the dev issuer gets none: a user registry is its retirement condition, ADR 0067), the ADR, Keycloak's SMTP
   with Mailpit in development, and a browser test of *forgot password* to a first
   sign-in that sees the imported orders — **L**
 - `P16-18` **Orders born closed**: the ADR (decision 4), `Order.Imported(...)`

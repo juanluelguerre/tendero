@@ -65,7 +65,7 @@ everything here that is not *planned* is emitted.
 | Steward | Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? | Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. | `steward_opened`, `steward_answered`, `proposals_reviewed`, `steward_unavailable` | emitted |
 | Alt text for pictures | Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read? | Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes. | `tendero.alt_text.pictures`, `image_alt_proposal_decided` | emitted |
 | Pictures read for claims | Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for? | Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events. | `tendero.picture_reading.pictures` | emitted |
-| Importing a store | Is the Shopify source used, and how much of a store comes across clean, per context? | A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. | `tendero.catalog.import.products`, `tendero.catalog.import.notes`, `tendero.inventory.import.levels`, `tendero.inventory.import.notes` | emitted |
+| Importing a store | Is the Shopify source used, and how much of a store comes across clean, per context? | A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. | `tendero.catalog.import.products`, `tendero.catalog.import.notes`, `tendero.inventory.import.levels`, `tendero.inventory.import.notes`, `tendero.accounts.import.customers`, `tendero.accounts.import.notes` | emitted |
 
 ### Agents
 
@@ -777,6 +777,32 @@ Answers:
 |---|---|---|---|
 | `catalog.source` | string | — | The source imported from. |
 | `inventory.import.note` | string | `LocationNotMapped`, `VariantNotInCatalogue`, `WarehouseUnknown` | The note's code (StockNoteCode). |
+
+### `tendero.accounts.import.customers`
+
+counter, unit `{customer}`. Customers an import created, found already imported or linked, by source.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from; the same label as the catalogue and stock imports. |
+| `accounts.import.outcome` | string | `created`, `already_imported`, `linked` | Made here, brought by an earlier import, or a person the shop already had, linked through their identity. |
+
+### `tendero.accounts.import.notes`
+
+counter, unit `{note}`. What a customer source did not hand over cleanly, by source and code.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from. |
+| `accounts.import.note` | string | `FieldRedacted`, `NoEmail`, `AlreadyHere`, `IdentityNotProvisioned`, `AddressUnreadable`, `Erased` | The note's code (CustomerNoteCode). |
 
 ### `tendero.catalog.products.withdrawn`
 

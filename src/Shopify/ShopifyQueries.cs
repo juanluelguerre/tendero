@@ -74,6 +74,28 @@ internal static class ShopifyQueries
         }
         """;
 
+    /// <summary>
+    /// Every customer with their addresses, as one bulk operation (S2b, P16-17):
+    /// one connection inside another, each address a line whose parent is its
+    /// customer. Through the fields current in the pinned version —
+    /// <c>defaultEmailAddress</c> carries the email and its marketing consent,
+    /// <c>addressesV2</c> the addresses — because <c>email</c>,
+    /// <c>emailMarketingConsent</c> and <c>addresses</c> are deprecated in it.
+    /// Customers are protected data: each field must have been granted to the app.
+    /// </summary>
+    public const string Customers =
+        """
+        mutation {
+          bulkOperationRunQuery(
+            groupObjects: true
+            query: "{ customers { edges { node { id firstName lastName locale defaultEmailAddress { emailAddress marketingState marketingUpdatedAt } defaultAddress { id } addressesV2 { edges { node { id name address1 address2 city provinceCode zip countryCodeV2 phone } } } } } } }"
+          ) {
+            bulkOperation { id status }
+            userErrors { field message }
+          }
+        }
+        """;
+
     /// <summary>The store's locations; a store has a handful, so a page of 250 is all of them.</summary>
     public const string Locations = "{ locations(first: 250, includeInactive: true) { nodes { id name isActive } } }";
 

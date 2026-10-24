@@ -41,8 +41,9 @@ public sealed class PrivacyOptions
 // ---------- The wire ----------
 
 /// <param name="DisplayName">The name the sign-in provider last sent: a cache, not the shop's own.</param>
+/// <param name="Email">The email the shop holds, which only a customer imported from another store has (phase 16, S2b).</param>
 public sealed record AccountData(
-    string? DisplayName, string Culture, bool CultureChosen, bool? MarketingGiven, DateTimeOffset? MarketingAt,
+    string? DisplayName, string? Email, string Culture, bool CultureChosen, bool? MarketingGiven, DateTimeOffset? MarketingAt,
     string? MarketingWording, DateTimeOffset CreatedAt);
 
 /// <param name="Sections">Each holder's share by its name — <c>addresses</c>, <c>browsingHistory</c>, <c>paymentMethods</c>, <c>orders</c> — only those that hold something.</param>
@@ -161,7 +162,7 @@ public sealed class YourDataHandlers(
         return new PersonalDataExport(
             clock.GetUtcNow(),
             new AccountData(
-                customer.DisplayName, customer.Culture, customer.CultureChosen,
+                customer.DisplayName, customer.Email, customer.Culture, customer.CultureChosen,
                 customer.Marketing?.Given, customer.Marketing?.At, customer.Marketing?.Wording, customer.CreatedAt),
             sections);
     }

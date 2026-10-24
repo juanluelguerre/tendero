@@ -38,6 +38,7 @@ public sealed class ShopifyRegistrationTests
 
             Assert.Equal("shopify", scope.ServiceProvider.GetRequiredKeyedService<ICatalogSourceConnector>("shopify").Source);
             Assert.Equal("shopify", scope.ServiceProvider.GetRequiredKeyedService<IStockSourceConnector>("shopify").Source);
+            Assert.Equal("shopify", scope.ServiceProvider.GetRequiredKeyedService<ElGuerre.Tendero.Accounts.Ports.ICustomerSourceConnector>("shopify").Source);
             var options = provider.GetRequiredService<IOptions<ShopifyOptions>>().Value;
             Assert.Equal("COFFEE_MAKER", options.Categories["gid://shopify/TaxonomyCategory/hg-11-1-3"]);
             Assert.Equal("MAD", options.Locations["gid://shopify/Location/71"]);

@@ -46,6 +46,9 @@ internal sealed class FakeShopify : HttpMessageHandler
     /// <summary>Two collections: "cocina" with both products, "ofertas" with none.</summary>
     public string CollectionsFixture { get; set; } = "collections.jsonl";
 
+    /// <summary>Four customers: Ana with two addresses, Luis unsubscribed, Marta never asked, and one with no email.</summary>
+    public string CustomersFixture { get; set; } = "customers.jsonl";
+
     /// <summary>The store's locations: Madrid and Barcelona mapped, Bilbao not.</summary>
     public string Locations { get; set; } =
         """[{"id":"gid://shopify/Location/71","name":"Almacén central (Madrid)","isActive":true},{"id":"gid://shopify/Location/72","name":"Almacén norte (Barcelona)","isActive":true},{"id":"gid://shopify/Location/73","name":"Tienda de Bilbao","isActive":true}]""";
@@ -71,6 +74,7 @@ internal sealed class FakeShopify : HttpMessageHandler
             {
                 { } bulk when bulk.Contains("productVariants", StringComparison.Ordinal) => InventoryFixture,
                 { } bulk when bulk.Contains("{ collections", StringComparison.Ordinal) => CollectionsFixture,
+                { } bulk when bulk.Contains("{ customers", StringComparison.Ordinal) => CustomersFixture,
                 _ => ResultsFixture,
             };
             return Text(File.ReadAllText(Fixture(fixture)), "application/jsonl");

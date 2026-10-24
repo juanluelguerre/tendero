@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ImportCustomers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/agent-denials": {
         parameters: {
             query?: never;
@@ -1882,6 +1898,7 @@ export interface components {
     schemas: {
         AccountData: {
             displayName: null | string;
+            email: null | string;
             culture: string;
             cultureChosen: boolean;
             marketingGiven: null | boolean;
@@ -2330,6 +2347,8 @@ export interface components {
             culture: null | string;
         };
         /** @enum {unknown} */
+        CustomerNoteCode: "FieldRedacted" | "NoEmail" | "AlreadyHere" | "IdentityNotProvisioned" | "AddressUnreadable" | "Erased";
+        /** @enum {unknown} */
         DashboardPeriod: "Day" | "Week" | "Month";
         /** @enum {unknown} */
         DealKind: "PercentOffLine" | "AmountOffOrder" | "BuyXGetY" | "FreeShipping";
@@ -2442,6 +2461,22 @@ export interface components {
         ImageAltOutcome: "Described" | "Unchanged" | "NoSuchImage" | "Archived" | "NotFound";
         /** @enum {unknown} */
         ImageShowsOutcome: "Shown" | "Unchanged" | "NoSuchImage" | "NotSold" | "Archived" | "NotFound";
+        ImportCustomersCommand: {
+            source: string;
+            /** @default es */
+            culture: string;
+            /** @default false */
+            rehearse: boolean;
+        };
+        ImportCustomersResult: {
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            alreadyImported: number;
+            /** Format: int32 */
+            linked: number;
+            notes: components["schemas"]["MessageOfCustomerNoteCode"][];
+        };
         /** @enum {unknown} */
         ImportNoteCode: "CategoryNotMapped" | "LocaleIgnored" | "DescriptionHadLayout" | "VariantWithoutSku" | "SkuSharedAtSource" | "SkuChangedAtSource" | "ImageUnreadable" | "CollectionNotMapped";
         ImportProductsCommand: {
@@ -2653,6 +2688,11 @@ export interface components {
         MergeHistoryRequest: {
             views: null | components["schemas"]["ViewedProduct"][];
             searches: null | components["schemas"]["PastSearch"][];
+        };
+        MessageOfCustomerNoteCode: {
+            code: components["schemas"]["CustomerNoteCode"];
+            about: null | string;
+            text: string;
         };
         MessageOfImportNoteCode: {
             code: components["schemas"]["ImportNoteCode"];
@@ -4137,6 +4177,56 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "NoCustomer";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ImportCustomers: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCustomersCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCustomersResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
                     } & components["schemas"]["Problem"];
                 };
             };

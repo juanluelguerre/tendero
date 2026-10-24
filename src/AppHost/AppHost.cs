@@ -52,6 +52,7 @@ const int elasticsearchPort = 39200;
 const int pgWebPort = 35433;
 const int elasticvuePort = 39201;
 const int keycloakPort = 38443;
+const int mailpitPort = 38025;
 const int qdrantGrpcPort = 36334;
 const int qdrantHttpPort = 36333;
 const int embeddingsPort = 38081;
@@ -641,6 +642,19 @@ var keycloak = builder.AddKeycloak("keycloak", port: keycloakPort, adminPassword
     // before the request left.
     .WithLifetime(ContainerLifetime.Persistent);
 
+// WHERE KEYCLOAK'S EMAIL GOES IN DEVELOPMENT (phase 16, S2b; ADR 0067): an imported
+// customer has no password, and sets one with the realm's *forgot password*, whose
+// link Keycloak emails. Mailpit catches every message and shows it at its own page,
+// so nothing reaches a real inbox. MIT, a service beside the app (Tier 2). The realm
+// names it as its SMTP server (`mailpit:1025`). Started with Keycloak, and like it
+// on demand otherwise.
+var mailpit = builder.AddContainer("mailpit", "axllent/mailpit", "v1.31.5")
+    .WithHttpEndpoint(targetPort: 8025, port: mailpitPort, name: "http")
+    .WithEndpoint(targetPort: 1025, name: "smtp")
+    .WithContainerRuntimeArgs("--memory=128m", "--memory-swap=128m", Cpus(1))
+    .WithExternalHttpEndpoints();
+keycloak.WaitFor(mailpit);
+
 if (!useKeycloak)
 {
     // Visible, listed, and not started. The Start button in the dashboard is
@@ -652,6 +666,7 @@ if (!useKeycloak)
     // gives you is the admin console, which is how the committed realm gets
     // edited and re-exported.
     keycloak.WithExplicitStart();
+    mailpit.WithExplicitStart();
 }
 
 var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
@@ -882,7 +897,17 @@ if (useKeycloak)
         // AllowHttpMetadata stays true because the realm is served over plain HTTP
         // inside the compose network. It is tied to the environment, not a constant.
         .WithEnvironment("Authentication__Authority", $"{keycloak.GetEndpoint("http")}/realms/tendero")
-        .WithEnvironment("Authentication__AllowHttpMetadata", "true");
+        .WithEnvironment("Authentication__AllowHttpMetadata", "true")
+        // Provisioning imported customers (phase 16, S2b; ADR 0067): the realm's
+        // service account that may manage users and nothing else. Its secret is
+        // committed in the realm for the reason the admin password is above — a
+        // development realm — and passed as a secret parameter so the dashboard
+        // masks it.
+        .WithEnvironment("Keycloak__Provisioning__BaseUrl", keycloak.GetEndpoint("http"))
+        .WithEnvironment("Keycloak__Provisioning__Realm", "tendero")
+        .WithEnvironment("Keycloak__Provisioning__ClientId", "tendero-provisioning")
+        .WithEnvironment("Keycloak__Provisioning__ClientSecret",
+            builder.AddParameter("keycloak-provisioning-secret", "tendero-provisioning-dev", secret: true));
 }
 
 // Aspire brings up both Angular apps too: one command starts everything, and the

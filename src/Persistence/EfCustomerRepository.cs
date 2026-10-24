@@ -15,8 +15,16 @@ namespace ElGuerre.Tendero.Persistence;
 /// on every request and is forbidden from writing.
 /// </summary>
 internal sealed class EfCustomerRepository(TenderoDbContext context)
-    : ICustomerRepository, ICustomerDirectory
+    : ICustomerRepository, ICustomerDirectory, IImportedCustomers
 {
+    /// <summary>Tracked, like the other finds: the import links or leaves who it finds (phase 16, S2b).</summary>
+    public Task<Customer?> FindByOriginAsync(CustomerOrigin origin, CancellationToken ct) =>
+        context.Customers.FirstOrDefaultAsync(
+            customer => customer.ImportedFrom != null
+                && customer.ImportedFrom.Source == origin.Source
+                && customer.ImportedFrom.ExternalId == origin.ExternalId,
+            ct);
+
     // WITH tracking: whoever loads a customer from a slice does it to change one.
     public Task<Customer?> FindByIdAsync(CustomerId id, CancellationToken ct) =>
         context.Customers.FirstOrDefaultAsync(customer => customer.Id == id, ct);

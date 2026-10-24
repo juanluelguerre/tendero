@@ -108,6 +108,7 @@ public static class PersistenceServiceCollectionExtensions
         // One adapter, two Accounts ports, one instance per scope.
         services.AddScoped<EfCustomerRepository>();
         services.AddScoped<ICustomerRepository>(services => services.GetRequiredService<EfCustomerRepository>());
+        services.AddScoped<IImportedCustomers>(services => services.GetRequiredService<EfCustomerRepository>());
         services.AddScoped<ICustomerDirectory>(services => services.GetRequiredService<EfCustomerRepository>());
 
         services.AddScoped<EfAgentRepository>();

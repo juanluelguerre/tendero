@@ -52,6 +52,24 @@ users above. It also turns the shop's languages on: `internationalizationEnabled
 `supportedLocales: ["es", "en"]`, `defaultLocale: "es"` — the shop's own default
 culture (invariant 6) — and `loginTheme: "tendero"`.
 
+**Imported customers** (phase 16, S2b; ADR 0067) add three things:
+
+- **`tendero-provisioning`**, a confidential client whose service account holds
+  `realm-management`'s `manage-users`, `view-users` and `query-users` and nothing
+  else. The API uses it, when the issuer is Keycloak, to make an identity with no
+  password for each customer an import brings. Its development secret is in the
+  file, for the reason the admin password is (`keycloak-provisioning-secret` in the
+  AppHost).
+- **`resetPasswordAllowed: true`**: an imported customer sets their password with
+  *forgot password*, which also proves the address is theirs.
+- **`smtpServer`**: `mailpit:1025`, the AppHost's Mailpit, which catches every
+  email and shows it at `http://localhost:38025`. Nothing reaches a real inbox.
+
+A machine that started Keycloak before this has none of the three: see the next
+paragraph. Changing the running realm by hand means creating the client with a
+service account and those three roles, turning *Forgot password* on (Realm settings
+→ Login) and setting the SMTP host and port (Realm settings → Email).
+
 **An import happens once.** `--import-realm` skips a realm that already exists, and
 the realm lives in the `tendero-keycloak-data` volume, so an edit to this file does
 not reach a machine that has started Keycloak before. Two ways to bring it in:
