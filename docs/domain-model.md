@@ -644,6 +644,7 @@ classDiagram
         +OrderChannel? Channel
         +DateTimeOffset? ConfirmedAt
         +DateTimeOffset? ShippedAt
+        +OrderOrigin? ImportedFrom
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment
@@ -691,6 +692,12 @@ classDiagram
         <<enumeration>>
         Live
         Test
+    }
+    class OrderOrigin {
+        <<record>>
+        +string Source
+        +string ExternalId
+        +string Number
     }
     class OrderPayment {
         <<record>>
@@ -817,6 +824,7 @@ classDiagram
     Order --> OrderQuote : Quote
     Order --> OrderTotals : Totals
     Order --> OrderMandate : Mandate
+    Order --> OrderOrigin : ImportedFrom
     Order "1" --> "*" OrderDiscount : Discounts
     Order "1" --> "*" OrderTax : Taxes
     Order --> OrderPayment : Payment
@@ -869,6 +877,9 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
+    [*] --> Pending
+    [*] --> Delivered
+    [*] --> Cancelled
     Pending --> PaymentAuthorized
     Pending --> PaymentFailed
     Pending --> Cancelled
@@ -885,6 +896,8 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
+    [*] --> Requested
+    [*] --> Refunded
     Requested --> Approved
     Requested --> Rejected
     Requested --> Cancelled

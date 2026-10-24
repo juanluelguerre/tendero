@@ -53,4 +53,35 @@ public sealed class TransitionTableTests
 
         Assert.Contains("Light.Amber", exception.Message);
     }
+
+    /// <summary>
+    /// Where an aggregate may be born is declared beside its edges (ADR 0066): a
+    /// light is switched on at red, or found already off, and nowhere else.
+    /// </summary>
+    [Theory]
+    [InlineData(Light.Red, true)]
+    [InlineData(Light.Off, true)]
+    [InlineData(Light.Green, false)]
+    public void A_table_declares_where_its_aggregate_may_be_born(Light state, bool entry)
+    {
+        var table = new TransitionTable<Light>
+        {
+            Entries = [Light.Red, Light.Off],
+            [Light.Red] = [Light.Green],
+            [Light.Green] = [Light.Amber],
+            [Light.Amber] = [Light.Red],
+            [Light.Off] = [],
+        };
+
+        Assert.Equal(entry, table.IsEntry(state));
+        if (entry)
+            table.EnsureEntry(state, "light 7");
+        else
+            Assert.Equal("Illegal entry Green for light 7.", Assert.Throws<InvalidOperationException>(() => table.EnsureEntry(state, "light 7")).Message);
+    }
+
+    /// <summary>A table that declares no entries refuses none: the idiom predates them.</summary>
+    [Fact]
+    public void A_table_without_entries_refuses_none() =>
+        Table.EnsureEntry(Light.Green, "light 7");
 }

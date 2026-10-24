@@ -188,6 +188,13 @@ internal static class DomainModelDocument
 
         document.Append($"\n### {type.Name} states\n\n```mermaid\nstateDiagram-v2\n");
 
+        // Where the aggregate may be born (ADR 0066): an imported order's entry is
+        // in the picture, not only in the code.
+        foreach (var entry in (System.Collections.IEnumerable)field.FieldType.GetProperty("Entries")!.GetValue(table)!)
+        {
+            document.Append($"    [*] --> {entry}\n");
+        }
+
         foreach (var from in Enum.GetValues(status))
         {
             IEnumerable<object> targets;

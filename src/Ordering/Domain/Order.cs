@@ -157,6 +157,9 @@ public sealed class Order : AggregateRoot
     // A declarative state machine: a transition outside this table is a bug.
     private static readonly TransitionTable<OrderStatus> AllowedTransitions = new()
     {
+        // Placed here, an order starts Pending; brought from another platform it is
+        // history, born in its final state (ADR 0066, Imported).
+        Entries = [OrderStatus.Pending, OrderStatus.Delivered, OrderStatus.Cancelled],
         [OrderStatus.Pending] = [OrderStatus.PaymentAuthorized, OrderStatus.PaymentFailed, OrderStatus.Cancelled],
         [OrderStatus.PaymentAuthorized] = [OrderStatus.Confirmed, OrderStatus.Cancelled],
         [OrderStatus.PaymentFailed] = [OrderStatus.Pending, OrderStatus.Cancelled],
@@ -252,6 +255,13 @@ public sealed class Order : AggregateRoot
     public DateTimeOffset? ShippedAt { get; private set; }
 
     /// <summary>
+    /// Where an imported order came from (ADR 0066): the platform, its id there and
+    /// the number the merchant knew it by. Null for an order placed here, which is
+    /// what lets a figure tell the shop's history from its sales.
+    /// </summary>
+    public OrderOrigin? ImportedFrom { get; private set; }
+
+    /// <summary>
     /// What came off, frozen as codes and labels. Backed by a list for the same
     /// reason the lines are: EF maps a private collection into one JSON column,
     /// and the aggregate keeps the only way to add to it.
@@ -334,42 +344,9 @@ public sealed class Order : AggregateRoot
         OrderChannel? channel = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
-        ArgumentNullException.ThrowIfNull(shippingAddress);
-        ArgumentNullException.ThrowIfNull(billingAddress);
-        ArgumentNullException.ThrowIfNull(shipping);
         ArgumentNullException.ThrowIfNull(quote);
-        ArgumentNullException.ThrowIfNull(totals);
-
-        if (lines.Count == 0)
-            throw new InvalidOperationException("An order requires at least one line.");
-        if (lines.Any(l => l.Quantity <= 0))
-            throw new InvalidOperationException("Line quantity must be positive.");
-
-        // An order has ONE currency. Catching it here rather than while summing
-        // turns a data error into a named rejection, in the one place that can
-        // decide it. Multi-currency is deferred on purpose (initial-plan §7).
-        var currency = lines[0].UnitPrice.Currency;
-        if (lines.Any(l => !string.Equals(l.UnitPrice.Currency, currency, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidOperationException("An order cannot mix currencies.");
-
-        // The totals and the shipping come from elsewhere, so their currency is
-        // an assumption until it is checked. A total in the wrong currency is
-        // the kind of thing that reads fine and charges a hundred times over.
-        if (!string.Equals(totals.Total.Currency, currency, StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(shipping.Amount.Currency, currency, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException($"The order is in {currency} and its totals are not.");
-
-        // Prices include VAT (ADR 0028): a total is the subtotal less the
-        // discounts plus the shipping, and the tax is a part of it. This is not
-        // a recomputation — the order still freezes what Pricing decided — it is
-        // a refusal to freeze totals that contradict themselves. The ones this
-        // check would have refused are the ones the shop charged until
-        // 2026-09-11, with the tax added on top of prices that already had it.
-        var expected = totals.Subtotal - totals.DiscountTotal + totals.Shipping;
-        if (totals.Total.Amount != expected.Amount)
-            throw new InvalidOperationException(
-                $"The order's totals do not add up: {totals.Subtotal} − {totals.DiscountTotal} + " +
-                $"{totals.Shipping} is {expected}, not {totals.Total}.");
+        AllowedTransitions.EnsureEntry(OrderStatus.Pending, "a placed order");
+        var currency = EnsureConsistent(lines, shippingAddress, billingAddress, shipping, totals);
 
         // Placement checks this before charging anything; the aggregate holds the
         // rule too, so no path — present or future — places an order for other
@@ -408,6 +385,119 @@ public sealed class Order : AggregateRoot
         order.taxes.AddRange(taxes ?? []);
         order.Raise(new OrderPlaced(order.Id, now));
         return order;
+    }
+
+    /// <summary>
+    /// An order that already happened on another platform (ADR 0066): born in its
+    /// final state — <c>Delivered</c> or <c>Cancelled</c>, the table's other entries
+    /// — on the day the source says, with every check placing makes and **no
+    /// event**, because nothing must reserve, capture or write to anybody about a
+    /// purchase made last year.
+    ///
+    /// Keyed by its source for idempotence (<c>import:shopify:5001</c>), so a store
+    /// imported twice brings each order once. Its quote names the source rather
+    /// than one Pricing issued: nothing will charge it, so nothing revalidates it.
+    /// </summary>
+    public static Order Imported(
+        OrderOrigin origin,
+        OrderStatus status,
+        CustomerId customerId,
+        IReadOnlyList<OrderLine> lines,
+        Address shippingAddress,
+        Address billingAddress,
+        OrderShipping shipping,
+        OrderTotals totals,
+        DateTimeOffset placedAt,
+        IReadOnlyList<OrderDiscount>? discounts = null,
+        IReadOnlyList<OrderTax>? taxes = null,
+        string culture = "es",
+        DateTimeOffset? shippedAt = null,
+        string? contactEmail = null)
+    {
+        ArgumentNullException.ThrowIfNull(origin);
+        var key = $"import:{origin.Source}:{origin.ExternalId}";
+
+        // History is closed: born only where the table has no edge out.
+        AllowedTransitions.EnsureEntry(status, $"imported order {key}");
+        if (AllowedTransitions[status].Count > 0)
+            throw new InvalidOperationException($"Illegal entry {status} for imported order {key}: history is born closed.");
+
+        var currency = EnsureConsistent(lines, shippingAddress, billingAddress, shipping, totals);
+
+        var order = new Order
+        {
+            Id = OrderId.New(),
+            CustomerId = customerId,
+            Mode = OrderMode.Live,
+            ContactEmail = string.IsNullOrWhiteSpace(contactEmail) ? null : contactEmail.Trim(),
+            ImportedFrom = origin,
+            IdempotencyKey = key,
+            Culture = SharedKernel.Culture.Normalize(culture),
+            Currency = currency,
+            Status = status,
+            CreatedAt = placedAt,
+            // Its last change is the source's, not the import's: the returns window
+            // counts from it, and a purchase made last spring is not returnable for a
+            // fortnight because the shop moved platforms today.
+            UpdatedAt = shippedAt ?? placedAt,
+            ShippedAt = shippedAt,
+            ShippingAddress = shippingAddress,
+            BillingAddress = billingAddress,
+            Shipping = shipping,
+            Quote = new OrderQuote(key, "imported", placedAt),
+            Totals = totals
+        };
+        order.lines.AddRange(lines);
+        order.discounts.AddRange(discounts ?? []);
+        order.taxes.AddRange(taxes ?? []);
+        return order;
+    }
+
+    /// <summary>
+    /// What an order must be, however it is born: lines with a quantity, one
+    /// currency, and totals in it that add up. Returns that currency.
+    /// </summary>
+    private static string EnsureConsistent(
+        IReadOnlyList<OrderLine> lines, Address shippingAddress, Address billingAddress,
+        OrderShipping shipping, OrderTotals totals)
+    {
+        ArgumentNullException.ThrowIfNull(shippingAddress);
+        ArgumentNullException.ThrowIfNull(billingAddress);
+        ArgumentNullException.ThrowIfNull(shipping);
+        ArgumentNullException.ThrowIfNull(totals);
+
+        if (lines.Count == 0)
+            throw new InvalidOperationException("An order requires at least one line.");
+        if (lines.Any(l => l.Quantity <= 0))
+            throw new InvalidOperationException("Line quantity must be positive.");
+
+        // An order has ONE currency. Catching it here rather than while summing
+        // turns a data error into a named rejection, in the one place that can
+        // decide it. Multi-currency is deferred on purpose (initial-plan §7).
+        var currency = lines[0].UnitPrice.Currency;
+        if (lines.Any(l => !string.Equals(l.UnitPrice.Currency, currency, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("An order cannot mix currencies.");
+
+        // The totals and the shipping come from elsewhere, so their currency is
+        // an assumption until it is checked. A total in the wrong currency is
+        // the kind of thing that reads fine and charges a hundred times over.
+        if (!string.Equals(totals.Total.Currency, currency, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(shipping.Amount.Currency, currency, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException($"The order is in {currency} and its totals are not.");
+
+        // Prices include VAT (ADR 0028): a total is the subtotal less the
+        // discounts plus the shipping, and the tax is a part of it. This is not
+        // a recomputation — the order still freezes what Pricing decided — it is
+        // a refusal to freeze totals that contradict themselves. The ones this
+        // check would have refused are the ones the shop charged until
+        // 2026-09-11, with the tax added on top of prices that already had it.
+        var expected = totals.Subtotal - totals.DiscountTotal + totals.Shipping;
+        if (totals.Total.Amount != expected.Amount)
+            throw new InvalidOperationException(
+                $"The order's totals do not add up: {totals.Subtotal} − {totals.DiscountTotal} + " +
+                $"{totals.Shipping} is {expected}, not {totals.Total}.");
+
+        return currency;
     }
 
     /// <summary>

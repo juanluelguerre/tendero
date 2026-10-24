@@ -32,7 +32,24 @@ public sealed class TransitionTable<TStatus>
         init => this.edges[from] = [.. value];
     }
 
+    /// <summary>
+    /// Where the aggregate may be born (ADR 0066), declared beside its edges: an
+    /// order is placed <c>Pending</c>, and history imported from another platform is
+    /// born <c>Delivered</c> or <c>Cancelled</c>. Empty for a table that declares
+    /// none, which refuses no entry — the idiom predates entries.
+    /// </summary>
+    public IReadOnlyList<TStatus> Entries { get; init; } = [];
+
     public bool Allows(TStatus from, TStatus to) => this[from].Contains(to);
+
+    public bool IsEntry(TStatus state) => Entries.Count == 0 || Entries.Contains(state);
+
+    /// <summary>The guard a factory calls before it creates the aggregate in <paramref name="state"/>.</summary>
+    public void EnsureEntry(TStatus state, string subject)
+    {
+        if (!IsEntry(state))
+            throw new InvalidOperationException($"Illegal entry {state} for {subject}.");
+    }
 
     /// <summary>
     /// The guard every aggregate used to write by hand. <paramref name="subject"/>

@@ -99,6 +99,9 @@ public sealed class ReturnRequest : AggregateRoot
 {
     private static readonly TransitionTable<ReturnStatus> AllowedTransitions = new()
     {
+        // Opened here, a return starts Requested; a refund brought from another
+        // platform is history, born Refunded (ADR 0066, Imported).
+        Entries = [ReturnStatus.Requested, ReturnStatus.Refunded],
         [ReturnStatus.Requested] = [ReturnStatus.Approved, ReturnStatus.Rejected, ReturnStatus.Cancelled],
         [ReturnStatus.Approved] = [ReturnStatus.Received, ReturnStatus.Cancelled],
 
@@ -219,6 +222,67 @@ public sealed class ReturnRequest : AggregateRoot
     public static ReturnRequest Open(
         TimeProvider clock, Order order, IReadOnlyList<ReturnLine> lines, IReadOnlyList<ReturnRequest> earlier)
     {
+        AllowedTransitions.EnsureEntry(ReturnStatus.Requested, "an opened return");
+        EnsureReturnable(order, lines, earlier);
+
+        var now = clock.GetUtcNow();
+
+        var request = new ReturnRequest
+        {
+            Id = ReturnRequestId.New(),
+            OrderId = order.Id,
+            Number = earlier.Count + 1,
+            CustomerId = order.CustomerId,
+            Status = ReturnStatus.Requested,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        request.lines.AddRange(lines);
+        request.Raise(new ReturnRequested(request.Id, order.Id, now));
+
+        return request;
+    }
+
+    /// <summary>
+    /// A refund that already happened on another platform (ADR 0066): a return born
+    /// <c>Refunded</c>, the table's other entry, against the order it refunded, with
+    /// the amount and the source's reference, dated when it happened — and **no
+    /// event**, because the money went back then and nothing must refund or restock
+    /// it again. It keeps every check opening makes, so what came back once cannot
+    /// come back twice.
+    /// </summary>
+    public static ReturnRequest Imported(
+        Order order, IReadOnlyList<ReturnLine> lines, IReadOnlyList<ReturnRequest> earlier,
+        Money refund, string reference, DateTimeOffset refundedAt)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reference);
+        AllowedTransitions.EnsureEntry(ReturnStatus.Refunded, $"an imported refund of order {order.Id}");
+        EnsureReturnable(order, lines, earlier);
+
+        if (refund.IsNegative || refund.IsZero)
+            throw new InvalidOperationException("A refund needs a positive amount.");
+
+        var request = new ReturnRequest
+        {
+            Id = ReturnRequestId.New(),
+            OrderId = order.Id,
+            Number = earlier.Count + 1,
+            CustomerId = order.CustomerId,
+            Status = ReturnStatus.Refunded,
+            RefundAmount = refund,
+            RefundReference = reference,
+            CreatedAt = refundedAt,
+            UpdatedAt = refundedAt
+        };
+
+        request.lines.AddRange(lines);
+        return request;
+    }
+
+    /// <summary>What a return must be, however it is born: against a delivered order, for lines and quantities it still has.</summary>
+    private static void EnsureReturnable(Order order, IReadOnlyList<ReturnLine> lines, IReadOnlyList<ReturnRequest> earlier)
+    {
         ArgumentNullException.ThrowIfNull(order);
 
         if (order.Status != OrderStatus.Delivered)
@@ -251,24 +315,6 @@ public sealed class ReturnRequest : AggregateRoot
                 throw new InvalidOperationException(
                     $"{group.Key}: {asked} asked to return, {left[group.Key]} left — the rest is already coming back.");
         }
-
-        var now = clock.GetUtcNow();
-
-        var request = new ReturnRequest
-        {
-            Id = ReturnRequestId.New(),
-            OrderId = order.Id,
-            Number = earlier.Count + 1,
-            CustomerId = order.CustomerId,
-            Status = ReturnStatus.Requested,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-
-        request.lines.AddRange(lines);
-        request.Raise(new ReturnRequested(request.Id, order.Id, now));
-
-        return request;
     }
 
     /// <summary>

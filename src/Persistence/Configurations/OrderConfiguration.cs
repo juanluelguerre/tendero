@@ -126,6 +126,11 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         // read with the order and never queried on its own (P11-5).
         builder.ComplexProperty(o => o.Mandate, mandate => mandate.ToJson("mandate"));
 
+        // Null for every order placed here; jsonb like the mandate (ADR 0066). An
+        // imported order is found again by its idempotency key, import:<source>:<id>,
+        // which the unique index above already serves.
+        builder.ComplexProperty(o => o.ImportedFrom, origin => origin.ToJson("imported_from"));
+
         builder.Ignore(o => o.LinesTotal);
         builder.Ignore(o => o.Total);
         builder.Ignore(o => o.DomainEvents);

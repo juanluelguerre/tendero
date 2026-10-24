@@ -59,6 +59,12 @@ public sealed record OrderTotals(
 public sealed record OrderQuote(string QuoteId, string InputHash, DateTimeOffset IssuedAt);
 
 /// <summary>
+/// Where an imported order came from (ADR 0066): the platform, the order's id there,
+/// and the number the merchant and the buyer knew it by (<c>#1001</c>).
+/// </summary>
+public sealed record OrderOrigin(string Source, string ExternalId, string Number);
+
+/// <summary>
 /// What the payment provider gave back.
 ///
 /// `Provider` is the keyed adapter's name and travels with the reference because
