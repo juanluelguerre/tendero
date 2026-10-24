@@ -1108,10 +1108,30 @@ S2a's tasks (spec, *Tasks*):
 - [x] `P16-14` A merchant's own store: `Shopify:AccessToken` and `tools/shopify-connect/` — **M** · *Done 2026-10-23*: the token is used as it is, never exchanged; the AppHost gives it to the API when `Parameters:shopify-access-token` is there; the script checks state, HMAC and store, asks read scopes only, refuses an expiring token and writes the user secrets without printing the token. Not yet run against a store outside the organisation: that needs a merchant's approval
 - [x] `P16-15` The seed's stock in two locations, the round trip grown, S2a's close — **M** · *Done 2026-10-24*: `tools/shopify-seed/stock.mjs` made Madrid and Barcelona in the development store and set the seed's stock; the round trip reads back all 242 levels, the 30 collections each to a page, and the tax classes. **S2a closed** (`docs/testing.md`, *Phase 16 S2a's close*, S1 included): Shopify's first baseline **92.64 %** of covered (81.63 % on run 1); Catalog 70.35 → **81.16 %** and Inventory 82.14 → 73.77 % + one by hand, scoped; SharedKernel unbuildable by Stryker (C# 15 `closed` records), `Slugs.cs` proven by hand; a lowercase note sentence found and fixed
 
+S2b's tasks (spec, *S2b, the people and their history*, accepted 2026-10-24 with its four decisions: provisioning, a refund as a closed return, no email at migration, the whole order history):
+
+- [ ] `P16-16` The lab store's people: the scopes and the customer fields requested, five customers, a dozen closed orders (one cancelled, one refunded, one open), two discounts, two gift cards — **S**
+- [ ] `P16-17` Customers: the source port and adapter, `ImportCustomers` with its rehearsal, the email on `Customer`, and provisioning (port, Keycloak and dev-issuer adapters, the ADR, Keycloak's SMTP with Mailpit, a browser test of *forgot password* to a first sign-in) — **L**
+- [ ] `P16-18` Orders born closed: the ADR, `Order.Imported` and `ReturnRequest.Imported`, the port and adapter, `ImportOrders`, open ones listed, the orders round trip — **L**
+- [ ] `P16-19` Discounts as a proposed promotions file, with notes for what the engine cannot express — **M**
+- [ ] `P16-20` Gift cards listed with their balances — **S**
+- [ ] `P16-21` The whole migration in one rehearsal, the counters per context, S2b's close — **M**
+
 **S3 · Shopify as a channel** (case B, without the theme): an outbound
 sales-channel port, catalogue, stock and prices published through the outbox,
 orders received by idempotent webhooks, a stock margin against overselling, and
 an ADR on which system owns which data. Spec written when S2 closes.
+
+**Exports and feeds — leaving Tendero, and selling elsewhere** (after S2b; spec
+[`docs/specs/exports.md`](specs/exports.md), accepted 2026-10-24 with its five
+decisions: an `Exports` project that is not a context, the product feed first,
+CSV before XLSX, `;` for es and `,` for en, the feed as a public URL). An import
+without an export is lock-in:
+
+- [ ] `E-1` The `Exports` project, the outbound port and its contract suite, the architecture rule extended to it — **S**
+- [ ] `E-2` The product feed for Google Merchant Center: the slice, the adapter, the category mapping, the public URL and the backoffice download, the counter — **M**
+- [ ] `E-3` Shopify's product CSV, and the round trip from the other side on the lab store — **M**
+- [ ] `E-4` Orders for the accountant: CSV for the reader's culture, audited, with the erasure test — **M**
 
 **Risks.** Shopify's API changes every quarter (the version is pinned and
 recorded); a real merchant's store needs an install flow S1 does not have; and

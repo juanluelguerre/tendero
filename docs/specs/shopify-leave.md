@@ -1,6 +1,6 @@
 # Spec: leaving Shopify (phase 16, stage S2)
 
-**Status**: accepted 2026-10-23, all nine decisions as proposed. S2a comes
+**Status**: accepted 2026-10-23, all nine decisions as proposed; S2a closed 2026-10-24; **S2b accepted 2026-10-24**, its four decisions as proposed (A: provisioning). S2a came
 first. One correction came from reading the code before writing S2a's tasks:
 **warehouses are a file nothing writes**, as promotions are. So a store's
 locations become a *proposed warehouses file* that a person commits, while
@@ -299,4 +299,143 @@ locations, publications, navigation).
   stock), the round trip grows (stock per SKU and location, tax classes,
   redirects), the notebook, S2a's close — **M**
 
-S2b's tasks are written when S2a closes.
+## S2b, the people and their history — accepted 2026-10-24
+
+S2a closed on 2026-10-24 (`docs/testing.md`, *Phase 16 S2a's close*). S2b brings
+what decisions 3 to 6 accepted: customers, their orders, the discounts they were
+promised, and the gift cards they hold. It reuses everything S2a built: the
+rehearsal, an import run per context, the notes in es and en, the counters
+labelled with `catalog.source`, and a contract suite per port.
+
+### What exists today, measured 2026-10-24
+
+- **`Customer` has no email.** A guest is a customer with no `Subject`, and a guest
+  becomes a person only through `LinkIdentity`, with the guest id the browser
+  holds. Nothing links a sign-in to a customer by email. The name, culture,
+  segment, address book (`AddressBook`) and marketing consent
+  (`MarketingConsent(Given, At, Wording)`) exist.
+- **Nothing writes to the identity provider.** The API validates tokens and
+  nothing else (invariant 10). Keycloak runs in the AppHost with its realm
+  imported, and the realm has **`registrationAllowed: false`**: nobody creates
+  their own account today. There is **no mailer**, and the realm configures no
+  SMTP, so Keycloak sends no email of its own either.
+- **An order's life is a table** (`Order.AllowedTransitions`): Pending →
+  PaymentAuthorized → Confirmed → Shipped → Delivered, or Cancelled. There is
+  **no Refunded status**: a refund is a `ReturnRequest`, which has a life of its
+  own.
+- **Promotions are a file nothing writes** (`seed/promotions.sample.json`), with
+  four effects: `percent-off-line`, `amount-off-order`, `free-shipping` and
+  `buy-x-get-y`. The conditions are a category, a minimum subtotal and a minimum
+  quantity, plus combination rules and a priority.
+- **Erasure is per context** (`IPersonalDataHolder`, phase 15). Anything S2b
+  stores about a person must be erasable.
+- **Shopify treats customers and orders as protected customer data.** A custom
+  app in a development store needs no review, but each field (name, email,
+  address, phone) is requested in the Partner Dashboard. A field not granted
+  comes back redacted with HTTP 200 and an `errors` entry, so the adapter must
+  read those errors and not trust the 200 alone.
+
+### Behaviour, proposed
+
+**Customers.** Each store customer becomes a `Customer`. Their addresses go into
+the address book, and their marketing consent comes with its date and the wording
+*"Imported from Shopify: consent given to the store on <date>"*. What they
+agreed to was the store's wording, and we do not have it. **No password comes**:
+no platform exports one. How a person signs in for the first time is
+decision S2b-1. A customer the catalogue has already seen, by email, is the same
+customer and is not imported twice.
+
+**Orders.** Only **closed** orders come: fulfilled, or cancelled. Each is born in
+its final state through `Order.Imported(...)` (decision 4): the lines are
+snapshotted with their names, prices, discounts and taxes as the store charged
+them; no stock moves; and no event sends anything. An order still open on the
+day is listed, for the merchant to finish in Shopify before switching. An order
+whose customer the import did not bring belongs to a guest. A refunded order is
+decision S2b-2.
+
+**Discounts.** Each store discount is translated into a proposed entry of the
+promotions file (decision 5), with a note when the engine cannot express it: a
+customer segment, a usage limit, a product-level target, a schedule. A person
+reads the proposal and commits it. The proposal *is* the migration.
+
+**Gift cards.** Each card is listed with its last four characters, its balance
+and its expiry, for the merchant to reissue (decision 6). Shopify returns a full
+code only when it creates the card.
+
+**The rehearsal** covers all four, as S2a's does. Each context is its own port
+with a Shopify adapter: customers, orders, discounts, gift cards. None reaches
+into another's tables.
+
+### Decisions for the author (S2b)
+
+1. **How an imported customer first signs in.** Decision 3 accepted
+   provisioning. Reading the code showed a lighter-looking road, and then why it
+   does not hold today. The two:
+   - **A. Provision** (decision 3 as accepted, proposed): a port creates each
+     person in Keycloak, or in the dev issuer, with their email and no password,
+     and the customer is created already linked to that identity. On their first
+     visit they use *forgot password*, which emails them a link and so proves
+     they own the address. It needs a Keycloak service account that can manage
+     users (one more secret), email from Keycloak (SMTP, with a Mailpit container
+     in development: Tier 2, MIT), and the provisioning ADR. It matches how the
+     shop works today: accounts are made by the shop, not by the shopper.
+   - **B. Import as guests with an email, linked at first sign-in**: the
+     customer comes with no identity, only an email (personal data, erasable),
+     and when somebody signs in with a **verified** email that matches,
+     `LinkIdentity` links them to it. Nothing is written to the identity
+     provider. But with `registrationAllowed: false` nobody can make the account
+     to sign in with, so B needs **self-registration turned on** for every
+     shopper, with email verification (the same SMTP) as the guard against
+     anyone registering an address to claim its orders. That is a product
+     decision of its own, larger than this migration.
+   *Proposed: A.* It writes outside Tendero only through a port, as decision 3
+   accepted, and it does not change how every other shopper gets an account.
+   Both roads need Keycloak to send email, which is a step of its own in
+   `P16-17`.
+2. **A refunded order.** Tendero has no Refunded status. The options: import it
+   as Delivered with a closed `ReturnRequest` for the refunded lines and amount,
+   or as Delivered with a note. *Proposed: a closed `ReturnRequest`*, because a
+   refund is a return in Tendero's language, and the customer's history shows
+   it. A return has its own transition table, so it is born closed through the
+   same narrow exception as the order (`ReturnRequest.Imported(...)`), recorded in
+   the same ADR.
+3. **No email at migration.** Neither road sends anything on the day: writing
+   to every imported customer would be marketing, and their consent was given to
+   the store, not to us. The merchant announces the move in their own words.
+   *Proposed: yes.*
+4. **How far back orders go.** All closed orders, which needs `read_all_orders`
+   for anything older than sixty days. Or the last two years. *Proposed: all*:
+   the lab store has a handful, and a merchant's history is theirs.
+
+### Tasks (S2b)
+
+Each task: port and contract suite first, then the Shopify adapter on recorded
+fixtures, then the slice with its rehearsal, then the round trip against the lab
+store.
+
+- `P16-16` **The lab store's people**: the author adds `read_customers`,
+  `read_orders`, `read_all_orders`, `read_discounts`, `read_gift_cards` (and
+  `write_*` for the seeding), and requests the customer fields in the Partner
+  Dashboard. `tools/shopify-seed` grows: five customers with addresses, about a
+  dozen closed orders (one cancelled, one refunded, one open), two discounts
+  (one the engine can express and one it cannot), and two gift cards — **S**
+- `P16-17` **Customers**: a customer source port in `Accounts`, the adapter
+  (reading the protected-data errors), an `ImportCustomers` slice with its
+  rehearsal and notes, the email on `Customer` (an erasable personal-data holder),
+  and decision S2b-1's sign-in road. With A: a provisioning port with a
+  contract suite, its Keycloak and dev-issuer adapters, the ADR, Keycloak's SMTP
+  with Mailpit in development, and a browser test of *forgot password* to a first
+  sign-in that sees the imported orders — **L**
+- `P16-18` **Orders born closed**: the ADR (decision 4), `Order.Imported(...)`
+  listed in the transition table as an entry point, an order source port and its
+  adapter, an `ImportOrders` slice (closed only, open ones listed, decision S2b-2
+  for refunds), and the orders round trip (lines, totals, taxes) — **L**
+- `P16-19` **Discounts as a proposal**: a discount source port, the adapter, and
+  a slice that writes a proposed `promotions` file beside the committed one, with
+  notes for what the engine cannot express. The round trip compares the proposal
+  with the seeded discounts — **M**
+- `P16-20` **Gift cards listed**: the adapter and the listing in the rehearsal
+  and in the import's answer — **S**
+- `P16-21` **The whole migration in one rehearsal**: one answer across the five
+  contexts, the counters per context, the notebook, and S2b's close (Stryker over
+  Accounts, Ordering, Pricing and Shopify) — **M**
