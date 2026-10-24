@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ElGuerre.Tendero.Accounts.Adapters;
 using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.Accounts.Features.ImportCustomers;
 using ElGuerre.Tendero.Accounts.Ports;
@@ -79,10 +80,12 @@ public sealed class ImportCustomersTests
 
         public bool WithProvisioner { get; set; } = true;
 
+        public RehearsedCustomers Rehearsed { get; } = new();
+
         public Task<ImportCustomersResult> ImportAsync(bool rehearse = false, string culture = "es") =>
             new ImportCustomersHandler(
                     new OneSource(Source), Customers, Customers, new Books(Books), UnitOfWork, Clock,
-                    WithProvisioner ? [Provisioner] : [])
+                    WithProvisioner ? [Provisioner] : [], Rehearsed)
                 .HandleAsync(new ImportCustomersCommand(FakeCustomerSource.Key, culture, rehearse), Ct);
     }
 
@@ -212,6 +215,24 @@ public sealed class ImportCustomersTests
         Assert.Empty(shop.Books);
         Assert.Empty(shop.Provisioner.Made);
         Assert.Equal(0, shop.UnitOfWork.SaveCount);
+    }
+
+    /// <summary>
+    /// A rehearsal holds who it would bring, for an order rehearsed in the same request
+    /// to find its buyer (P16-21); an import for real holds nobody there.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_holds_who_it_would_bring_and_an_import_for_real_nobody()
+    {
+        var shop = new Shop();
+
+        await shop.ImportAsync();
+        Assert.Empty(shop.Rehearsed.Of(FakeCustomerSource.Key));
+
+        var again = new Shop();
+        await again.ImportAsync(rehearse: true);
+        Assert.Equal(["6001", "6002"], again.Rehearsed.Of(FakeCustomerSource.Key).Keys.Order(StringComparer.Ordinal));
+        Assert.Empty(again.Rehearsed.Of("another"));
     }
 
     /// <summary>Each note in the language asked, starting with what it is about.</summary>

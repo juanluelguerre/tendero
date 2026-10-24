@@ -621,6 +621,118 @@
         }
       }
     },
+    "/api/migration": {
+      "post": {
+        "tags": [
+          "Migration"
+        ],
+        "operationId": "MigrateStore",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MigrateStoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreMigrationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No part of the shop can be brought from that source.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "UnknownSource"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/telemetry/config": {
       "get": {
         "tags": [
@@ -15586,6 +15698,21 @@
           }
         }
       },
+      "MigrateStoreRequest": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "MissingAttributeView": {
         "required": [
           "code",
@@ -20180,6 +20307,80 @@
           }
         }
       },
+      "StoreMigrationResult": {
+        "required": [
+          "source",
+          "rehearsal",
+          "catalogue",
+          "stock",
+          "customers",
+          "orders",
+          "discounts",
+          "notBrought"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "rehearsal": {
+            "type": "boolean"
+          },
+          "catalogue": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportProductsResult"
+              }
+            ]
+          },
+          "stock": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportStockResult"
+              }
+            ]
+          },
+          "customers": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportCustomersResult"
+              }
+            ]
+          },
+          "orders": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportOrdersResult"
+              }
+            ]
+          },
+          "discounts": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProposePromotionsResult"
+              }
+            ]
+          },
+          "notBrought": {
+            "type": "array"
+          }
+        }
+      },
       "StrategyScore": {
         "required": [
           "ndcgAt10",
@@ -20970,6 +21171,9 @@
     },
     {
       "name": "Knowledge"
+    },
+    {
+      "name": "Migration"
     },
     {
       "name": "Ordering"

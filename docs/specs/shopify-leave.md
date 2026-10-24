@@ -445,4 +445,20 @@ store.
   and in the import's answer — **S**
 - `P16-21` **The whole migration in one rehearsal**: one answer across the five
   contexts, the counters per context, the notebook, and S2b's close (Stryker over
-  Accounts, Ordering, Pricing and Shopify) — **M**
+  Accounts, Ordering, Pricing and Shopify) — **M**. *As built (2026-10-24)*, with the author's ruling
+  that a rehearsal must see what its earlier steps would bring (ADR 0068):
+  `POST /api/migration` (`StoreMigration`, in the host) dispatches the five
+  imports in one scope — catalogue, stock, customers, orders, discounts — and
+  answers each step's own result, with the steps the source has no adapter for
+  as `notBrought` and a source no step knows refused (`UnknownSource`). The
+  catalogue's and the customers' rehearsals hold what they would create
+  (`IRehearsedCatalogue`, `IRehearsedCustomers`, scoped), and the four readers the
+  later steps use answer from both what is stored and that. The counters stay
+  per context, labelled `catalog.source`, and `tendero.migration.runs` counts the
+  runs, rehearsed or not. Held by a test on the fixtures' store and a real
+  Postgres: an empty shop rehearsed, then migrated, answers the same step by step
+  and stores what the rehearsal counted. Building it found a fault in P16-18:
+  `ImportOrders` resolved its lines through the reader of what is on sale, and a
+  catalogue just imported is all in Draft, so every order of a real migration
+  would have been refused. It reads `ICatalogueVariants` now, whatever the
+  product's status.

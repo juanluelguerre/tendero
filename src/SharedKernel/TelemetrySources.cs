@@ -32,6 +32,9 @@ public static class TelemetrySources
     /// <summary>The agent transports, MCP and UCP: what external agents call.</summary>
     public const string Agents = "ElGuerre.Tendero.Agents";
 
+    /// <summary>A store's migration as one operation across the contexts (phase 16, P16-21), composed by the host.</summary>
+    public const string Migration = "ElGuerre.Tendero.Migration";
+
     /// <summary>
     /// The dispatcher pipeline itself. It gets a source because the audit step
     /// is the one place that swallows an exception on purpose, and a swallowed
@@ -41,5 +44,5 @@ public static class TelemetrySources
     public const string SharedKernel = "ElGuerre.Tendero.SharedKernel";
 
     public static readonly string[] All =
-        [Accounts, AI, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search, Outbox, Agents, SharedKernel];
+        [Accounts, AI, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search, Outbox, Agents, Migration, SharedKernel];
 }

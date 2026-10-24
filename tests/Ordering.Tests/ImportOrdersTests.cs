@@ -308,7 +308,7 @@ public sealed class ImportOrdersTests
     }
 
     /// <summary>The catalogue sells one shirt under SHIRT-M.</summary>
-    private sealed class Catalogue : IPurchasableReader
+    private sealed class Catalogue : ICatalogueVariants
     {
         public static readonly ProductId Product = ProductId.New();
         public static readonly VariantId Variant = VariantId.New();

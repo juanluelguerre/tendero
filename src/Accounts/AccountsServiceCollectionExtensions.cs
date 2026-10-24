@@ -29,6 +29,9 @@ public static class AccountsServiceCollectionExtensions
         // The customer sources a store's people are imported from (phase 16, S2b):
         // each registers itself keyed (AddShopify), and this lists them.
         services.TryAddScoped<ICustomerSourceRegistry, KeyedCustomerSourceRegistry>();
+
+        // Who a rehearsal would bring, for the rest of a migration rehearsed in the same request (P16-21).
+        services.TryAddScoped<IRehearsedCustomers, RehearsedCustomers>();
         return services;
     }
 

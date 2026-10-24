@@ -67,6 +67,8 @@ builder.Services.Configure<PrivacyOptions>(builder.Configuration.GetSection(Priv
 builder.Services.AddCatalog(builder.Configuration);
 // A Shopify store as a catalogue source, only when its credentials are set (phase 16).
 builder.Services.AddShopify(builder.Configuration);
+// A store's migration as one operation across the contexts (P16-21): composed here, where they all are.
+builder.Services.AddScoped<StoreMigration>();
 
 builder.Services.AddPricing(builder.Configuration);
 

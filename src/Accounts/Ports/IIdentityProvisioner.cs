@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Accounts.Domain;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Accounts.Ports;
 
@@ -38,4 +39,19 @@ public sealed record IdentityToProvision(string Email, string? FirstName, string
 public interface IImportedCustomers
 {
     Task<Customer?> FindByOriginAsync(CustomerOrigin origin, CancellationToken ct);
+}
+
+/// <summary>
+/// Who a rehearsal of the customers' import would bring (phase 16, S2b, P16-21),
+/// held for the request and nothing longer: a whole migration rehearsed in one
+/// request finds an order's buyer among them, as the import would leave the shop.
+/// An import for real records nothing here.
+/// </summary>
+public interface IRehearsedCustomers
+{
+    /// <summary>A customer the rehearsal would create, under a fresh id.</summary>
+    void Bring(CustomerOrigin origin);
+
+    /// <summary>The ones the rehearsal would create from this source, by the source's ids.</summary>
+    IReadOnlyDictionary<string, CustomerId> Of(string source);
 }

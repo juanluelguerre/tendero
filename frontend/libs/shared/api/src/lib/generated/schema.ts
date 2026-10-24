@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/migration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MigrateStore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/telemetry/config": {
         parameters: {
             query?: never;
@@ -2783,6 +2799,11 @@ export interface components {
             about: null | string;
             text: string;
         };
+        MigrateStoreRequest: {
+            source: string;
+            /** @default false */
+            rehearse: boolean;
+        };
         MissingAttributeView: {
             code: string;
             label: string;
@@ -3942,6 +3963,16 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        StoreMigrationResult: {
+            source: string;
+            rehearsal: boolean;
+            catalogue: null | components["schemas"]["ImportProductsResult"];
+            stock: null | components["schemas"]["ImportStockResult"];
+            customers: null | components["schemas"]["ImportCustomersResult"];
+            orders: null | components["schemas"]["ImportOrdersResult"];
+            discounts: null | components["schemas"]["ProposePromotionsResult"];
+            notBrought: unknown[];
+        };
         StrategyScore: {
             /** Format: double */
             ndcgAt10: number;
@@ -4483,6 +4514,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthConfiguration"];
+                };
+            };
+        };
+    };
+    MigrateStore: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MigrateStoreRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreMigrationResult"];
+                };
+            };
+            /** @description No part of the shop can be brought from that source. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownSource";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };

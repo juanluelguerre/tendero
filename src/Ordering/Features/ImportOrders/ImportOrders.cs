@@ -81,7 +81,7 @@ public sealed class ImportOrdersHandler(
     IGiftCardSourceRegistry giftCards,
     IOrderRepository orders,
     IReturnRequestRepository returns,
-    IPurchasableReader catalogue,
+    ICatalogueVariants catalogue,
     IImportedCustomerIds customers,
     IUnitOfWork unitOfWork)
     : ICommandHandler<ImportOrdersCommand, ImportOrdersResult>

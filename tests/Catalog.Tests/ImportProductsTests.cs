@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
+using ElGuerre.Tendero.Catalog.Adapters;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
@@ -361,6 +362,43 @@ public sealed class ImportProductsTests
     }
 
     /// <summary>
+    /// A rehearsal holds what it would bring for the rest of a migration rehearsed
+    /// in the same request (P16-21): the product it would create and the collection
+    /// it would keep, so the stock, the orders and the discounts are judged against
+    /// the catalogue the import would leave.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_holds_what_it_would_bring_for_the_rest_of_the_migration()
+    {
+        var shop = new Shop { Rehearse = true };
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId])];
+
+        await shop.ImportAsync(Illustration);
+
+        var brought = Assert.Single(shop.Rehearsed.Products);
+        Assert.Equal(OneProductConnector.ExternalId, Assert.Single(brought.ExternalReferences).ExternalId);
+        Assert.Equal("COOKWARE", shop.Rehearsed.CategoryOf("menaje"));
+    }
+
+    /// <summary>A product the shop already has is read from where it is stored, and an import for real holds nothing.</summary>
+    [Fact]
+    public async Task Neither_a_known_product_nor_an_import_for_real_is_held_as_rehearsed()
+    {
+        var shop = new Shop();
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId])];
+
+        await shop.ImportAsync(Illustration);
+        Assert.Empty(shop.Rehearsed.Products);
+        Assert.Null(shop.Rehearsed.CategoryOf("menaje"));
+
+        shop.Rehearse = true;
+        await shop.ImportAsync(Illustration);
+        Assert.Empty(shop.Rehearsed.Products);
+    }
+
+    /// <summary>
     /// What the rehearsal says is what the import then does (spec, *Measures*):
     /// the same counts and the same notes, for a new product and for one the shop
     /// already has.
@@ -416,6 +454,8 @@ public sealed class ImportProductsTests
 
         public KeptCollections Collections { get; } = new();
 
+        public RehearsedCatalogue Rehearsed { get; } = new();
+
         public RecordedRuns Runs { get; } = new();
 
         public Product Product { get; private set; } = null!;
@@ -450,6 +490,7 @@ public sealed class ImportProductsTests
                 new NoAttributeDefinitions(),
                 new KitchenCategories(),
                 this.Collections,
+                this.Rehearsed,
                 this.Runs,
                 Clock,
                 NullLogger<ImportProductsHandler>.Instance);

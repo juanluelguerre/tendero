@@ -34,6 +34,9 @@ public static class CatalogServiceCollectionExtensions
 
         services.AddScoped<ICatalogSourceRegistry, KeyedCatalogSourceRegistry>();
 
+        // What a rehearsal would bring, for the rest of a migration rehearsed in the same request (P16-21).
+        services.TryAddScoped<IRehearsedCatalogue, RehearsedCatalogue>();
+
         services.AddCatalogReaders(configuration);
 
         services.AddHttpClient<IExternalImageReader, ExternalImageReader>();

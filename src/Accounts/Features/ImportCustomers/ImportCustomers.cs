@@ -76,7 +76,8 @@ public sealed class ImportCustomersHandler(
     IAddressBookRepository books,
     IUnitOfWork unitOfWork,
     TimeProvider clock,
-    IEnumerable<IIdentityProvisioner> provisioners)
+    IEnumerable<IIdentityProvisioner> provisioners,
+    IRehearsedCustomers rehearsed)
     : ICommandHandler<ImportCustomersCommand, ImportCustomersResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Accounts);
@@ -114,9 +115,11 @@ public sealed class ImportCustomersHandler(
                 continue;
             }
 
-            // A rehearsal provisions nobody: it counts who would come, and says why not.
+            // A rehearsal provisions nobody: it counts who would come, and says why not, and
+            // holds them for an order rehearsed in the same request to find (P16-21).
             if (command.Rehearse)
             {
+                rehearsed.Bring(origin);
                 created++;
                 Addresses(person, notes);
                 continue;

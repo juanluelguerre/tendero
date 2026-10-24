@@ -98,6 +98,20 @@ public interface IOrderSourceRegistry
 }
 
 /// <summary>
+/// The catalogue's variants by SKU, whatever their status (phase 16, S2b): what an
+/// imported order's line snapshots. Not <see cref="IPurchasableReader"/>, which
+/// answers only what is on sale: an order already placed is not a purchase, and a
+/// catalogue just imported is all in Draft (ADR 0012), so the history would wait on
+/// the review queue for no reason. Persistence answers it.
+/// </summary>
+public interface ICatalogueVariants
+{
+    /// <summary>The ones the catalogue has, keyed by SKU; the others are absent.</summary>
+    Task<IReadOnlyDictionary<string, PurchasableVariant>> FindBySkusAsync(
+        IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
 /// The customer an imported order belongs to (phase 16, S2b): the store's id for
 /// the buyer, answered with the customer Accounts imported under it. A port, as
 /// <see cref="IRegisteredCustomers"/> is, so Ordering never learns what a customer

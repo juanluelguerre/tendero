@@ -94,6 +94,11 @@ public sealed class EndpointAuthorizationTests(TenderoApiFactory factory) : ICla
     [InlineData("/api/knowledge/claims/approve")]
     public void Claims_in_bulk_are_approved_by_the_shopkeeper(string route) => Writes_to_the_catalogue_require_the_shopkeeper(route);
 
+    /// <summary>A store's whole migration (P16-21): the shopkeeper's, as each of its steps is.</summary>
+    [Theory]
+    [InlineData("/api/migration")]
+    public void A_store_is_migrated_by_the_shopkeeper(string route) => Writes_to_the_catalogue_require_the_shopkeeper(route);
+
     [Theory]
     [InlineData("/api/catalog/import")]
     [InlineData("/api/catalog/products/{id:guid}/publish")]

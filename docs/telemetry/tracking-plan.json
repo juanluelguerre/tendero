@@ -477,7 +477,7 @@
       "name": "Importing a store",
       "area": "backoffice",
       "question": "Is the Shopify source used, and how much of a store comes across clean, per context?",
-      "decision": "A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. Gift cards listed for reissue, counted per store, say whether Tendero needs gift cards of its own (docs/specs/shopify-leave.md, decision 6).",
+      "decision": "A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. Gift cards listed for reissue, counted per store, say whether Tendero needs gift cards of its own (docs/specs/shopify-leave.md, decision 6). A rehearsal of the whole migration never followed by one for real says the answer stopped the merchant, and its notes say which step to work on first.",
       "signals": [
         "tendero.catalog.import.products",
         "tendero.catalog.import.notes",
@@ -489,7 +489,8 @@
         "tendero.ordering.import.notes",
         "tendero.ordering.import.gift_cards",
         "tendero.pricing.import.discounts",
-        "tendero.pricing.import.notes"
+        "tendero.pricing.import.notes",
+        "tendero.migration.runs"
       ]
     },
     {
@@ -1835,6 +1836,26 @@
         "catalog.source": {
           "type": "string",
           "description": "The source imported from."
+        }
+      }
+    },
+    {
+      "name": "tendero.migration.runs",
+      "instrument": "counter",
+      "unit": "{run}",
+      "description": "A store's migrations run as one operation, rehearsed or for real, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The store being left."
+        },
+        "migration.rehearsal": {
+          "type": "string",
+          "values": [
+            "true",
+            "false"
+          ],
+          "description": "Whether the run was a rehearsal, which wrote nothing."
         }
       }
     },

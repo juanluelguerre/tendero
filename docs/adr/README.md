@@ -69,6 +69,7 @@
 | [0065](0065-the-sign-in-page-is-keycloaks-theme-in-the-shops-tokens.md) | The sign-in page is Keycloak's own `keycloak.v2` theme in the shop's generated tokens, with no template copied; the realm speaks es and en and the apps ask for theirs with `ui_locales`; it is platform, documented in `keycloak/README.md`, not a feature | accepted |
 | [0066](0066-imported-history-is-born-closed.md) | Imported history is born closed: a transition table declares where its aggregate may be born, and `Order.Imported` and `ReturnRequest.Imported` are the named entries for orders and refunds that already happened — final state, no event, the source and its dates kept, idempotent by source | accepted |
 | [0067](0067-provisioning-an-identity-is-not-an-authorization-server.md) | Provisioning an identity is not writing an authorization server: through a port, the shop asks the provider to make an identity with no password for somebody it already knows; the person sets one with the provider's own *forgot password*; Keycloak and dev-issuer adapters, idempotent by email; no email at migration | accepted |
+| [0068](0068-a-rehearsal-is-the-migration-minus-its-writes.md) | A rehearsal is the migration minus its writes: the whole migration runs in one scope, the catalogue's and the customers' rehearsals hold what they would bring, and the readers the later steps use see it — so on an empty shop an order still finds the products and the buyer its earlier steps would bring | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

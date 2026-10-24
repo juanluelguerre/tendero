@@ -78,6 +78,7 @@ public sealed class ImportProductsHandler(
     IAttributeDefinitionReader attributeDefinitions,
     ICategoryReader categories,
     ISourceCollections collections,
+    IRehearsedCatalogue rehearsed,
     IImportRunRepository runs,
     TimeProvider clock,
     ILogger<ImportProductsHandler> logger)
@@ -180,11 +181,15 @@ public sealed class ImportProductsHandler(
             // the mapping refuses fails here as it would there. A product the
             // shop has is mapped afresh rather than changed, so nothing it holds
             // is touched; its pictures are read, not stored.
-            var rehearsed = external.ToNewProduct(source, clock, definitions);
+            var product = external.ToNewProduct(source, clock, definitions);
             await ReadImagesAsync(external, tally, cancellationToken);
-            tally.PendingCategories[external.ExternalId] = rehearsed.Category;
+            tally.PendingCategories[external.ExternalId] = product.Category;
             if (existing is null)
+            {
+                // Held for the rest of a migration rehearsed in the same request (P16-21).
+                rehearsed.Bring(product);
                 tally.Created++;
+            }
             else
                 tally.Updated++;
             tally.Pending++;
@@ -357,7 +362,9 @@ public sealed class ImportProductsHandler(
 
             if (tree.SharedBy(saved) is { } category)
             {
-                if (!tally.Rehearsal)
+                if (tally.Rehearsal)
+                    rehearsed.Keep(collection.Handle, category);
+                else
                     await collections.KeepAsync(connector.Source, collection.Handle, category, cancellationToken);
             }
             else
