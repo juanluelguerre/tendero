@@ -84,6 +84,10 @@ public static class OrderingServiceCollectionExtensions
         services.AddKeyedSingleton<IPaymentProvider, FakePaymentProvider>(FakePaymentProvider.Key);
         services.TryAddSingleton<IPaymentProviderRegistry, KeyedPaymentProviderRegistry>();
 
+        // The order sources a store's history is imported from (phase 16, S2b): each
+        // registers itself keyed (AddShopify), and this lists them.
+        services.TryAddScoped<IOrderSourceRegistry, KeyedOrderSourceRegistry>();
+
         // What Ordering holds about a person, for their download and the removal of
         // their account (P15-9): the wallet, forgotten, and the orders, kept.
         services.AddScoped<IPersonalDataHolder, WalletPersonalData>();

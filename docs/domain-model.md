@@ -763,6 +763,7 @@ classDiagram
         Damaged
         WrongItem
         ChangedMind
+        Unstated
     }
     class ReturnRequest {
         <<aggregate>>

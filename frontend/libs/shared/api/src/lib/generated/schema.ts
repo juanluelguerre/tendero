@@ -852,6 +852,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ImportOrders"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{orderId}": {
         parameters: {
             query?: never;
@@ -2479,6 +2495,22 @@ export interface components {
         };
         /** @enum {unknown} */
         ImportNoteCode: "CategoryNotMapped" | "LocaleIgnored" | "DescriptionHadLayout" | "VariantWithoutSku" | "SkuSharedAtSource" | "SkuChangedAtSource" | "ImageUnreadable" | "CollectionNotMapped";
+        ImportOrdersCommand: {
+            source: string;
+            /** @default es */
+            culture: string;
+            /** @default false */
+            rehearse: boolean;
+        };
+        ImportOrdersResult: {
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            alreadyImported: number;
+            /** Format: int32 */
+            refunds: number;
+            notes: components["schemas"]["MessageOfOrderNoteCode"][];
+        };
         ImportProductsCommand: {
             source: string;
             /** @default es */
@@ -2704,6 +2736,11 @@ export interface components {
             about: null | string;
             text: string;
         };
+        MessageOfOrderNoteCode: {
+            code: components["schemas"]["OrderNoteCode"];
+            about: null | string;
+            text: string;
+        };
         MessageOfProductNote: {
             code: components["schemas"]["ProductNote"];
             about: null | string;
@@ -2830,6 +2867,8 @@ export interface components {
         OrderMode: "Live" | "Test";
         /** @enum {unknown} */
         OrderMove: "Ship" | "Deliver" | "Cancel";
+        /** @enum {unknown} */
+        OrderNoteCode: "StillOpen" | "ProductNotInCatalogue" | "CustomerNotImported" | "TotalsDoNotAddUp" | "RefundNotExpressed";
         /** @enum {unknown} */
         OrderStatus: "Pending" | "PaymentAuthorized" | "PaymentFailed" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
         OrderStatusCount: {
@@ -3445,7 +3484,7 @@ export interface components {
             windowDays: number;
         };
         /** @enum {unknown} */
-        ReturnReason: "WrongSize" | "NotAsDescribed" | "Damaged" | "WrongItem" | "ChangedMind";
+        ReturnReason: "WrongSize" | "NotAsDescribed" | "Damaged" | "WrongItem" | "ChangedMind" | "Unstated";
         /** @enum {unknown} */
         ReturnStatus: "Requested" | "Approved" | "Received" | "Refunded" | "Rejected" | "Cancelled";
         ReturnView: {
@@ -6663,6 +6702,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyOrdersResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ImportOrders: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportOrdersCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOrdersResult"];
                 };
             };
             /** @description This needs somebody signed in. */

@@ -86,6 +86,7 @@ public static class PersistenceServiceCollectionExtensions
         // Whether an order's customer has an account: Ordering asks it to decide
         // who may read the order by its id, and must not learn what a Customer is.
         services.AddScoped<IRegisteredCustomers, EfRegisteredCustomers>();
+        services.AddScoped<IImportedCustomerIds, EfImportedCustomerIds>();
 
         // The Ordering side of the catalogue crossing, the sibling of
         // IPricedItemReader: values out, no entity shared (ADR 0014).

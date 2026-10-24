@@ -484,7 +484,9 @@
         "tendero.inventory.import.levels",
         "tendero.inventory.import.notes",
         "tendero.accounts.import.customers",
-        "tendero.accounts.import.notes"
+        "tendero.accounts.import.notes",
+        "tendero.ordering.import.orders",
+        "tendero.ordering.import.notes"
       ]
     },
     {
@@ -1587,7 +1589,7 @@
       "name": "tendero.returns.requested",
       "instrument": "counter",
       "unit": "{line}",
-      "description": "Lines of the returns opened, by their reason: the closed set of five the domain keeps for exactly this analysis.",
+      "description": "Lines of the returns opened, by their reason: the closed set of five a buyer chooses from, kept by the domain for exactly this analysis.",
       "attributes": {
         "reason": {
           "type": "string",
@@ -1596,9 +1598,10 @@
             "not_as_described",
             "damaged",
             "wrong_item",
-            "changed_mind"
+            "changed_mind",
+            "unstated"
           ],
-          "description": "ReturnReason, labelled by MetricLabels.",
+          "description": "ReturnReason, labelled by MetricLabels. unstated is never counted: it is the reason of a refund an import brought (ADR 0066), which no buyer opened, and opening a return refuses it.",
           "from": "ReturnReason"
         }
       }
@@ -1773,6 +1776,50 @@
             "Erased"
           ],
           "description": "The note's code (CustomerNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.ordering.import.orders",
+      "instrument": "counter",
+      "unit": "{order}",
+      "description": "Orders an import created or found already imported, and refunds it brought, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from; the same label as the catalogue, stock and customer imports."
+        },
+        "ordering.import.outcome": {
+          "type": "string",
+          "values": [
+            "created",
+            "already_imported",
+            "refund"
+          ],
+          "description": "An order made here, one an earlier import brought, or a refund brought as a return born refunded."
+        }
+      }
+    },
+    {
+      "name": "tendero.ordering.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What an order source did not hand over cleanly, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "ordering.import.note": {
+          "type": "string",
+          "values": [
+            "StillOpen",
+            "ProductNotInCatalogue",
+            "CustomerNotImported",
+            "TotalsDoNotAddUp",
+            "RefundNotExpressed"
+          ],
+          "description": "The note's code (OrderNoteCode)."
         }
       }
     },

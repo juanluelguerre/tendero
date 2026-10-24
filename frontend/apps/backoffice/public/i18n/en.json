@@ -59,6 +59,7 @@
       "EndCampaignCommand": "End a campaign",
       "ForgetBrowsingCommand": "Remove an entry from a browsing history",
       "ImportCustomersCommand": "Import customers",
+      "ImportOrdersCommand": "Import order history",
       "ImportProductsCommand": "Import products",
       "ImportStockCommand": "Import stock",
       "LinkIdentityCommand": "Link a sign-in to a customer",
@@ -417,7 +418,8 @@
       "NotAsDescribed": "Not as described",
       "Damaged": "Damaged",
       "WrongItem": "Wrong item",
-      "ChangedMind": "Changed their mind"
+      "ChangedMind": "Changed their mind",
+      "Unstated": "Refunded in the previous store"
     },
     "status": {
       "Requested": "Requested",
@@ -1227,7 +1229,8 @@
       "NotAsDescribed": "Not as described",
       "Damaged": "Damaged",
       "WrongItem": "Wrong item",
-      "ChangedMind": "Changed their mind"
+      "ChangedMind": "Changed their mind",
+      "Unstated": "Refunded in the previous store"
     },
     "card": {
       "heading": "{{count}} proposals · {{topic}}",

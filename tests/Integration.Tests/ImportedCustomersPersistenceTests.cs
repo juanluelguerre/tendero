@@ -48,6 +48,10 @@ public sealed class ImportedCustomersPersistenceTests(PostgresFixture postgres)
             Assert.Equal(("ana@example.com", "kc-ana", "imported:shopify"), (ana!.Email, ana.Subject, ana.Marketing!.Wording));
             Assert.Null(await scope.ServiceProvider.GetRequiredService<IImportedCustomers>().FindByOriginAsync(new CustomerOrigin("shopify", "6999"), ct));
 
+            // Ordering's question, answered from the same columns: which customer each buyer was imported as.
+            var owners = await scope.ServiceProvider.GetRequiredService<Ordering.Ports.IImportedCustomerIds>().ForAsync("shopify", ["6001", "6999"], ct);
+            Assert.Equal(new Dictionary<string, SharedKernel.CustomerId> { ["6001"] = ana.Id }, owners);
+
             ana.Erase(Clock);
             await scope.ServiceProvider.GetRequiredService<SharedKernel.IUnitOfWork>().SaveChangesAsync(ct);
         }

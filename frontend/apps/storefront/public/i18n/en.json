@@ -261,6 +261,7 @@
     "reason.NotAsDescribed": "Not as described",
     "reason.WrongItem": "The wrong item arrived",
     "reason.WrongSize": "Wrong size",
+    "reason.Unstated": "Refunded in our previous shop",
     "reference": "Order {{id}}",
     "returnClosed": "The return window has closed.",
     "returnFailed": "The return could not be opened: {{reason}}",

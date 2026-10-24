@@ -27,7 +27,16 @@ public enum ReturnReason
 
     /// <summary>No reason beyond changing their mind. Legitimate, common, and
     /// the one a shop cannot fix.</summary>
-    ChangedMind
+    ChangedMind,
+
+    /// <summary>
+    /// The store a refund was imported from recorded no reason (phase 16, S2b; ADR
+    /// 0066). Never a shopper's choice: opening a return here refuses it, so the
+    /// return-reason analysis can tell history from what customers said. Calling it
+    /// <see cref="ChangedMind"/> instead would have inflated that reason with every
+    /// refund the migration brought.
+    /// </summary>
+    Unstated
 }
 
 public enum ReturnStatus
@@ -224,6 +233,9 @@ public sealed class ReturnRequest : AggregateRoot
     {
         AllowedTransitions.EnsureEntry(ReturnStatus.Requested, "an opened return");
         EnsureReturnable(order, lines, earlier);
+
+        if (lines.Any(line => line.Reason == ReturnReason.Unstated))
+            throw new InvalidOperationException("A return opened here says why; no reason is an imported refund's mark.");
 
         var now = clock.GetUtcNow();
 

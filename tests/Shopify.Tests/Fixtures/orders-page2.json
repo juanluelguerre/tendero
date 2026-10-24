@@ -1,0 +1,45 @@
+{
+  "data": {
+    "orders": {
+      "pageInfo": { "hasNextPage": false, "endCursor": "c3" },
+      "nodes": [
+        {
+          "id": "gid://shopify/Order/5003",
+          "name": "#1003",
+          "createdAt": "2026-10-20T08:00:00Z",
+          "cancelledAt": null,
+          "displayFulfillmentStatus": "PARTIALLY_FULFILLED",
+          "email": "ana@example.com",
+          "customerLocale": "fr",
+          "customer": { "id": "gid://shopify/Customer/6001" },
+          "totalDiscountsSet": { "shopMoney": { "amount": "0.0", "currencyCode": "EUR" } },
+          "totalTaxSet": { "shopMoney": { "amount": "6.93", "currencyCode": "EUR" } },
+          "totalPriceSet": { "shopMoney": { "amount": "39.9", "currencyCode": "EUR" } },
+          "taxLines": [],
+          "shippingAddress": { "name": "Ana Ruiz", "address1": "Calle Mayor 1", "address2": null, "city": "Madrid", "provinceCode": "M", "zip": "28013", "countryCodeV2": "ES", "phone": null },
+          "billingAddress": null,
+          "shippingLine": null,
+          "fulfillments": [{ "createdAt": "2026-10-21T08:00:00Z" }],
+          "discountApplications": { "nodes": [] },
+          "lineItems": {
+            "nodes": [
+              {
+                "id": "gid://shopify/LineItem/31", "title": "Cafetera Moka", "variantTitle": "Oliva", "quantity": 1,
+                "variant": { "id": "gid://shopify/ProductVariant/44001" },
+                "originalUnitPriceSet": { "shopMoney": { "amount": "29.9", "currencyCode": "EUR" } },
+                "discountAllocations": []
+              },
+              {
+                "id": "gid://shopify/LineItem/32", "title": "Jarra retirada", "variantTitle": null, "quantity": 1,
+                "variant": null,
+                "originalUnitPriceSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+                "discountAllocations": []
+              }
+            ]
+          },
+          "refunds": []
+        }
+      ]
+    }
+  }
+}

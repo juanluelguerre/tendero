@@ -12,4 +12,8 @@ internal static class ShopifyLanguage
 
     public static string Of(string locale) =>
         (locale.Split('-', '_')[0]).ToLowerInvariant();
+
+    /// <summary>A person's locale as a language the shop speaks, or none: <c>en-GB</c> is English, French is nothing.</summary>
+    public static string? SpokenOf(string? locale) =>
+        locale is null ? null : Of(locale) is var language && Spoken.Contains(language) ? language : null;
 }

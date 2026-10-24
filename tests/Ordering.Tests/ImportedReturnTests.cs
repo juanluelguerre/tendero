@@ -65,4 +65,15 @@ public sealed class ImportedReturnTests
         Assert.Throws<InvalidOperationException>(() =>
             ReturnRequest.Imported(order, [Shirts(1)], [], Money.Zero("EUR"), "shopify:refund:7001", RefundedThen));
     }
+
+    /// <summary>The reason an imported refund carries, because the store recorded none — and opening a return here refuses it.</summary>
+    [Fact]
+    public void Only_history_returns_without_a_reason()
+    {
+        var order = Delivered();
+        var unstated = new ReturnLine(VariantId.New(), "SHIRT-M", 1, ReturnReason.Unstated, null);
+
+        Assert.Equal(ReturnStatus.Refunded, ReturnRequest.Imported(order, [unstated], [], new Money(20m, "EUR"), "shopify:refund:7001", RefundedThen).Status);
+        Assert.Throws<InvalidOperationException>(() => ReturnRequest.Open(new ElGuerre.Tendero.Tests.TestClock(), order, [unstated], []));
+    }
 }

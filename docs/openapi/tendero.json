@@ -4845,6 +4845,96 @@
         ]
       }
     },
+    "/api/orders/import": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "ImportOrders",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportOrdersCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportOrdersResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/orders/{orderId}": {
       "get": {
         "tags": [
@@ -14273,6 +14363,54 @@
           "CollectionNotMapped"
         ]
       },
+      "ImportOrdersCommand": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ImportOrdersResult": {
+        "required": [
+          "created",
+          "alreadyImported",
+          "refunds",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyImported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "refunds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfOrderNoteCode"
+            }
+          }
+        }
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -15213,6 +15351,28 @@
           }
         }
       },
+      "MessageOfOrderNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/OrderNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
       "MessageOfProductNote": {
         "required": [
           "code",
@@ -15697,6 +15857,15 @@
           "Ship",
           "Deliver",
           "Cancel"
+        ]
+      },
+      "OrderNoteCode": {
+        "enum": [
+          "StillOpen",
+          "ProductNotInCatalogue",
+          "CustomerNotImported",
+          "TotalsDoNotAddUp",
+          "RefundNotExpressed"
         ]
       },
       "OrderStatus": {
@@ -18121,7 +18290,8 @@
           "NotAsDescribed",
           "Damaged",
           "WrongItem",
-          "ChangedMind"
+          "ChangedMind",
+          "Unstated"
         ]
       },
       "ReturnStatus": {

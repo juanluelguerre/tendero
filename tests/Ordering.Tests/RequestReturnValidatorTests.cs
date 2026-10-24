@@ -43,4 +43,12 @@ public sealed class RequestReturnValidatorTests
         Assert.True(Valid(Line(comment: new string('a', 500))));
         Assert.False(Valid(Line(comment: new string('a', 501))));
     }
+
+    /// <summary>
+    /// A shopper always says why: no reason is the mark of a refund imported from
+    /// another store (ADR 0066), never a choice a request may make.
+    /// </summary>
+    [Fact]
+    public void A_shopper_cannot_ask_without_a_reason() =>
+        Assert.False(Valid(new ReturnLineRequest("KETTLE-SKU", 1, ReturnReason.Unstated, null)));
 }

@@ -2,6 +2,7 @@ using System.Text.Json;
 using ElGuerre.Tendero.Accounts.Ports;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Inventory.Ports;
+using ElGuerre.Tendero.Ordering.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -47,6 +48,7 @@ public static class ShopifyServiceCollectionExtensions
         services.AddKeyedScoped<ICatalogSourceConnector, ShopifyCatalogConnector>(ShopifyCatalogConnector.Key);
         services.AddKeyedScoped<IStockSourceConnector, ShopifyStockConnector>(ShopifyStockConnector.Key);
         services.AddKeyedScoped<ICustomerSourceConnector, ShopifyCustomerConnector>(ShopifyCustomerConnector.Key);
+        services.AddKeyedScoped<IOrderSourceConnector, ShopifyOrderConnector>(ShopifyOrderConnector.Key);
 
         return services;
     }

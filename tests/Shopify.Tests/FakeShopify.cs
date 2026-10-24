@@ -129,6 +129,13 @@ internal sealed class FakeShopify : HttpMessageHandler
             return Json("{\"data\":{\"node\":{\"status\":\"" + status + "\",\"errorCode\":" + code + ",\"objectCount\":\"7\",\"url\":" + url + "}}}");
         }
 
+        // Orders come in two pages: the second is asked for after the first's cursor.
+        if (query.Contains("{ orders(", StringComparison.Ordinal))
+        {
+            var page = query.Contains("after: \"c2\"", StringComparison.Ordinal) ? "orders-page2.json" : "orders.json";
+            return Json(File.ReadAllText(Fixture(page)));
+        }
+
         if (query.Contains("locations(", StringComparison.Ordinal))
             return Json("{\"data\":{\"locations\":{\"nodes\":" + Locations + "}}}");
 

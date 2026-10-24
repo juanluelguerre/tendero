@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace ElGuerre.Tendero.Shopify;
 
 /// <summary>
@@ -95,6 +97,43 @@ internal static class ShopifyQueries
           }
         }
         """;
+
+    /// <summary>
+    /// A page of orders, oldest first, with everything an order's history keeps
+    /// (S2b, P16-18). Paged rather than bulk: a refund's lines are a connection
+    /// inside the refunds list, and a bulk query refuses a connection under a
+    /// list. Money is each figure's <c>shopMoney</c>, the store's currency, as
+    /// the catalogue's prices are. A line's discounts are its allocations, named
+    /// by the application's index, because an application carries a value (10 %)
+    /// and not what it took off this order. 250 lines and 250 refunded lines per
+    /// order are the most a page carries, far beyond a shop at this scale.
+    /// </summary>
+    public static string Orders(string? after)
+    {
+        var cursor = after is null ? "" : $", after: {JsonSerializer.Serialize(after)}";
+        const string money = "{ shopMoney { amount currencyCode } }";
+        const string address = "{ name address1 address2 city provinceCode zip countryCodeV2 phone }";
+        const string allocations = $"discountAllocations {{ allocatedAmountSet {money} discountApplication {{ index }} }}";
+
+        return
+            $$"""
+            { orders(first: 50, sortKey: CREATED_AT{{cursor}}) {
+                pageInfo { hasNextPage endCursor }
+                nodes {
+                  id name createdAt cancelledAt displayFulfillmentStatus email customerLocale
+                  customer { id }
+                  totalDiscountsSet {{money}} totalTaxSet {{money}} totalPriceSet {{money}}
+                  taxLines { title rate priceSet {{money}} }
+                  shippingAddress {{address}} billingAddress {{address}}
+                  shippingLine { title originalPriceSet {{money}} {{allocations}} }
+                  fulfillments { createdAt }
+                  discountApplications(first: 20) { nodes { index ... on DiscountCodeApplication { code } ... on AutomaticDiscountApplication { title } ... on ManualDiscountApplication { title } } }
+                  lineItems(first: 250) { nodes { id title variantTitle quantity variant { id } originalUnitPriceSet {{money}} {{allocations}} } }
+                  refunds { id createdAt totalRefundedSet {{money}} refundLineItems(first: 250) { nodes { quantity lineItem { id } } } }
+                }
+              } }
+            """;
+    }
 
     /// <summary>The store's locations; a store has a handful, so a page of 250 is all of them.</summary>
     public const string Locations = "{ locations(first: 250, includeInactive: true) { nodes { id name isActive } } }";

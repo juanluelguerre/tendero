@@ -59,6 +59,7 @@
       "EndCampaignCommand": "Terminar una campaña",
       "ForgetBrowsingCommand": "Quitar una entrada del historial de navegación",
       "ImportCustomersCommand": "Importar clientes",
+      "ImportOrdersCommand": "Importar el historial de pedidos",
       "ImportProductsCommand": "Importar productos",
       "ImportStockCommand": "Importar existencias",
       "LinkIdentityCommand": "Vincular un inicio de sesión a un cliente",
@@ -417,7 +418,8 @@
       "NotAsDescribed": "No es como se describía",
       "Damaged": "Dañado",
       "WrongItem": "Artículo equivocado",
-      "ChangedMind": "Cambió de opinión"
+      "ChangedMind": "Cambió de opinión",
+      "Unstated": "Reembolsado en la tienda anterior"
     },
     "status": {
       "Requested": "Solicitada",
@@ -1227,7 +1229,8 @@
       "NotAsDescribed": "No era como se describía",
       "Damaged": "Dañado",
       "WrongItem": "Artículo equivocado",
-      "ChangedMind": "Cambió de idea"
+      "ChangedMind": "Cambió de idea",
+      "Unstated": "Reembolsado en la tienda anterior"
     },
     "card": {
       "heading": "{{count}} propuestas · {{topic}}",

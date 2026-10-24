@@ -91,7 +91,7 @@ internal sealed class ShopifyCustomerConnector(ShopifyAdmin admin) : ICustomerSo
                 email is { } known ? Text(known, "emailAddress") : null,
                 Text(customer, "firstName"),
                 Text(customer, "lastName"),
-                LanguageOf(Text(customer, "locale")),
+                ShopifyLanguage.SpokenOf(Text(customer, "locale")),
                 email is { } consented ? ConsentOf(consented) : null,
                 addresses);
         }
@@ -108,9 +108,6 @@ internal sealed class ShopifyCustomerConnector(ShopifyAdmin admin) : ICustomerSo
                 _ => null,
             };
         }
-
-        private static string? LanguageOf(string? locale) =>
-            locale is null ? null : ShopifyLanguage.Of(locale) is var language && ShopifyLanguage.Spoken.Contains(language) ? language : null;
 
         private static string? Text(JsonElement element, string property) =>
             element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
