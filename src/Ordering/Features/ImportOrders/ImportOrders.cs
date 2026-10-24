@@ -19,7 +19,13 @@ public sealed record ImportOrdersCommand(string Source, string Culture = "es", b
 /// <param name="Created">Orders born in their final state.</param>
 /// <param name="AlreadyImported">Orders a previous import brought, found by the source's id.</param>
 /// <param name="Refunds">Refunds born as returns, closed.</param>
-public sealed record ImportOrdersResult(int Created, int AlreadyImported, int Refunds, IReadOnlyList<Message<OrderNoteCode>> Notes);
+/// <param name="GiftCards">The store's gift cards still owed, which cannot come across: listed for the merchant to reissue (decision 6).</param>
+public sealed record ImportOrdersResult(int Created, int AlreadyImported, int Refunds, IReadOnlyList<Message<OrderNoteCode>> Notes, IReadOnlyList<GiftCardToReissue> GiftCards);
+
+/// <param name="LastCharacters">The end of its code: what the holder recognises it by. The store keeps the rest.</param>
+/// <param name="Customer">The customer imported for its holder, when the import brought them.</param>
+/// <param name="CustomerAtSource">The store's id for its holder, when it had one: whom to reissue it to when they were not imported.</param>
+public sealed record GiftCardToReissue(string LastCharacters, Money Balance, DateOnly? ExpiresOn, string? Customer, string? CustomerAtSource);
 
 public sealed class ImportOrdersValidator : AbstractValidator<ImportOrdersCommand>
 {
@@ -67,10 +73,12 @@ public sealed class ImportOrdersEndpoint : ICarterModule
 ///
 /// An order still on its way is finished in the store first; an order naming
 /// something the catalogue lacks waits for the catalogue's import rather than being
-/// invented; figures that do not add up are refused. Each is said.
+/// invented; figures that do not add up are refused. Each is said. The store's
+/// gift cards cannot come across, so the answer lists them (P16-20).
 /// </summary>
 public sealed class ImportOrdersHandler(
     IOrderSourceRegistry sources,
+    IGiftCardSourceRegistry giftCards,
     IOrderRepository orders,
     IReturnRequestRepository returns,
     IPurchasableReader catalogue,
@@ -131,11 +139,40 @@ public sealed class ImportOrdersHandler(
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
         notes.AddRange(source.SourceNotes);
+        var cards = await GiftCardsAsync(source.Source, cancellationToken);
         if (!command.Rehearse)
-            ImportOrdersMetrics.Record(source.Source, created, alreadyImported, refunds, notes);
+            ImportOrdersMetrics.Record(source.Source, created, alreadyImported, refunds, notes, cards.Count);
 
         var english = command.Culture == "en";
-        return new ImportOrdersResult(created, alreadyImported, refunds, [.. notes.Select(note => ImportOrdersNotes.Said(note, english))]);
+        return new ImportOrdersResult(created, alreadyImported, refunds, [.. notes.Select(note => ImportOrdersNotes.Said(note, english))], cards);
+    }
+
+    /// <summary>
+    /// The store's gift cards still owed, listed and not imported (decision 6): read
+    /// alike by a rehearsal and an import, since listing writes nothing. Each names
+    /// the customer imported for its holder, or the store's id for them.
+    /// </summary>
+    private async Task<List<GiftCardToReissue>> GiftCardsAsync(string source, CancellationToken cancellationToken)
+    {
+        if (giftCards.Find(source) is not { } connector)
+            return [];
+
+        var cards = new List<SourceGiftCard>();
+        await foreach (var card in connector.StreamGiftCardsAsync(cancellationToken))
+            cards.Add(card);
+
+        var holders = cards.Select(card => card.CustomerExternalId).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
+        var imported = holders.Count == 0 ? new Dictionary<string, CustomerId>() : await customers.ForAsync(source, holders, cancellationToken);
+
+        return
+        [
+            .. cards.Select(card => new GiftCardToReissue(
+                card.LastCharacters,
+                card.Balance,
+                card.ExpiresOn,
+                card.CustomerExternalId is { } holder && imported.TryGetValue(holder, out var customer) ? customer.Value.ToString() : null,
+                card.CustomerExternalId)),
+        ];
     }
 
     /// <summary>The order's lines as the catalogue sells them, or null — with a note — when one names something it lacks.</summary>
@@ -291,9 +328,11 @@ internal static class ImportOrdersNotes
 }
 
 /// <summary>
-/// `tendero.ordering.import.orders` and `tendero.ordering.import.notes` (the
-/// tracking plan; phase 16, spec *Evidence of use*): how much of a store's history
-/// comes across, by source, labelled as the other contexts' imports are.
+/// `tendero.ordering.import.orders`, `tendero.ordering.import.notes` and
+/// `tendero.ordering.import.gift_cards` (the tracking plan; phase 16, spec
+/// *Evidence of use*): how much of a store's history comes across, and how many
+/// gift cards are left for the merchant to reissue, by source, labelled as the
+/// other contexts' imports are.
 /// </summary>
 internal static class ImportOrdersMetrics
 {
@@ -305,11 +344,16 @@ internal static class ImportOrdersMetrics
     private static readonly Counter<long> Notes = Meter.CreateCounter<long>(
         "tendero.ordering.import.notes", unit: "{note}", description: "What an order source did not hand over cleanly, by source and code.");
 
-    public static void Record(string source, int created, int alreadyImported, int refunds, IEnumerable<OrderNote> notes)
+    private static readonly Counter<long> GiftCards = Meter.CreateCounter<long>(
+        "tendero.ordering.import.gift_cards", unit: "{card}", description: "Gift cards an import listed for the merchant to reissue, by source.");
+
+    public static void Record(string source, int created, int alreadyImported, int refunds, IEnumerable<OrderNote> notes, int giftCards)
     {
         Add(source, "created", created);
         Add(source, "already_imported", alreadyImported);
         Add(source, "refund", refunds);
+        if (giftCards > 0)
+            GiftCards.Add(giftCards, new KeyValuePair<string, object?>("catalog.source", source));
 
         foreach (var group in notes.GroupBy(note => note.Code))
         {

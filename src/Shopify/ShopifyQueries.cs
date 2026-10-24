@@ -176,6 +176,26 @@ internal static class ShopifyQueries
             """;
     }
 
+    /// <summary>
+    /// A page of the gift cards still owed (S2b, P16-20): enabled, not expired, with
+    /// a balance left — the store's own search, so a spent card is never read. A
+    /// card tells the last four characters of its code and never the rest, which the
+    /// store gives only on the day it makes the card; that is why a card is listed
+    /// for the merchant to reissue and not imported.
+    /// </summary>
+    public static string GiftCards(string? after)
+    {
+        var cursor = after is null ? "" : $", after: {JsonSerializer.Serialize(after)}";
+
+        return
+            $$"""
+            { giftCards(first: 100, query: "status:enabled AND NOT status:expired AND balance_status:full_or_partial"{{cursor}}) {
+                pageInfo { hasNextPage endCursor }
+                nodes { id lastCharacters enabled balance { amount currencyCode } expiresOn customer { id } }
+              } }
+            """;
+    }
+
     /// <summary>The store's locations; a store has a handful, so a page of 250 is all of them.</summary>
     public const string Locations = "{ locations(first: 250, includeInactive: true) { nodes { id name isActive } } }";
 

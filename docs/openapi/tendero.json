@@ -14327,6 +14327,43 @@
           }
         }
       },
+      "GiftCardToReissue": {
+        "required": [
+          "lastCharacters",
+          "balance",
+          "expiresOn",
+          "customer",
+          "customerAtSource"
+        ],
+        "type": "object",
+        "properties": {
+          "lastCharacters": {
+            "type": "string"
+          },
+          "balance": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "expiresOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "customer": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerAtSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "HistorySettingsRequest": {
         "required": [
           "enabled"
@@ -14490,7 +14527,8 @@
           "created",
           "alreadyImported",
           "refunds",
-          "notes"
+          "notes",
+          "giftCards"
         ],
         "type": "object",
         "properties": {
@@ -14510,6 +14548,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/MessageOfOrderNoteCode"
+            }
+          },
+          "giftCards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GiftCardToReissue"
             }
           }
         }

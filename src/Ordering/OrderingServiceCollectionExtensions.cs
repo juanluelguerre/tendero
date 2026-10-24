@@ -87,6 +87,7 @@ public static class OrderingServiceCollectionExtensions
         // The order sources a store's history is imported from (phase 16, S2b): each
         // registers itself keyed (AddShopify), and this lists them.
         services.TryAddScoped<IOrderSourceRegistry, KeyedOrderSourceRegistry>();
+        services.TryAddScoped<IGiftCardSourceRegistry, KeyedGiftCardSourceRegistry>();
 
         // What Ordering holds about a person, for their download and the removal of
         // their account (P15-9): the wallet, forgotten, and the orders, kept.

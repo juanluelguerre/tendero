@@ -2475,6 +2475,14 @@ export interface components {
             status: components["schemas"]["ProductStatus"];
             lacks: string[];
         };
+        GiftCardToReissue: {
+            lastCharacters: string;
+            balance: components["schemas"]["Money"];
+            /** Format: date */
+            expiresOn: null | string;
+            customer: null | string;
+            customerAtSource: null | string;
+        };
         HistorySettingsRequest: {
             enabled: boolean;
         };
@@ -2528,6 +2536,7 @@ export interface components {
             /** Format: int32 */
             refunds: number;
             notes: components["schemas"]["MessageOfOrderNoteCode"][];
+            giftCards: components["schemas"]["GiftCardToReissue"][];
         };
         ImportProductsCommand: {
             source: string;

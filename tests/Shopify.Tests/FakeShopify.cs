@@ -19,6 +19,9 @@ internal sealed class FakeShopify : HttpMessageHandler
 
     public List<HttpRequestMessage> Requests { get; } = [];
 
+    /// <summary>Every GraphQL query the store was asked, in order.</summary>
+    public List<string> Queries { get; } = [];
+
     public int TokensIssued { get; private set; }
 
     /// <summary>What each token request posted, as the form it sent.</summary>
@@ -103,6 +106,7 @@ internal sealed class FakeShopify : HttpMessageHandler
         }
 
         var query = JsonDocument.Parse(body).RootElement.GetProperty("query").GetString()!;
+        Queries.Add(query);
 
         // A query the store finds wrong: GraphQL answers 200 with errors.
         if (query.Contains("{ wrong }", StringComparison.Ordinal))
@@ -138,6 +142,9 @@ internal sealed class FakeShopify : HttpMessageHandler
 
         if (query.Contains("{ discountNodes(", StringComparison.Ordinal))
             return Json(File.ReadAllText(Fixture("discounts.json")));
+
+        if (query.Contains("{ giftCards(", StringComparison.Ordinal))
+            return Json(File.ReadAllText(Fixture("gift-cards.json")));
 
         if (query.Contains("locations(", StringComparison.Ordinal))
             return Json("{\"data\":{\"locations\":{\"nodes\":" + Locations + "}}}");

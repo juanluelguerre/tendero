@@ -50,6 +50,7 @@ public static class ShopifyServiceCollectionExtensions
         services.AddKeyedScoped<IStockSourceConnector, ShopifyStockConnector>(ShopifyStockConnector.Key);
         services.AddKeyedScoped<ICustomerSourceConnector, ShopifyCustomerConnector>(ShopifyCustomerConnector.Key);
         services.AddKeyedScoped<IOrderSourceConnector, ShopifyOrderConnector>(ShopifyOrderConnector.Key);
+        services.AddKeyedScoped<IGiftCardSourceConnector, ShopifyGiftCardConnector>(ShopifyGiftCardConnector.Key);
         services.AddKeyedScoped<IDiscountSourceConnector, ShopifyDiscountConnector>(ShopifyDiscountConnector.Key);
 
         return services;

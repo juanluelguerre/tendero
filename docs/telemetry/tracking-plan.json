@@ -477,7 +477,7 @@
       "name": "Importing a store",
       "area": "backoffice",
       "question": "Is the Shopify source used, and how much of a store comes across clean, per context?",
-      "decision": "A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own.",
+      "decision": "A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. Gift cards listed for reissue, counted per store, say whether Tendero needs gift cards of its own (docs/specs/shopify-leave.md, decision 6).",
       "signals": [
         "tendero.catalog.import.products",
         "tendero.catalog.import.notes",
@@ -487,6 +487,7 @@
         "tendero.accounts.import.notes",
         "tendero.ordering.import.orders",
         "tendero.ordering.import.notes",
+        "tendero.ordering.import.gift_cards",
         "tendero.pricing.import.discounts",
         "tendero.pricing.import.notes"
       ]
@@ -1822,6 +1823,18 @@
             "RefundNotExpressed"
           ],
           "description": "The note's code (OrderNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.ordering.import.gift_cards",
+      "instrument": "counter",
+      "unit": "{card}",
+      "description": "Gift cards an import listed for the merchant to reissue, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
         }
       }
     },

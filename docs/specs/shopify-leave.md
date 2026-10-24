@@ -364,7 +364,10 @@ proposal *is* the migration.
 
 **Gift cards.** Each card is listed with its last four characters, its balance
 and its expiry, for the merchant to reissue (decision 6). Shopify returns a full
-code only when it creates the card.
+code only when it creates the card. No context owns gift cards, so the port
+lives in Ordering beside payments, and the listing travels in the orders
+import's answer, with the holder's imported customer or the store's id for them
+(P16-20).
 
 **The rehearsal** covers all four, as S2a's does. Each context is its own port
 with a Shopify adapter: customers, orders, discounts, gift cards. None reaches

@@ -44,6 +44,31 @@ internal sealed class FakeOrderSource : IOrderSourceConnector
     }
 }
 
+/// <summary>A store's gift cards written in memory: Ana's, which expires, and one with no holder.</summary>
+internal sealed class FakeGiftCardSource : IGiftCardSourceConnector
+{
+    public List<SourceGiftCard> Cards { get; } =
+    [
+        new("8001", "ab12", new Money(25m, "EUR"), new DateOnly(2027, 12, 31), "6001"),
+        new("8002", "cd34", new Money(50m, "EUR"), null, null),
+    ];
+
+    public string Source => FakeOrderSource.Key;
+
+    public async IAsyncEnumerable<SourceGiftCard> StreamGiftCardsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        await Task.CompletedTask;
+        foreach (var card in Cards)
+            yield return card;
+    }
+}
+
+/// <summary>The fake gift card source passes the contract every gift card source does.</summary>
+public sealed class FakeGiftCardSourceContractTests : GiftCardSourceConnectorContractTests
+{
+    protected override IGiftCardSourceConnector CreateConnector() => new FakeGiftCardSource();
+}
+
 /// <summary>The fake order source passes the contract every order source does.</summary>
 public sealed class FakeOrderSourceContractTests : OrderSourceConnectorContractTests
 {
@@ -72,9 +97,65 @@ public sealed class ImportOrdersTests
 
         public CountingUnitOfWork UnitOfWork { get; } = new();
 
+        /// <summary>The source's gift cards, or null for a source that registers none.</summary>
+        public FakeGiftCardSource? GiftCards { get; set; } = new();
+
         public Task<ImportOrdersResult> ImportAsync(bool rehearse = false, string culture = "es") =>
-            new ImportOrdersHandler(new OneSource(Source), Orders, Returns, new Catalogue(), new ImportedAna(), UnitOfWork)
+            new ImportOrdersHandler(new OneSource(Source), new GiftCardsOf(GiftCards), Orders, Returns, new Catalogue(), new ImportedAna(), UnitOfWork)
                 .HandleAsync(new ImportOrdersCommand(FakeOrderSource.Key, culture, rehearse), Ct);
+    }
+
+    /// <summary>
+    /// A gift card cannot come across (decision 6): each one still owed is listed with
+    /// the end of its code, its balance, its expiry and whom it belongs to here, for
+    /// the merchant to reissue.
+    /// </summary>
+    [Fact]
+    public async Task Each_gift_card_still_owed_is_listed_for_the_merchant_to_reissue()
+    {
+        var shop = new Shop();
+
+        var result = await shop.ImportAsync();
+
+        Assert.Equal(
+            [
+                new GiftCardToReissue("ab12", new Money(25m, "EUR"), new DateOnly(2027, 12, 31), Ana.Value.ToString(), "6001"),
+                new GiftCardToReissue("cd34", new Money(50m, "EUR"), null, null, null),
+            ],
+            result.GiftCards);
+    }
+
+    /// <summary>A holder the customers' import did not bring is still named, by the store's id for them.</summary>
+    [Fact]
+    public async Task A_gift_card_whose_holder_was_not_imported_names_them_as_the_store_did()
+    {
+        var shop = new Shop();
+        shop.GiftCards!.Cards.Add(new SourceGiftCard("8003", "ef56", new Money(10m, "EUR"), null, "6999"));
+
+        var result = await shop.ImportAsync();
+
+        Assert.Equal(new GiftCardToReissue("ef56", new Money(10m, "EUR"), null, null, "6999"), result.GiftCards[^1]);
+    }
+
+    [Fact]
+    public async Task A_rehearsal_lists_the_gift_cards_too()
+    {
+        var shop = new Shop();
+
+        var rehearsal = await shop.ImportAsync(rehearse: true);
+
+        Assert.Equal(["ab12", "cd34"], rehearsal.GiftCards.Select(card => card.LastCharacters));
+    }
+
+    [Fact]
+    public async Task A_source_with_no_gift_cards_lists_none()
+    {
+        var shop = new Shop { GiftCards = null };
+
+        var result = await shop.ImportAsync();
+
+        Assert.Equal(3, result.Created);
+        Assert.Empty(result.GiftCards);
     }
 
     [Fact]
@@ -193,6 +274,11 @@ public sealed class ImportOrdersTests
         public IReadOnlyCollection<string> Sources => [source.Source];
 
         public IOrderSourceConnector Get(string name) => source;
+    }
+
+    private sealed class GiftCardsOf(IGiftCardSourceConnector? source) : IGiftCardSourceRegistry
+    {
+        public IGiftCardSourceConnector? Find(string name) => source?.Source == name ? source : null;
     }
 
     private sealed class Orders : IOrderRepository
