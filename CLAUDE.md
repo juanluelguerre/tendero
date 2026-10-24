@@ -501,7 +501,10 @@ name.
 - Test data: explicit builders + Bogus. No AutoFixture.
 - Any change touching search relevance MUST keep NDCG@10 ≥ the committed
   threshold (`tools/SearchEval`). If a regression is intentional, update the
-  golden set in the same PR and explain why in the description.
+  golden set in the same PR and explain why in the description. The thresholds
+  name the golden set they were set against (`"goldenSet"` in
+  `eval.thresholds.json`): a change to the judgments records the new fingerprint
+  beside re-derived thresholds, or the gate and `GoldenSetFingerprintTests` fail.
 - **Mutation testing, two levels** (`docs/testing.md`): a test written for code
   that already exists earns its place by failing against a hand-made mutation,
   listed in the commit message. **At every phase close**, Stryker.NET runs over

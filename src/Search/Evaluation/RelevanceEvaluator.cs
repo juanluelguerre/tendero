@@ -14,9 +14,18 @@ namespace ElGuerre.Tendero.Search.Evaluation;
 /// bar, and lexical still has to clear its own — a hybrid that won by making the
 /// fallback worse would have made the mode every AI failure lands in worse.
 /// </summary>
+/// <param name="GoldenSet">The fingerprint of the golden set these thresholds were set
+/// against (<see cref="Evaluation.GoldenSet.Fingerprint"/>): scores measured against other
+/// judgments are not compared with them. Null in a file that does not say.</param>
 public sealed record EvaluationThresholds(
-    IReadOnlyDictionary<string, IReadOnlyDictionary<string, CultureThresholds>> ByStrategy)
+    IReadOnlyDictionary<string, IReadOnlyDictionary<string, CultureThresholds>> ByStrategy,
+    string? GoldenSet = null)
 {
+    /// <summary>The key beside the strategies that names the golden set.</summary>
+    private const string GoldenSetKey = "goldenSet";
+
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public static async Task<EvaluationThresholds> LoadAsync(string path, CancellationToken cancellationToken)
     {
         await using var stream = File.OpenRead(path);
@@ -25,14 +34,23 @@ public sealed record EvaluationThresholds(
 
     public static async Task<EvaluationThresholds> LoadAsync(Stream stream, string origin, CancellationToken cancellationToken)
     {
-        var strategies = await JsonSerializer.DeserializeAsync<Dictionary<string, Dictionary<string, CultureThresholds>>>(
-                             stream, new JsonSerializerOptions(JsonSerializerDefaults.Web), cancellationToken)
-                         ?? throw new InvalidDataException($"'{origin}' is empty or not a thresholds file.");
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+            throw new InvalidDataException($"'{origin}' is empty or not a thresholds file.");
 
-        return new EvaluationThresholds(strategies.ToDictionary(
-            strategy => strategy.Key,
-            strategy => (IReadOnlyDictionary<string, CultureThresholds>)strategy.Value,
-            StringComparer.OrdinalIgnoreCase));
+        string? goldenSet = null;
+        var strategies = new Dictionary<string, IReadOnlyDictionary<string, CultureThresholds>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var property in document.RootElement.EnumerateObject())
+        {
+            if (property.NameEquals(GoldenSetKey))
+                goldenSet = property.Value.GetString();
+            else
+                strategies[property.Name] = property.Value.Deserialize<Dictionary<string, CultureThresholds>>(JsonOptions)
+                    ?? throw new InvalidDataException($"'{origin}' has no thresholds for the {property.Name} strategy.");
+        }
+
+        return new EvaluationThresholds(strategies, goldenSet);
     }
 
     public CultureThresholds For(string strategy, string culture) =>

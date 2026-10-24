@@ -41,6 +41,14 @@ está bien puesta, y la puerta acaba midiendo los prejuicios de quien anotó.
 `eval.thresholds.json` — **medidos, no inventados**, con ~1% de margen sobre la
 línea base real. Bajarlos exige justificarlo en el cuerpo del PR.
 
+Llevan también `"goldenSet"`: la huella del golden set contra el que se fijaron
+(`GoldenSet.Fingerprint`, 12 caracteres, sobre lo que puntúa: consultas y juicios
+con su nota; las razones, el `kind`, el `split` y el formato no cuentan). El
+informe la dice al principio, la puerta falla si no coincide —aunque las notas
+aprueben— y `GoldenSetFingerprintTests` lo comprueba en cada PR sin Elasticsearch.
+Quien cambia los juicios rederiva los umbrales si se movieron y escribe la huella
+nueva en el mismo diff (`docs/search-evaluation.md`, *CI gate*).
+
 ## La suite `copilot` (Steward, fase 12)
 
 Steward contra `Copilot/cases.json`: cada caso es una pregunta, la pantalla en

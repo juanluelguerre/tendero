@@ -92,6 +92,32 @@ non-zero below the thresholds in `eval.thresholds.json`. Threshold or annotation
 changes require justification in the PR body. `--report <file>` writes the
 Markdown report for publishing as an artifact.
 
+**The thresholds name the judgments they were set against** (2026-10-24, a
+reader's suggestion under article 03). If a pull request changes the code and the
+golden set together, the two runs are not scored against the same expectations,
+and a moved score cannot tell which of the two moved it. So:
+
+- `eval.thresholds.json` carries `"goldenSet"`, a 12-character fingerprint of the
+  golden set (`GoldenSet.Fingerprint`). It is taken over what the gate scores —
+  each culture and source, each query's words, each judgment's product and grade —
+  so rewording a `why`, a query's kind or split, the order of queries or the
+  file's layout move nothing.
+- The report says it first: *Golden set `d275da236994`, the one the thresholds
+  were set against*, or that the thresholds were set against another one and the
+  scores are not comparable with them.
+- The gate fails on a mismatch, however good the scores: it refuses to compare
+  rather than guess. Measured: one grade lowered in `es.json` left Spanish at
+  0.710, over its threshold, and the run still exited 1.
+- A unit test (`GoldenSetFingerprintTests`) holds the committed thresholds to the
+  committed golden set on every pull request, with no Elasticsearch, and its
+  failure gives the new fingerprint.
+
+**Changing the golden set** is therefore one diff with three parts: the judgments,
+the thresholds re-derived against them if the scores moved, and the new
+`"goldenSet"` beside them, with the reason in the PR. The cleanest comparison for
+the reviewer is the base commit and the head both scored against the new
+judgments: the difference between them is the code alone.
+
 It does **not** start Elasticsearch itself — it takes `--elasticsearch <url>`
 and defaults to `http://localhost:9200`. Booting a container from the tool would
 mean a Testcontainers dependency for something a service container already does.

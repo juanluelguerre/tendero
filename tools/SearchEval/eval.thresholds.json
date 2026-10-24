@@ -1,4 +1,5 @@
 {
+  "goldenSet": "d275da236994",
   "lexical": {
     "es": { "ndcgAt10": 0.69, "recallAt50": 0.71 },
     "en": { "ndcgAt10": 0.75, "recallAt50": 0.78 }

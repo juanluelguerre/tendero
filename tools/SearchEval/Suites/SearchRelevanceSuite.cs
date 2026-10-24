@@ -174,6 +174,10 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         foreach (var path in Directory.EnumerateFiles(options.GoldenDirectory, "*.json").Order())
             goldenSets.Add(await GoldenSet.LoadAsync(path, cancellationToken));
 
+        // Of the whole golden set, before any split: it names the judgments the
+        // thresholds were set against, and a split run is never the gate.
+        var goldenSet = GoldenSet.Fingerprint(goldenSets);
+
         // A tuning run looks at one half; the other half is what a change has to
         // survive. Options refuse a split with --ci, so the gate always sees all.
         if (options.Split is { } split)
@@ -205,7 +209,7 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
             results.Add(new StrategyScores(strategy.Name, cultures, strategy.Gated));
         }
 
-        var report = EvaluationReport.Render(results, thresholds, rerank: options.IsHybrid && options.Reranker is not null);
+        var report = EvaluationReport.Render(results, thresholds, rerank: options.IsHybrid && options.Reranker is not null, goldenSet: goldenSet);
 
         if (options.Siglip is not null)
         {
@@ -238,19 +242,16 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         await host.StopAsync(cancellationToken);
 
         // A diagnostic strategy is reported and never gates: it has no thresholds.
-        var failures = results
-            .Where(result => result.Gated)
-            .SelectMany(result => result.Cultures
-                .Where(score => !thresholds.For(result.Strategy, score.Culture).AreMetBy(score))
-                .Select(score => $"{result.Strategy} {score.Culture}"))
-            .ToList();
+        // Scores against other judgments than the thresholds' are not compared.
+        var failures = RelevanceGate.Failures(results, thresholds, goldenSet);
 
         if (failures.Count == 0)
             return 0;
 
-        Console.Error.WriteLine($"Below the committed thresholds: {string.Join(", ", failures)}.");
+        Console.Error.WriteLine($"The relevance gate does not pass: {string.Join("; ", failures)}.");
         Console.Error.WriteLine(
-            "Either the change hurt relevance, or the golden set needs updating — and that needs justifying in the PR.");
+            "Either the change hurt relevance, or the golden set changed and the thresholds need re-deriving against it, " +
+            "with its fingerprint recorded beside them — and either needs justifying in the PR.");
 
         // Without --ci the report still prints but breaks nobody's session.
         return options.FailUnderThresholds ? 1 : 0;
