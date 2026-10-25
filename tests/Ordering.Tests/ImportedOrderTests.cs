@@ -95,6 +95,35 @@ public sealed class ImportedOrderTests
         Assert.Throws<InvalidOperationException>(() => Imported(OrderStatus.Delivered, line: Line(currency: "USD")));
     }
 
+    /// <summary>
+    /// A line of nothing is no line, however the order is born. Found by phase 16
+    /// S2b's Stryker close: "at most zero" made "below zero" survived, and so did
+    /// "any line" made "every line".
+    /// </summary>
+    [Fact]
+    public void A_line_of_nothing_is_refused()
+    {
+        var nothing = Line() with { Quantity = 0 };
+
+        Assert.Throws<InvalidOperationException>(() => Order.Imported(
+            Shopify, OrderStatus.Delivered, CustomerId.New(), [Line(), nothing], Ana, Ana, Standard,
+            Totals(subtotal: 159.90m, total: 164.85m), LastSpring));
+    }
+
+    /// <summary>What the store took off is kept beside the figures it explains. Found by the same close.</summary>
+    [Fact]
+    public void An_imported_order_keeps_its_discounts()
+    {
+        var discount = new OrderDiscount("SPRING15", "SPRING15", new Money(12m, "EUR"));
+
+        var order = Order.Imported(
+            Shopify, OrderStatus.Delivered, CustomerId.New(), [Line()], Ana, Ana, Standard,
+            new OrderTotals(new Money(79.95m, "EUR"), new Money(12m, "EUR"), new Money(4.95m, "EUR"), new Money(12.65m, "EUR"), new Money(72.90m, "EUR")),
+            LastSpring, discounts: [discount]);
+
+        Assert.Equal([discount], order.Discounts);
+    }
+
     /// <summary>Placing still starts where it always did, and nowhere else.</summary>
     [Fact]
     public void An_order_placed_here_is_born_pending()

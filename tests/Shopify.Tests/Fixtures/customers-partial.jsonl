@@ -1,0 +1,2 @@
+{"id":"gid://shopify/Customer/6005","firstName":"Eva","lastName":null,"locale":"es","defaultEmailAddress":{"emailAddress":"eva@example.com","marketingState":"NOT_SUBSCRIBED","marketingUpdatedAt":null},"defaultAddress":null}
+{"id":"gid://shopify/MailingAddress/9300?model_name=CustomerAddress","name":null,"address1":null,"address2":null,"city":null,"provinceCode":null,"zip":null,"countryCodeV2":null,"phone":null,"__parentId":"gid://shopify/Customer/6005"}

@@ -1,0 +1,78 @@
+{
+  "data": {
+    "orders": {
+      "pageInfo": { "hasNextPage": false, "endCursor": "f2" },
+      "nodes": [
+        {
+          "id": "gid://shopify/Order/5101",
+          "name": "#1101",
+          "createdAt": "2026-05-01T10:00:00Z",
+          "cancelledAt": null,
+          "displayFulfillmentStatus": "FULFILLED",
+          "email": "ana@example.com",
+          "customerLocale": "es",
+          "customer": { "id": "gid://shopify/Customer/6001" },
+          "totalDiscountsSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+          "totalTaxSet": { "shopMoney": { "amount": "6.07", "currencyCode": "EUR" } },
+          "totalPriceSet": { "shopMoney": { "amount": "35.0", "currencyCode": "EUR" } },
+          "taxLines": [],
+          "shippingAddress": { "name": "Ana Ruiz", "address1": "Calle Mayor 1", "address2": "2º B", "city": "Madrid", "provinceCode": "M", "zip": "28013", "countryCodeV2": "ES", "phone": "+34600000001" },
+          "billingAddress": null,
+          "shippingLine": {
+            "title": "Envío estándar", "originalPriceSet": { "shopMoney": { "amount": "5.0", "currencyCode": "EUR" } },
+            "discountAllocations": [{ "allocatedAmountSet": { "shopMoney": { "amount": "5.0", "currencyCode": "EUR" } }, "discountApplication": { "index": 1 } }]
+          },
+          "fulfillments": [{ "createdAt": "2026-05-03T09:00:00Z" }, { "createdAt": "2026-05-02T09:00:00Z" }],
+          "discountApplications": { "nodes": [{ "index": 0, "code": "TAZAS5" }, { "index": 1, "title": "Envío gratis" }] },
+          "lineItems": {
+            "nodes": [
+              {
+                "id": "gid://shopify/LineItem/51", "title": "Taza de gres", "variantTitle": null, "quantity": 2,
+                "variant": { "id": "gid://shopify/ProductVariant/44003" },
+                "originalUnitPriceSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+                "discountAllocations": [{ "allocatedAmountSet": { "shopMoney": { "amount": "2.5", "currencyCode": "EUR" } }, "discountApplication": { "index": 0 } }]
+              },
+              {
+                "id": "gid://shopify/LineItem/52", "title": "Cafetera Moka", "variantTitle": "Oliva", "quantity": 1,
+                "variant": { "id": "gid://shopify/ProductVariant/44001" },
+                "originalUnitPriceSet": { "shopMoney": { "amount": "20.0", "currencyCode": "EUR" } },
+                "discountAllocations": [{ "allocatedAmountSet": { "shopMoney": { "amount": "2.5", "currencyCode": "EUR" } }, "discountApplication": { "index": 0 } }]
+              }
+            ]
+          },
+          "refunds": []
+        },
+        {
+          "id": "gid://shopify/Order/5102",
+          "name": "#1102",
+          "createdAt": "2026-05-04T10:00:00Z",
+          "cancelledAt": null,
+          "displayFulfillmentStatus": "FULFILLED",
+          "email": null,
+          "customerLocale": "es",
+          "customer": null,
+          "totalDiscountsSet": { "shopMoney": { "amount": "0.0", "currencyCode": "EUR" } },
+          "totalTaxSet": { "shopMoney": { "amount": "1.74", "currencyCode": "EUR" } },
+          "totalPriceSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+          "taxLines": [],
+          "shippingAddress": null,
+          "billingAddress": null,
+          "shippingLine": null,
+          "fulfillments": [],
+          "discountApplications": { "nodes": [] },
+          "lineItems": {
+            "nodes": [
+              {
+                "id": "gid://shopify/LineItem/61", "title": "Taza de gres", "variantTitle": null, "quantity": 1,
+                "variant": { "id": "gid://shopify/ProductVariant/44003" },
+                "originalUnitPriceSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+                "discountAllocations": []
+              }
+            ]
+          },
+          "refunds": []
+        }
+      ]
+    }
+  }
+}

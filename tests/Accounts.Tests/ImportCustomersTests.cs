@@ -249,6 +249,176 @@ public sealed class ImportCustomersTests
         Assert.StartsWith("6003: ", english.Text, StringComparison.Ordinal);
     }
 
+    // The tests below were found by phase 16 S2b's Stryker close: each mutant they
+    // name survived the suite above.
+
+    /// <summary>
+    /// Every note says its sentence in the language asked, starting with the customer
+    /// it is about and naming the detail it carries; a note about nobody in particular
+    /// has nothing in front, and an identity refused for no stated reason says none.
+    /// </summary>
+    [Theory]
+    [InlineData(CustomerNoteCode.FieldRedacted, true, "tienda")]
+    [InlineData(CustomerNoteCode.NoEmail, false, "cliente")]
+    [InlineData(CustomerNoteCode.AlreadyHere, true, "cliente")]
+    [InlineData(CustomerNoteCode.IdentityNotProvisioned, true, "identidad")]
+    [InlineData(CustomerNoteCode.AddressUnreadable, true, "dirección")]
+    [InlineData(CustomerNoteCode.Erased, false, "olvidara")]
+    public async Task A_note_is_said_in_the_language_asked_about_its_customer(CustomerNoteCode code, bool namesItsDetail, string spanishWord)
+    {
+        var shop = new Shop();
+        shop.Source.Customers.Clear();
+        shop.Source.Notes.Add(new CustomerNote(code, "6009", "the detail"));
+
+        var spanish = Assert.Single((await shop.ImportAsync(rehearse: true, culture: "es")).Notes);
+        var english = Assert.Single((await shop.ImportAsync(rehearse: true, culture: "en")).Notes);
+
+        Assert.Contains(spanishWord, spanish.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain(spanishWord, english.Text, StringComparison.Ordinal);
+        Assert.All([spanish.Text, english.Text], text =>
+        {
+            Assert.StartsWith("6009: ", text, StringComparison.Ordinal);
+            Assert.True(text.Length > 30, text);
+            Assert.Equal(namesItsDetail, text.Contains("the detail", StringComparison.Ordinal));
+        });
+
+        // About nobody; and an identity refused for no stated reason says none.
+        shop.Source.Notes[0] = new CustomerNote(code, null, code == CustomerNoteCode.IdentityNotProvisioned ? null : "the detail");
+        var aboutNothing = Assert.Single((await shop.ImportAsync(rehearse: true, culture: "en")).Notes);
+        if (code == CustomerNoteCode.IdentityNotProvisioned)
+            Assert.Contains("for them; they came", aboutNothing.Text, StringComparison.Ordinal);
+        else
+            Assert.Equal(Sentences.StartingUpper(english.Text["6009: ".Length..]), aboutNothing.Text);
+    }
+
+    /// <summary>The source's own notes come with the answer, after the import's.</summary>
+    [Fact]
+    public async Task What_the_source_withheld_is_said()
+    {
+        var shop = new Shop();
+        shop.Source.Notes.Add(new CustomerNote(CustomerNoteCode.FieldRedacted, null, "phone"));
+
+        var result = await shop.ImportAsync();
+
+        Assert.Equal(CustomerNoteCode.FieldRedacted, Assert.Single(result.Notes).Code);
+    }
+
+    /// <summary>A customer keeps the language the store knew, Spanish when it knew none, and no name when the store had none.</summary>
+    [Fact]
+    public async Task A_customer_keeps_their_language_and_has_no_name_when_the_store_had_none()
+    {
+        var shop = new Shop();
+        shop.Source.Customers[0] = shop.Source.Customers[0] with { Culture = "en" };
+        shop.Source.Customers[1] = shop.Source.Customers[1] with { FirstName = " ", LastName = null };
+
+        await shop.ImportAsync();
+
+        var (ana, luis) = (shop.Customers.All[0], shop.Customers.All[1]);
+        Assert.Equal(("en", "es"), (ana.Culture, luis.Culture));
+        Assert.Null(luis.DisplayName);
+    }
+
+    /// <summary>A customer with no address has no address book; a city too long to be a label is cut to one.</summary>
+    [Fact]
+    public async Task Only_a_customer_with_addresses_gets_a_book_each_labelled_by_its_city()
+    {
+        var shop = new Shop();
+        var city = new string('L', AddressBook.MaxLabelLength + 5);
+        shop.Source.Customers[0] = shop.Source.Customers[0] with
+        {
+            Addresses = [new SourceAddress("Ana Ruiz", "Calle Mayor 1", null, city, null, "28013", "ES", null, IsDefault: true)],
+        };
+
+        await shop.ImportAsync();
+
+        var book = Assert.Single(shop.Books);
+        Assert.Equal(city[..AddressBook.MaxLabelLength], Assert.Single(book.Entries).Label);
+    }
+
+    /// <summary>A rehearsal reads the addresses as the import would, so an unreadable one is said before anything is written.</summary>
+    [Fact]
+    public async Task A_rehearsal_says_which_addresses_could_not_be_read()
+    {
+        var shop = new Shop();
+        shop.Source.Customers[1] = shop.Source.Customers[1] with
+        {
+            Addresses = [new SourceAddress("Luis Gómez", " ", null, "Sevilla", null, "41001", "ES", null, IsDefault: true)],
+        };
+
+        var rehearsal = await shop.ImportAsync(rehearse: true);
+
+        Assert.Contains(rehearsal.Notes, note => note.Code == CustomerNoteCode.AddressUnreadable && note.About == "6002");
+    }
+
+    /// <summary>Saved when somebody came or was linked, and not when nobody did.</summary>
+    [Fact]
+    public async Task An_import_saves_only_when_it_brought_or_linked_somebody()
+    {
+        var shop = new Shop();
+        await shop.ImportAsync();
+        await shop.ImportAsync();
+        Assert.Equal(1, shop.UnitOfWork.SaveCount);
+
+        var linking = new Shop();
+        linking.Source.Customers.RemoveAt(1);
+        linking.Customers.All.Add(Customer.Identified(linking.Clock, "kc-ana@example.com", "Ana Ruiz", "es", Segments.Retail));
+        var linked = await linking.ImportAsync();
+        Assert.Equal((0, 1, 1), (linked.Created, linked.Linked, linking.UnitOfWork.SaveCount));
+    }
+
+    /// <summary>
+    /// How many of a store's people come across (spec, *Evidence of use*): customers by
+    /// outcome and the notes by code, by source; an outcome with nothing in it is not
+    /// counted, and a rehearsal counts nothing.
+    /// </summary>
+    [Fact]
+    public async Task An_import_counts_its_customers_by_outcome_and_its_notes_by_code()
+    {
+        using var recorder = new InstrumentRecorder("tendero.accounts.import.customers", "tendero.accounts.import.notes");
+        var shop = new Shop();
+        shop.Source.Customers.Add(new SourceCustomer("6003", null, null, null, null, null, []));
+
+        await shop.ImportAsync(rehearse: true);
+        Assert.Empty(recorder.Of("tendero.accounts.import.customers"));
+
+        await shop.ImportAsync();
+        await shop.ImportAsync();
+
+        Assert.Equal(
+            [("fake", "created", 2L), ("fake", "already_imported", 2L)],
+            recorder.Measured("tendero.accounts.import.customers")
+                .Select(each => ((string)each.Tags["catalog.source"]!, (string)each.Tags["accounts.import.outcome"]!, each.Value)));
+        Assert.Equal(
+            [("fake", "NoEmail"), ("fake", "NoEmail")],
+            recorder.Of("tendero.accounts.import.notes").Select(tags => ((string)tags["catalog.source"]!, (string)tags["accounts.import.note"]!)));
+    }
+
+    /// <summary>A customer linked to somebody the shop had is counted as linked.</summary>
+    [Fact]
+    public async Task A_linked_customer_is_counted_as_linked()
+    {
+        using var recorder = new InstrumentRecorder("tendero.accounts.import.customers");
+        var shop = new Shop();
+        shop.Source.Customers.RemoveAt(1);
+        shop.Customers.All.Add(Customer.Identified(shop.Clock, "kc-ana@example.com", "Ana Ruiz", "es", Segments.Retail));
+
+        await shop.ImportAsync();
+
+        Assert.Equal(["linked"], recorder.Of("tendero.accounts.import.customers").Select(tags => (string)tags["accounts.import.outcome"]!));
+    }
+
+    /// <summary>A source must exist, not just look like one: the request is refused before anything is read.</summary>
+    [Fact]
+    public void An_unknown_source_is_refused_naming_the_ones_there_are()
+    {
+        var validator = new ImportCustomersValidator(new OneSource(new FakeCustomerSource()));
+
+        var refused = validator.Validate(new ImportCustomersCommand("magento"));
+
+        Assert.Equal("Unknown customer source 'magento'. Registered sources: fake.", Assert.Single(refused.Errors).ErrorMessage);
+        Assert.True(validator.Validate(new ImportCustomersCommand(FakeCustomerSource.Key)).IsValid);
+    }
+
     private sealed class OneSource(ICustomerSourceConnector source) : ICustomerSourceRegistry
     {
         public IReadOnlyCollection<string> Sources => [source.Source];

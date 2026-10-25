@@ -1,0 +1,17 @@
+{
+  "data": {
+    "giftCards": {
+      "pageInfo": { "hasNextPage": false, "endCursor": "g4" },
+      "nodes": [
+        {
+          "id": "gid://shopify/GiftCard/8005",
+          "lastCharacters": "ij90",
+          "enabled": true,
+          "balance": { "amount": "15.0", "currencyCode": "EUR" },
+          "expiresOn": null,
+          "customer": { "id": "gid://shopify/Customer/6003" }
+        }
+      ]
+    }
+  }
+}

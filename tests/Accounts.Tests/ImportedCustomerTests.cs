@@ -60,6 +60,25 @@ public sealed class ImportedCustomerTests
         Assert.Throws<InvalidOperationException>(() => ana.LinkOrigin(clock, new CustomerOrigin("shopify", "6999")));
     }
 
+    /// <summary>
+    /// Linking is a change like any other: dated, and refused for somebody erased.
+    /// Found by phase 16 S2b's Stryker close: both checks survived being removed.
+    /// </summary>
+    [Fact]
+    public void Linking_is_dated_and_refused_for_somebody_erased()
+    {
+        var clock = new TestClock();
+        var ana = Customer.Identified(clock, "ana", "Ana Ruiz", "es", Segments.Retail);
+        var later = clock.Advance(TimeSpan.FromDays(3));
+
+        ana.LinkOrigin(clock, Shopify);
+        Assert.Equal(later, ana.UpdatedAt);
+
+        var luis = Customer.Identified(clock, "luis", "Luis Gómez", "es", Segments.Retail);
+        luis.Erase(clock);
+        Assert.Throws<InvalidOperationException>(() => luis.LinkOrigin(clock, new CustomerOrigin("shopify", "6002")));
+    }
+
     [Fact]
     public void An_imported_customer_needs_an_email() =>
         Assert.Throws<ArgumentException>(() => Customer.Imported(new TestClock(), Shopify, " ", "Ana", "es", null, null));

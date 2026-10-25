@@ -39,6 +39,10 @@ public sealed class InstrumentRecorder : IDisposable
     public IReadOnlyList<IReadOnlyDictionary<string, object?>> Of(string instrument) =>
         [.. this.heard.Where(entry => entry.Name == instrument).Select(entry => entry.Tags)];
 
+    /// <summary>Every measurement of one instrument, its value with its labels, in the order they came.</summary>
+    public IReadOnlyList<(long Value, IReadOnlyDictionary<string, object?> Tags)> Measured(string instrument) =>
+        [.. this.heard.Where(entry => entry.Name == instrument).Select(entry => (entry.Value, entry.Tags))];
+
     /// <summary>What one instrument added up to, every measurement's value summed.</summary>
     public long Sum(string instrument) => this.heard.Where(entry => entry.Name == instrument).Sum(entry => entry.Value);
 

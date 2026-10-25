@@ -96,4 +96,42 @@ public sealed class ShopifyCustomerConnectorTests
         Assert.Null(customers[3].Email);
         Assert.Empty(customers[3].Addresses);
     }
+
+    // The tests below were found by phase 16 S2b's Stryker close: each mutant they
+    // name survived the suite above.
+
+    /// <summary>An address that comes under somebody else is a file the store did not group, not an address of the customer being read.</summary>
+    [Fact]
+    public async Task An_address_of_somebody_else_is_an_ungrouped_file()
+    {
+        var (connector, store) = AConnector();
+        store.CustomersFixture = "customers-ungrouped.jsonl";
+
+        var refused = await Assert.ThrowsAsync<ShopifyException>(() => Customers(connector));
+
+        Assert.Equal(ShopifyFailure.UngroupedBulkFile, refused.Failure);
+    }
+
+    /// <summary>A store with no customers finishes its bulk operation with no file, and hands over nobody.</summary>
+    [Fact]
+    public async Task A_store_with_no_customers_hands_over_nobody()
+    {
+        var (connector, store) = AConnector();
+        store.NothingToRead = true;
+
+        Assert.Empty(await Customers(connector));
+        Assert.DoesNotContain(store.Requests, request => request.RequestUri == FakeShopify.ResultsFile);
+    }
+
+    /// <summary>An address the store kept with nothing in it comes empty, for the import to say it cannot read it, never made up.</summary>
+    [Fact]
+    public async Task An_address_with_nothing_in_it_comes_empty()
+    {
+        var (connector, store) = AConnector();
+        store.CustomersFixture = "customers-partial.jsonl";
+
+        var eva = Assert.Single(await Customers(connector));
+
+        Assert.Equal(new SourceAddress("", "", null, "", null, "", "", null, IsDefault: false), Assert.Single(eva.Addresses));
+    }
 }

@@ -34,7 +34,12 @@ internal sealed class FakeOrderSource : IOrderSourceConnector
         Shirts("5003", "#1003", refunds: [new SourceRefund("7001", PlacedThen.AddDays(10), Eur(20m), [("5003-1", 1)])]),
     ];
 
+    /// <summary>What the source itself says it could not hand over.</summary>
+    public List<OrderNote> Notes { get; } = [];
+
     public string Source => Key;
+
+    public IReadOnlyList<OrderNote> SourceNotes => Notes;
 
     public async IAsyncEnumerable<SourceOrder> StreamOrdersAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -267,6 +272,207 @@ public sealed class ImportOrdersTests
         Assert.Empty(shop.Returns.All);
         Assert.Equal(0, shop.UnitOfWork.Saves);
         Assert.StartsWith("#1004: ", Assert.Single(rehearsal.Notes).Text, StringComparison.Ordinal);
+    }
+
+    // The tests below were found by phase 16 S2b's Stryker close: each mutant they
+    // name survived the suite above.
+
+    /// <summary>Sent or billed, one address is both when the store kept only one ("shipping ?? billing" and its mirror).</summary>
+    [Fact]
+    public async Task An_order_the_store_kept_one_address_for_is_sent_and_billed_there()
+    {
+        var shop = new Shop();
+        var sevilla = Address.Create("Luis Gómez", "Calle Sierpes 3", null, "Sevilla", null, "41004", "ES");
+        shop.Source.Orders.Clear();
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5010", "#1010") with { ShippingAddress = null, BillingAddress = sevilla });
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5011", "#1011") with { BillingAddress = null, ShippingAddress = sevilla });
+
+        var result = await shop.ImportAsync();
+
+        Assert.Equal(2, result.Created);
+        Assert.All(shop.Orders.All, order => Assert.Equal((sevilla, sevilla), (order.ShippingAddress, order.BillingAddress)));
+    }
+
+    /// <summary>An order sent and billed nowhere is no order the shop can keep ("or" made "and").</summary>
+    [Fact]
+    public async Task An_order_with_no_address_is_said_and_not_imported()
+    {
+        var shop = new Shop();
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5012", "#1012") with { ShippingAddress = null, BillingAddress = null });
+
+        var result = await shop.ImportAsync();
+
+        Assert.Equal(3, result.Created);
+        Assert.Contains(result.Notes, note => note.Code == OrderNoteCode.TotalsDoNotAddUp && note.About == "#1012");
+    }
+
+    /// <summary>The buyer's language comes with the order, and Spanish when the store knew none; the shipping keeps its label under the source's option.</summary>
+    [Fact]
+    public async Task An_order_keeps_its_buyers_language_and_its_shipping_as_the_store_named_it()
+    {
+        var shop = new Shop();
+        shop.Source.Orders.Clear();
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5013", "#1013") with { Culture = "en" });
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5014", "#1014") with { Culture = null });
+
+        await shop.ImportAsync();
+
+        Assert.Equal(["en", "es"], shop.Orders.All.Select(order => order.Culture));
+        Assert.All(shop.Orders.All, order => Assert.Equal(("fake:shipping", "Envío estándar"), (order.Shipping.OptionCode, order.Shipping.Label)));
+    }
+
+    /// <summary>A tax line at no rate has no base to take it on: zero, not a division by it.</summary>
+    [Fact]
+    public async Task A_tax_line_at_no_rate_has_no_base()
+    {
+        var shop = new Shop();
+        shop.Source.Orders.Clear();
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5015", "#1015") with { Taxes = [new SourceTax("Exento", 0m, new Money(0m, "EUR"))] });
+
+        await shop.ImportAsync();
+
+        Assert.Equal(new OrderTax("Exento", 0m, Money.Zero("EUR"), new Money(0m, "EUR")), Assert.Single(Assert.Single(shop.Orders.All).Taxes));
+    }
+
+    /// <summary>A refund naming a line the order did not have is said, and the order comes without it.</summary>
+    [Fact]
+    public async Task A_refund_of_a_line_the_order_lacks_is_said_and_the_order_comes_without_it()
+    {
+        var shop = new Shop();
+        shop.Source.Orders.Clear();
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5016", "#1016",
+            refunds: [new SourceRefund("7009", FakeOrderSource.PlacedThen.AddDays(5), new Money(20m, "EUR"), [("5099-1", 1)])]));
+
+        var result = await shop.ImportAsync();
+
+        Assert.Equal((1, 0), (result.Created, result.Refunds));
+        Assert.Empty(shop.Returns.All);
+        var note = Assert.Single(result.Notes);
+        Assert.Equal((OrderNoteCode.RefundNotExpressed, "#1016"), (note.Code, note.About));
+        Assert.Contains("5099-1", note.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>The note names the SKU the catalogue lacks, or the product's name when the line had none (its variant was deleted).</summary>
+    [Fact]
+    public async Task A_line_the_catalogue_lacks_is_named_by_its_sku_or_its_name()
+    {
+        var shop = new Shop();
+        shop.Source.Orders.Clear();
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5017", "#1017", sku: "GONE-SKU"));
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5018", "#1018") with
+        {
+            Lines = [new SourceOrderLine("5018-1", null, "Jarra retirada", null, new Money(20m, "EUR"), 2)],
+        });
+
+        var result = await shop.ImportAsync(culture: "en");
+
+        Assert.Contains("GONE-SKU", result.Notes[0].Text, StringComparison.Ordinal);
+        Assert.Contains("Jarra retirada", result.Notes[1].Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Every note says its sentence in the language asked, starting with the order it
+    /// is about and naming the detail it carries; a note about no order in particular
+    /// has nothing in front.
+    /// </summary>
+    [Theory]
+    [InlineData(OrderNoteCode.StillOpen, false, "pedido")]
+    [InlineData(OrderNoteCode.ProductNotInCatalogue, true, "catálogo")]
+    [InlineData(OrderNoteCode.CustomerNotImported, true, "comprador")]
+    [InlineData(OrderNoteCode.TotalsDoNotAddUp, true, "importes")]
+    [InlineData(OrderNoteCode.RefundNotExpressed, true, "reembolso")]
+    public async Task A_note_is_said_in_the_language_asked_about_its_order(OrderNoteCode code, bool namesItsDetail, string spanishWord)
+    {
+        var shop = new Shop();
+        shop.Source.Orders.Clear();
+        shop.Source.Notes.Add(new OrderNote(code, "#9", "the detail"));
+
+        var spanish = Assert.Single((await shop.ImportAsync(rehearse: true, culture: "es")).Notes);
+        var english = Assert.Single((await shop.ImportAsync(rehearse: true, culture: "en")).Notes);
+
+        Assert.Contains(spanishWord, spanish.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain(spanishWord, english.Text, StringComparison.Ordinal);
+        Assert.All([spanish.Text, english.Text], text =>
+        {
+            Assert.StartsWith("#9: ", text, StringComparison.Ordinal);
+            Assert.True(text.Length > 30, text);
+            Assert.Equal(namesItsDetail, text.Contains("the detail", StringComparison.Ordinal));
+        });
+
+        shop.Source.Notes[0] = new OrderNote(code, null, "the detail");
+        var aboutNothing = Assert.Single((await shop.ImportAsync(rehearse: true, culture: "en")).Notes);
+        Assert.Equal(Sentences.StartingUpper(english.Text["#9: ".Length..]), aboutNothing.Text);
+    }
+
+    /// <summary>An order sent to one address and billed to another keeps each where it was.</summary>
+    [Fact]
+    public async Task An_order_sent_and_billed_to_two_addresses_keeps_each()
+    {
+        var shop = new Shop();
+        var sevilla = Address.Create("Luis Gómez", "Calle Sierpes 3", null, "Sevilla", null, "41004", "ES");
+        var madrid = Address.Create("Ana Ruiz", "Calle Mayor 1", null, "Madrid", null, "28013", "ES");
+        shop.Source.Orders.Clear();
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5019", "#1019") with { ShippingAddress = sevilla, BillingAddress = madrid });
+
+        await shop.ImportAsync();
+
+        var order = Assert.Single(shop.Orders.All);
+        Assert.Equal((sevilla, madrid), (order.ShippingAddress, order.BillingAddress));
+    }
+
+    /// <summary>
+    /// How much of a store's history comes across (spec, *Evidence of use*): orders
+    /// by outcome, the notes by code and the gift cards left to reissue, by source;
+    /// an outcome with nothing in it is not counted, and a rehearsal counts nothing.
+    /// </summary>
+    [Fact]
+    public async Task An_import_counts_its_orders_by_outcome_its_notes_by_code_and_its_gift_cards()
+    {
+        using var recorder = new InstrumentRecorder("tendero.ordering.import.orders", "tendero.ordering.import.notes", "tendero.ordering.import.gift_cards");
+        var shop = new Shop();
+        shop.Source.Orders.Add(FakeOrderSource.Shirts("5004", "#1004", state: SourceOrderState.Open));
+
+        await shop.ImportAsync(rehearse: true);
+        Assert.Empty(recorder.Of("tendero.ordering.import.orders"));
+
+        await shop.ImportAsync();
+        await shop.ImportAsync();
+
+        Assert.Equal(
+            [("fake", "created", 3L), ("fake", "refund", 1L), ("fake", "already_imported", 3L)],
+            recorder.Measured("tendero.ordering.import.orders")
+                .Select(each => ((string)each.Tags["catalog.source"]!, (string)each.Tags["ordering.import.outcome"]!, each.Value)));
+        Assert.Equal(
+            [("fake", "StillOpen"), ("fake", "StillOpen")],
+            recorder.Of("tendero.ordering.import.notes").Select(tags => ((string)tags["catalog.source"]!, (string)tags["ordering.import.note"]!)));
+        Assert.Equal(4, recorder.Sum("tendero.ordering.import.gift_cards"));
+        Assert.All(recorder.Of("tendero.ordering.import.gift_cards"), tags => Assert.Equal("fake", tags["catalog.source"]));
+    }
+
+    /// <summary>A source with no gift card left to reissue counts none, rather than a zero.</summary>
+    [Fact]
+    public async Task An_import_with_no_gift_cards_counts_none()
+    {
+        using var recorder = new InstrumentRecorder("tendero.ordering.import.gift_cards");
+        var shop = new Shop();
+        shop.GiftCards!.Cards.Clear();
+
+        await shop.ImportAsync();
+
+        Assert.Empty(recorder.Of("tendero.ordering.import.gift_cards"));
+    }
+
+    /// <summary>A source must exist, not just look like one: the request is refused before anything is read.</summary>
+    [Fact]
+    public void An_unknown_source_is_refused_naming_the_ones_there_are()
+    {
+        var validator = new ImportOrdersValidator(new OneSource(new FakeOrderSource()));
+
+        var refused = validator.Validate(new ImportOrdersCommand("magento"));
+
+        Assert.Equal("Unknown order source 'magento'. Registered sources: fake.", Assert.Single(refused.Errors).ErrorMessage);
+        Assert.True(validator.Validate(new ImportOrdersCommand(FakeOrderSource.Key)).IsValid);
+        Assert.False(validator.Validate(new ImportOrdersCommand("")).IsValid);
     }
 
     private sealed class OneSource(IOrderSourceConnector source) : IOrderSourceRegistry

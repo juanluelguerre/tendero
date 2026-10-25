@@ -91,6 +91,46 @@ public sealed class KeycloakIdentityProvisionerTests
 
         Assert.Contains("403", refused.Message, StringComparison.Ordinal);
     }
+
+    // The tests below were found by phase 16 S2b's Stryker close: each mutant they
+    // name survived the suite above.
+
+    /// <summary>A search Keycloak refuses is an error, not "nobody has that email": that would make a second identity.</summary>
+    [Fact]
+    public async Task A_search_keycloak_refuses_is_an_error_not_nobody()
+    {
+        var (provisioner, keycloak) = AProvisioner();
+        keycloak.RefuseSearch = HttpStatusCode.Forbidden;
+
+        await Assert.ThrowsAsync<HttpRequestException>(() =>
+            provisioner.ProvisionAsync(new IdentityToProvision("ana@example.com", null, null, null), Ct));
+        Assert.Empty(keycloak.Users);
+    }
+
+    [Fact]
+    public async Task Credentials_keycloak_refuses_are_said_with_its_answer()
+    {
+        var (provisioner, keycloak) = AProvisioner();
+        keycloak.RefuseToken = HttpStatusCode.Unauthorized;
+
+        var refused = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            provisioner.ProvisionAsync(new IdentityToProvision("ana@example.com", null, null, null), Ct));
+
+        Assert.Contains("401", refused.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>The realm is the shop's unless configured otherwise, and provisioning is on only with an address and both credentials.</summary>
+    [Fact]
+    public void Provisioning_is_configured_only_with_an_address_and_both_credentials()
+    {
+        var whole = new KeycloakProvisioningOptions { BaseUrl = new Uri("https://localhost:38443/"), ClientId = "tendero-provisioning", ClientSecret = "secret" };
+
+        Assert.Equal("tendero", whole.Realm);
+        Assert.True(whole.IsConfigured);
+        Assert.False(new KeycloakProvisioningOptions { ClientId = whole.ClientId, ClientSecret = whole.ClientSecret }.IsConfigured);
+        Assert.False(new KeycloakProvisioningOptions { BaseUrl = whole.BaseUrl, ClientId = " ", ClientSecret = whole.ClientSecret }.IsConfigured);
+        Assert.False(new KeycloakProvisioningOptions { BaseUrl = whole.BaseUrl, ClientId = whole.ClientId, ClientSecret = "" }.IsConfigured);
+    }
 }
 
 /// <summary>Keycloak's token endpoint and the slice of its admin API the provisioner uses, in memory.</summary>
@@ -107,6 +147,12 @@ internal sealed class FakeKeycloak : HttpMessageHandler
 
     public HttpStatusCode? RefuseCreate { get; set; }
 
+    /// <summary>A status the search by email answers with instead.</summary>
+    public HttpStatusCode? RefuseSearch { get; set; }
+
+    /// <summary>A status the token endpoint answers with instead: the service account's credentials refused.</summary>
+    public HttpStatusCode? RefuseToken { get; set; }
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var path = request.RequestUri!.AbsolutePath;
@@ -114,7 +160,9 @@ internal sealed class FakeKeycloak : HttpMessageHandler
         if (path == "/realms/tendero/protocol/openid-connect/token")
         {
             TokenRequests.Add(await request.Content!.ReadAsStringAsync(cancellationToken));
-            return Json(new JsonObject { ["access_token"] = "admin-token", ["expires_in"] = 300 });
+            return RefuseToken is { } refused
+                ? new HttpResponseMessage(refused)
+                : Json(new JsonObject { ["access_token"] = "admin-token", ["expires_in"] = 300 });
         }
 
         if (path != "/admin/realms/tendero/users")
@@ -124,6 +172,9 @@ internal sealed class FakeKeycloak : HttpMessageHandler
 
         if (request.Method == HttpMethod.Get)
         {
+            if (RefuseSearch is { } refused)
+                return new HttpResponseMessage(refused);
+
             var email = System.Web.HttpUtility.ParseQueryString(request.RequestUri.Query)["email"];
             var found = Users.Where(user => (string)user.Value["email"]! == email)
                 .Select(user => new JsonObject { ["id"] = user.Key, ["email"] = (string)user.Value["email"]! });

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Pricing.Adapters;
 using ElGuerre.Tendero.Pricing.Domain;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
 namespace ElGuerre.Tendero.Pricing.Tests;
@@ -211,6 +212,38 @@ public sealed class PricingSeedFileTests
             Assert.Equal(shipped.Select(promotion => promotion.Canonical()), read.Select(promotion => promotion.Canonical()));
             Assert.Equal(shipped.Select(promotion => promotion.Name.Values), read.Select(promotion => promotion.Name.Values));
             Assert.Contains("\"Rebajas de verano\"", await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken), StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// A shop that sells in another currency reads its proposal back in it — the
+    /// currency an amount off is in, else the minimum's — and a promotion with no
+    /// condition is written with none, as a person would write it. Found by phase
+    /// 16 S2b's Stryker close: the shipped file is all euros and all conditioned.
+    /// </summary>
+    [Fact]
+    public async Task A_proposal_keeps_its_currency_and_writes_no_condition_where_there_is_none()
+    {
+        IReadOnlyList<Promotion> dollars =
+        [
+            new("FIVE", LocalizedText.From("en", "Five off"), PromotionCondition.Always,
+                new AmountOffOrder(new Money(5m, "USD")), CombinationPolicy.Stackable, 10),
+            new("TEN", LocalizedText.From("en", "Ten percent over fifty"), new PromotionCondition(new Money(50m, "USD"), null, null, null),
+                new PercentOffLine(10m), CombinationPolicy.ExclusiveGlobal, 20),
+        ];
+        var path = Path.Combine(Path.GetTempPath(), $"promotions-{Guid.NewGuid():N}.json");
+        try
+        {
+            await PricingSeedFile.WritePromotionsAsync(path, dollars, TestContext.Current.CancellationToken);
+            var read = await PricingSeedFile.LoadPromotionsAsync(path, TestContext.Current.CancellationToken);
+
+            Assert.Equal(dollars.Select(promotion => promotion.Canonical()), read.Select(promotion => promotion.Canonical()));
+            using var written = JsonDocument.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
+            Assert.Equal([false, true], written.RootElement.EnumerateArray().Select(entry => entry.TryGetProperty("condition", out _)));
         }
         finally
         {

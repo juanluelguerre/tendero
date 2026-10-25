@@ -76,4 +76,26 @@ public sealed class ImportedReturnTests
         Assert.Equal(ReturnStatus.Refunded, ReturnRequest.Imported(order, [unstated], [], new Money(20m, "EUR"), "shopify:refund:7001", RefundedThen).Status);
         Assert.Throws<InvalidOperationException>(() => ReturnRequest.Open(new ElGuerre.Tendero.Tests.TestClock(), order, [unstated], []));
     }
+
+    /// <summary>
+    /// One line without a reason is enough to refuse opening, however many say why.
+    /// Found by phase 16 S2b's Stryker close: "any" made "all" survived.
+    /// </summary>
+    [Fact]
+    public void A_return_opened_here_refuses_any_line_without_a_reason()
+    {
+        var order = Delivered();
+        var unstated = new ReturnLine(VariantId.New(), "SHIRT-M", 1, ReturnReason.Unstated, null);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            ReturnRequest.Open(new ElGuerre.Tendero.Tests.TestClock(), order, [Shirts(1), unstated], []));
+    }
+
+    /// <summary>An imported refund names the source's refund it was, or it cannot be told from another. Found by the same close.</summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void An_imported_refund_without_its_reference_is_refused(string reference) =>
+        Assert.ThrowsAny<ArgumentException>(() =>
+            ReturnRequest.Imported(Delivered(), [Shirts(1)], [], new Money(20m, "EUR"), reference, RefundedThen));
 }

@@ -27,9 +27,9 @@ public sealed class ShopifyDiscountConnectorTests
 
     private static Money Eur(decimal amount) => new(amount, "EUR");
 
-    internal static ShopifyDiscountConnector AConnector()
+    internal static ShopifyDiscountConnector AConnector(FakeShopify? store = null)
     {
-        var store = new FakeShopify();
+        store ??= new FakeShopify();
         var clock = new TestClock();
         var options = Options.Create(new ShopifyOptions
         {
@@ -61,7 +61,7 @@ public sealed class ShopifyDiscountConnectorTests
         Assert.Equal(new CategoryItems("KITCHEN"), spring.Target);
         Assert.Equal(["SPRING15"], spring.Codes);
         Assert.Equal((SourceCombination.Nothing, false), (spring.Combination, spring.Expired));
-        Assert.Equal(new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero), spring.EndsAt);
+        Assert.Equal((new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero), new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero)), (spring.StartsAt, spring.EndsAt));
         Assert.Empty(spring.Restrictions);
     }
 
@@ -85,6 +85,62 @@ public sealed class ShopifyDiscountConnectorTests
         Assert.Equal([SourceDiscountRestriction.UsageLimit, SourceDiscountRestriction.OncePerCustomer], welcome.Restrictions);
         Assert.Equal((new SourceAmountOff(Eur(5m), OnEachItem: false), 2, SourceCombination.Some), (welcome.Effect, welcome.MinimumQuantity!.Value, welcome.Combination));
         Assert.Equal(["HOLA5", "HELLO5"], welcome.Codes);
+        Assert.Equal(new AllItems(), welcome.Target);
+    }
+
+    // The tests below, and the second page of the fixture, were found by phase 16
+    // S2b's Stryker close: each mutant they name survived the suite above.
+
+    /// <summary>Every page is read, the second after the first's cursor; the first is asked with none.</summary>
+    [Fact]
+    public async Task Every_page_is_read_the_next_after_the_cursor()
+    {
+        var store = new FakeShopify();
+
+        var discounts = new List<SourceDiscountRule>();
+        await foreach (var discount in AConnector(store).StreamDiscountsAsync(Ct))
+            discounts.Add(discount);
+
+        Assert.Equal(10, discounts.Count);
+        var pages = store.Queries.Where(query => query.Contains("{ discountNodes(", StringComparison.Ordinal)).ToList();
+        Assert.Equal(2, pages.Count);
+        Assert.Contains("{ discountNodes(first: 25) {", pages[0], StringComparison.Ordinal);
+        Assert.Contains("after: \"d6\")", pages[1], StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A free shipping to some countries, up to a shipping price, for subscriptions
+    /// only, and a deal with a limit per order: each restriction comes with it.
+    /// </summary>
+    [Fact]
+    public async Task Every_restriction_the_store_holds_comes_with_it()
+    {
+        var discounts = await Discounts();
+
+        Assert.Equal(
+            [SourceDiscountRestriction.SomeCountries, SourceDiscountRestriction.MaximumShippingPrice, SourceDiscountRestriction.SubscriptionsOnly],
+            discounts["Envío gratis a Portugal"].Restrictions);
+        Assert.Equal([SourceDiscountRestriction.UsesPerOrder], discounts["Compra 50 € y llévate una taza"].Restrictions);
+    }
+
+    /// <summary>A deal bought by an amount is no case of the port's: its program's, and reaching everything rather than what it gives.</summary>
+    [Fact]
+    public async Task A_deal_bought_by_an_amount_is_named_and_reaches_nothing_in_particular()
+    {
+        var deal = (await Discounts())["Compra 50 € y llévate una taza"];
+
+        Assert.Equal((new SourceOtherEffect("DiscountCodeBxgy"), new AllItems()), (deal.Effect, deal.Target));
+    }
+
+    /// <summary>An amount off each item says so; a variant the catalogue lacks, or two collections, are said in the store's words.</summary>
+    [Fact]
+    public async Task What_the_catalogue_cannot_place_is_said_in_the_stores_words()
+    {
+        var discounts = await Discounts();
+
+        var each = discounts["2 € por taza"];
+        Assert.Equal((new SourceAmountOff(Eur(2m), OnEachItem: true), new UnplacedItems("variant 44009")), (each.Effect, each.Target));
+        Assert.Equal(new UnplacedItems("cocina, ofertas"), discounts["Cocina y ofertas"].Target);
     }
 
     [Fact]
@@ -93,6 +149,8 @@ public sealed class ShopifyDiscountConnectorTests
         var deal = (await Discounts())["3x2 en cafeteras"];
 
         Assert.Equal(new SourceBuyXGetY(2, 1, 100m, SameItems: true), deal.Effect);
+        // No limit per order: the store answers null, and null is no limit.
+        Assert.Empty(deal.Restrictions);
         Assert.Equal(["MOKA-OLV"], Assert.IsType<SkuItems>(deal.Target).Skus);
     }
 

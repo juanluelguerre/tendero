@@ -1,7 +1,7 @@
 {
   "data": {
     "discountNodes": {
-      "pageInfo": { "hasNextPage": false, "endCursor": "d6" },
+      "pageInfo": { "hasNextPage": true, "endCursor": "d6" },
       "nodes": [
         {
           "id": "gid://shopify/DiscountCodeNode/901",

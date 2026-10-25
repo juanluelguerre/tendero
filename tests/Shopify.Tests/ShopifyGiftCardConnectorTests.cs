@@ -54,8 +54,26 @@ public sealed class ShopifyGiftCardConnectorTests
             [
                 new SourceGiftCard("8001", "ab12", new Money(25m, "EUR"), new DateOnly(2027, 12, 31), "6001"),
                 new SourceGiftCard("8002", "cd34", new Money(50m, "EUR"), null, null),
+                new SourceGiftCard("8005", "ij90", new Money(15m, "EUR"), null, "6003"),
             ],
             cards);
+    }
+
+    /// <summary>
+    /// Every page is read, the second after the first's cursor; the first is asked
+    /// with none. Found by phase 16 S2b's Stryker close, when the fixture was one page.
+    /// </summary>
+    [Fact]
+    public async Task Every_page_is_read_the_next_after_the_cursor()
+    {
+        var store = new FakeShopify();
+
+        await Cards(store);
+
+        var pages = store.Queries.Where(query => query.Contains("{ giftCards(", StringComparison.Ordinal)).ToList();
+        Assert.Equal(2, pages.Count);
+        Assert.Contains("balance_status:full_or_partial\") {", pages[0], StringComparison.Ordinal);
+        Assert.Contains("after: \"g3\")", pages[1], StringComparison.Ordinal);
     }
 
     /// <summary>

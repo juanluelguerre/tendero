@@ -1,0 +1,74 @@
+{
+  "data": {
+    "discountNodes": {
+      "pageInfo": { "hasNextPage": false, "endCursor": "d10" },
+      "nodes": [
+        {
+          "id": "gid://shopify/DiscountCodeNode/907",
+          "discount": {
+            "__typename": "DiscountCodeBxgy",
+            "title": "Compra 50 € y llévate una taza", "status": "ACTIVE", "startsAt": "2026-03-01T00:00:00Z", "endsAt": null,
+            "usageLimit": null, "appliesOncePerCustomer": false, "usesPerOrderLimit": 1,
+            "combinesWith": { "orderDiscounts": false, "productDiscounts": false, "shippingDiscounts": false },
+            "context": { "__typename": "DiscountBuyerSelectionAll" },
+            "codes": { "nodes": [{ "code": "TAZA50" }] },
+            "customerBuys": {
+              "items": { "allItems": true },
+              "value": {}
+            },
+            "customerGets": {
+              "appliesOnOneTimePurchase": true,
+              "items": { "collections": { "nodes": [{ "handle": "cocina" }] } },
+              "value": { "quantity": { "quantity": "1" }, "effect": { "percentage": 1.0 } }
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/DiscountCodeNode/908",
+          "discount": {
+            "__typename": "DiscountCodeFreeShipping",
+            "title": "Envío gratis a Portugal", "status": "ACTIVE", "startsAt": "2026-03-01T00:00:00Z", "endsAt": null,
+            "usageLimit": null, "appliesOncePerCustomer": false,
+            "combinesWith": { "orderDiscounts": false, "productDiscounts": false, "shippingDiscounts": false },
+            "context": { "__typename": "DiscountBuyerSelectionAll" },
+            "codes": { "nodes": [{ "code": "PORTUGAL" }] },
+            "minimumRequirement": null,
+            "appliesOnOneTimePurchase": false,
+            "destinationSelection": { "__typename": "DiscountCountries" },
+            "maximumShippingPrice": { "amount": "10.0", "currencyCode": "EUR" }
+          }
+        },
+        {
+          "id": "gid://shopify/DiscountAutomaticNode/909",
+          "discount": {
+            "__typename": "DiscountAutomaticBasic",
+            "title": "2 € por taza", "status": "ACTIVE", "startsAt": "2026-03-01T00:00:00Z", "endsAt": null,
+            "combinesWith": { "orderDiscounts": false, "productDiscounts": false, "shippingDiscounts": false },
+            "context": { "__typename": "DiscountBuyerSelectionAll" },
+            "minimumRequirement": null,
+            "customerGets": {
+              "appliesOnOneTimePurchase": true,
+              "items": { "products": { "nodes": [] }, "productVariants": { "nodes": [{ "id": "gid://shopify/ProductVariant/44001" }, { "id": "gid://shopify/ProductVariant/44009" }] } },
+              "value": { "amount": { "amount": "2.0", "currencyCode": "EUR" }, "appliesOnEachItem": true }
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/DiscountAutomaticNode/910",
+          "discount": {
+            "__typename": "DiscountAutomaticBasic",
+            "title": "Cocina y ofertas", "status": "ACTIVE", "startsAt": "2026-03-01T00:00:00Z", "endsAt": null,
+            "combinesWith": { "orderDiscounts": false, "productDiscounts": false, "shippingDiscounts": false },
+            "context": { "__typename": "DiscountBuyerSelectionAll" },
+            "minimumRequirement": null,
+            "customerGets": {
+              "appliesOnOneTimePurchase": true,
+              "items": { "collections": { "nodes": [{ "handle": "cocina" }, { "handle": "ofertas" }] } },
+              "value": { "percentage": 0.1 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

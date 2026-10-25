@@ -52,6 +52,12 @@ internal sealed class FakeShopify : HttpMessageHandler
     /// <summary>Four customers: Ana with two addresses, Luis unsubscribed, Marta never asked, and one with no email.</summary>
     public string CustomersFixture { get; set; } = "customers.jsonl";
 
+    /// <summary>A bulk operation that completes with no file: a store with nothing of that kind.</summary>
+    public bool NothingToRead { get; set; }
+
+    /// <summary>One page every orders query answers with instead of the two the store has, when set.</summary>
+    public string? OrdersFixture { get; set; }
+
     /// <summary>The store's locations: Madrid and Barcelona mapped, Bilbao not.</summary>
     public string Locations { get; set; } =
         """[{"id":"gid://shopify/Location/71","name":"Almacén central (Madrid)","isActive":true},{"id":"gid://shopify/Location/72","name":"Almacén norte (Barcelona)","isActive":true},{"id":"gid://shopify/Location/73","name":"Tienda de Bilbao","isActive":true}]""";
@@ -128,23 +134,23 @@ internal sealed class FakeShopify : HttpMessageHandler
                 return Json("""{"data":{"node":{"status":"RUNNING","errorCode":null,"objectCount":"3","url":null}}}""");
 
             var (status, error) = BulkEnd;
-            var url = status == "COMPLETED" ? $"\"{ResultsFile}\"" : "null";
+            var url = status == "COMPLETED" && !NothingToRead ? $"\"{ResultsFile}\"" : "null";
             var code = error is null ? "null" : $"\"{error}\"";
             return Json("{\"data\":{\"node\":{\"status\":\"" + status + "\",\"errorCode\":" + code + ",\"objectCount\":\"7\",\"url\":" + url + "}}}");
         }
 
-        // Orders come in two pages: the second is asked for after the first's cursor.
+        // Orders, discounts and gift cards come in two pages: the second is asked for after the first's cursor.
         if (query.Contains("{ orders(", StringComparison.Ordinal))
         {
-            var page = query.Contains("after: \"c2\"", StringComparison.Ordinal) ? "orders-page2.json" : "orders.json";
+            var page = OrdersFixture ?? (query.Contains("after: \"c2\"", StringComparison.Ordinal) ? "orders-page2.json" : "orders.json");
             return Json(File.ReadAllText(Fixture(page)));
         }
 
         if (query.Contains("{ discountNodes(", StringComparison.Ordinal))
-            return Json(File.ReadAllText(Fixture("discounts.json")));
+            return Json(File.ReadAllText(Fixture(query.Contains("after: \"d6\"", StringComparison.Ordinal) ? "discounts-page2.json" : "discounts.json")));
 
         if (query.Contains("{ giftCards(", StringComparison.Ordinal))
-            return Json(File.ReadAllText(Fixture("gift-cards.json")));
+            return Json(File.ReadAllText(Fixture(query.Contains("after: \"g3\"", StringComparison.Ordinal) ? "gift-cards-page2.json" : "gift-cards.json")));
 
         if (query.Contains("locations(", StringComparison.Ordinal))
             return Json("{\"data\":{\"locations\":{\"nodes\":" + Locations + "}}}");

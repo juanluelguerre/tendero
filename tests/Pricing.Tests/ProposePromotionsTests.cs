@@ -4,6 +4,7 @@ using ElGuerre.Tendero.Pricing.Features.ProposePromotions;
 using ElGuerre.Tendero.Pricing.Ports;
 using ElGuerre.Tendero.Pricing.Tests.Sources;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Tests;
 using Xunit;
 
 namespace ElGuerre.Tendero.Pricing.Tests;
@@ -225,13 +226,13 @@ public sealed class ProposePromotionsTests
     public async Task What_is_narrowed_is_proposed_and_said()
     {
         var shop = new Shop();
-        shop.Source.Discounts.Add(FakeDiscountSource.Rule("12", "Dos códigos", codes: ["FIRST", "SECOND"], combination: SourceCombination.Some));
+        shop.Source.Discounts.Add(FakeDiscountSource.Rule("12", "Dos códigos", codes: ["FIRST", "SECOND", "THIRD"], combination: SourceCombination.Some));
 
         var result = await shop.ProposeAsync();
 
         Assert.Equal(CombinationPolicy.ExclusiveGlobal, shop.Proposed("FIRST").Combination);
         Assert.Contains(result.Notes, note => note.Code == DiscountNoteCode.CombinationNarrowed && note.About == "Dos códigos");
-        Assert.Contains(result.Notes, note => note.Code == DiscountNoteCode.CodesNarrowed && note.About == "Dos códigos" && note.Text.Contains("SECOND", StringComparison.Ordinal));
+        Assert.Contains(result.Notes, note => note.Code == DiscountNoteCode.CodesNarrowed && note.About == "Dos códigos" && note.Text.Contains("SECOND, THIRD", StringComparison.Ordinal));
     }
 
     /// <summary>Two discounts with the same title are two promotions, not one written twice.</summary>
@@ -270,6 +271,150 @@ public sealed class ProposePromotionsTests
 
         Assert.Equal((0, null), (result.Proposed.Count, result.File));
         Assert.Null(shop.Proposals.Written);
+    }
+
+    // The tests below were found by phase 16 S2b's Stryker close: each mutant they
+    // name survived the suite above.
+
+    /// <summary>A shop with no promotion of its own gets the proposal from the first step on (the empty shop has no highest priority).</summary>
+    [Fact]
+    public async Task On_a_shop_with_no_promotions_the_proposal_starts_at_the_first_step()
+    {
+        var shop = new Shop();
+        shop.Committed.Clear();
+
+        await shop.ProposeAsync();
+
+        Assert.Equal([10, 20], shop.Proposals.Written!.Select(promotion => promotion.Priority));
+    }
+
+    /// <summary>Free shipping is the order's, whatever the store said it reached.</summary>
+    [Fact]
+    public async Task Free_shipping_reaching_a_category_is_the_orders()
+    {
+        var shop = new Shop();
+        shop.Source.Discounts.Add(FakeDiscountSource.Rule("14", "Envío gratis en menaje", new SourceFreeShipping(), new CategoryItems("KITCHEN"), codes: ["SHIPKITCHEN"]));
+
+        await shop.ProposeAsync();
+
+        Assert.Null(shop.Proposed("SHIPKITCHEN").Condition.CategoryCode);
+    }
+
+    /// <summary>A third discount with one title is a third code, counting up.</summary>
+    [Fact]
+    public async Task Three_automatic_discounts_with_one_title_count_up()
+    {
+        var shop = new Shop();
+        shop.Source.Discounts.Add(FakeDiscountSource.Rule("13", "Envío gratis desde 60 €", new SourceFreeShipping(), minimumSubtotal: 80m));
+        shop.Source.Discounts.Add(FakeDiscountSource.Rule("15", "Envío gratis desde 60 €", new SourceFreeShipping(), minimumSubtotal: 90m));
+
+        await shop.ProposeAsync();
+
+        Assert.Equal(["ENVIO-GRATIS-DESDE-60", "ENVIO-GRATIS-DESDE-60-2", "ENVIO-GRATIS-DESDE-60-3"],
+            shop.Proposals.Written!.Select(promotion => promotion.Code).Where(code => code.StartsWith("ENVIO", StringComparison.Ordinal)));
+    }
+
+    /// <summary>What the engine cannot take off, or reach, is named in the note as the store had it.</summary>
+    [Theory]
+    [MemberData(nameof(WhatIsNamed))]
+    public async Task What_cannot_be_expressed_is_named(SourceDiscountEffect effect, SourceDiscountTarget target, string named)
+    {
+        var shop = new Shop();
+        shop.Source.Discounts.Add(FakeDiscountSource.Rule("16", "Raro", effect, target, codes: ["ODD"]));
+
+        var result = await shop.ProposeAsync(culture: "en");
+
+        Assert.Contains($"({named})", Assert.Single(result.Notes, note => note.About == "Raro").Text, StringComparison.Ordinal);
+    }
+
+    public static TheoryData<SourceDiscountEffect, SourceDiscountTarget, string> WhatIsNamed() => new()
+    {
+        { new SourceAmountOff(new Money(2m, "EUR"), OnEachItem: true), new AllItems(), "amount-off-each-item" },
+        { new SourceBuyXGetY(2, 1, 50m, SameItems: true), new AllItems(), "buy 2 get 1 at 50% off" },
+        { new SourceBuyXGetY(2, 1, 100m, SameItems: false), new AllItems(), "buy 2 get 1 of other items" },
+        { new SourcePercentOff(10m), new SkuItems(["A", "B"]), "A, B" },
+    };
+
+    /// <summary>
+    /// Every note says its sentence in the language asked, starting with the discount
+    /// it is about and naming the detail it carries.
+    /// </summary>
+    [Theory]
+    [InlineData(DiscountNoteCode.Expired, false, "tienda")]
+    [InlineData(DiscountNoteCode.AlreadyHere, true, "código")]
+    [InlineData(DiscountNoteCode.LimitNotExpressible, true, "límite")]
+    [InlineData(DiscountNoteCode.CustomersNotExpressible, false, "clientes")]
+    [InlineData(DiscountNoteCode.ConditionNotExpressible, true, "condición")]
+    [InlineData(DiscountNoteCode.TargetNotExpressible, true, "categoría")]
+    [InlineData(DiscountNoteCode.EffectNotExpressible, true, "descuenta")]
+    [InlineData(DiscountNoteCode.CombinationNarrowed, false, "combinaba")]
+    [InlineData(DiscountNoteCode.CodesNarrowed, true, "códigos")]
+    public void A_note_is_said_in_the_language_asked_about_its_discount(DiscountNoteCode code, bool namesItsDetail, string spanishWord)
+    {
+        var note = new DiscountNote(code, "Rebajas", "the detail");
+
+        var spanish = ProposePromotionsNotes.Said(note, english: false).Text;
+        var english = ProposePromotionsNotes.Said(note, english: true).Text;
+
+        Assert.Contains(spanishWord, spanish, StringComparison.Ordinal);
+        Assert.DoesNotContain(spanishWord, english, StringComparison.Ordinal);
+        Assert.All([spanish, english], text =>
+        {
+            Assert.StartsWith("Rebajas: ", text, StringComparison.Ordinal);
+            Assert.True(text.Length > 30, text);
+            Assert.Equal(namesItsDetail, text.Contains("the detail", StringComparison.Ordinal));
+        });
+    }
+
+    /// <summary>The answer's notes are in the language the request asked for.</summary>
+    [Fact]
+    public async Task The_answer_is_in_the_language_asked()
+    {
+        var shop = new Shop();
+
+        var english = await shop.ProposeAsync(rehearse: true, culture: "en");
+
+        Assert.Equal(ProposePromotionsNotes.Said(new DiscountNote(DiscountNoteCode.LimitNotExpressible, "Bienvenida", "OncePerCustomer"), english: true).Text,
+            Assert.Single(english.Notes).Text);
+    }
+
+    /// <summary>
+    /// How much of a store's discounts comes across (spec, *Evidence of use*):
+    /// discounts proposed and left, and the notes by code, by source; an outcome with
+    /// nothing in it is not counted, and a rehearsal counts nothing.
+    /// </summary>
+    [Fact]
+    public async Task A_proposal_counts_its_discounts_by_outcome_and_its_notes_by_code()
+    {
+        using var recorder = new InstrumentRecorder("tendero.pricing.import.discounts", "tendero.pricing.import.notes");
+        var shop = new Shop();
+
+        await shop.ProposeAsync(rehearse: true);
+        Assert.Empty(recorder.Of("tendero.pricing.import.discounts"));
+
+        await shop.ProposeAsync();
+        shop.Source.Discounts.RemoveAt(2);
+        await shop.ProposeAsync();
+
+        Assert.Equal(
+            [("fake", "proposed", 2L), ("fake", "left", 1L), ("fake", "proposed", 2L)],
+            recorder.Measured("tendero.pricing.import.discounts")
+                .Select(each => ((string)each.Tags["catalog.source"]!, (string)each.Tags["pricing.import.outcome"]!, each.Value)));
+        Assert.Equal(
+            [("fake", "LimitNotExpressible")],
+            recorder.Of("tendero.pricing.import.notes").Select(tags => ((string)tags["catalog.source"]!, (string)tags["pricing.import.note"]!)));
+    }
+
+    /// <summary>A source must exist, not just look like one: the request is refused before anything is read.</summary>
+    [Fact]
+    public void An_unknown_source_is_refused_naming_the_ones_there_are()
+    {
+        var validator = new ProposePromotionsValidator(new OneSource(new FakeDiscountSource()));
+
+        var refused = validator.Validate(new ProposePromotionsCommand("magento"));
+
+        Assert.Equal("Unknown discount source 'magento'. Registered sources: fake.", Assert.Single(refused.Errors).ErrorMessage);
+        Assert.True(validator.Validate(new ProposePromotionsCommand(FakeDiscountSource.Key)).IsValid);
     }
 
     private sealed class OneSource(IDiscountSourceConnector source) : IDiscountSourceRegistry

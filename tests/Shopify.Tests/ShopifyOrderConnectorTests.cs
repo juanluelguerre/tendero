@@ -117,6 +117,61 @@ public sealed class ShopifyOrderConnectorTests
         Assert.Empty(open.Discounts);
     }
 
+    // The tests below, and orders-figures.json, were found by phase 16 S2b's Stryker
+    // close: each mutant they name survived the suite above.
+
+    /// <summary>The first page is asked with no cursor, the second after the first's.</summary>
+    [Fact]
+    public async Task Every_page_is_read_the_next_after_the_cursor()
+    {
+        var (connector, store) = AConnector();
+
+        await foreach (var _ in connector.StreamOrdersAsync(Ct))
+        {
+        }
+
+        var pages = store.Queries.Where(query => query.Contains("{ orders(", StringComparison.Ordinal)).ToList();
+        Assert.Equal(2, pages.Count);
+        Assert.Contains("{ orders(first: 50, sortKey: CREATED_AT) {", pages[0], StringComparison.Ordinal);
+        Assert.Contains("after: \"c2\")", pages[1], StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The subtotal is each line's price times its quantity; a discount is what its
+    /// allocations took off the lines and the shipping, added up, named by its code or
+    /// by its title when it had none; an order shipped twice left on the last day.
+    /// </summary>
+    [Fact]
+    public async Task An_orders_figures_add_up_as_the_store_allocated_them()
+    {
+        var (connector, store) = AConnector();
+        store.OrdersFixture = "orders-figures.json";
+
+        var orders = new List<SourceOrder>();
+        await foreach (var order in connector.StreamOrdersAsync(Ct))
+            orders.Add(order);
+
+        var mugs = orders[0];
+        Assert.Equal(Eur(40m), mugs.Totals.Subtotal);
+        Assert.Equal([new SourceDiscount("TAZAS5", "TAZAS5", Eur(5m)), new SourceDiscount("Envío gratis", "Envío gratis", Eur(5m))], mugs.Discounts);
+        Assert.Equal(new DateTimeOffset(2026, 5, 3, 9, 0, 0, TimeSpan.Zero), mugs.ShippedAt);
+        Assert.Equal(Address.Create("Ana Ruiz", "Calle Mayor 1", "2º B", "Madrid", "M", "28013", "ES", "+34600000001"), mugs.ShippingAddress);
+    }
+
+    /// <summary>A fulfilled order the store kept no fulfilment for left, as far as anybody knows, the day it was placed.</summary>
+    [Fact]
+    public async Task A_fulfilled_order_with_no_fulfilment_left_the_day_it_was_placed()
+    {
+        var (connector, store) = AConnector();
+        store.OrdersFixture = "orders-figures.json";
+
+        var orders = new List<SourceOrder>();
+        await foreach (var order in connector.StreamOrdersAsync(Ct))
+            orders.Add(order);
+
+        Assert.Equal((SourceOrderState.Fulfilled, new DateTimeOffset(2026, 5, 4, 10, 0, 0, TimeSpan.Zero)), (orders[1].State, orders[1].ShippedAt));
+    }
+
     /// <summary>The catalogue's answer, as the store's catalogue was imported (8002's single variant got ours).</summary>
     private sealed class CatalogueSkus : ISourceVariantSkus
     {
