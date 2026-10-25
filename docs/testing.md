@@ -1526,6 +1526,119 @@ is proven by the hand mutations in its commits (the source filter in
 one more unit per stock level read back). Reports:
 `docs/blog/reports/2026-10-24-phase-16-s2a/stryker/`.
 
+### Phase 16 S2b's close: leaving Shopify, its people (P16-17 to P16-21)
+
+2026-10-24. Mutated: the files changed since S2a's close (the commit *docs: phase 16
+S2a's close, measured with Stryker*), project by project. Run 1 was
+`stryker-parallel.mjs --since` that commit, four shares each, from the commit of
+P16-21. Run 2 went through the serial runner in the working tree, with the
+parallel runner's settings written into each configuration for the run
+(`coverage-analysis: all`, a 30 s margin, `language-version: Preview`), because the
+tests that closed the gaps were not committed yet. **The scores below are on the
+lines the phase changed** (`git diff -U0`), since a changed file also carries code
+older than the phase; the file-level score is beside it.
+
+| Project | Mutated with | Run 1, phase lines | Run 2, phase lines | Run 2, its files | Survivors on phase lines | Reports |
+|---|---|---|---|---|---|---|
+| `src/Shopify`, 7 files | `Shopify.Tests` | 86.27 % | **96.02 %** | 95.42 % | 42 → 13, then 3 more killed by hand | `shopify-run1.html`, `-run2.html` |
+| `src/Ordering`, 10 files | `Ordering.Tests` | 48.48 % | **77.72 %** | 66.41 % | 85 → 41, then 2 more | `ordering-run1.html`, `-run2.html` |
+| `src/Accounts`, 10 files | `Accounts.Tests` | 55.41 % | **89.89 %** | 82.66 % | 66 → 18, then 2 more | `accounts-run1.html`, `-run2.html` |
+| `src/Pricing`, 5 files | `Pricing.Tests` | 44.35 % | **91.27 %** | 85.31 % | 64 → 11, then 1 more | `pricing-run1.html`, `-run2.html` |
+| `src/Catalog`, 4 files | `Catalog.Tests` | 66.67 % (3 mutants) | — | 73.74 % | 1, a registration | `catalog-run1.html` |
+| `src/SharedKernel`, 2 files | `SharedKernel.Tests`, `Architecture.Tests` | **100 %** (8 mutants) | — | 100 % | 0 | `sharedkernel-run1.html` |
+
+All scoped, so no baseline moves. Every gap below was closed with a test and each
+test proven by a hand mutation, 103 of them, every one seen red and restored.
+
+**Two runner faults, fixed in the runner.**
+
+- **C# 15's `closed` records build now.** S2a found Stryker's embedded Roslyn treating
+  them as an unsupported preview feature (CS8652), so SharedKernel never built. S2b
+  met it in Pricing, whose new port declares two: all four shares ended with no
+  report and a score of "n/a". Stryker's own `language-version: Preview` is the cure,
+  and `stryker-parallel.mjs` now writes it into every share's configuration.
+  SharedKernel was measured for the first time: `TransitionTable` and
+  `TelemetrySources`, 8 of 8 killed.
+- **Pricing's suite with `coverage-analysis: perTest`** gave the same 43.94 % as with
+  `all` here, so the setting was not the cause of a low score this time; the tests
+  were.
+
+**What Stryker found, and what closed it.**
+
+- **Every import's metrics were untested** — orders, customers, discounts: a counter
+  removed, a label emptied, `count == 0` inverted, a rehearsal counted, all survived.
+  Three tests listen with `InstrumentRecorder` (now linked into Accounts and Pricing
+  too, and grown a `Measured` that keeps each value with its labels).
+- **Every import's notes, in both languages.** The tests compared the Spanish and
+  the English sentence and found them different, which a swapped language also
+  is: three theories now name a Spanish word each code's sentence must carry and the
+  English one must not, the prefix of what a note is about, the detail it names,
+  and a note about nobody as the same sentence without the prefix.
+- **The validators** of the three imports had no test anywhere: a source not
+  checked survived. And the return validator's new rule (no `Unstated` reason)
+  survived only because its test holds the validator in a static field — proven by
+  hand instead.
+- **Ordering**: an order with only one address (each fallback), with two different
+  ones, its buyer's language, its shipping option, a tax at no rate (a division by
+  zero waiting), a refund naming a line the order lacks, a line named by its SKU or
+  by its name; `Order.Imported` dropping its discounts; a zero-quantity line;
+  opening a return raising its event; one unstated line among stated ones; a blank
+  refund reference.
+- **Accounts**: the save when only somebody was linked (and none when nobody came),
+  the source's own notes, a customer's language and an empty name, no address book
+  for no address, a city too long for a label, a rehearsal reading addresses,
+  linking dated and refused for somebody erased; Keycloak's realm default, when
+  provisioning counts as configured, a refused search (read as "nobody" it would
+  make a second identity) and refused credentials.
+- **Pricing**: an empty shop's first priority (`Max` of nothing threw), free shipping
+  reaching a category, a third discount with one title, the effects and targets
+  named in the notes, the dropped codes' separator; the proposal file in another
+  currency, and an unconditioned promotion written without a condition.
+- **Shopify**: **pagination was never exercised** for discounts and gift cards,
+  whose fixtures fit one page: both now have a second (`discounts-page2.json`,
+  `gift-cards-page2.json`), and each paged query's first page is checked to the
+  letter. Every restriction the store can hold (countries, a maximum shipping
+  price, subscriptions only, uses per order, and a null limit read as none); a deal
+  bought by amount; an amount off each item; a variant the catalogue lacks; two
+  collections. Orders' figures (`orders-figures.json`): quantity times price, a
+  discount summed across lines and the shipping, an automatic one named by its
+  title, the last of two fulfilments, a fulfilled order with none, the whole
+  address. Customers: an address under somebody else (an ungrouped file), an
+  address with nothing in it, a store with no customers.
+
+**Left, and what each is.**
+
+- **Out of Stryker's reach**: instrument names and descriptions in `static readonly`
+  fields (the three imports'), `WriteIndented` in a static `JsonSerializerOptions`.
+- **Equivalent**: `||` made `&&` in the order's address check (with the fallbacks,
+  one address is null only when both are); `Append` made `Prepend` over allocations
+  grouped into a dictionary; asking the catalogue or the customers with an empty
+  list instead of not asking; an empty name kept (`Customer.Imported` makes it
+  none); `>` made `>=` on a city exactly a label long; `TryGetProperty || kind` in the
+  JSON readers for a field the schema types (`allItems` is always `true`, a title is
+  a string); the `?? ""` of a note's detail for codes whose sentence never names it,
+  or always carries one; the `EnsureEntry` of a constant entry the table declares.
+- **Unreachable**: `?? ""` after fields the Admin API declares non-null (a title, a
+  name, a code), a Keycloak search answering `null`, a mapping file holding `null`.
+- **Noise**: exception messages, a registered-sources list joined over one source,
+  the `"imported"` marker in an imported order's quote, the `"no items"` label,
+  argument guards on parameters that are not nullable.
+- **A run artefact, noted**: a garbled cursor on the second page makes the
+  connector read the first page forever — Stryker counts the timeout as a kill, and
+  the hand mutation sat for the runner's ten minutes before it did.
+- **Older than the phase**, counted, not classified: the older lines of the files
+  the phase touched — Ordering 88 survivors (`Order.cs`, `ReturnRequest.cs`), Accounts
+  25 (`Customer.cs`), Pricing 10 (`PricingSeedFiles`' readers), Shopify 3, Catalog 25.
+- **Held by suites out of the configuration**: the five module registrations and the
+  three keyed registries (`Api.Tests`' composition tests, `ShopifyRegistrationTests`,
+  `StoreMigrationTests` on Postgres), the three import endpoints (the OpenAPI
+  contract test holds their route, name and tag; the policy test their policy).
+
+`Persistence` and `Api` have no Stryker configuration; their phase code is proven by
+the hand mutations in P16-21's commit (the four rehearsal readers, the on-sale
+filter, `notBrought`, the refusal). Reports:
+`docs/blog/reports/2026-10-24-phase-16-s2b/stryker/`.
+
 ## Property-based (CsCheck)
 
 Value objects carry the invariants worth generating inputs for:
