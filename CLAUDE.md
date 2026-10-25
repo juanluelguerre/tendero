@@ -211,7 +211,10 @@ node tools/api-map.mjs --schema CartView
 > either: an external system's adapters in a project of their own (phase 16,
 > P16-8), implementing the catalogue's and the stock's ports, composed by the
 > host with `AddShopify` beside `AddCatalog`, and never reaching a domain (an
-> architecture rule). `Assist` became one in
+> architecture rule). `Exports` is its outbound twin (E-1, ADR 0069): the feed and
+> the exports, reading each context through a read port of values the context
+> implements (`ICatalogueExport`, `IOrderExport`), held by the same rule, a file written
+> by a keyed `IExportFormat<TRow>`. `Assist` became one in
 > phase 12 (ADR 0052): a proposal has a lifecycle, a writer and actors of its own.
 
 ## Conventions

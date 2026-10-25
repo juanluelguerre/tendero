@@ -3198,6 +3198,185 @@
         ]
       }
     },
+    "/api/exports/orders": {
+      "post": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportOrders",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/exports/catalogue": {
+      "post": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportCatalogue",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/dashboard/restock": {
       "get": {
         "tags": [
@@ -21162,6 +21341,9 @@
     },
     {
       "name": "Dashboard"
+    },
+    {
+      "name": "Exports"
     },
     {
       "name": "Inventory"

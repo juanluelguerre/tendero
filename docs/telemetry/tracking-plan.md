@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-51 features: **46** answered by a signal emitted today,
+52 features: **47** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -66,6 +66,7 @@ everything here that is not *planned* is emitted.
 | Alt text for pictures | Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read? | Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes. | `tendero.alt_text.pictures`, `image_alt_proposal_decided` | emitted |
 | Pictures read for claims | Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for? | Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events. | `tendero.picture_reading.pictures` | emitted |
 | Importing a store | Is the Shopify source used, and how much of a store comes across clean, per context? | A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. Gift cards listed for reissue, counted per store, say whether Tendero needs gift cards of its own (docs/specs/shopify-leave.md, decision 6). A rehearsal of the whole migration never followed by one for real says the answer stopped the merchant, and its notes say which step to work on first. | `tendero.catalog.import.products`, `tendero.catalog.import.notes`, `tendero.inventory.import.levels`, `tendero.inventory.import.notes`, `tendero.accounts.import.customers`, `tendero.accounts.import.notes`, `tendero.ordering.import.orders`, `tendero.ordering.import.notes`, `tendero.ordering.import.gift_cards`, `tendero.pricing.import.discounts`, `tendero.pricing.import.notes`, `tendero.migration.runs` | emitted |
+| Exports and feeds | Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant? | Orders exported often in CSV decide whether XLSX earns its dependency (docs/specs/exports.md, decision 3); a feed fetched every day decides whether a Merchant API client is worth building over a fetched file. The rows each feed carries, against the products on sale, say whether the feed loses any on the way. | `tendero.exports.generated`, `tendero.exports.rows` | emitted |
 
 ### Agents
 
@@ -841,6 +842,32 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `catalog.source` | string | — | The source imported from. |
+
+### `tendero.exports.generated`
+
+counter, unit `{export}`. Exports and feeds written, by kind and format.
+
+Answers:
+
+- **Exports and feeds** — Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `export.kind` | string | `feed`, `catalogue`, `orders` | What left the shop: the product feed, the catalogue for another platform, orders for the accountant. |
+| `export.format` | string | — | The format it was written in: google-merchant, shopify-csv, csv. |
+
+### `tendero.exports.rows`
+
+histogram, unit `{row}`. The rows an export or a feed carried, by kind and format.
+
+Answers:
+
+- **Exports and feeds** — Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `export.kind` | string | `feed`, `catalogue`, `orders` | What left the shop. |
+| `export.format` | string | — | The format it was written in. |
 
 ### `tendero.migration.runs`
 

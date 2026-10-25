@@ -94,6 +94,9 @@ public static class OrderingServiceCollectionExtensions
         services.AddScoped<IPersonalDataHolder, WalletPersonalData>();
         services.AddScoped<IPersonalDataHolder, OrdersPersonalData>();
 
+        // The shop's sales as they leave it for the accountant, as values (phase 16, E-4).
+        services.AddScoped<IOrderExport, Adapters.OrderExportReader>();
+
         // The one file that knows Pricing exists. Scoped, because the dispatcher
         // it delegates to resolves scoped handlers.
         services.AddScoped<ICartPricer, PricingCartPricer>();

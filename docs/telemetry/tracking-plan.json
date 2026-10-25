@@ -494,6 +494,16 @@
       ]
     },
     {
+      "name": "Exports and feeds",
+      "area": "backoffice",
+      "question": "Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant?",
+      "decision": "Orders exported often in CSV decide whether XLSX earns its dependency (docs/specs/exports.md, decision 3); a feed fetched every day decides whether a Merchant API client is worth building over a fetched file. The rows each feed carries, against the products on sale, say whether the feed loses any on the way.",
+      "signals": [
+        "tendero.exports.generated",
+        "tendero.exports.rows"
+      ]
+    },
+    {
       "name": "A store's old addresses",
       "area": "storefront",
       "question": "After a shop leaves its store, are the store's old addresses still visited, and do they still lead somewhere?",
@@ -1836,6 +1846,48 @@
         "catalog.source": {
           "type": "string",
           "description": "The source imported from."
+        }
+      }
+    },
+    {
+      "name": "tendero.exports.generated",
+      "instrument": "counter",
+      "unit": "{export}",
+      "description": "Exports and feeds written, by kind and format.",
+      "attributes": {
+        "export.kind": {
+          "type": "string",
+          "values": [
+            "feed",
+            "catalogue",
+            "orders"
+          ],
+          "description": "What left the shop: the product feed, the catalogue for another platform, orders for the accountant."
+        },
+        "export.format": {
+          "type": "string",
+          "description": "The format it was written in: google-merchant, shopify-csv, csv."
+        }
+      }
+    },
+    {
+      "name": "tendero.exports.rows",
+      "instrument": "histogram",
+      "unit": "{row}",
+      "description": "The rows an export or a feed carried, by kind and format.",
+      "attributes": {
+        "export.kind": {
+          "type": "string",
+          "values": [
+            "feed",
+            "catalogue",
+            "orders"
+          ],
+          "description": "What left the shop."
+        },
+        "export.format": {
+          "type": "string",
+          "description": "The format it was written in."
         }
       }
     },

@@ -951,6 +951,8 @@ var storefront = builder.AddViteApp("storefront", frontend, "serve:storefront")
 // and the page an agent's checkout continues on when it needs a person (P11-1).
 // An address, not a dependency: nothing waits on anything.
 api.WithEnvironment("Ucp__StorefrontUrl", storefront.GetEndpoint("http"));
+// A product feed links each variant to its page on the storefront (phase 16, E-2).
+api.WithEnvironment("Exports__StorefrontUrl", storefront.GetEndpoint("http"));
 
 var backoffice = builder.AddViteApp("backoffice", frontend, "serve:backoffice")
     .WithNpm(install: false)
@@ -1267,7 +1269,8 @@ internal static class SeedFileEnvironment
         ("Pricing__Campaigns__FilePath", "campaigns.sample.json"),
         ("Kits__Seed__TemplatesPath", "kits.sample.json"),
         ("Inventory__Warehouses__FilePath", "warehouses.sample.json"),
-        ("Inventory__Stock__FilePath", "stock.sample.json")
+        ("Inventory__Stock__FilePath", "stock.sample.json"),
+        ("Exports__GoogleCategoriesFile", "google-categories.sample.json")
     ];
 
     public static IResourceBuilder<ProjectResource> WithSeedFiles(

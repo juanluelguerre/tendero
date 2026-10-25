@@ -61,11 +61,18 @@ internal static class Solution
     /// </summary>
     public static readonly Assembly Shopify = typeof(ElGuerre.Tendero.Shopify.ShopifyOptions).Assembly;
 
-    public static readonly Assembly[] Adapters = [Shopify];
+    /// <summary>
+    /// What leaves Tendero (phase 16, E-1): exports and feeds, the outbound side of
+    /// Shopify's inbound one. It reads the contexts through read ports of values,
+    /// owns no state and declares no domain.
+    /// </summary>
+    public static readonly Assembly Exports = typeof(ElGuerre.Tendero.Exports.IExportFormats).Assembly;
+
+    public static readonly Assembly[] Adapters = [Shopify, Exports];
 
     public static readonly Assembly[] All =
     [
         SharedKernel, AI, Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search,
-        Mcp, Ucp, Shopify, Persistence, ServiceDefaults, Api, Workers, SearchEval
+        Mcp, Ucp, Shopify, Exports, Persistence, ServiceDefaults, Api, Workers, SearchEval
     ];
 }

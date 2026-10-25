@@ -106,3 +106,26 @@ same. What the store keeps differently from what was written is named in the
 tests: an order's addresses join its buyer's address book, and an order written
 by `orderCreate` has no buyer's language and a fulfilment dated the day it was
 written.
+
+## The round trip from the other side (E-3)
+
+Tendero's catalogue exported as Shopify's product CSV and read by Shopify's own
+importer. The importer is a screen in Shopify's admin with no API, so this half is
+done by hand; the other half — the seed exported and read back field by field — is
+`ExportsOverTheSeedTests`.
+
+1. **Use a clean development store, not this one.** The CSV's handles are a
+   product's slug and code (`camiseta-tecnica-b07tuvw404`), the lab store's are its
+   item id: importing here would add 120 products beside the seeded ones and break
+   the round trips above.
+2. **The API must be reachable from the internet** for the pictures: Shopify
+   downloads each `Product image URL` from `/api/images/{id}`. With the API only on
+   `localhost`, the products import without pictures (a tunnel, or leave them out).
+3. Download it from the backoffice (*Products → Feeds and exports → Download the
+   catalogue for Shopify*), or `POST /api/exports/catalogue?format=shopify-csv` as a
+   shopkeeper; Spanish texts with `?culture=es`.
+4. In Shopify: *Products → Import*, the file, *Upload and preview*, then import.
+5. Compare: every product by title, its vendor, its variants by SKU at their prices,
+   its options, its pictures; Draft products come in as drafts. Stock comes as one
+   quantity, which Shopify applies only to a store with one location.
+6. Write the result in the notebook, with what Shopify changed on the way.

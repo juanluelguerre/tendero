@@ -100,6 +100,9 @@ public static class CatalogServiceCollectionExtensions
         // Every picture of the catalogue, for that job (phase 13a, I-4).
         services.TryAddScoped<IProductPictures, Adapters.ProductPicturesReader>();
 
+        // The catalogue as it leaves the shop, as values, for the exports (phase 16, E-2).
+        services.TryAddScoped<ICatalogueExport, Adapters.CatalogueExportReader>();
+
         return services;
     }
 }

@@ -564,6 +564,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exports/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExportOrders"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exports/catalogue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExportCatalogue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/restock": {
         parameters: {
             query?: never;
@@ -5896,6 +5928,98 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CatalogueGaps"];
                 };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ExportOrders: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                format?: string;
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ExportCatalogue: {
+        parameters: {
+            query: {
+                format: string;
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description This needs somebody signed in. */
             401: {

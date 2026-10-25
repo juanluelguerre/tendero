@@ -45,6 +45,7 @@ internal sealed class OrderBuilder
         "standard", "Envio estandar", new Money(4.95m, "EUR"), 3);
 
     private OrderTotals? totals;
+    private string? contactEmail;
     private IReadOnlyList<OrderDiscount> discounts = [];
     private IReadOnlyList<OrderTax> taxes = [];
 
@@ -128,6 +129,13 @@ internal sealed class OrderBuilder
         return this;
     }
 
+    /// <summary>Where to write to the buyer, as a checkout that asked for it froze it.</summary>
+    public OrderBuilder WithContactEmail(string email)
+    {
+        this.contactEmail = email;
+        return this;
+    }
+
     public OrderBuilder WithDiscounts(params OrderDiscount[] discounts)
     {
         this.discounts = [.. discounts];
@@ -177,6 +185,7 @@ internal sealed class OrderBuilder
             this.taxes,
             this.culture,
             this.mode,
+            contactEmail: this.contactEmail,
             mandate: this.mandate is { } approved ? approved with { ApprovedTotal = totals.Total.Amount } : null,
             placedBy: this.placedBy,
             channel: this.channel);

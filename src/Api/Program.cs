@@ -15,6 +15,8 @@ using ElGuerre.Tendero.Assist.Tino;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.DevIssuer;
+using ElGuerre.Tendero.Exports;
+using ElGuerre.Tendero.Exports.Features.ProductFeed;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Inventory.Features.ListStock;
 using ElGuerre.Tendero.Knowledge;
@@ -54,7 +56,8 @@ builder.Services.AddTenderoCqrs(
     typeof(LinkIdentityCommand).Assembly,
     typeof(ReviewClaimsEndpoints).Assembly,
     typeof(ApproveProposalsCommand).Assembly,
-    typeof(TranscribeSpeechQuery).Assembly);
+    typeof(TranscribeSpeechQuery).Assembly,
+    typeof(ProductFeedQuery).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -69,6 +72,8 @@ builder.Services.AddCatalog(builder.Configuration);
 builder.Services.AddShopify(builder.Configuration);
 // A store's migration as one operation across the contexts (P16-21): composed here, where they all are.
 builder.Services.AddScoped<StoreMigration>();
+// What leaves the shop: the product feed, the catalogue for another platform, orders for the accountant (phase 16, E-1).
+builder.Services.AddExports(builder.Configuration);
 
 builder.Services.AddPricing(builder.Configuration);
 
