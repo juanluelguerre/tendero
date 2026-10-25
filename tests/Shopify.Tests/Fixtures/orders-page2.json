@@ -6,7 +6,7 @@
         {
           "id": "gid://shopify/Order/5003",
           "name": "#1003",
-          "createdAt": "2026-10-20T08:00:00Z",
+          "processedAt": "2026-10-20T08:00:00Z",
           "cancelledAt": null,
           "displayFulfillmentStatus": "PARTIALLY_FULFILLED",
           "email": "ana@example.com",

@@ -142,7 +142,7 @@ public sealed class StoreMigrationTests(PostgresFixture postgres)
     /// rehearsed customer has an id of its own, so a gift card says whether it names
     /// one, not which.
     /// </summary>
-    private static Dictionary<MigrationStep, string> Said(StoreMigrationResult result) => new()
+    internal static Dictionary<MigrationStep, string> Said(StoreMigrationResult result) => new()
     {
         [MigrationStep.Catalogue] = $"{result.Catalogue!.Created} {result.Catalogue.Updated} {result.Catalogue.Failed} {string.Join("|", result.Catalogue.Notes)}",
         [MigrationStep.Stock] = $"{result.Stock!.Counted} {result.Stock.Skipped} {string.Join("|", result.Stock.Notes)}",
@@ -152,14 +152,36 @@ public sealed class StoreMigrationTests(PostgresFixture postgres)
         [MigrationStep.Discounts] = $"{string.Join("|", result.Discounts!.Proposed.Select(promotion => promotion.Code))} {result.Discounts.Left} {string.Join("|", result.Discounts.Notes)}",
     };
 
-    private static async Task<StoreMigrationResult> RunAsync(ServiceProvider provider, bool rehearse, CancellationToken ct)
+    internal static async Task<StoreMigrationResult> RunAsync(ServiceProvider provider, bool rehearse, CancellationToken ct)
     {
         // One scope, as one request is: what the rehearsal's earlier steps would bring lives in it.
         await using var scope = provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<StoreMigration>().RunAsync("shopify", "en", rehearse, ct);
     }
 
-    private static ServiceProvider Compose(string connectionString, string proposal, string locations, string categories)
+    private static ServiceProvider Compose(string connectionString, string proposal, string locations, string categories) =>
+        Compose(
+            connectionString,
+            proposal,
+            new()
+            {
+                ["Shopify:Store"] = FakeShopify.Store,
+                ["Shopify:ClientId"] = "client-id",
+                ["Shopify:ClientSecret"] = "client-secret",
+                ["Shopify:LocationsFile"] = locations,
+                ["Shopify:CategoriesFile"] = categories,
+                ["Shopify:BulkPollInterval"] = "00:00:00",
+                ["Shopify:ThrottleBackoff"] = "00:00:00",
+            },
+            new FakeShopify());
+
+    /// <summary>
+    /// The host's migration over the seed's files and a real database, reaching the
+    /// store through <paramref name="shopify"/>'s settings: its recorded answers when
+    /// <paramref name="store"/> is given, the store itself when it is null.
+    /// </summary>
+    internal static ServiceProvider Compose(
+        string connectionString, string proposal, Dictionary<string, string?> shopify, HttpMessageHandler? store)
     {
         static string Seed(string file) => Path.Combine(AppContext.BaseDirectory, "TestData", file);
 
@@ -173,14 +195,8 @@ public sealed class StoreMigrationTests(PostgresFixture postgres)
                 ["Pricing:Seed:PromotionsPath"] = Seed("promotions.sample.json"),
                 ["Pricing:Seed:ProposedPromotionsPath"] = proposal,
                 ["Inventory:Warehouses:FilePath"] = Seed("warehouses.sample.json"),
-                ["Shopify:Store"] = FakeShopify.Store,
-                ["Shopify:ClientId"] = "client-id",
-                ["Shopify:ClientSecret"] = "client-secret",
-                ["Shopify:LocationsFile"] = locations,
-                ["Shopify:CategoriesFile"] = categories,
-                ["Shopify:BulkPollInterval"] = "00:00:00",
-                ["Shopify:ThrottleBackoff"] = "00:00:00",
             })
+            .AddInMemoryCollection(shopify)
             .Build();
 
         var services = new ServiceCollection();
@@ -201,9 +217,9 @@ public sealed class StoreMigrationTests(PostgresFixture postgres)
         services.AddScoped<StoreMigration>();
         services.AddSingleton<IPrincipalAccessor>(new SystemPrincipalAccessor());
 
-        // The store is its recorded answers, and its pictures are not fetched: no network.
-        var store = new FakeShopify();
-        services.AddHttpClient("shopify").ConfigurePrimaryHttpMessageHandler(() => store).SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+        // The store is its recorded answers when there are some; its pictures are never fetched.
+        if (store is not null)
+            services.AddHttpClient("shopify").ConfigurePrimaryHttpMessageHandler(() => store).SetHandlerLifetime(Timeout.InfiniteTimeSpan);
         services.AddSingleton<IExternalImageReader, NoPictures>();
 
         return services.BuildServiceProvider(validateScopes: true);

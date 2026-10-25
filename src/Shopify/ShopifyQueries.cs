@@ -106,7 +106,9 @@ internal static class ShopifyQueries
     /// the catalogue's prices are. A line's discounts are its allocations, named
     /// by the application's index, because an application carries a value (10 %)
     /// and not what it took off this order. 250 lines and 250 refunded lines per
-    /// order are the most a page carries, far beyond a shop at this scale.
+    /// order are the most a page carries, far beyond a shop at this scale. An
+    /// order's day, and a refund's, is when it was processed: an order the store
+    /// imported from elsewhere was created on the day it arrived (P16-16).
     /// </summary>
     public static string Orders(string? after)
     {
@@ -117,10 +119,10 @@ internal static class ShopifyQueries
 
         return
             $$"""
-            { orders(first: 50, sortKey: CREATED_AT{{cursor}}) {
+            { orders(first: 50, sortKey: PROCESSED_AT{{cursor}}) {
                 pageInfo { hasNextPage endCursor }
                 nodes {
-                  id name createdAt cancelledAt displayFulfillmentStatus email customerLocale
+                  id name processedAt cancelledAt displayFulfillmentStatus email customerLocale
                   customer { id }
                   totalDiscountsSet {{money}} totalTaxSet {{money}} totalPriceSet {{money}}
                   taxLines { title rate priceSet {{money}} }
@@ -129,7 +131,7 @@ internal static class ShopifyQueries
                   fulfillments { createdAt }
                   discountApplications(first: 20) { nodes { index ... on DiscountCodeApplication { code } ... on AutomaticDiscountApplication { title } ... on ManualDiscountApplication { title } } }
                   lineItems(first: 250) { nodes { id title variantTitle quantity variant { id } originalUnitPriceSet {{money}} {{allocations}} } }
-                  refunds { id createdAt totalRefundedSet {{money}} refundLineItems(first: 250) { nodes { quantity lineItem { id } } } }
+                  refunds { id processedAt totalRefundedSet {{money}} refundLineItems(first: 250) { nodes { quantity lineItem { id } } } }
                 }
               } }
             """;
@@ -177,11 +179,14 @@ internal static class ShopifyQueries
     }
 
     /// <summary>
-    /// A page of the gift cards still owed (S2b, P16-20): enabled, not expired, with
-    /// a balance left — the store's own search, so a spent card is never read. A
-    /// card tells the last four characters of its code and never the rest, which the
-    /// store gives only on the day it makes the card; that is why a card is listed
-    /// for the merchant to reissue and not imported.
+    /// A page of the gift cards still owed (S2b, P16-20): enabled, with a balance
+    /// left — the store's own search, so a spent card is never read. Not
+    /// <c>NOT status:expired</c>: the store's search drops every card that never
+    /// expires from it (P16-16), so the expired ones are asked for by themselves
+    /// (<see cref="ExpiredGiftCards"/>). A card tells the last four characters of
+    /// its code and never the rest, which the store gives only on the day it makes
+    /// the card; that is why a card is listed for the merchant to reissue and not
+    /// imported.
     /// </summary>
     public static string GiftCards(string? after)
     {
@@ -189,9 +194,23 @@ internal static class ShopifyQueries
 
         return
             $$"""
-            { giftCards(first: 100, query: "status:enabled AND NOT status:expired AND balance_status:full_or_partial"{{cursor}}) {
+            { giftCards(first: 100, query: "status:enabled AND balance_status:full_or_partial"{{cursor}}) {
                 pageInfo { hasNextPage endCursor }
                 nodes { id lastCharacters enabled balance { amount currencyCode } expiresOn customer { id } }
+              } }
+            """;
+    }
+
+    /// <summary>A page of the gift cards the store has seen expire, by id: the ones its calendar says are past.</summary>
+    public static string ExpiredGiftCards(string? after)
+    {
+        var cursor = after is null ? "" : $", after: {JsonSerializer.Serialize(after)}";
+
+        return
+            $$"""
+            { giftCards(first: 250, query: "status:expired"{{cursor}}) {
+                pageInfo { hasNextPage endCursor }
+                nodes { id }
               } }
             """;
     }

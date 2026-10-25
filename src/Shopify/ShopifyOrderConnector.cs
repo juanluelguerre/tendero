@@ -86,8 +86,8 @@ internal sealed class ShopifyOrderConnector(ShopifyAdmin admin, ISourceVariantSk
             Present(order, "customer") is { } customer ? ShopifyBulkProducts.IdOf(customer.GetProperty("id").GetString()) : null,
             Text(order, "email"),
             ShopifyLanguage.SpokenOf(Text(order, "customerLocale")),
-            At(order, "createdAt")!.Value,
-            state == SourceOrderState.Fulfilled ? LastFulfilment(order) ?? At(order, "createdAt") : null,
+            At(order, "processedAt")!.Value,
+            state == SourceOrderState.Fulfilled ? LastFulfilment(order) ?? At(order, "processedAt") : null,
             state,
             ordered,
             AddressOf(Present(order, "shippingAddress")),
@@ -140,7 +140,7 @@ internal sealed class ShopifyOrderConnector(ShopifyAdmin admin, ISourceVariantSk
 
     private static SourceRefund Refund(JsonElement refund) => new(
         ShopifyBulkProducts.IdOf(refund.GetProperty("id").GetString()),
-        At(refund, "createdAt")!.Value,
+        At(refund, "processedAt")!.Value,
         MoneyOf(refund.GetProperty("totalRefundedSet")),
         [
             .. refund.GetProperty("refundLineItems").GetProperty("nodes").EnumerateArray().Select(line => (

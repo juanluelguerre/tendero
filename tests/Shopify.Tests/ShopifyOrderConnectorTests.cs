@@ -80,6 +80,22 @@ public sealed class ShopifyOrderConnectorTests
     }
 
     /// <summary>
+    /// An order is placed, and a refund made, on the day the store says it was
+    /// processed, not the day it was written into the store: the two are the same
+    /// for an order taken there, and apart for one the store itself imported from
+    /// elsewhere — every order in the lab store, written by <c>orderCreate</c>
+    /// (P16-16), was created on the day of the seeding.
+    /// </summary>
+    [Fact]
+    public async Task An_order_is_placed_on_the_day_the_store_processed_it()
+    {
+        var moka = (await Orders())[0];
+
+        Assert.Equal(new DateTimeOffset(2026, 4, 2, 10, 0, 0, TimeSpan.Zero), moka.PlacedAt);
+        Assert.Equal(new DateTimeOffset(2026, 4, 20, 16, 0, 0, TimeSpan.Zero), moka.Refunds[0].At);
+    }
+
+    /// <summary>
     /// Cancelled when the store says so, open while not all of it left (a partial
     /// fulfilment ships nothing yet); every page is read, the second after the
     /// first's cursor.
@@ -132,7 +148,7 @@ public sealed class ShopifyOrderConnectorTests
 
         var pages = store.Queries.Where(query => query.Contains("{ orders(", StringComparison.Ordinal)).ToList();
         Assert.Equal(2, pages.Count);
-        Assert.Contains("{ orders(first: 50, sortKey: CREATED_AT) {", pages[0], StringComparison.Ordinal);
+        Assert.Contains("{ orders(first: 50, sortKey: PROCESSED_AT) {", pages[0], StringComparison.Ordinal);
         Assert.Contains("after: \"c2\")", pages[1], StringComparison.Ordinal);
     }
 

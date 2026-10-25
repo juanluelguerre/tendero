@@ -11,7 +11,9 @@ namespace ElGuerre.Tendero.Shopify;
 /// reads the cards the store still owes, a page at a time, each by the end of its
 /// code with its balance, its expiry and the customer it was sold or issued to.
 /// The store's search already leaves the spent ones out; a card that comes anyway
-/// disabled or empty is not handed over, since there is nothing to reissue.
+/// disabled or empty is not handed over, since there is nothing to reissue. The
+/// expired ones are asked for first and left out, because the store's search
+/// cannot exclude them without losing the cards that never expire (P16-16).
 ///
 /// Registered with the other Shopify adapters when the store's credentials are
 /// configured.
@@ -24,16 +26,27 @@ internal sealed class ShopifyGiftCardConnector(ShopifyAdmin admin) : IGiftCardSo
 
     public async IAsyncEnumerable<SourceGiftCard> StreamGiftCardsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        var expired = new HashSet<string>(StringComparer.Ordinal);
+        await foreach (var node in PagesAsync(ShopifyQueries.ExpiredGiftCards, cancellationToken))
+            expired.Add(ShopifyBulkProducts.IdOf(node.GetProperty("id").GetString()));
+
+        await foreach (var node in PagesAsync(ShopifyQueries.GiftCards, cancellationToken))
+        {
+            if (Card(node) is { } card && !expired.Contains(card.ExternalId))
+                yield return card;
+        }
+    }
+
+    /// <summary>Every card a query answers, a page at a time, the next asked after the cursor.</summary>
+    private async IAsyncEnumerable<JsonElement> PagesAsync(Func<string?, string> query, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
         string? after = null;
         do
         {
-            var page = (await admin.QueryAsync(ShopifyQueries.GiftCards(after), cancellationToken)).GetProperty("giftCards");
+            var page = (await admin.QueryAsync(query(after), cancellationToken)).GetProperty("giftCards");
 
             foreach (var node in page.GetProperty("nodes").EnumerateArray())
-            {
-                if (Card(node) is { } card)
-                    yield return card;
-            }
+                yield return node;
 
             var info = page.GetProperty("pageInfo");
             after = info.GetProperty("hasNextPage").GetBoolean() ? info.GetProperty("endCursor").GetString() : null;

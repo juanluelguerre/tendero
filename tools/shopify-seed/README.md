@@ -14,6 +14,12 @@ to approve them:
 - `read_locales`;
 - `read_files` and `write_files`.
 
+For the stock (S2a): `write_inventory` and `write_locations`. For the people and
+their history (S2b): `read_customers`, `write_customers`, `read_orders`,
+`read_all_orders`, `write_orders`, `read_discounts`, `write_discounts`,
+`read_gift_cards`, `write_gift_cards`, and the protected customer data — name,
+email, phone and address — requested for the app in the Dev Dashboard.
+
 The store is set to EUR, with Spanish as its default language and English
 published. The three credentials live in the AppHost's user secrets, never in
 the repository:
@@ -61,6 +67,14 @@ dotnet user-secrets set "Parameters:shopify-client-secret" "<client secret>" --p
   (`write_inventory`, `write_locations`). Repeatable: it writes only what
   differs. It writes `locations.json`, location → warehouse code, which the
   stock import reads through `Shopify:LocationsFile`.
+- `history.mjs` (S2b, P16-16): the people and their history from `history.json`
+  — five customers with their address books, a dozen past orders (one cancelled,
+  one partly refunded, one still open), two discounts (one the promotions engine
+  can express, one it cannot for its limits) and two gift cards. Orders go
+  through `orderCreate`, dated by `processedAt` (the day an order was placed; the
+  day it is created is the seeding's), with the stock bypassed and no receipt
+  sent. Repeatable: each thing is found by its email, source identifier, code or
+  note, and a half-finished order is finished. A gift card's code is never printed.
 
 The store's look in Tendero's style is `tools/shopify-theme/`.
 
@@ -77,3 +91,18 @@ dotnet run --project tools/SearchEval -- --elasticsearch <throwaway es> --source
 The test compares the store with the seed field by field, and is skipped
 without the credentials. SearchEval scores the catalogue read back from the
 store with the seed's golden set.
+
+The people and the whole migration, after `stock.mjs` and `history.mjs`:
+
+```
+dotnet test --project tests/Integration.Tests --filter-class "*ShopifyHistoryRoundTripTests"
+dotnet test --project tests/Integration.Tests --filter-class "*LabStoreMigrationTests"
+```
+
+The first reads each customer, order, discount and gift card back against
+`history.json`; the second rehearses and runs the host's migration from the store
+into an empty shop on a disposable Postgres (Docker), and holds that both say the
+same. What the store keeps differently from what was written is named in the
+tests: an order's addresses join its buyer's address book, and an order written
+by `orderCreate` has no buyer's language and a fulfilment dated the day it was
+written.

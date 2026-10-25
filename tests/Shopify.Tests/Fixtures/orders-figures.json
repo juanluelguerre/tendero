@@ -6,7 +6,7 @@
         {
           "id": "gid://shopify/Order/5101",
           "name": "#1101",
-          "createdAt": "2026-05-01T10:00:00Z",
+          "processedAt": "2026-05-01T10:00:00Z",
           "cancelledAt": null,
           "displayFulfillmentStatus": "FULFILLED",
           "email": "ana@example.com",
@@ -45,7 +45,7 @@
         {
           "id": "gid://shopify/Order/5102",
           "name": "#1102",
-          "createdAt": "2026-05-04T10:00:00Z",
+          "processedAt": "2026-05-04T10:00:00Z",
           "cancelledAt": null,
           "displayFulfillmentStatus": "FULFILLED",
           "email": null,

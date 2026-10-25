@@ -34,7 +34,7 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// </summary>
 public sealed class ShopifyRoundTripTests
 {
-    private static string Seed(string file)
+    internal static string Seed(string file)
     {
         var folder = new DirectoryInfo(AppContext.BaseDirectory);
         while (folder is not null && !File.Exists(Path.Combine(folder.FullName, "Tendero.slnx")))
@@ -43,7 +43,7 @@ public sealed class ShopifyRoundTripTests
     }
 
     /// <summary>The AppHost's user secrets, read as a file: no package for one read.</summary>
-    private static Dictionary<string, string>? StoreSecrets()
+    internal static Dictionary<string, string>? StoreSecrets()
     {
         var file = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -184,7 +184,7 @@ public sealed class ShopifyRoundTripTests
     private sealed record SeedLevel(string Sku, string Warehouse, int OnHand);
 
     /// <summary>The catalogue's answer for the store's variants, filled from what the store's catalogue says.</summary>
-    private sealed class StoreSkus : ISourceVariantSkus
+    internal sealed class StoreSkus : ISourceVariantSkus
     {
         public Dictionary<string, string> Known { get; } = new(StringComparer.Ordinal);
 
@@ -193,8 +193,8 @@ public sealed class ShopifyRoundTripTests
                 externalVariantIds.Where(Known.ContainsKey).ToDictionary(id => id, id => Known[id]));
     }
 
-    /// <summary>The catalogue and the Shopify source, configured as the API is, over the seed's files.</summary>
-    private static ServiceProvider Services(Dictionary<string, string> secrets)
+    /// <summary>The catalogue and the Shopify source, configured as the API is, over the seed's files; <paramref name="also"/> stands in for what a database would answer.</summary>
+    internal static ServiceProvider Services(Dictionary<string, string> secrets, Action<IServiceCollection>? also = null)
     {
         var settings = new Dictionary<string, string?>(secrets.ToDictionary(pair => pair.Key, pair => (string?)pair.Value))
         {
@@ -211,6 +211,7 @@ public sealed class ShopifyRoundTripTests
         services.AddShopify(configuration);
         services.AddSingleton<StoreSkus>();
         services.AddSingleton<ISourceVariantSkus>(provider => provider.GetRequiredService<StoreSkus>());
+        also?.Invoke(services);
         return services.BuildServiceProvider();
     }
 
@@ -264,7 +265,7 @@ public sealed class ShopifyRoundTripTests
     private static string Shown(ExternalProduct product) =>
         string.Join(" | ", product.Images.Select(image => image.Shows is { } shows ? Flat(shows) : "-").Order(StringComparer.Ordinal));
 
-    private static async Task<List<ExternalProduct>> All(ICatalogSourceConnector connector, CancellationToken ct)
+    internal static async Task<List<ExternalProduct>> All(ICatalogSourceConnector connector, CancellationToken ct)
     {
         var products = new List<ExternalProduct>();
         await foreach (var product in connector.StreamProductsAsync(ct))

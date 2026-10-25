@@ -70,7 +70,7 @@ public sealed class ShopifyGiftCardConnectorTests
 
         await Cards(store);
 
-        var pages = store.Queries.Where(query => query.Contains("{ giftCards(", StringComparison.Ordinal)).ToList();
+        var pages = store.Queries.Where(query => query.Contains("{ giftCards(", StringComparison.Ordinal) && !query.Contains("status:expired", StringComparison.Ordinal)).ToList();
         Assert.Equal(2, pages.Count);
         Assert.Contains("balance_status:full_or_partial\") {", pages[0], StringComparison.Ordinal);
         Assert.Contains("after: \"g3\")", pages[1], StringComparison.Ordinal);
@@ -91,5 +91,26 @@ public sealed class ShopifyGiftCardConnectorTests
         Assert.Contains(store.Queries, query => query.Contains("{ giftCards(", StringComparison.Ordinal)
             && query.Contains("status:enabled", StringComparison.Ordinal)
             && query.Contains("balance_status:full_or_partial", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// The store's search drops a card that never expires from <c>NOT status:expired</c>,
+    /// which is most of them: measured on the lab store on 2026-10-25, where a card with
+    /// no expiry came for every other filter and not for that one (P16-16's round trip).
+    /// So the cards owed are asked without it, the expired ones are asked for by
+    /// themselves, and those are left out — the store still decides what has expired,
+    /// on its own calendar.
+    /// </summary>
+    [Fact]
+    public async Task A_card_that_never_expires_is_asked_for_and_an_expired_one_left_out()
+    {
+        var store = new FakeShopify();
+
+        var cards = await Cards(store);
+
+        Assert.DoesNotContain(cards, card => card.ExternalId == "8006");
+        Assert.Contains(cards, card => card.ExternalId == "8002" && card.ExpiresOn is null);
+        Assert.DoesNotContain(store.Queries, query => query.Contains("NOT status:expired", StringComparison.Ordinal));
+        Assert.Contains(store.Queries, query => query.Contains("{ giftCards(first: 250, query: \"status:expired\"", StringComparison.Ordinal));
     }
 }
