@@ -10,6 +10,14 @@
           "balance": { "amount": "15.0", "currencyCode": "EUR" },
           "expiresOn": null,
           "customer": { "id": "gid://shopify/Customer/6003" }
+        },
+        {
+          "id": "gid://shopify/GiftCard/8007",
+          "lastCharacters": "mn34",
+          "enabled": true,
+          "balance": { "amount": "20.0", "currencyCode": "EUR" },
+          "expiresOn": "2025-12-31",
+          "customer": null
         }
       ]
     }

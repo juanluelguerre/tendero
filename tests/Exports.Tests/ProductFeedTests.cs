@@ -127,6 +127,46 @@ public sealed class ProductFeedTests
         Assert.Equal(("8412345678905", "24.90 EUR", "Trail Co"), (Cell(lines, 1, "gtin"), Cell(lines, 1, "price"), Cell(lines, 1, "brand")));
     }
 
+    // The tests below were found by the exports' Stryker close: each mutant they name survived the suite above.
+
+    /// <summary>The variant's own colour wins over the product's; a product that says no colour anywhere has none, and no error.</summary>
+    [Fact]
+    public async Task A_variants_colour_wins_and_a_product_without_one_has_none()
+    {
+        var both = Shirt() with { Attributes = [new("COLOR", "color", "GREY", "gris")] };
+        var none = Moka() with { Code = "B11COF0402", Attributes = [] };
+
+        var (_, lines) = await Feed("es", both, none);
+
+        Assert.Equal(("azul marino", ""), (Cell(lines, 1, "color"), Cell(lines, 3, "color")));
+    }
+
+    [Theory]
+    [InlineData("MEN", "male")]
+    [InlineData("UNISEX", "unisex")]
+    [InlineData("KIDS", "")]
+    public async Task Gender_is_said_in_googles_words_or_not_at_all(string key, string expected)
+    {
+        var (_, lines) = await Feed("es", Shirt() with { Attributes = [new("GENDER", "género", key, key)] });
+
+        Assert.Equal(expected, Cell(lines, 1, "gender"));
+    }
+
+    /// <summary>A branch mapped only at its root takes the root's: the nearest one up is as far up as it goes.</summary>
+    [Fact]
+    public void A_branch_mapped_only_at_its_root_takes_the_roots() =>
+        Assert.Equal(536, new GoogleCategoryMapping(new Dictionary<string, int> { ["HOME"] = 536 })
+            .Of([new("HOME", "Hogar"), new("KITCHEN", "Cocina"), new("COFFEE_MAKER", "Cafeteras")]));
+
+    /// <summary>The defaults a configuration without the AppHost has: the storefront's development address, the committed mapping.</summary>
+    [Fact]
+    public void Without_configuration_the_feed_links_the_development_storefront_and_reads_the_committed_mapping()
+    {
+        var options = new ExportsOptions();
+
+        Assert.Equal(("http://localhost:4200", "seed/google-categories.sample.json"), (options.StorefrontUrl, options.GoogleCategoriesFile));
+    }
+
     [Theory]
     [InlineData("es", true)]
     [InlineData("en", true)]

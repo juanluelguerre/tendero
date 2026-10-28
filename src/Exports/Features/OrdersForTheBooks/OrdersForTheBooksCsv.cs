@@ -15,10 +15,10 @@ internal sealed class OrdersForTheBooksCsv : IExportFormat<OrderLineForTheBooks>
 {
     public const string Key = "csv";
 
-    private static readonly string[] Spanish =
+    private static string[] Spanish =>
         ["Pedido", "Día", "Estado", "Cliente", "País", "Concepto", "SKU", "Descripción", "Cantidad", "Precio unitario", "Importe", "Tipo impositivo (%)", "Base imponible", "Impuesto", "Moneda"];
 
-    private static readonly string[] English =
+    private static string[] English =>
         ["Order", "Day", "Status", "Customer", "Country", "Kind", "SKU", "Description", "Quantity", "Unit price", "Amount", "Tax rate (%)", "Tax base", "Tax", "Currency"];
 
     public string Format => Key;

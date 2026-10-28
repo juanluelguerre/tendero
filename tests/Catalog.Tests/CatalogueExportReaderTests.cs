@@ -112,6 +112,35 @@ public sealed class CatalogueExportReaderTests
         Assert.Empty(exported.Category);
     }
 
+    // The tests below were found by the exports' Stryker close: each mutant they name survived the suite above.
+
+    /// <summary>The products leave by their code, so two exports of an unchanged catalogue are the same file.</summary>
+    [Fact]
+    public async Task Products_leave_in_the_order_of_their_codes()
+    {
+        var products = Enumerable.Range(0, 4).Select(_ => AShirt()).ToArray();
+
+        var exported = await Reader(products).ProductsAsync("es", Ct);
+
+        Assert.Equal(products.Select(product => product.Code).Order(StringComparer.Ordinal), exported.Select(product => product.Code));
+    }
+
+    /// <summary>A number leaves with its unit, since another vocabulary has no definition to render it by.</summary>
+    [Fact]
+    public async Task A_number_leaves_with_its_unit()
+    {
+        var pan = AShirt();
+        pan.SetAttribute(Clock, AttributeValue.Numeric("CAPACITY_L", 1.5m));
+        var capacity = AttributeDefinition.Define(Clock, "CAPACITY_L", Text("capacidad", "capacity"), AttributeKind.Number, unit: "L");
+
+        var exported = Assert.Single(await new CatalogueExportReader(
+            new InMemoryProductCatalogReader(pan),
+            new StaticDefinitions(new AttributeDefinitions([.. Definitions().All, capacity])),
+            new StaticCategories(Tree)).ProductsAsync("es", Ct));
+
+        Assert.Equal(new ExportedAttribute("CAPACITY_L", "capacidad", "1.5", "1.5 L"), exported.Attributes.Single(attribute => attribute.Code == "CAPACITY_L"));
+    }
+
     private sealed class StaticDefinitions(AttributeDefinitions definitions) : IAttributeDefinitionReader
     {
         public Task<AttributeDefinitions> AllAsync(CancellationToken cancellationToken = default) => Task.FromResult(definitions);

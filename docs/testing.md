@@ -98,6 +98,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `src/Assist` | `Assist.Tests` | 87.13 % | 79.92 % | 2026-10-14 · phase 13c's close, third run (83.63 %, then 85.33 % with the kit reader's tests, then its static fields made properties); 86.31 % since 2026-10-09 |
 | `src/AI` | `AI.Tests` | 89.10 % | 71.93 % | 2026-10-17 · phase 14's close, the parallel method with coverage per mutant (75.00 % since 2026-10-09, measured per test) |
 | `src/Shopify` | `Shopify.Tests` | 92.64 % | 86.29 % | 2026-10-24 · phase 16 S2a's close, first baseline, third run, coverage per mutant (81.63 % on run 1) |
+| `src/Exports` | `Exports.Tests` | 92.97 % | 87.19 % | 2026-10-28 · the exports' close (E-1 to E-4), first baseline, second run, coverage per mutant (63.04 % on run 1) |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -1638,6 +1639,72 @@ test proven by a hand mutation, 103 of them, every one seen red and restored.
 the hand mutations in P16-21's commit (the four rehearsal readers, the on-sale
 filter, `notBrought`, the refusal). Reports:
 `docs/blog/reports/2026-10-24-phase-16-s2b/stryker/`.
+
+### The exports' close: what leaves the shop (E-1 to E-4, with P16-16)
+
+2026-10-28. Mutated: `src/Exports` whole, a new project; Catalog's and Ordering's new
+read ports of values, scoped to their files; and the three Shopify files P16-16
+changed. Through the serial runner in the working tree, the parallel runner's
+settings written into each configuration for the run (`coverage-analysis: all`, a
+30 s margin, `language-version: Preview`): `Exports`' configuration was not
+committed yet, and the parallel runner runs from `HEAD`.
+
+| Project | Mutated with | Run 1 | Run 2 | Survivors | Reports |
+|---|---|---|---|---|---|
+| `src/Exports`, whole | `Exports.Tests` | 63.04 % | **92.97 %** (first baseline) | 180 → 35, then 5 more killed by hand | `exports-run1.html`, `-run2.html` |
+| `src/Catalog`, `CatalogueExportReader.cs` | `Catalog.Tests` | 77.78 % | **100 %** | 2 → 0 | `catalog-run1.html`, `-run2.html` |
+| `src/Ordering`, `OrderExportReader.cs` | `Ordering.Tests` | 0 % (1 mutant covered) | **100 %** | 1 → 0 | `ordering-run1.html`, `-run2.html` |
+| `src/Shopify`, the three files P16-16 changed | `Shopify.Tests` | 95.68 % | **98.16 %** | 7 → 3, older than P16-16 | `shopify-run1.html`, `-run2.html` |
+
+**What Stryker found, and what closed it.**
+
+- **Static tables again** (phase 13c's and 14's lesson, met a third time): the three
+  formats' headers and two dialects were `static readonly`, so some 70 mutants
+  inside them survived whatever the tests said. Made properties, they are measured,
+  and the header tests kill them.
+- **The counters had no listener**: removing `ExportMetrics.Record` from any of the
+  three exports survived. `ExportMetricsTests` listens, each test under a format
+  name no other uses, since the instruments are the process's.
+- **Shopify's CSV**: what a product's later lines must leave empty was never read —
+  every cell of the second and third lines is now; a fourth option, a variant
+  missing a value, a CRLF blank line between paragraphs, a product with no brand,
+  picture or category (its whole first line).
+- **The accountant's CSV**: every status in both languages and one it does not know,
+  the English header whole, shipping in Spanish, the currency of a row without an
+  amount, an id short enough to be its own reference and a dash in it.
+- **The CSV reader**: a cell beginning with a quote or the separator, a file ending
+  in a quoted cell, a bare LF, a last record of one cell or ending empty.
+- **The feed**: the variant's colour over the product's, a product with no colour at
+  all, `MEN` and `UNISEX`, a branch mapped only at its root, the options' defaults.
+- **An edge never walked**: a product all of whose variants were discontinued — the
+  catalogue's export leaves those out — so that taking the first variant's options
+  without asking whether there was one survived.
+- **The read ports**: neither held its order (products by code, sales oldest first),
+  and a number's unit was never rendered.
+- **Shopify**: the expired gift cards' second page was never read (the query's
+  cursor survived); now they span two pages.
+
+**Left, and what each is.**
+
+- **Equivalent**: `leaveOpen` false over a `MemoryStream`, which every caller writes
+  to and whose `ToArray` works after it is disposed; the reader's decoder told to
+  emit a BOM (decoding ignores it); `continue` as the last statement of a loop's
+  branch; asking availability with an empty list instead of not asking; `<` for `<=`
+  where a text or an id is cut exactly at its length; replacing `.` with `.`; which
+  of an order line's monies gives the currency, since an order has one.
+- **Noise**: the validator's and `ExportNumbers`' messages.
+- **Out of Stryker's reach**: the instruments' names, units and descriptions in
+  `static readonly` fields — the name proven by hand: renamed, the three metric
+  tests went red.
+- **Older than the change**, counted, not classified: Shopify 3, in
+  `ShopifyOrderConnector.cs`'s lines from S2b, classified at its close.
+- **Not compiled by Stryker**: Ordering's 24 and Catalog's 8 mutants of the new
+  readers, in collection-expression spreads (`..`) it cannot rewrite.
+
+Hand mutations after run 2, each red, each restored: a missing vendor written as a
+word, a missing picture given a position, an English header renamed, shipping said
+in English to a Spanish reader, the counter renamed. Reports:
+`docs/blog/reports/2026-10-28-phase-16-exports/stryker/`.
 
 ## Property-based (CsCheck)
 

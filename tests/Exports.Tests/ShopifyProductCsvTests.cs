@@ -129,6 +129,85 @@ public sealed class ShopifyProductCsvTests
             (Cell(file, 1, "Charge tax"), Cell(file, 1, "Inventory tracker"), Cell(file, 1, "Continue selling when out of stock"), Cell(file, 1, "Requires shipping"), Cell(file, 1, "Fulfillment service"), Cell(file, 1, "Gift card")));
     }
 
+    // The tests below were found by the exports' Stryker close: each mutant they name survived the suite above.
+
+    /// <summary>
+    /// Every cell of every line, so a value written where it does not belong shows: the
+    /// second line is the second variant and picture with nothing of the product's, the
+    /// third only a picture with nothing of a variant's.
+    /// </summary>
+    [Fact]
+    public async Task Each_line_after_the_first_carries_only_what_is_its_own()
+    {
+        var file = await Written(Shirt);
+
+        Assert.Equal(
+            [
+                "", "camiseta-tecnica-b07tuvw404", "", "", "", "", "", "", "SHIRT-BLACK-M", "",
+                "", "negro", "", "M", "", "", "26.90", "true", "shopify", "0", "deny", "true", "manual",
+                "https://api.example/api/images/back", "2", "", "", "", "",
+            ],
+            file[2]);
+        Assert.Equal(
+            [
+                "", "camiseta-tecnica-b07tuvw404", "", "", "", "", "", "", "", "",
+                "", "", "", "", "", "", "", "", "", "", "", "", "",
+                "https://api.example/api/images/side", "3", "", "", "", "",
+            ],
+            file[3]);
+        Assert.Equal(("", "false", "212"), (Cell(file, 1, "Tags"), Cell(file, 1, "Gift card"), Cell(file, 1, "Google Shopping / Google Product Category")));
+    }
+
+    /// <summary>A product with no brand, no picture and no Google category leaves those cells empty, never a word in them.</summary>
+    [Fact]
+    public async Task What_a_product_lacks_stays_empty_on_its_line()
+    {
+        var file = await Written(Moka);
+
+        Assert.Equal(
+            [
+                "Cafetera italiana", "cafetera-italiana-b11cof0401", "", "", "Cafeteras", "", "false", "draft", "MOKA-DEFAULT", "",
+                "Title", "Default Title", "", "", "", "", "29.90", "true", "shopify", "5", "deny", "true", "manual",
+                "", "", "", "", "false", "",
+            ],
+            file[1]);
+    }
+
+    /// <summary>A product sold one way names its option once, and a line that is only a picture has no "Default Title".</summary>
+    [Fact]
+    public async Task A_product_sold_one_way_names_its_option_once()
+    {
+        var file = await Written(Moka with { Pictures = [new("https://api.example/api/images/a", null), new("https://api.example/api/images/b", null)] });
+
+        Assert.Equal(["Title", "Default Title", "", ""], file[1].Skip(10).Take(4));
+        Assert.Equal(["", "", "", ""], file[2].Skip(10).Take(4));
+    }
+
+    /// <summary>Shopify holds three options: a fourth is not written; a variant missing a value leaves its cell empty.</summary>
+    [Fact]
+    public async Task A_fourth_option_has_nowhere_to_go_and_a_missing_value_stays_empty()
+    {
+        var many = Moka with
+        {
+            OptionNames = ["color", "talla", "largo", "corte"],
+            Variants = [new("MOKA-X", null, new Money(29.90m, "EUR"), ["negro", "M"], 1, null)],
+        };
+
+        var file = await Written(many);
+
+        Assert.Equal(["color", "negro", "talla", "M", "largo", ""], file[1].Skip(10).Take(6));
+        Assert.DoesNotContain("corte", file[1]);
+    }
+
+    /// <summary>Paragraphs split by a blank line written either way, CRLF or LF.</summary>
+    [Fact]
+    public async Task Paragraphs_split_by_a_windows_blank_line_are_paragraphs_too()
+    {
+        var file = await Written(Moka with { Description = "Uno.\r\n\r\nDos." });
+
+        Assert.Equal("<p>Uno.</p><p>Dos.</p>", Cell(file, 1, "Description"));
+    }
+
     [Fact]
     public async Task Shopify_reads_commas_whatever_the_readers_language()
     {

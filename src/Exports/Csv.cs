@@ -25,7 +25,7 @@ public sealed record CsvDialect(char Separator, bool Quoted, bool ByteOrderMark)
         new(culture == "es" ? ';' : ',', Quoted: true, ByteOrderMark: true);
 
     /// <summary>A product feed, as Merchant Center reads one: tabs, no quoting, no BOM.</summary>
-    public static readonly CsvDialect Feed = new('\t', Quoted: false, ByteOrderMark: false);
+    public static CsvDialect Feed => new('\t', Quoted: false, ByteOrderMark: false);
 }
 
 /// <summary>

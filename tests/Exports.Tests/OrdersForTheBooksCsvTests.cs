@@ -96,7 +96,9 @@ public sealed class OrdersForTheBooksCsvTests
     {
         var file = await Written("en", Lamp, Discount);
 
-        Assert.Equal(["Order", "Day", "Status"], file[0].Take(3));
+        Assert.Equal(
+            ["Order", "Day", "Status", "Customer", "Country", "Kind", "SKU", "Description", "Quantity", "Unit price", "Amount", "Tax rate (%)", "Tax base", "Tax", "Currency"],
+            file[0]);
         Assert.Equal(["Confirmed", "line", "1074.90"], [file[1][2], file[1][5], file[1][10]]);
         Assert.Equal(["discount", "-5.00"], [file[2][5], file[2][10]]);
     }
@@ -108,6 +110,48 @@ public sealed class OrdersForTheBooksCsvTests
         var file = await Written("es", Tax with { TaxRate = 0.055m });
 
         Assert.Equal("5,5", file[1][11]);
+    }
+
+    // The tests below were found by the exports' Stryker close: each mutant they name survived the suite above.
+
+    /// <summary>Every status a sale can be in, in the reader's words; another goes by its code.</summary>
+    [Theory]
+    [InlineData("PaymentAuthorized", "Pago autorizado", "Payment authorised")]
+    [InlineData("Confirmed", "Confirmado", "Confirmed")]
+    [InlineData("Shipped", "Enviado", "Shipped")]
+    [InlineData("Delivered", "Entregado", "Delivered")]
+    [InlineData("Returned", "Returned", "Returned")]
+    public async Task A_status_is_said_in_the_readers_words(string status, string spanish, string english)
+    {
+        var es = await Written("es", Moka with { Status = status });
+        var en = await Written("en", Moka with { Status = status });
+
+        Assert.Equal((spanish, english), (es[1][2], en[1][2]));
+    }
+
+    /// <summary>A row with no amount still says its currency: the tax's, or the price's; and what it lacks stays empty.</summary>
+    [Fact]
+    public async Task A_row_without_an_amount_still_says_its_currency_and_leaves_the_rest_empty()
+    {
+        var file = await Written("en", Tax, Discount, Moka with { Kind = BookLineKind.Shipping, Sku = null, Quantity = null, UnitPrice = null, Amount = Eur(4.95m) });
+
+        Assert.Equal(["tax", "", "", "", "", "EUR"], [file[1][5], file[1][6], file[1][8], file[1][9], file[1][10], file[1][14]]);
+        Assert.Equal(["discount", "", "", "", "EUR"], [file[2][5], file[2][6], file[2][8], file[2][9], file[2][14]]);
+        Assert.Equal("shipping", file[3][5]);
+
+        var spanish = await Written("es", Moka with { Kind = BookLineKind.Shipping });
+        Assert.Equal("envío", spanish[1][5]);
+    }
+
+    /// <summary>An id short enough is its own reference, and a dash in it is not.</summary>
+    [Theory]
+    [InlineData("abcd-efgh", "abcdefgh")]
+    [InlineData("abc-def", "abcdef")]
+    public async Task A_reference_is_the_ids_last_eight_characters_without_its_dashes(string id, string reference)
+    {
+        var file = await Written("es", Moka with { OrderId = id });
+
+        Assert.Equal(reference, file[1][0]);
     }
 
     [Fact]

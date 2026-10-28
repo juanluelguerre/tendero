@@ -17,7 +17,7 @@ internal sealed class GoogleMerchantFeed : IExportFormat<FeedItem>
 {
     public const string Key = "google-merchant";
 
-    private static readonly string[] Header =
+    private static string[] Header =>
     [
         "id", "item_group_id", "title", "description", "link", "image_link", "additional_image_link", "availability", "price",
         "brand", "gtin", "identifier_exists", "condition", "google_product_category", "product_type", "color", "size", "gender",

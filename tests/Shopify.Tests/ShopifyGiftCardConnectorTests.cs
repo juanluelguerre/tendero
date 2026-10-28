@@ -108,9 +108,27 @@ public sealed class ShopifyGiftCardConnectorTests
 
         var cards = await Cards(store);
 
-        Assert.DoesNotContain(cards, card => card.ExternalId == "8006");
+        Assert.DoesNotContain(cards, card => card.ExternalId is "8006" or "8007");
         Assert.Contains(cards, card => card.ExternalId == "8002" && card.ExpiresOn is null);
         Assert.DoesNotContain(store.Queries, query => query.Contains("NOT status:expired", StringComparison.Ordinal));
         Assert.Contains(store.Queries, query => query.Contains("{ giftCards(first: 250, query: \"status:expired\"", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// The expired cards are read to their last page, the first asked with no cursor
+    /// and the next after it: a card that expired is left out wherever it is listed.
+    /// Found by the exports' Stryker close, when the expired cards fit one page.
+    /// </summary>
+    [Fact]
+    public async Task Every_page_of_the_expired_cards_is_read()
+    {
+        var store = new FakeShopify();
+
+        await Cards(store);
+
+        var pages = store.Queries.Where(query => query.Contains("\"status:expired\"", StringComparison.Ordinal)).ToList();
+        Assert.Equal(2, pages.Count);
+        Assert.Contains("query: \"status:expired\") {", pages[0], StringComparison.Ordinal);
+        Assert.Contains("after: \"x1\")", pages[1], StringComparison.Ordinal);
     }
 }

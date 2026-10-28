@@ -70,6 +70,37 @@ public sealed class CsvTests
     public void A_quote_inside_an_unquoted_cell_is_text() =>
         Assert.Equal([["dice \"hola\" ya", "b"]], Csv.Read(Encoding.UTF8.GetBytes("dice \"hola\" ya\tb"), '\t'));
 
+    // The tests below were found by the exports' Stryker close: each mutant they name survived the suite above.
+
+    /// <summary>A cell that begins with what must be quoted is quoted too, not only one that holds it further in.</summary>
+    [Fact]
+    public async Task A_cell_that_begins_with_a_quote_or_the_separator_is_quoted()
+    {
+        var bytes = await Written(new CsvDialect(';', Quoted: true, ByteOrderMark: false), ["\"dicho\"", ";uno"]);
+
+        Assert.Equal("name;note\r\n\"\"\"dicho\"\"\";\";uno\"\r\n", Encoding.UTF8.GetString(bytes));
+    }
+
+    [Fact]
+    public void A_file_that_ends_in_a_quoted_cell_reads_it() =>
+        Assert.Equal([["a", "b"], ["c", "d e"]], Csv.Read(Encoding.UTF8.GetBytes("a,b\r\nc,\"d e\""), ','));
+
+    /// <summary>A line break on its own, as a file written elsewhere has it, ends a record as CRLF does, and loses nothing before it.</summary>
+    [Fact]
+    public void A_bare_line_break_ends_a_record()
+    {
+        Assert.Equal([["a", "b"], ["c", "d"]], Csv.Read(Encoding.UTF8.GetBytes("a,b\nc,d\n"), ','));
+        Assert.Equal([["a", "b\r"]], Csv.Read(Encoding.UTF8.GetBytes("a,b\r"), ','));
+    }
+
+    /// <summary>A last record of one cell, or one that ends in an empty cell, is still a record.</summary>
+    [Fact]
+    public void A_last_record_of_one_cell_or_ending_empty_is_kept()
+    {
+        Assert.Equal([["a"], ["b"]], Csv.Read(Encoding.UTF8.GetBytes("a\r\nb"), ','));
+        Assert.Equal([["a", "b"], ["c", ""]], Csv.Read(Encoding.UTF8.GetBytes("a,b\r\nc,"), ','));
+    }
+
     [Fact]
     public void A_file_that_ends_without_a_line_break_still_has_its_last_record() =>
         Assert.Equal([["a", "b"], ["c", "d"]], Csv.Read(Encoding.UTF8.GetBytes("a,b\r\nc,d"), ','));

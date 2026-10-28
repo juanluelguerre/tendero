@@ -74,6 +74,22 @@ public sealed class ExportCatalogueTests
                 $"{variant.Sku} {variant.Barcode ?? "-"} {variant.Price} [{string.Join('/', variant.OptionValues)}] {variant.Inventory} {variant.PictureUrl ?? "-"}"));
     }
 
+    /// <summary>
+    /// A product every variant of which was discontinued leaves with none, and no
+    /// options: the catalogue's export leaves those variants out. Found by the
+    /// exports' Stryker close, where taking the first variant without asking survived.
+    /// </summary>
+    [Fact]
+    public async Task A_product_with_nothing_left_to_sell_leaves_without_variants_or_options()
+    {
+        var formats = new CapturingFormats();
+        var handler = new ExportCatalogueHandler(new Catalogue([Draft() with { Variants = [] }]), new Shelves([]), GoogleCategoryMapping.None, formats);
+
+        await handler.HandleAsync(new ExportCatalogueCommand("shopify-csv", "es", "https://api.example"), Ct);
+
+        Assert.Equal((0, 0), (formats.Written[0].Variants.Count, formats.Written[0].OptionNames.Count));
+    }
+
     /// <summary>A format nobody registered is refused before anything is read.</summary>
     [Theory]
     [InlineData("shopify-csv", "es", true)]

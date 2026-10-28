@@ -5,8 +5,9 @@
 is a screen in Shopify's admin (`tools/shopify-seed/README.md`). Calls made while
 building it, for the author to check: the feed is a query and the two downloads are
 commands (an audit row per Merchant Center fetch would bury the rest); the feed's price
-is the catalogue's, as the product page shows it; the Google category mapping is
-proposed, not yet approved; in the accountant's file a discount is a negative amount,
+is the catalogue's, as the product page shows it; the Google category mapping was
+proposed and then approved by the author as it stands (2026-10-28), knowing the field is
+optional for Google; in the accountant's file a discount is a negative amount,
 so the column sums to what the orders took, a tax rate is a row of its own with its
 base, and an order goes by the reference the backoffice shows (the last eight
 characters of its id).

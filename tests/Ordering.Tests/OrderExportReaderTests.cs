@@ -71,6 +71,22 @@ public sealed class OrderExportReaderTests
         Assert.Equal([new ExportedOrderTax("standard", 0.21m, Eur(65.08m), Eur(13.67m))], exported.Taxes);
     }
 
+    /// <summary>
+    /// Oldest first, whatever order the history answers in: the accountant reads a
+    /// span as it happened. Found by the exports' Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task Sales_leave_oldest_first()
+    {
+        Order At(int day) => OrderBuilder.Default().At(new TestClock(new DateTimeOffset(2026, 10, day, 10, 0, 0, TimeSpan.Zero))).InStatus(OrderStatus.Confirmed);
+        var (third, first, second) = (At(20), At(2), At(9));
+
+        var exported = await new OrderExportReader(new RecordingHistory([third, first, second]), Madrid)
+            .SalesAsync(new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31), Ct);
+
+        Assert.Equal([2, 9, 20], exported.Select(order => order.Day.Day));
+    }
+
     private sealed class RecordingHistory(IReadOnlyList<Order> orders) : IShopHistory
     {
         public (DateTimeOffset From, DateTimeOffset To)? Asked { get; private set; }

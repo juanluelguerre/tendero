@@ -14,4 +14,9 @@
     <ProjectReference Include="../../src/Exports/ElGuerre.Tendero.Exports.csproj" />
   </ItemGroup>
 
+  <!-- Shared with the other test projects: listening to the exports' counters. -->
+  <ItemGroup>
+    <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
+  </ItemGroup>
+
 </Project>

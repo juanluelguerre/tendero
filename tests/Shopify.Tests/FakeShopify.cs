@@ -150,7 +150,7 @@ internal sealed class FakeShopify : HttpMessageHandler
             return Json(File.ReadAllText(Fixture(query.Contains("after: \"d6\"", StringComparison.Ordinal) ? "discounts-page2.json" : "discounts.json")));
 
         if (query.Contains("{ giftCards(", StringComparison.Ordinal) && query.Contains("\"status:expired\"", StringComparison.Ordinal))
-            return Json(File.ReadAllText(Fixture("gift-cards-expired.json")));
+            return Json(File.ReadAllText(Fixture(query.Contains("after: \"x1\"", StringComparison.Ordinal) ? "gift-cards-expired-page2.json" : "gift-cards-expired.json")));
 
         if (query.Contains("{ giftCards(", StringComparison.Ordinal))
             return Json(File.ReadAllText(Fixture(query.Contains("after: \"g3\"", StringComparison.Ordinal) ? "gift-cards-page2.json" : "gift-cards.json")));

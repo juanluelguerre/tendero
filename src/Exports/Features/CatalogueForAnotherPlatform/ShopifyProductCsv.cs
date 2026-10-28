@@ -27,7 +27,7 @@ internal sealed class ShopifyProductCsv : IExportFormat<ProductForAnotherPlatfor
     /// <summary>Shopify keeps three options at most; a fourth has nowhere to go.</summary>
     private const int Options = 3;
 
-    private static readonly string[] Header =
+    private static string[] Header =>
     [
         "Title", "URL handle", "Description", "Vendor", "Type", "Tags", "Published on online store", "Status", "SKU", "Barcodes",
         "Option1 name", "Option1 value", "Option2 name", "Option2 value", "Option3 name", "Option3 value", "Price", "Charge tax",
@@ -35,7 +35,7 @@ internal sealed class ShopifyProductCsv : IExportFormat<ProductForAnotherPlatfor
         "Product image URL", "Image position", "Image alt text", "Variant image URL", "Gift card", "Google Shopping / Google Product Category",
     ];
 
-    private static readonly CsvDialect Dialect = new(',', Quoted: true, ByteOrderMark: false);
+    private static CsvDialect Dialect => new(',', Quoted: true, ByteOrderMark: false);
 
     public string Format => Key;
 
