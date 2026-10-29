@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -48,8 +49,6 @@ import { describe, expect, it } from 'vitest';
 describe('the stylesheets', () => {
   const TOKENS = 'design/tokens.css';
 
-  const SKIP = new Set(['node_modules', 'dist', '.angular', '.git', 'bin', 'obj', 'coverage']);
-
   const repository = (() => {
     let directory = __dirname;
 
@@ -62,15 +61,20 @@ describe('the stylesheets', () => {
     return directory;
   })();
 
+  /**
+   * The repository's stylesheets as git sees them, as `design-tokens.spec.ts`
+   * reads them: tracked, or new and not ignored. A third-party theme in an
+   * ignored folder is not the repository's, and failed here on one machine only.
+   */
   function stylesheets(directory: string): string[] {
-    return readdirSync(directory).flatMap((entry) => {
-      const path = join(directory, entry);
-
-      if (SKIP.has(entry)) return [];
-      if (statSync(path).isDirectory()) return stylesheets(path);
-
-      return path.endsWith('.css') ? [path] : [];
-    });
+    return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', '*.css'], {
+      cwd: directory,
+      encoding: 'utf8',
+    })
+      .split('\0')
+      .filter(Boolean)
+      .map((path) => join(directory, path))
+      .filter((path) => existsSync(path));
   }
 
   const files = stylesheets(repository).map(

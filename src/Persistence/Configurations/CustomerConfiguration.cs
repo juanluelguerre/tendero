@@ -39,6 +39,22 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         });
         builder.Ignore(customer => customer.MayBeSentMarketing);
 
+        // Phase 16, S2b: an imported customer's email (personal data, erased with the
+        // rest) and where they came from. The origin is owned rather than complex for
+        // one reason: an import asks "was this person brought before, from this
+        // source" by those two columns, and only an owned type takes an index —
+        // unique, because one store customer is one customer here.
+        builder.Property(customer => customer.Email).HasMaxLength(320);
+        builder.OwnsOne(customer => customer.ImportedFrom, origin =>
+        {
+            origin.WithOwner().HasForeignKey("Id");
+            origin.Property(each => each.Source).HasColumnName("ImportedSource").HasMaxLength(50);
+            origin.Property(each => each.ExternalId).HasColumnName("ImportedExternalId").HasMaxLength(200);
+            origin.HasIndex(each => new { each.Source, each.ExternalId })
+                .IsUnique()
+                .HasDatabaseName("ux_customers_imported_from");
+        });
+
         // P15-9: an erased customer is kept, anonymised, with when.
         builder.Property(customer => customer.ErasedAt);
         builder.Ignore(customer => customer.IsErased);

@@ -13,7 +13,7 @@
 | [0009](0009-spec-driven-development-scope.md) | Lightweight specs now; Spec Kit as a phase-3 experiment | accepted |
 | [0010](0010-frontend-sharing-boundaries.md) | What the two frontends share, and what they duplicate | accepted |
 | [0011](0011-product-images.md) | Product images are ingested, not referenced | accepted |
-| [0012](0012-publishing-and-reindexing.md) | Publishing is an explicit step; the index is rebuildable | accepted |
+| [0012](0012-publishing-and-reindexing.md) | Publishing is an explicit step; the index is rebuildable (amended 2026-10-23: a migration is published at once) | accepted |
 | [0013](0013-culture-negotiation.md) | Culture: explicit parameter wins, `Accept-Language` is the default | accepted |
 | [0014](0014-context-map.md) | Contexts share no entities; the count is not the rule | accepted |
 | [0015](0015-variant-is-the-indexed-unit.md) | The variant is the indexed unit; the product is the returned unit | accepted |
@@ -67,6 +67,10 @@
 | [0063](0063-a-picture-is-a-question-not-a-fact.md) | A picture is the shopper's question, never a fact: reads made by code over closed lists, each labelled as what it is (*similar in the shop*, never *this is*); nothing a model reads in a shopper's picture is written anywhere; a model that writes words never receives it; the picture is not kept | accepted |
 | [0064](0064-a-saved-card-is-the-providers-token.md) | A saved card is the provider's token and what may be shown of it, never the card: the port gains save and forget, charging a kept card is the authorisation unchanged, the wallet is Ordering's, a token outlives nothing, and it never leaves the server | accepted |
 | [0065](0065-the-sign-in-page-is-keycloaks-theme-in-the-shops-tokens.md) | The sign-in page is Keycloak's own `keycloak.v2` theme in the shop's generated tokens, with no template copied; the realm speaks es and en and the apps ask for theirs with `ui_locales`; it is platform, documented in `keycloak/README.md`, not a feature | accepted |
+| [0066](0066-imported-history-is-born-closed.md) | Imported history is born closed: a transition table declares where its aggregate may be born, and `Order.Imported` and `ReturnRequest.Imported` are the named entries for orders and refunds that already happened — final state, no event, the source and its dates kept, idempotent by source | accepted |
+| [0067](0067-provisioning-an-identity-is-not-an-authorization-server.md) | Provisioning an identity is not writing an authorization server: through a port, the shop asks the provider to make an identity with no password for somebody it already knows; the person sets one with the provider's own *forgot password*; Keycloak and dev-issuer adapters, idempotent by email; no email at migration | accepted |
+| [0068](0068-a-rehearsal-is-the-migration-minus-its-writes.md) | A rehearsal is the migration minus its writes: the whole migration runs in one scope, the catalogue's and the customers' rehearsals hold what they would bring, and the readers the later steps use see it — so on an empty shop an order still finds the products and the buyer its earlier steps would bring | accepted |
+| [0069](0069-what-leaves-the-shop-leaves-as-values.md) | What leaves the shop leaves as values: each export reads a context through a read port of values the context implements (`ICatalogueExport`, `IOrderExport`), `Exports` never reaches a domain, and a file is written by a keyed `IExportFormat<TRow>` that passes one contract suite; what must leave an audit row is a command, what a machine fetches is a query | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

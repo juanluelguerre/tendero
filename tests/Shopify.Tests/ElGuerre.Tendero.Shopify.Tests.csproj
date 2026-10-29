@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Shopify.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Shopify/ElGuerre.Tendero.Shopify.csproj" />
+  </ItemGroup>
+
+  <!-- A Shopify store's answers, recorded: the adapters are tested on them with
+       no network, the same way on every run. -->
+  <ItemGroup>
+    <Content Include="Fixtures/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Shared with the other test projects: the clock, and the contract suite
+       every catalogue source inherits (Catalog.Tests runs it on the seed). -->
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+    <Compile Include="../CatalogSourceConnectorContract.cs" Link="CatalogSourceConnectorContract.cs" />
+    <Compile Include="../StockSourceConnectorContract.cs" Link="StockSourceConnectorContract.cs" />
+    <Compile Include="../CustomerSourceConnectorContract.cs" Link="CustomerSourceConnectorContract.cs" />
+    <Compile Include="../OrderSourceConnectorContract.cs" Link="OrderSourceConnectorContract.cs" />
+    <Compile Include="../GiftCardSourceConnectorContract.cs" Link="GiftCardSourceConnectorContract.cs" />
+    <Compile Include="../DiscountSourceConnectorContract.cs" Link="DiscountSourceConnectorContract.cs" />
+  </ItemGroup>
+
+</Project>

@@ -91,6 +91,17 @@ classDiagram
         <<record>>
         +string Source
         +string ExternalId
+        +string? Handle
+    }
+    class ImportRun {
+        +ImportRunId Id
+        +string Source
+        +DateTimeOffset StartedAt
+        +ProductId[] Products
+    }
+    class ImportRunId {
+        <<record>>
+        +Guid Value
     }
     class Product {
         <<aggregate>>
@@ -106,6 +117,7 @@ classDiagram
         +ProductStatus Status
         +DateTimeOffset CreatedAt
         +DateTimeOffset UpdatedAt
+        +DateTimeOffset? FirstPublishedAt
         +ProductImage[] Images
         +ProductImage? PrimaryImage
         +AttributeValue[] Attributes
@@ -127,6 +139,12 @@ classDiagram
         Active
         Archived
     }
+    class SourceCollection {
+        +string Source
+        +string Handle
+        +string CategoryCode
+        +DateTimeOffset UpdatedAt
+    }
     class Variant {
         +VariantId Id
         +string Sku
@@ -134,6 +152,8 @@ classDiagram
         +Map~string, string~ AxisValues
         +string? TaxClass
         +VariantStatus Status
+        +string? Barcode
+        +ExternalReference[] ExternalReferences
     }
     class VariantStatus {
         <<enumeration>>
@@ -142,12 +162,14 @@ classDiagram
     }
     AttributeDefinition "1" --> "*" AttributeOption : Options
     CategoryTree "1" --> "*" Category : All
+    ImportRun --> ImportRunId : Id
     Product "1" --> "*" ProductImage : Images
     Product --> ProductImage : PrimaryImage
     Product "1" --> "*" AttributeValue : Attributes
     Product "1" --> "*" ExternalReference : ExternalReferences
     Product "1" --> "*" Variant : Variants
     ProductImage "1" --> "*" AxisValue : Shows
+    Variant "1" --> "*" ExternalReference : ExternalReferences
 ```
 
 ### Events
@@ -622,6 +644,7 @@ classDiagram
         +OrderChannel? Channel
         +DateTimeOffset? ConfirmedAt
         +DateTimeOffset? ShippedAt
+        +OrderOrigin? ImportedFrom
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment
@@ -669,6 +692,12 @@ classDiagram
         <<enumeration>>
         Live
         Test
+    }
+    class OrderOrigin {
+        <<record>>
+        +string Source
+        +string ExternalId
+        +string Number
     }
     class OrderPayment {
         <<record>>
@@ -734,6 +763,7 @@ classDiagram
         Damaged
         WrongItem
         ChangedMind
+        Unstated
     }
     class ReturnRequest {
         <<aggregate>>
@@ -795,6 +825,7 @@ classDiagram
     Order --> OrderQuote : Quote
     Order --> OrderTotals : Totals
     Order --> OrderMandate : Mandate
+    Order --> OrderOrigin : ImportedFrom
     Order "1" --> "*" OrderDiscount : Discounts
     Order "1" --> "*" OrderTax : Taxes
     Order --> OrderPayment : Payment
@@ -847,6 +878,9 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
+    [*] --> Pending
+    [*] --> Delivered
+    [*] --> Cancelled
     Pending --> PaymentAuthorized
     Pending --> PaymentFailed
     Pending --> Cancelled
@@ -863,6 +897,8 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
+    [*] --> Requested
+    [*] --> Refunded
     Requested --> Approved
     Requested --> Rejected
     Requested --> Cancelled
@@ -938,6 +974,8 @@ classDiagram
         +string Culture
         +bool CultureChosen
         +MarketingConsent? Marketing
+        +string? Email
+        +CustomerOrigin? ImportedFrom
         +DateTimeOffset? ErasedAt
         +bool IsErased
         +bool MayBeSentMarketing
@@ -946,6 +984,11 @@ classDiagram
         +DateTimeOffset CreatedAt
         +DateTimeOffset UpdatedAt
         +bool IsGuest
+    }
+    class CustomerOrigin {
+        <<record>>
+        +string Source
+        +string ExternalId
     }
     class MarketingConsent {
         <<record>>
@@ -963,6 +1006,7 @@ classDiagram
     AddressBook --> AddressEntryId : BillingDefault
     AddressEntry --> AddressEntryId : Id
     Customer --> MarketingConsent : Marketing
+    Customer --> CustomerOrigin : ImportedFrom
 ```
 
 ### Events

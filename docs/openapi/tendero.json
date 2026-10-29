@@ -287,6 +287,96 @@
         ]
       }
     },
+    "/api/accounts/import": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ImportCustomers",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportCustomersCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportCustomersResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/dashboard/agent-denials": {
       "get": {
         "tags": [
@@ -529,6 +619,118 @@
             }
           }
         }
+      }
+    },
+    "/api/migration": {
+      "post": {
+        "tags": [
+          "Migration"
+        ],
+        "operationId": "MigrateStore",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MigrateStoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreMigrationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No part of the shop can be brought from that source.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "UnknownSource"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
       }
     },
     "/api/telemetry/config": {
@@ -2143,6 +2345,110 @@
         ]
       }
     },
+    "/api/catalog/imports/{id}/publish": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "PublishImport",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishImportResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is nothing at this address.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NotFound"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/catalog/products": {
       "get": {
         "tags": [
@@ -2371,6 +2677,15 @@
           "Catalog"
         ],
         "operationId": "ImportProducts",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2883,6 +3198,185 @@
         ]
       }
     },
+    "/api/exports/orders": {
+      "post": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportOrders",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/exports/catalogue": {
+      "post": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportCatalogue",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/dashboard/restock": {
       "get": {
         "tags": [
@@ -3275,6 +3769,96 @@
                       "type": "string"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/inventory/import": {
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "ImportStock",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportStockCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportStockResult"
                 }
               }
             }
@@ -4552,6 +5136,96 @@
         ]
       }
     },
+    "/api/orders/import": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "ImportOrders",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportOrdersCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportOrdersResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/orders/{orderId}": {
       "get": {
         "tags": [
@@ -4847,6 +5521,96 @@
         }
       }
     },
+    "/api/pricing/promotions/proposal": {
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "ProposePromotions",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposePromotionsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposePromotionsResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/pricing/campaign-images": {
       "post": {
         "tags": [
@@ -5128,6 +5892,55 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListCampaignsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/cards": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "operationId": "GetProductCards",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "codes",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCardsResult"
                 }
               }
             }
@@ -5749,55 +6562,6 @@
             ]
           }
         ]
-      }
-    },
-    "/api/search/cards": {
-      "get": {
-        "tags": [
-          "Search"
-        ],
-        "operationId": "GetProductCards",
-        "parameters": [
-          {
-            "name": "ids",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "codes",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "culture",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductCardsResult"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/search/by-image/objects": {
@@ -11615,6 +12379,7 @@
       "AccountData": {
         "required": [
           "displayName",
+          "email",
           "culture",
           "cultureChosen",
           "marketingGiven",
@@ -11625,6 +12390,12 @@
         "type": "object",
         "properties": {
           "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
             "type": [
               "null",
               "string"
@@ -13442,6 +14213,16 @@
           }
         }
       },
+      "CustomerNoteCode": {
+        "enum": [
+          "FieldRedacted",
+          "NoEmail",
+          "AlreadyHere",
+          "IdentityNotProvisioned",
+          "AddressUnreadable",
+          "Erased"
+        ]
+      },
       "DashboardPeriod": {
         "enum": [
           "Day",
@@ -13665,6 +14446,19 @@
           }
         }
       },
+      "DiscountNoteCode": {
+        "enum": [
+          "Expired",
+          "AlreadyHere",
+          "LimitNotExpressible",
+          "CustomersNotExpressible",
+          "ConditionNotExpressible",
+          "TargetNotExpressible",
+          "EffectNotExpressible",
+          "CombinationNarrowed",
+          "CodesNarrowed"
+        ]
+      },
       "DiscountOutcome": {
         "enum": [
           "Applied",
@@ -13824,6 +14618,43 @@
           }
         }
       },
+      "GiftCardToReissue": {
+        "required": [
+          "lastCharacters",
+          "balance",
+          "expiresOn",
+          "customer",
+          "customerAtSource"
+        ],
+        "type": "object",
+        "properties": {
+          "lastCharacters": {
+            "type": "string"
+          },
+          "balance": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "expiresOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "customer": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerAtSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "HistorySettingsRequest": {
         "required": [
           "enabled"
@@ -13903,6 +14734,121 @@
           "NotFound"
         ]
       },
+      "ImportCustomersCommand": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ImportCustomersResult": {
+        "required": [
+          "created",
+          "alreadyImported",
+          "linked",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyImported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "linked": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfCustomerNoteCode"
+            }
+          }
+        }
+      },
+      "ImportNoteCode": {
+        "enum": [
+          "CategoryNotMapped",
+          "LocaleIgnored",
+          "DescriptionHadLayout",
+          "VariantWithoutSku",
+          "SkuSharedAtSource",
+          "SkuChangedAtSource",
+          "ImageUnreadable",
+          "CollectionNotMapped"
+        ]
+      },
+      "ImportOrdersCommand": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ImportOrdersResult": {
+        "required": [
+          "created",
+          "alreadyImported",
+          "refunds",
+          "notes",
+          "giftCards"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyImported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "refunds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfOrderNoteCode"
+            }
+          },
+          "giftCards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GiftCardToReissue"
+            }
+          }
+        }
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -13911,6 +14857,14 @@
         "properties": {
           "source": {
             "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -13919,7 +14873,9 @@
           "created",
           "updated",
           "failed",
-          "elapsedSeconds"
+          "elapsedSeconds",
+          "notes",
+          "importId"
         ],
         "type": "object",
         "properties": {
@@ -13938,6 +14894,68 @@
           "elapsedSeconds": {
             "type": "number",
             "format": "double"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfImportNoteCode"
+            }
+          },
+          "importId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ImportStockCommand": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ImportStockResult": {
+        "required": [
+          "counted",
+          "skipped",
+          "proposedWarehouses",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "counted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "proposedWarehouses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposedWarehouse"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfStockNoteCode"
+            }
           }
         }
       },
@@ -14705,6 +15723,72 @@
           }
         }
       },
+      "MessageOfCustomerNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/CustomerNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "MessageOfDiscountNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/DiscountNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "MessageOfImportNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ImportNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
       "MessageOfKitSaid": {
         "required": [
           "code",
@@ -14715,6 +15799,28 @@
         "properties": {
           "code": {
             "$ref": "#/components/schemas/KitSaid"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "MessageOfOrderNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/OrderNoteCode"
           },
           "about": {
             "type": [
@@ -14746,6 +15852,43 @@
           },
           "text": {
             "type": "string"
+          }
+        }
+      },
+      "MessageOfStockNoteCode": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/StockNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "MigrateStoreRequest": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -15189,6 +16332,15 @@
           "Ship",
           "Deliver",
           "Cancel"
+        ]
+      },
+      "OrderNoteCode": {
+        "enum": [
+          "StillOpen",
+          "ProductNotInCatalogue",
+          "CustomerNotImported",
+          "TotalsDoNotAddUp",
+          "RefundNotExpressed"
         ]
       },
       "OrderStatus": {
@@ -16726,6 +17878,191 @@
           }
         }
       },
+      "ProposePromotionsCommand": {
+        "required": [
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string",
+            "default": "es"
+          },
+          "rehearse": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ProposePromotionsResult": {
+        "required": [
+          "proposed",
+          "left",
+          "file",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "proposed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposedPromotionView"
+            }
+          },
+          "left": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "file": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageOfDiscountNoteCode"
+            }
+          }
+        }
+      },
+      "ProposedPromotionView": {
+        "required": [
+          "code",
+          "name",
+          "effect",
+          "combination",
+          "priority",
+          "couponCode",
+          "categoryCode",
+          "sku",
+          "minimumSubtotal",
+          "minimumQuantity",
+          "validFrom",
+          "validTo"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "effect": {
+            "type": "string"
+          },
+          "combination": {
+            "$ref": "#/components/schemas/CombinationPolicy"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "couponCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categoryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sku": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minimumSubtotal": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Money"
+              }
+            ]
+          },
+          "minimumQuantity": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "validFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "validTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ProposedWarehouse": {
+        "required": [
+          "code",
+          "name",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PublishImportResponse": {
+        "required": [
+          "published",
+          "alreadyActive",
+          "withdrawn",
+          "archived"
+        ],
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyActive": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "withdrawn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "archived": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PublishOutcome": {
         "enum": [
           "Published",
@@ -17567,7 +18904,8 @@
           "NotAsDescribed",
           "Damaged",
           "WrongItem",
-          "ChangedMind"
+          "ChangedMind",
+          "Unstated"
         ]
       },
       "ReturnStatus": {
@@ -19102,6 +20440,13 @@
           }
         }
       },
+      "StockNoteCode": {
+        "enum": [
+          "LocationNotMapped",
+          "VariantNotInCatalogue",
+          "WarehouseUnknown"
+        ]
+      },
       "StockRowView": {
         "required": [
           "sku",
@@ -19138,6 +20483,80 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "StoreMigrationResult": {
+        "required": [
+          "source",
+          "rehearsal",
+          "catalogue",
+          "stock",
+          "customers",
+          "orders",
+          "discounts",
+          "notBrought"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "rehearsal": {
+            "type": "boolean"
+          },
+          "catalogue": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportProductsResult"
+              }
+            ]
+          },
+          "stock": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportStockResult"
+              }
+            ]
+          },
+          "customers": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportCustomersResult"
+              }
+            ]
+          },
+          "orders": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportOrdersResult"
+              }
+            ]
+          },
+          "discounts": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProposePromotionsResult"
+              }
+            ]
+          },
+          "notBrought": {
+            "type": "array"
           }
         }
       },
@@ -19924,6 +21343,9 @@
       "name": "Dashboard"
     },
     {
+      "name": "Exports"
+    },
+    {
       "name": "Inventory"
     },
     {
@@ -19931,6 +21353,9 @@
     },
     {
       "name": "Knowledge"
+    },
+    {
+      "name": "Migration"
     },
     {
       "name": "Ordering"

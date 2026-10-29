@@ -472,6 +472,45 @@
         "saved_method_declined",
         "tendero.accounts.erased"
       ]
+    },
+    {
+      "name": "Importing a store",
+      "area": "backoffice",
+      "question": "Is the Shopify source used, and how much of a store comes across clean, per context?",
+      "decision": "A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. Gift cards listed for reissue, counted per store, say whether Tendero needs gift cards of its own (docs/specs/shopify-leave.md, decision 6). A rehearsal of the whole migration never followed by one for real says the answer stopped the merchant, and its notes say which step to work on first.",
+      "signals": [
+        "tendero.catalog.import.products",
+        "tendero.catalog.import.notes",
+        "tendero.inventory.import.levels",
+        "tendero.inventory.import.notes",
+        "tendero.accounts.import.customers",
+        "tendero.accounts.import.notes",
+        "tendero.ordering.import.orders",
+        "tendero.ordering.import.notes",
+        "tendero.ordering.import.gift_cards",
+        "tendero.pricing.import.discounts",
+        "tendero.pricing.import.notes",
+        "tendero.migration.runs"
+      ]
+    },
+    {
+      "name": "Exports and feeds",
+      "area": "backoffice",
+      "question": "Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant?",
+      "decision": "Orders exported often in CSV decide whether XLSX earns its dependency (docs/specs/exports.md, decision 3); a feed fetched every day decides whether a Merchant API client is worth building over a fetched file. The rows each feed carries, against the products on sale, say whether the feed loses any on the way.",
+      "signals": [
+        "tendero.exports.generated",
+        "tendero.exports.rows"
+      ]
+    },
+    {
+      "name": "A store's old addresses",
+      "area": "storefront",
+      "question": "After a shop leaves its store, are the store's old addresses still visited, and do they still lead somewhere?",
+      "decision": "When redirected requests fall to nothing the table of collections can go; a high share of missing ones says which handles or collections the import did not keep (docs/specs/shopify-leave.md, decision 7).",
+      "signals": [
+        "tendero.catalog.source_addresses"
+      ]
     }
   ],
   "events": [
@@ -1564,7 +1603,7 @@
       "name": "tendero.returns.requested",
       "instrument": "counter",
       "unit": "{line}",
-      "description": "Lines of the returns opened, by their reason: the closed set of five the domain keeps for exactly this analysis.",
+      "description": "Lines of the returns opened, by their reason: the closed set of five a buyer chooses from, kept by the domain for exactly this analysis.",
       "attributes": {
         "reason": {
           "type": "string",
@@ -1573,9 +1612,10 @@
             "not_as_described",
             "damaged",
             "wrong_item",
-            "changed_mind"
+            "changed_mind",
+            "unstated"
           ],
-          "description": "ReturnReason, labelled by MetricLabels.",
+          "description": "ReturnReason, labelled by MetricLabels. unstated is never counted: it is the reason of a refund an import brought (ADR 0066), which no buyer opened, and opening a return refuses it.",
           "from": "ReturnReason"
         }
       }
@@ -1593,6 +1633,328 @@
             "agent"
           ],
           "description": "Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036)."
+        }
+      }
+    },
+    {
+      "name": "tendero.catalog.import.products",
+      "instrument": "counter",
+      "unit": "{product}",
+      "description": "Products an import created, updated or failed, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from: seed, shopify (phase 16)."
+        },
+        "catalog.import.outcome": {
+          "type": "string",
+          "values": [
+            "created",
+            "updated",
+            "failed"
+          ],
+          "description": "What happened to the product, counted once its batch is saved."
+        }
+      }
+    },
+    {
+      "name": "tendero.catalog.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What a source did not hand over cleanly, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "catalog.import.note": {
+          "type": "string",
+          "values": [
+            "CategoryNotMapped",
+            "LocaleIgnored",
+            "DescriptionHadLayout",
+            "VariantWithoutSku",
+            "SkuSharedAtSource",
+            "SkuChangedAtSource",
+            "ImageUnreadable",
+            "CollectionNotMapped"
+          ],
+          "description": "The note's code (ImportNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.catalog.source_addresses",
+      "instrument": "counter",
+      "unit": "{request}",
+      "description": "A store's old addresses asked for, by kind and whether they led somewhere.",
+      "attributes": {
+        "catalog.address.kind": {
+          "type": "string",
+          "values": [
+            "product",
+            "collection"
+          ],
+          "description": "What the old address named: /products/<handle>, or /collections/<handle>."
+        },
+        "catalog.address.outcome": {
+          "type": "string",
+          "values": [
+            "redirected",
+            "missing"
+          ],
+          "description": "Answered with a 301 to a page on sale, or with a 404."
+        }
+      }
+    },
+    {
+      "name": "tendero.inventory.import.levels",
+      "instrument": "counter",
+      "unit": "{level}",
+      "description": "Stock levels an import counted or skipped, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from; the same label as the catalogue import, so one query reads a store across contexts."
+        },
+        "inventory.import.outcome": {
+          "type": "string",
+          "values": [
+            "counted",
+            "skipped"
+          ],
+          "description": "Counted into a warehouse the shop operates, or skipped because the shop does not operate it."
+        }
+      }
+    },
+    {
+      "name": "tendero.inventory.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What a stock source did not hand over cleanly, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "inventory.import.note": {
+          "type": "string",
+          "values": [
+            "LocationNotMapped",
+            "VariantNotInCatalogue",
+            "WarehouseUnknown"
+          ],
+          "description": "The note's code (StockNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.accounts.import.customers",
+      "instrument": "counter",
+      "unit": "{customer}",
+      "description": "Customers an import created, found already imported or linked, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from; the same label as the catalogue and stock imports."
+        },
+        "accounts.import.outcome": {
+          "type": "string",
+          "values": [
+            "created",
+            "already_imported",
+            "linked"
+          ],
+          "description": "Made here, brought by an earlier import, or a person the shop already had, linked through their identity."
+        }
+      }
+    },
+    {
+      "name": "tendero.accounts.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What a customer source did not hand over cleanly, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "accounts.import.note": {
+          "type": "string",
+          "values": [
+            "FieldRedacted",
+            "NoEmail",
+            "AlreadyHere",
+            "IdentityNotProvisioned",
+            "AddressUnreadable",
+            "Erased"
+          ],
+          "description": "The note's code (CustomerNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.ordering.import.orders",
+      "instrument": "counter",
+      "unit": "{order}",
+      "description": "Orders an import created or found already imported, and refunds it brought, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from; the same label as the catalogue, stock and customer imports."
+        },
+        "ordering.import.outcome": {
+          "type": "string",
+          "values": [
+            "created",
+            "already_imported",
+            "refund"
+          ],
+          "description": "An order made here, one an earlier import brought, or a refund brought as a return born refunded."
+        }
+      }
+    },
+    {
+      "name": "tendero.ordering.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What an order source did not hand over cleanly, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "ordering.import.note": {
+          "type": "string",
+          "values": [
+            "StillOpen",
+            "ProductNotInCatalogue",
+            "CustomerNotImported",
+            "TotalsDoNotAddUp",
+            "RefundNotExpressed"
+          ],
+          "description": "The note's code (OrderNoteCode)."
+        }
+      }
+    },
+    {
+      "name": "tendero.ordering.import.gift_cards",
+      "instrument": "counter",
+      "unit": "{card}",
+      "description": "Gift cards an import listed for the merchant to reissue, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        }
+      }
+    },
+    {
+      "name": "tendero.exports.generated",
+      "instrument": "counter",
+      "unit": "{export}",
+      "description": "Exports and feeds written, by kind and format.",
+      "attributes": {
+        "export.kind": {
+          "type": "string",
+          "values": [
+            "feed",
+            "catalogue",
+            "orders"
+          ],
+          "description": "What left the shop: the product feed, the catalogue for another platform, orders for the accountant."
+        },
+        "export.format": {
+          "type": "string",
+          "description": "The format it was written in: google-merchant, shopify-csv, csv."
+        }
+      }
+    },
+    {
+      "name": "tendero.exports.rows",
+      "instrument": "histogram",
+      "unit": "{row}",
+      "description": "The rows an export or a feed carried, by kind and format.",
+      "attributes": {
+        "export.kind": {
+          "type": "string",
+          "values": [
+            "feed",
+            "catalogue",
+            "orders"
+          ],
+          "description": "What left the shop."
+        },
+        "export.format": {
+          "type": "string",
+          "description": "The format it was written in."
+        }
+      }
+    },
+    {
+      "name": "tendero.migration.runs",
+      "instrument": "counter",
+      "unit": "{run}",
+      "description": "A store's migrations run as one operation, rehearsed or for real, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The store being left."
+        },
+        "migration.rehearsal": {
+          "type": "string",
+          "values": [
+            "true",
+            "false"
+          ],
+          "description": "Whether the run was a rehearsal, which wrote nothing."
+        }
+      }
+    },
+    {
+      "name": "tendero.pricing.import.discounts",
+      "instrument": "counter",
+      "unit": "{discount}",
+      "description": "Discounts a proposal turned into promotions or left out, by source.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from; the same label as the other imports."
+        },
+        "pricing.import.outcome": {
+          "type": "string",
+          "values": [
+            "proposed",
+            "left"
+          ],
+          "description": "Written to the proposal of promotions, or left out with a note saying why."
+        }
+      }
+    },
+    {
+      "name": "tendero.pricing.import.notes",
+      "instrument": "counter",
+      "unit": "{note}",
+      "description": "What a discount source could not hand over as the store ran it, by source and code.",
+      "attributes": {
+        "catalog.source": {
+          "type": "string",
+          "description": "The source imported from."
+        },
+        "pricing.import.note": {
+          "type": "string",
+          "values": [
+            "Expired",
+            "AlreadyHere",
+            "LimitNotExpressible",
+            "CustomersNotExpressible",
+            "ConditionNotExpressible",
+            "TargetNotExpressible",
+            "EffectNotExpressible",
+            "CombinationNarrowed",
+            "CodesNarrowed"
+          ],
+          "description": "The note's code (DiscountNoteCode)."
         }
       }
     },

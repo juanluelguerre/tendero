@@ -26,6 +26,7 @@
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
     <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
+    <Compile Include="../CatalogSourceConnectorContract.cs" Link="CatalogSourceConnectorContract.cs" />
   </ItemGroup>
 
 </Project>

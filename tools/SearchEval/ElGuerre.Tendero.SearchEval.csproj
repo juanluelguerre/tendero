@@ -27,6 +27,7 @@
     <ProjectReference Include="../../src/AI/ElGuerre.Tendero.AI.csproj" />
     <ProjectReference Include="../../src/Assist/ElGuerre.Tendero.Assist.csproj" />
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../../src/Shopify/ElGuerre.Tendero.Shopify.csproj" />
     <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../../src/Knowledge/ElGuerre.Tendero.Knowledge.csproj" />
     <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />

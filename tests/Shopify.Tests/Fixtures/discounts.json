@@ -1,0 +1,99 @@
+{
+  "data": {
+    "discountNodes": {
+      "pageInfo": { "hasNextPage": true, "endCursor": "d6" },
+      "nodes": [
+        {
+          "id": "gid://shopify/DiscountCodeNode/901",
+          "discount": {
+            "__typename": "DiscountCodeBasic",
+            "title": "Menaje de primavera", "status": "ACTIVE", "startsAt": "2026-03-01T00:00:00Z", "endsAt": "2026-06-01T00:00:00Z",
+            "usageLimit": null, "appliesOncePerCustomer": false,
+            "combinesWith": { "orderDiscounts": false, "productDiscounts": false, "shippingDiscounts": false },
+            "context": { "__typename": "DiscountBuyerSelectionAll" },
+            "codes": { "nodes": [{ "code": "SPRING15" }] },
+            "minimumRequirement": null,
+            "customerGets": {
+              "appliesOnOneTimePurchase": true,
+              "items": { "collections": { "nodes": [{ "handle": "cocina" }] } },
+              "value": { "percentage": 0.15 }
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/DiscountAutomaticNode/902",
+          "discount": {
+            "__typename": "DiscountAutomaticFreeShipping",
+            "title": "Envío gratis desde 60 €", "status": "ACTIVE", "startsAt": "2026-03-01T00:00:00Z", "endsAt": null,
+            "combinesWith": { "orderDiscounts": true, "productDiscounts": true, "shippingDiscounts": true },
+            "context": { "__typename": "DiscountBuyerSelectionAll" },
+            "minimumRequirement": { "greaterThanOrEqualToSubtotal": { "amount": "60.0", "currencyCode": "EUR" } },
+            "appliesOnOneTimePurchase": true,
+            "destinationSelection": { "__typename": "DiscountCountryAll" },
+            "maximumShippingPrice": null
+          }
+        },
+        {
+          "id": "gid://shopify/DiscountCodeNode/903",
+          "discount": {
+            "__typename": "DiscountCodeBasic",
+            "title": "Bienvenida", "status": "ACTIVE", "startsAt": "2026-03-01T00:00:00Z", "endsAt": null,
+            "usageLimit": 100, "appliesOncePerCustomer": true,
+            "combinesWith": { "orderDiscounts": false, "productDiscounts": true, "shippingDiscounts": true },
+            "context": { "__typename": "DiscountBuyerSelectionAll" },
+            "codes": { "nodes": [{ "code": "HOLA5" }, { "code": "HELLO5" }] },
+            "minimumRequirement": { "greaterThanOrEqualToQuantity": "2" },
+            "customerGets": {
+              "appliesOnOneTimePurchase": true,
+              "items": { "allItems": true },
+              "value": { "amount": { "amount": "5.0", "currencyCode": "EUR" }, "appliesOnEachItem": false }
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/DiscountAutomaticNode/904",
+          "discount": {
+            "__typename": "DiscountAutomaticBxgy",
+            "title": "3x2 en cafeteras", "status": "SCHEDULED", "startsAt": "2026-11-01T00:00:00Z", "endsAt": "2026-11-30T00:00:00Z",
+            "usesPerOrderLimit": null,
+            "combinesWith": { "orderDiscounts": true, "productDiscounts": false, "shippingDiscounts": true },
+            "context": { "__typename": "DiscountBuyerSelectionAll" },
+            "customerBuys": {
+              "items": { "products": { "nodes": [] }, "productVariants": { "nodes": [{ "id": "gid://shopify/ProductVariant/44001" }] } },
+              "value": { "quantity": "2" }
+            },
+            "customerGets": {
+              "appliesOnOneTimePurchase": true,
+              "items": { "products": { "nodes": [] }, "productVariants": { "nodes": [{ "id": "gid://shopify/ProductVariant/44001" }] } },
+              "value": { "quantity": { "quantity": "1" }, "effect": { "percentage": 1.0 } }
+            }
+          }
+        },
+        {
+          "id": "gid://shopify/DiscountAutomaticNode/905",
+          "discount": {
+            "__typename": "DiscountAutomaticApp",
+            "title": "Descuento de una app", "status": "ACTIVE", "startsAt": "2026-03-01T00:00:00Z", "endsAt": null
+          }
+        },
+        {
+          "id": "gid://shopify/DiscountCodeNode/906",
+          "discount": {
+            "__typename": "DiscountCodeBasic",
+            "title": "Rebajas pasadas", "status": "EXPIRED", "startsAt": "2026-01-07T00:00:00Z", "endsAt": "2026-02-28T00:00:00Z",
+            "usageLimit": null, "appliesOncePerCustomer": false,
+            "combinesWith": { "orderDiscounts": false, "productDiscounts": false, "shippingDiscounts": false },
+            "context": { "__typename": "DiscountCustomerSegments" },
+            "codes": { "nodes": [{ "code": "ENERO20" }] },
+            "minimumRequirement": null,
+            "customerGets": {
+              "appliesOnOneTimePurchase": true,
+              "items": { "products": { "nodes": [{ "id": "gid://shopify/Product/8001", "variants": { "nodes": [{ "id": "gid://shopify/ProductVariant/44001" }, { "id": "gid://shopify/ProductVariant/44002" }] } }] }, "productVariants": { "nodes": [] } },
+              "value": { "percentage": 0.2 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

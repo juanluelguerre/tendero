@@ -1,0 +1,131 @@
+# shopify-seed
+
+Fills a Shopify development store from Tendero's own seed, so the Shopify
+importer (phase 16, `docs/specs/shopify-import.md`) can be measured by a round
+trip: seed → Shopify → import → compare.
+
+## Before running
+
+A development store and an app from Shopify's Dev Dashboard, in the same
+organisation. The app's version has to carry these scopes, and the store has
+to approve them:
+- `read_products` and `write_products`;
+- `read_translations` and `write_translations`;
+- `read_locales`;
+- `read_files` and `write_files`.
+
+For the stock (S2a): `write_inventory` and `write_locations`. For the people and
+their history (S2b): `read_customers`, `write_customers`, `read_orders`,
+`read_all_orders`, `write_orders`, `read_discounts`, `write_discounts`,
+`read_gift_cards`, `write_gift_cards`, and the protected customer data — name,
+email, phone and address — requested for the app in the Dev Dashboard.
+
+The store is set to EUR, with Spanish as its default language and English
+published. The three credentials live in the AppHost's user secrets, never in
+the repository:
+
+```
+dotnet user-secrets set "Parameters:shopify-store" "<store>.myshopify.com" --project src/AppHost
+dotnet user-secrets set "Parameters:shopify-client-id" "<client id>" --project src/AppHost
+dotnet user-secrets set "Parameters:shopify-client-secret" "<client secret>" --project src/AppHost
+```
+
+## Files
+
+- `shopify.mjs`: the Admin API. The token comes from the client-credentials
+  grant, and throttled answers are waited out.
+- `propose-categories.mjs`: searches Shopify's taxonomy for each category the
+  seed uses, and writes `categories.proposed.json`, the candidates.
+- `categories.json`: Shopify's taxonomy category → our category code. A person
+  approved it (the author, 2026-10-23). The importer reads it through
+  `Shopify:CategoriesFile`, and the seeding script reads it inverted.
+- `seed.mjs`: one Shopify product per seed product. Each product carries:
+  - the Spanish texts, with English registered as translations;
+  - the vendor, the product type and the taxonomy category;
+  - its attributes as `tendero.*` metafields;
+  - its variants under the SKUs the catalogue already gives them;
+  - its pictures, uploaded and attached to the variants they show.
+
+  A product whose handle (its item id, lowercased) exists is skipped.
+  `--limit N` seeds the first N; `--delete-all` empties the store first.
+- `publish.mjs`: publishes every product to the Online Store channel
+  (`write_publications`), so the store's own storefront shows the catalogue.
+  It also sets each product's `publishedAt`, which the importer reads as
+  *available from*.
+
+- `collections.mjs`: one automated collection per category of our taxonomy, its
+  rule the product type (our category code); a department gathers the codes
+  under it. Spanish titles, English as translations, published.
+- `menu.mjs`: the main menu as our storefront's, department → section →
+  category, every item a collection (`write_online_store_navigation`). A menu
+  item is a `MenuItem` to the menus and a `Link` to translations.
+- `filters.mjs`: metafield definitions for colour, material, gender and
+  induction, so the Search & Discovery app can offer them as filters.
+- `stock.mjs` (S2a, P16-15): the seed's two warehouses as the store's
+  locations — its first location renamed for Madrid, Barcelona added — and
+  each variant's units on hand in each from `seed/stock.sample.json`
+  (`write_inventory`, `write_locations`). Repeatable: it writes only what
+  differs. It writes `locations.json`, location → warehouse code, which the
+  stock import reads through `Shopify:LocationsFile`.
+- `history.mjs` (S2b, P16-16): the people and their history from `history.json`
+  — five customers with their address books, a dozen past orders (one cancelled,
+  one partly refunded, one still open), two discounts (one the promotions engine
+  can express, one it cannot for its limits) and two gift cards. Orders go
+  through `orderCreate`, dated by `processedAt` (the day an order was placed; the
+  day it is created is the seeding's), with the stock bypassed and no receipt
+  sent. Repeatable: each thing is found by its email, source identifier, code or
+  note, and a half-finished order is finished. A gift card's code is never printed.
+
+The store's look in Tendero's style is `tools/shopify-theme/`.
+
+## The round trip
+
+From the repository root:
+
+```
+node tools/shopify-seed/seed.mjs
+dotnet test --project tests/Integration.Tests --filter-class "*ShopifyRoundTripTests"
+dotnet run --project tools/SearchEval -- --elasticsearch <throwaway es> --source shopify
+```
+
+The test compares the store with the seed field by field, and is skipped
+without the credentials. SearchEval scores the catalogue read back from the
+store with the seed's golden set.
+
+The people and the whole migration, after `stock.mjs` and `history.mjs`:
+
+```
+dotnet test --project tests/Integration.Tests --filter-class "*ShopifyHistoryRoundTripTests"
+dotnet test --project tests/Integration.Tests --filter-class "*LabStoreMigrationTests"
+```
+
+The first reads each customer, order, discount and gift card back against
+`history.json`; the second rehearses and runs the host's migration from the store
+into an empty shop on a disposable Postgres (Docker), and holds that both say the
+same. What the store keeps differently from what was written is named in the
+tests: an order's addresses join its buyer's address book, and an order written
+by `orderCreate` has no buyer's language and a fulfilment dated the day it was
+written.
+
+## The round trip from the other side (E-3)
+
+Tendero's catalogue exported as Shopify's product CSV and read by Shopify's own
+importer. The importer is a screen in Shopify's admin with no API, so this half is
+done by hand; the other half — the seed exported and read back field by field — is
+`ExportsOverTheSeedTests`.
+
+1. **Use a clean development store, not this one.** The CSV's handles are a
+   product's slug and code (`camiseta-tecnica-b07tuvw404`), the lab store's are its
+   item id: importing here would add 120 products beside the seeded ones and break
+   the round trips above.
+2. **The API must be reachable from the internet** for the pictures: Shopify
+   downloads each `Product image URL` from `/api/images/{id}`. With the API only on
+   `localhost`, the products import without pictures (a tunnel, or leave them out).
+3. Download it from the backoffice (*Products → Feeds and exports → Download the
+   catalogue for Shopify*), or `POST /api/exports/catalogue?format=shopify-csv` as a
+   shopkeeper; Spanish texts with `?culture=es`.
+4. In Shopify: *Products → Import*, the file, *Upload and preview*, then import.
+5. Compare: every product by title, its vendor, its variants by SKU at their prices,
+   its options, its pictures; Draft products come in as drafts. Stock comes as one
+   quantity, which Shopify applies only to a store with one location.
+6. Write the result in the notebook, with what Shopify changed on the way.

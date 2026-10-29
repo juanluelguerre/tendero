@@ -58,7 +58,10 @@
       "DefineVariantsCommand": "Define variants",
       "EndCampaignCommand": "End a campaign",
       "ForgetBrowsingCommand": "Remove an entry from a browsing history",
+      "ImportCustomersCommand": "Import customers",
+      "ImportOrdersCommand": "Import order history",
       "ImportProductsCommand": "Import products",
+      "ImportStockCommand": "Import stock",
       "LinkIdentityCommand": "Link a sign-in to a customer",
       "MergeBrowsingCommand": "Keep a guest's browsing history on signing in",
       "MoveOrderCommand": "Move an order along",
@@ -68,6 +71,8 @@
       "ProposeActionsCommand": "Propose changes",
       "ProposeAltTextCommand": "Propose alt text for pictures",
       "ProposeClaimsCommand": "Propose claims from a description or from a picture's reading",
+      "ProposePromotionsCommand": "Propose promotions from a store's discounts",
+      "PublishImportCommand": "Publish what an import brought",
       "PublishProductCommand": "Publish a product",
       "ReadPicturesCommand": "Read product pictures",
       "RecordBrowsingCommand": "Record a product viewed or a search",
@@ -104,7 +109,9 @@
       "UseCardByDefaultCommand": "Choose a default way to pay",
       "ChooseCultureCommand": "Choose the language the shop speaks",
       "SetMarketingConsentCommand": "Give or withdraw marketing consent",
-      "RemoveAccountCommand": "Remove an account"
+      "RemoveAccountCommand": "Remove an account",
+      "ExportCatalogueCommand": "Export the catalogue",
+      "ExportOrdersCommand": "Export orders for the accounts"
     },
     "fromProposal": "Proposed by Steward"
   },
@@ -147,6 +154,20 @@
     "language": {
       "en": "English",
       "es": "Spanish"
+    },
+    "exports": {
+      "catalogueHint": "To move to another platform, or try one: the whole catalogue, on sale and in draft, in the format it imports. The pictures are fetched from the API, so that platform must be able to reach it.",
+      "copied": "Copied",
+      "copy": "Copy",
+      "downloading": "Preparing the file…",
+      "failed": "The catalogue could not be exported.",
+      "feed": {
+        "en": "English feed",
+        "es": "Spanish feed"
+      },
+      "feedHint": "Give Merchant Center each language's address: it fetches it when it wants and reads every variant on sale, with its price and stock. Use the API's public address, not your machine's.",
+      "shopify": "Download the catalogue for Shopify (CSV)",
+      "title": "Feeds and exports"
     }
   },
   "charts": {
@@ -265,7 +286,17 @@
     "paneFailed": "Could not load this order's lines.",
     "paneId": "Order id",
     "copyId": "Copy the order id",
-    "copied": "Id copied"
+    "copied": "Id copied",
+    "export": {
+      "badSpan": "Choose a first day and a last one that is not before it.",
+      "download": "Download the spreadsheet",
+      "downloading": "Preparing the file…",
+      "failed": "The orders could not be exported.",
+      "from": "From",
+      "hint": "Those days' sales, a row per line, discount, shipping and tax rate, with its base: each order's amounts add up to its total. It carries the billing name and country, never the email or the phone.",
+      "title": "Export for the accounts",
+      "to": "To"
+    }
   },
   "promotions": {
     "title": "Promotions",
@@ -414,7 +445,8 @@
       "NotAsDescribed": "Not as described",
       "Damaged": "Damaged",
       "WrongItem": "Wrong item",
-      "ChangedMind": "Changed their mind"
+      "ChangedMind": "Changed their mind",
+      "Unstated": "Refunded in the previous store"
     },
     "status": {
       "Requested": "Requested",
@@ -1224,7 +1256,8 @@
       "NotAsDescribed": "Not as described",
       "Damaged": "Damaged",
       "WrongItem": "Wrong item",
-      "ChangedMind": "Changed their mind"
+      "ChangedMind": "Changed their mind",
+      "Unstated": "Refunded in the previous store"
     },
     "card": {
       "heading": "{{count}} proposals · {{topic}}",

@@ -52,7 +52,8 @@ public sealed record EvaluationOptions(
     string? Lines = null,
     string? Pictures = null,
     string? Owl = null,
-    string? Vision = null)
+    string? Vision = null,
+    string Source = "seed")
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -64,6 +65,8 @@ public sealed record EvaluationOptions(
         {string.Join(Environment.NewLine, suites.Select(s => $"                            {s.Name}: {s.Description}"))}
           --strategy <name>       lexical (default), or hybrid to score lexical AND hybrid side by side
           --elasticsearch <url>   Elasticsearch endpoint (default http://localhost:9200)
+          --source <name>         seed (default) or shopify: the seed read back from the Shopify
+                                  development store in the AppHost's user secrets (phase 16)
           --qdrant <url>          Qdrant's gRPC endpoint, for hybrid (default http://localhost:6334)
           --qdrant-key <key>      Qdrant's API key, when it has one
           --embeddings <url>      Text Embeddings Inference serving bge-m3, for hybrid (default http://localhost:8080)
@@ -180,6 +183,14 @@ public sealed record EvaluationOptions(
         if (siglip is not null && strategy is not SearchStrategies.Hybrid && suite != "objects")
             throw new ArgumentException("--siglip measures the pictures in the vector store, and needs --strategy hybrid.");
 
+        // Where the corpus comes from (phase 16, P16-6): the seed, or the seed
+        // filled into a Shopify development store and read back by the importer.
+        string source = values.GetValueOrDefault("source", "seed");
+        if (source is not ("seed" or "shopify"))
+            throw new ArgumentException($"Unknown source '{source}'. Available: seed, shopify.");
+        if (source != "seed" && ci)
+            throw new ArgumentException("--source cannot be combined with --ci: the gate measures the seed.");
+
         return new EvaluationOptions(
             suite,
             values.GetValueOrDefault("elasticsearch", "http://localhost:9200"),
@@ -227,6 +238,7 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("lines", Path.Combine("docs", "analysis", "voice-recordings.md")),
             values.GetValueOrDefault("pictures", Path.Combine("artifacts", "picture-eval")),
             values.GetValueOrDefault("owl"),
-            values.GetValueOrDefault("vision"));
+            values.GetValueOrDefault("vision"),
+            source);
     }
 }

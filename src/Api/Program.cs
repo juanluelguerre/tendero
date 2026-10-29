@@ -15,6 +15,8 @@ using ElGuerre.Tendero.Assist.Tino;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.DevIssuer;
+using ElGuerre.Tendero.Exports;
+using ElGuerre.Tendero.Exports.Features.ProductFeed;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Inventory.Features.ListStock;
 using ElGuerre.Tendero.Knowledge;
@@ -34,6 +36,7 @@ using ElGuerre.Tendero.Search.Health;
 using ElGuerre.Tendero.Search.Images;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Shopify;
 using ElGuerre.Tendero.Ucp;
 using ElGuerre.Tendero.Ucp.Catalog;
 using ElGuerre.Tendero.Ucp.Checkout;
@@ -53,16 +56,24 @@ builder.Services.AddTenderoCqrs(
     typeof(LinkIdentityCommand).Assembly,
     typeof(ReviewClaimsEndpoints).Assembly,
     typeof(ApproveProposalsCommand).Assembly,
-    typeof(TranscribeSpeechQuery).Assembly);
+    typeof(TranscribeSpeechQuery).Assembly,
+    typeof(ProductFeedQuery).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
 
 builder.Services.AddAccounts();
+builder.Services.AddKeycloakProvisioning(builder.Configuration);
 // How long the orders an erased account leaves behind are kept (P15-9).
 builder.Services.Configure<PrivacyOptions>(builder.Configuration.GetSection(PrivacyOptions.SectionName));
 
 builder.Services.AddCatalog(builder.Configuration);
+// A Shopify store as a catalogue source, only when its credentials are set (phase 16).
+builder.Services.AddShopify(builder.Configuration);
+// A store's migration as one operation across the contexts (P16-21): composed here, where they all are.
+builder.Services.AddScoped<StoreMigration>();
+// What leaves the shop: the product feed, the catalogue for another platform, orders for the accountant (phase 16, E-1).
+builder.Services.AddExports(builder.Configuration);
 
 builder.Services.AddPricing(builder.Configuration);
 

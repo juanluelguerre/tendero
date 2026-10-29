@@ -48,7 +48,19 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IProductRepository>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IProductReader>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IProductCatalogReader>(services => services.GetRequiredService<EfProductRepository>());
+        // Seen with what a rehearsal in the same request would bring, as the three
+        // readers below are (RehearsalReaders.cs, P16-21): the later steps of a
+        // migration read through them.
+        services.AddScoped<ISourceVariantSkus>(services => new RehearsalSourceVariantSkus(
+            services.GetRequiredService<EfProductRepository>(), RehearsedCatalogue(services)));
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+
+        // A source's old addresses (phase 16, P16-11): the import writes, the redirects read.
+        services.AddScoped<EfSourceAddresses>();
+        services.AddScoped<ISourceCollections>(services => services.GetRequiredService<EfSourceAddresses>());
+        services.AddScoped<ISourceAddresses>(services => new RehearsalSourceAddresses(
+            services.GetRequiredService<EfSourceAddresses>(), RehearsedCatalogue(services)));
+        services.AddScoped<IImportRunRepository, EfImportRunRepository>();
 
         // The catalogue facts pricing needs. Registered here rather than in
         // AddPricing because this is the only project that knows both contexts.
@@ -79,10 +91,18 @@ public static class PersistenceServiceCollectionExtensions
         // Whether an order's customer has an account: Ordering asks it to decide
         // who may read the order by its id, and must not learn what a Customer is.
         services.AddScoped<IRegisteredCustomers, EfRegisteredCustomers>();
+        services.AddScoped<EfImportedCustomerIds>();
+        services.AddScoped<IImportedCustomerIds>(services => new RehearsalImportedCustomerIds(
+            services.GetRequiredService<EfImportedCustomerIds>(), services.GetService<IRehearsedCustomers>() ?? NothingRehearsed.Instance));
 
         // The Ordering side of the catalogue crossing, the sibling of
         // IPricedItemReader: values out, no entity shared (ADR 0014).
+        services.AddScoped<CatalogueLines>();
         services.AddScoped<IPurchasableReader, EfPurchasableReader>();
+        // An imported order's lines, whatever the product's status (P16-18).
+        services.AddScoped<EfCatalogueVariants>();
+        services.AddScoped<ICatalogueVariants>(services => new RehearsalCatalogueVariants(
+            services.GetRequiredService<EfCatalogueVariants>(), services.GetRequiredService<CatalogueLines>(), RehearsedCatalogue(services)));
 
         // The dispatcher's audit step runs wherever a command does, including
         // the outbox worker — which opens a scope per batch, so scoped is
@@ -101,6 +121,7 @@ public static class PersistenceServiceCollectionExtensions
         // One adapter, two Accounts ports, one instance per scope.
         services.AddScoped<EfCustomerRepository>();
         services.AddScoped<ICustomerRepository>(services => services.GetRequiredService<EfCustomerRepository>());
+        services.AddScoped<IImportedCustomers>(services => services.GetRequiredService<EfCustomerRepository>());
         services.AddScoped<ICustomerDirectory>(services => services.GetRequiredService<EfCustomerRepository>());
 
         services.AddScoped<EfAgentRepository>();
@@ -129,6 +150,10 @@ public static class PersistenceServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>The scope's rehearsed catalogue, or nothing rehearsed in a host that composes no catalogue (the workers).</summary>
+    private static IRehearsedCatalogue RehearsedCatalogue(IServiceProvider services) =>
+        services.GetService<IRehearsedCatalogue>() ?? NothingRehearsed.Instance;
 
     /// <summary>
     /// Applies the pending migrations: for a tool that composes the shop in its own

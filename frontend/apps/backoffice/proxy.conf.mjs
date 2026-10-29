@@ -59,8 +59,9 @@ export default [
   {
     // /dev-issuer too: the login asks the development issuer for the token, and
     // that lives inside the API. When Keycloak arrives it will be another origin
-    // and this entry disappears.
-    context: ['/api', '/dev-issuer'],
+    // and this entry disappears. /feeds: the product feed the catalogue links to,
+    // public and outside /api (phase 16, E-2).
+    context: ['/api', '/dev-issuer', '/feeds'],
     target: api,
     secure: false,
     changeOrigin: true,

@@ -1,0 +1,49 @@
+{
+  "data": {
+    "giftCards": {
+      "pageInfo": { "hasNextPage": true, "endCursor": "g3" },
+      "nodes": [
+        {
+          "id": "gid://shopify/GiftCard/8001",
+          "lastCharacters": "ab12",
+          "enabled": true,
+          "balance": { "amount": "25.0", "currencyCode": "EUR" },
+          "expiresOn": "2027-12-31",
+          "customer": { "id": "gid://shopify/Customer/6001" }
+        },
+        {
+          "id": "gid://shopify/GiftCard/8002",
+          "lastCharacters": "cd34",
+          "enabled": true,
+          "balance": { "amount": "50.0", "currencyCode": "EUR" },
+          "expiresOn": null,
+          "customer": null
+        },
+        {
+          "id": "gid://shopify/GiftCard/8003",
+          "lastCharacters": "ef56",
+          "enabled": false,
+          "balance": { "amount": "30.0", "currencyCode": "EUR" },
+          "expiresOn": null,
+          "customer": { "id": "gid://shopify/Customer/6002" }
+        },
+        {
+          "id": "gid://shopify/GiftCard/8004",
+          "lastCharacters": "gh78",
+          "enabled": true,
+          "balance": { "amount": "0.0", "currencyCode": "EUR" },
+          "expiresOn": null,
+          "customer": null
+        },
+        {
+          "id": "gid://shopify/GiftCard/8006",
+          "lastCharacters": "kl12",
+          "enabled": true,
+          "balance": { "amount": "10.0", "currencyCode": "EUR" },
+          "expiresOn": "2026-01-31",
+          "customer": null
+        }
+      ]
+    }
+  }
+}

@@ -31,6 +31,7 @@ const NOT_CONTAINERS = {
   elasticvue: 'a development tool behind Tendero__Tools, not part of the system',
   'traffic-sim': 'the traffic simulator (ADR 0037): a customer from outside, started by hand, not part of the system',
   keycloak: 'drawn as the external identity provider it is in production (decided 2026-09-23)',
+  mailpit: "the development catcher of Keycloak's email (phase 16, ADR 0067): in production the identity provider sends through a real mail service, part of the provider drawn above",
   'extractor-model': 'a job that prepares the model of the extractor into a volume once and exits, not a process of the system',
   'vision-projector': 'a job that prepares the vision half of the same model into the same volume once and exits (phase 13a), not a process of the system',
   'speech-weights': "a job that converts Whisper and its VAD into models/whisper once and exits (phase 14), not a process of the system",

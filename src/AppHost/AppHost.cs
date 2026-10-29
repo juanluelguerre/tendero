@@ -52,6 +52,7 @@ const int elasticsearchPort = 39200;
 const int pgWebPort = 35433;
 const int elasticvuePort = 39201;
 const int keycloakPort = 38443;
+const int mailpitPort = 38025;
 const int qdrantGrpcPort = 36334;
 const int qdrantHttpPort = 36333;
 const int embeddingsPort = 38081;
@@ -641,6 +642,19 @@ var keycloak = builder.AddKeycloak("keycloak", port: keycloakPort, adminPassword
     // before the request left.
     .WithLifetime(ContainerLifetime.Persistent);
 
+// WHERE KEYCLOAK'S EMAIL GOES IN DEVELOPMENT (phase 16, S2b; ADR 0067): an imported
+// customer has no password, and sets one with the realm's *forgot password*, whose
+// link Keycloak emails. Mailpit catches every message and shows it at its own page,
+// so nothing reaches a real inbox. MIT, a service beside the app (Tier 2). The realm
+// names it as its SMTP server (`mailpit:1025`). Started with Keycloak, and like it
+// on demand otherwise.
+var mailpit = builder.AddContainer("mailpit", "axllent/mailpit", "v1.31.5")
+    .WithHttpEndpoint(targetPort: 8025, port: mailpitPort, name: "http")
+    .WithEndpoint(targetPort: 1025, name: "smtp")
+    .WithContainerRuntimeArgs("--memory=128m", "--memory-swap=128m", Cpus(1))
+    .WithExternalHttpEndpoints();
+keycloak.WaitFor(mailpit);
+
 if (!useKeycloak)
 {
     // Visible, listed, and not started. The Start button in the dashboard is
@@ -652,6 +666,7 @@ if (!useKeycloak)
     // gives you is the admin console, which is how the committed realm gets
     // edited and re-exported.
     keycloak.WithExplicitStart();
+    mailpit.WithExplicitStart();
 }
 
 var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
@@ -882,7 +897,17 @@ if (useKeycloak)
         // AllowHttpMetadata stays true because the realm is served over plain HTTP
         // inside the compose network. It is tied to the environment, not a constant.
         .WithEnvironment("Authentication__Authority", $"{keycloak.GetEndpoint("http")}/realms/tendero")
-        .WithEnvironment("Authentication__AllowHttpMetadata", "true");
+        .WithEnvironment("Authentication__AllowHttpMetadata", "true")
+        // Provisioning imported customers (phase 16, S2b; ADR 0067): the realm's
+        // service account that may manage users and nothing else. Its secret is
+        // committed in the realm for the reason the admin password is above — a
+        // development realm — and passed as a secret parameter so the dashboard
+        // masks it.
+        .WithEnvironment("Keycloak__Provisioning__BaseUrl", keycloak.GetEndpoint("http"))
+        .WithEnvironment("Keycloak__Provisioning__Realm", "tendero")
+        .WithEnvironment("Keycloak__Provisioning__ClientId", "tendero-provisioning")
+        .WithEnvironment("Keycloak__Provisioning__ClientSecret",
+            builder.AddParameter("keycloak-provisioning-secret", "tendero-provisioning-dev", secret: true));
 }
 
 // Aspire brings up both Angular apps too: one command starts everything, and the
@@ -926,6 +951,8 @@ var storefront = builder.AddViteApp("storefront", frontend, "serve:storefront")
 // and the page an agent's checkout continues on when it needs a person (P11-1).
 // An address, not a dependency: nothing waits on anything.
 api.WithEnvironment("Ucp__StorefrontUrl", storefront.GetEndpoint("http"));
+// A product feed links each variant to its page on the storefront (phase 16, E-2).
+api.WithEnvironment("Exports__StorefrontUrl", storefront.GetEndpoint("http"));
 
 var backoffice = builder.AddViteApp("backoffice", frontend, "serve:backoffice")
     .WithNpm(install: false)
@@ -1004,6 +1031,44 @@ if (observability)
 var browserTelemetry = builder.AddParameter("browser-telemetry",
     builder.Configuration["Parameters:browser-telemetry"] ?? "otel");
 api.WithEnvironment("Telemetry__Browser__Adapter", browserTelemetry);
+
+// A SHOPIFY STORE TO IMPORT FROM (phase 16, docs/specs/shopify-import.md), only
+// when its three secrets are in the AppHost's user secrets:
+// `Parameters:shopify-store` (tendero-dev.myshopify.com), `Parameters:shopify-client-id`
+// and `Parameters:shopify-client-secret`, from the app in Shopify's Dev Dashboard.
+// Without them nothing is declared and `shopify` is not a source at all — a fresh
+// clone neither asks for them nor changes. The category mapping is a committed
+// file beside the seeding script.
+//
+// A merchant's own store (S2a, P16-14) comes with `Parameters:shopify-access-token`
+// instead of the app's two, the offline token `tools/shopify-connect` installs
+// the app for; it wins when both are there.
+if (builder.Configuration["Parameters:shopify-store"] is { Length: > 0 } shopifyStore)
+{
+    var merchantsToken = builder.Configuration["Parameters:shopify-access-token"] is { Length: > 0 };
+    var appCredentials = builder.Configuration["Parameters:shopify-client-id"] is { Length: > 0 }
+        && builder.Configuration["Parameters:shopify-client-secret"] is { Length: > 0 };
+
+    if (merchantsToken)
+    {
+        api.WithEnvironment("Shopify__AccessToken", builder.AddParameter("shopify-access-token", secret: true));
+    }
+    else if (appCredentials)
+    {
+        // The development store, whose locations tools/shopify-seed/stock.mjs made
+        // and mapped. A merchant's store has locations of its own, and a person
+        // writes their file; until then each is proposed as a warehouse.
+        api.WithEnvironment("Shopify__ClientId", builder.AddParameter("shopify-client-id", secret: true))
+            .WithEnvironment("Shopify__ClientSecret", builder.AddParameter("shopify-client-secret", secret: true))
+            .WithEnvironment("Shopify__LocationsFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "locations.json"));
+    }
+
+    if (merchantsToken || appCredentials)
+    {
+        api.WithEnvironment("Shopify__Store", shopifyStore)
+            .WithEnvironment("Shopify__CategoriesFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "categories.json"));
+    }
+}
 
 // SIMULATED TRAFFIC (ADR 0037), listed and never started by itself.
 //
@@ -1204,7 +1269,8 @@ internal static class SeedFileEnvironment
         ("Pricing__Campaigns__FilePath", "campaigns.sample.json"),
         ("Kits__Seed__TemplatesPath", "kits.sample.json"),
         ("Inventory__Warehouses__FilePath", "warehouses.sample.json"),
-        ("Inventory__Stock__FilePath", "stock.sample.json")
+        ("Inventory__Stock__FilePath", "stock.sample.json"),
+        ("Exports__GoogleCategoriesFile", "google-categories.sample.json")
     ];
 
     public static IResourceBuilder<ProjectResource> WithSeedFiles(

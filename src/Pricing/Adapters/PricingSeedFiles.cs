@@ -15,6 +15,18 @@ public sealed class PricingSeedOptions
     public string PromotionsPath { get; set; } = Path.Combine("seed", "promotions.sample.json");
 
     /// <summary>
+    /// Where a proposal of promotions is written (phase 16, P16-19). Unset, it is
+    /// <c>promotions.proposed.json</c> in the committed file's own folder: beside it
+    /// wherever the host put it, and never over it.
+    /// </summary>
+    public string? ProposedPromotionsPath { get; set; }
+
+    public string ProposalPath =>
+        ProposedPromotionsPath is { Length: > 0 } chosen
+            ? chosen
+            : Path.Combine(Path.GetDirectoryName(PromotionsPath) ?? "", "promotions.proposed.json");
+
+    /// <summary>
     /// The segment of whoever has none. A named constant because it turns up in
     /// three places — the default tariff, promotions with no segment, and the
     /// anonymous principal — and three loose strings drift apart.
@@ -82,6 +94,24 @@ internal sealed class SeedFilePromotionReader(IOptions<PricingSeedOptions> optio
 }
 
 /// <summary>
+/// A proposal of promotions as a file in the committed one's shape (phase 16,
+/// P16-19), so committing it is a person's copy, not a translation. It is read by
+/// nobody: <see cref="SeedFilePromotionReader"/> reads only the committed path.
+/// </summary>
+internal sealed class SeedFilePromotionProposals(IOptions<PricingSeedOptions> options) : IPromotionProposals
+{
+    public async Task<string> WriteAsync(IReadOnlyList<Promotion> promotions, CancellationToken cancellationToken = default)
+    {
+        var path = options.Value.ProposalPath;
+        if (Path.GetDirectoryName(path) is { Length: > 0 } folder)
+            Directory.CreateDirectory(folder);
+
+        await PricingSeedFile.WritePromotionsAsync(path, promotions, cancellationToken);
+        return Path.GetFileName(path);
+    }
+}
+
+/// <summary>
 /// The shape of both files. Public because the tests load it directly, the same
 /// way the catalogue connector does with its sample: the file that ships is the
 /// file that gets validated.
@@ -119,6 +149,53 @@ public static class PricingSeedFile
         var raw = await JsonSerializer.DeserializeAsync<List<SeedPromotion>>(file, Json, cancellationToken) ?? [];
 
         return [.. raw.Select(Build)];
+    }
+
+    /// <summary>
+    /// Promotions written in the file's own shape, as a person would write them:
+    /// indented, with what does not restrict left out. What <see cref="LoadPromotionsAsync"/>
+    /// reads back is what was written — the round trip is tested.
+    /// </summary>
+    public static async Task WritePromotionsAsync(
+        string path, IReadOnlyList<Promotion> promotions, CancellationToken cancellationToken = default)
+    {
+        await using var file = File.Create(path);
+        await JsonSerializer.SerializeAsync(file, promotions.Select(Entry).ToList(), Written, cancellationToken);
+    }
+
+    private static readonly JsonSerializerOptions Written = new(Json)
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
+    private static SeedPromotion Entry(Promotion promotion)
+    {
+        var condition = promotion.Condition;
+        var currency = (promotion.Effect as AmountOffOrder)?.Amount.Currency ?? condition.MinimumSubtotal?.Currency ?? "EUR";
+
+        return new SeedPromotion(
+            promotion.Code,
+            new Dictionary<string, string>(promotion.Name.Values),
+            promotion.Effect switch
+            {
+                PercentOffLine(var percent) => new SeedEffect(promotion.Effect.Kind, Percent: percent),
+                AmountOffOrder(var amount) => new SeedEffect(promotion.Effect.Kind, Amount: amount.Amount),
+                BuyXGetY(var buy, var free) => new SeedEffect(promotion.Effect.Kind, Buy: buy, Free: free),
+                FreeShipping => new SeedEffect(promotion.Effect.Kind),
+            },
+            promotion.Combination,
+            promotion.Priority,
+            currency,
+            condition == PromotionCondition.Always
+                ? null
+                : new SeedCondition(condition.MinimumSubtotal?.Amount, condition.CategoryCode, condition.Sku, condition.MinimumQuantity),
+            promotion.ExclusivityGroup,
+            promotion.Segment,
+            promotion.CouponCode,
+            promotion.ValidFrom,
+            promotion.ValidTo);
     }
 
     private static Promotion Build(SeedPromotion entry) => new(

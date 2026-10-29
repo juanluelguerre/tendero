@@ -65,6 +65,11 @@ public sealed class RequestReturnValidator : AbstractValidator<RequestReturnComm
         RuleForEach(command => command.Lines)
             .Must(line => line.Comment is null || line.Comment.Length <= 500)
             .WithMessage("A comment is at most 500 characters.");
+
+        // No reason is an imported refund's mark (ADR 0066), never a shopper's choice.
+        RuleForEach(command => command.Lines)
+            .Must(line => line.Reason != ReturnReason.Unstated)
+            .WithMessage("A return says why.");
     }
 }
 

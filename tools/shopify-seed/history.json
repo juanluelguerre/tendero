@@ -1,0 +1,108 @@
+{
+  "customers": [
+    {
+      "key": "lucia",
+      "firstName": "Lucía",
+      "lastName": "Martín Ortega",
+      "email": "lucia.martin@example.com",
+      "locale": "es",
+      "marketing": "SUBSCRIBED",
+      "addresses": [
+        { "address1": "Calle de Hortaleza 48", "address2": "3º B", "city": "Madrid", "provinceCode": "M", "zip": "28004", "countryCode": "ES", "phone": "+34600111201" },
+        { "address1": "Paseo de la Castellana 95", "city": "Madrid", "provinceCode": "M", "zip": "28046", "countryCode": "ES" }
+      ]
+    },
+    {
+      "key": "jordi",
+      "firstName": "Jordi",
+      "lastName": "Puig Soler",
+      "email": "jordi.puig@example.com",
+      "locale": "es",
+      "marketing": "NOT_SUBSCRIBED",
+      "addresses": [{ "address1": "Carrer de Provença 214", "city": "Barcelona", "provinceCode": "B", "zip": "08036", "countryCode": "ES" }]
+    },
+    {
+      "key": "emma",
+      "firstName": "Emma",
+      "lastName": "Clarke",
+      "email": "emma.clarke@example.com",
+      "locale": "en",
+      "marketing": "SUBSCRIBED",
+      "addresses": [{ "address1": "Calle de Colón 12", "city": "Valencia", "provinceCode": "V", "zip": "46004", "countryCode": "ES" }]
+    },
+    {
+      "key": "carmen",
+      "firstName": "Carmen",
+      "lastName": "Ruiz",
+      "email": "carmen.ruiz@example.com",
+      "locale": "es",
+      "marketing": "UNSUBSCRIBED",
+      "addresses": []
+    },
+    {
+      "key": "daniel",
+      "firstName": "Daniel",
+      "lastName": "Weber",
+      "email": "daniel.weber@example.com",
+      "locale": "en",
+      "marketing": "NOT_SUBSCRIBED",
+      "addresses": [{ "address1": "Calle Sierpes 21", "city": "Sevilla", "provinceCode": "SE", "zip": "41004", "countryCode": "ES", "phone": "+34600111205" }]
+    }
+  ],
+  "orders": [
+    { "key": "01", "customer": "lucia", "placedAt": "2025-11-14T10:20:00Z", "state": "fulfilled", "lines": [{ "sku": "B11COF0401-DEFAULT", "quantity": 1 }, { "sku": "B12LAM0608-DEFAULT", "quantity": 2 }], "shipping": { "title": "Envío estándar", "amount": "4.95" } },
+    { "key": "02", "customer": "jordi", "placedAt": "2025-12-03T18:05:00Z", "state": "fulfilled", "lines": [{ "sku": "B13BAG0702-DEFAULT", "quantity": 1 }], "shipping": { "title": "Envío gratuito", "amount": "0.00" } },
+    {
+      "key": "03", "customer": "emma", "placedAt": "2026-01-20T09:45:00Z", "state": "fulfilled",
+      "lines": [{ "sku": "B10SHI0203-DEFAULT", "quantity": 1 }, { "sku": "B10SHI0204-DEFAULT", "quantity": 2 }],
+      "shipping": { "title": "Envío estándar", "amount": "4.95" },
+      "billingAddress": { "address1": "Avenida de Aragón 30", "city": "Valencia", "provinceCode": "V", "zip": "46021", "countryCode": "ES" }
+    },
+    {
+      "key": "04", "customer": "lucia", "placedAt": "2026-02-11T12:00:00Z", "state": "fulfilled",
+      "lines": [{ "sku": "B12LAM0602-DEFAULT", "quantity": 1 }, { "sku": "B12LAM0606-DEFAULT", "quantity": 1 }],
+      "shipping": { "title": "Envío gratuito", "amount": "0.00" },
+      "refund": { "processedAt": "2026-02-25T16:30:00Z", "lines": [{ "sku": "B12LAM0606-DEFAULT", "quantity": 1 }], "amount": "49.00" }
+    },
+    { "key": "05", "customer": "daniel", "placedAt": "2026-03-08T20:10:00Z", "state": "cancelled", "lines": [{ "sku": "B16PLA1402-DEFAULT", "quantity": 1 }], "shipping": { "title": "Envío estándar", "amount": "4.95" } },
+    {
+      "key": "06", "customer": "jordi", "placedAt": "2026-04-17T11:30:00Z", "state": "fulfilled",
+      "lines": [{ "sku": "B16PLA1401-DEFAULT", "quantity": 2 }, { "sku": "B16PLA1404-DEFAULT", "quantity": 2 }],
+      "shipping": { "title": "Envío estándar", "amount": "4.95" },
+      "discount": { "code": "PLANTAS15", "percentage": 15 }
+    },
+    {
+      "key": "07", "customer": "carmen", "placedAt": "2026-05-02T08:15:00Z", "state": "fulfilled",
+      "lines": [{ "sku": "B11COF0403-DEFAULT", "quantity": 1 }],
+      "shipping": { "title": "Envío estándar", "amount": "4.95" },
+      "shippingAddress": { "address1": "Calle Mayor 5", "city": "Zaragoza", "provinceCode": "Z", "zip": "50001", "countryCode": "ES" }
+    },
+    { "key": "08", "customer": "emma", "placedAt": "2026-06-21T17:40:00Z", "state": "fulfilled", "lines": [{ "sku": "B13BAG0704-DEFAULT", "quantity": 1 }], "shipping": { "title": "Envío gratuito", "amount": "0.00" } },
+    { "key": "09", "customer": "daniel", "placedAt": "2026-07-30T13:25:00Z", "state": "fulfilled", "lines": [{ "sku": "B12LAM0603-DEFAULT", "quantity": 1 }], "shipping": { "title": "Envío gratuito", "amount": "0.00" } },
+    { "key": "10", "customer": "lucia", "placedAt": "2026-09-05T10:00:00Z", "state": "fulfilled", "lines": [{ "sku": "B10SHI0201-DEFAULT", "quantity": 1 }, { "sku": "B10SHI0202-DEFAULT", "quantity": 1 }], "shipping": { "title": "Envío estándar", "amount": "4.95" } },
+    { "key": "11", "customer": "jordi", "placedAt": "2026-10-01T19:50:00Z", "state": "fulfilled", "lines": [{ "sku": "B11COF0404-DEFAULT", "quantity": 1 }], "shipping": { "title": "Envío estándar", "amount": "4.95" } },
+    { "key": "12", "customer": "emma", "placedAt": "2026-10-20T15:05:00Z", "state": "open", "lines": [{ "sku": "B12LAM0601-DEFAULT", "quantity": 1 }], "shipping": { "title": "Envío estándar", "amount": "4.95" } }
+  ],
+  "discounts": [
+    {
+      "code": "PLANTAS15",
+      "title": "Plantas -15 %",
+      "percentage": 15,
+      "collection": "plantas-y-jardin",
+      "startsAt": "2026-04-01T00:00:00Z",
+      "combinesWithEverything": true
+    },
+    {
+      "code": "VIP20",
+      "title": "Clientes VIP -20 %",
+      "percentage": 20,
+      "startsAt": "2026-01-01T00:00:00Z",
+      "usageLimit": 50,
+      "appliesOncePerCustomer": true
+    }
+  ],
+  "giftCards": [
+    { "key": "GC-LUCIA", "customer": "lucia", "amount": "25.00" },
+    { "key": "GC-NOBODY", "amount": "50.00", "expiresOn": "2027-12-31" }
+  ]
+}

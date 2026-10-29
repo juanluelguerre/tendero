@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Pricing.Adapters;
 using ElGuerre.Tendero.Pricing.Domain;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
 namespace ElGuerre.Tendero.Pricing.Tests;
@@ -190,5 +191,91 @@ public sealed class PricingSeedFileTests
         Assert.All(promotions, promotion =>
             Assert.True(promotion.ValidTo is null || promotion.ValidTo > repositoryDate,
                 $"{promotion.Code} expired before it was ever committed."));
+    }
+
+    /// <summary>
+    /// A proposal is written in the committed file's shape (phase 16, P16-19):
+    /// every shipped promotion, written and read back, is the same promotion —
+    /// what changes what anybody pays (<see cref="Promotion.Canonical"/>) and its
+    /// name in every language.
+    /// </summary>
+    [Fact]
+    public async Task What_is_written_reads_back_as_the_same_promotions()
+    {
+        var shipped = await Promotions();
+        var path = Path.Combine(Path.GetTempPath(), $"promotions-{Guid.NewGuid():N}.json");
+        try
+        {
+            await PricingSeedFile.WritePromotionsAsync(path, shipped, TestContext.Current.CancellationToken);
+            var read = await PricingSeedFile.LoadPromotionsAsync(path, TestContext.Current.CancellationToken);
+
+            Assert.Equal(shipped.Select(promotion => promotion.Canonical()), read.Select(promotion => promotion.Canonical()));
+            Assert.Equal(shipped.Select(promotion => promotion.Name.Values), read.Select(promotion => promotion.Name.Values));
+            Assert.Contains("\"Rebajas de verano\"", await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken), StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// A shop that sells in another currency reads its proposal back in it — the
+    /// currency an amount off is in, else the minimum's — and a promotion with no
+    /// condition is written with none, as a person would write it. Found by phase
+    /// 16 S2b's Stryker close: the shipped file is all euros and all conditioned.
+    /// </summary>
+    [Fact]
+    public async Task A_proposal_keeps_its_currency_and_writes_no_condition_where_there_is_none()
+    {
+        IReadOnlyList<Promotion> dollars =
+        [
+            new("FIVE", LocalizedText.From("en", "Five off"), PromotionCondition.Always,
+                new AmountOffOrder(new Money(5m, "USD")), CombinationPolicy.Stackable, 10),
+            new("TEN", LocalizedText.From("en", "Ten percent over fifty"), new PromotionCondition(new Money(50m, "USD"), null, null, null),
+                new PercentOffLine(10m), CombinationPolicy.ExclusiveGlobal, 20),
+        ];
+        var path = Path.Combine(Path.GetTempPath(), $"promotions-{Guid.NewGuid():N}.json");
+        try
+        {
+            await PricingSeedFile.WritePromotionsAsync(path, dollars, TestContext.Current.CancellationToken);
+            var read = await PricingSeedFile.LoadPromotionsAsync(path, TestContext.Current.CancellationToken);
+
+            Assert.Equal(dollars.Select(promotion => promotion.Canonical()), read.Select(promotion => promotion.Canonical()));
+            using var written = JsonDocument.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
+            Assert.Equal([false, true], written.RootElement.EnumerateArray().Select(entry => entry.TryGetProperty("condition", out _)));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// Beside the committed file wherever the host put it — the API's content root
+    /// has no seed folder, the lesson <c>SeedFileEnvironment</c> records — and never
+    /// over it.
+    /// </summary>
+    [Fact]
+    public async Task A_proposal_is_written_beside_the_committed_promotions()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"seed-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(folder);
+        var committed = Path.Combine(folder, "promotions.sample.json");
+        await File.WriteAllTextAsync(committed, "[]", TestContext.Current.CancellationToken);
+        try
+        {
+            var proposals = new SeedFilePromotionProposals(Microsoft.Extensions.Options.Options.Create(new PricingSeedOptions { PromotionsPath = committed }));
+
+            var file = await proposals.WriteAsync(await Promotions(), TestContext.Current.CancellationToken);
+
+            Assert.Equal("promotions.proposed.json", file);
+            Assert.Equal(7, (await PricingSeedFile.LoadPromotionsAsync(Path.Combine(folder, file), TestContext.Current.CancellationToken)).Count);
+            Assert.Equal("[]", await File.ReadAllTextAsync(committed, TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
     }
 }

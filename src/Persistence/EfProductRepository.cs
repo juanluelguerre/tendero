@@ -13,7 +13,7 @@ namespace ElGuerre.Tendero.Persistence;
 /// add; the index projection only needs to read by id.
 /// </summary>
 internal sealed class EfProductRepository(TenderoDbContext context)
-    : IProductRepository, IProductReader, IProductCatalogReader
+    : IProductRepository, IProductReader, IProductCatalogReader, ISourceVariantSkus
 {
     // Two queries rather than one with in-memory paging: the total belongs to the
     // whole filter and not to the page, because a review queue needs to say how
@@ -192,6 +192,25 @@ internal sealed class EfProductRepository(TenderoDbContext context)
             ct);
 
     public void Add(Product product) => context.Products.Add(product);
+
+    /// <summary>
+    /// One query over the variants' source references (phase 16, S2a): the
+    /// unique (source, external id) index answers it.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, string>> SkusOfAsync(
+        string source, IReadOnlyCollection<string> externalVariantIds, CancellationToken ct)
+    {
+        var normalised = source.ToLowerInvariant();
+        var rows = await context.Products
+            .AsNoTracking()
+            .SelectMany(product => product.Variants)
+            .SelectMany(variant => variant.ExternalReferences
+                .Where(reference => reference.Source == normalised && externalVariantIds.Contains(reference.ExternalId))
+                .Select(reference => new { reference.ExternalId, variant.Sku }))
+            .ToListAsync(ct);
+
+        return rows.ToDictionary(row => row.ExternalId, row => row.Sku, StringComparer.Ordinal);
+    }
 
     // WITH tracking, unlike GetByIdAsync: whoever looks up by id from a slice is
     // doing it to mutate (publish, archive) and commit through IUnitOfWork. With

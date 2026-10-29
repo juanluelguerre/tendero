@@ -84,10 +84,18 @@ public static class OrderingServiceCollectionExtensions
         services.AddKeyedSingleton<IPaymentProvider, FakePaymentProvider>(FakePaymentProvider.Key);
         services.TryAddSingleton<IPaymentProviderRegistry, KeyedPaymentProviderRegistry>();
 
+        // The order sources a store's history is imported from (phase 16, S2b): each
+        // registers itself keyed (AddShopify), and this lists them.
+        services.TryAddScoped<IOrderSourceRegistry, KeyedOrderSourceRegistry>();
+        services.TryAddScoped<IGiftCardSourceRegistry, KeyedGiftCardSourceRegistry>();
+
         // What Ordering holds about a person, for their download and the removal of
         // their account (P15-9): the wallet, forgotten, and the orders, kept.
         services.AddScoped<IPersonalDataHolder, WalletPersonalData>();
         services.AddScoped<IPersonalDataHolder, OrdersPersonalData>();
+
+        // The shop's sales as they leave it for the accountant, as values (phase 16, E-4).
+        services.AddScoped<IOrderExport, Adapters.OrderExportReader>();
 
         // The one file that knows Pricing exists. Scoped, because the dispatcher
         // it delegates to resolves scoped handlers.

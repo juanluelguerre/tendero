@@ -1,4 +1,3 @@
-using System.Text;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Catalog.Domain;
@@ -62,7 +61,30 @@ public sealed record ProductImage(ImageId Id, LocalizedText? Alt, int SortOrder)
 }
 
 // The key across N connectors: (source, external id). E.g. ("shopify", "gid://shopify/Product/123")
-public sealed record ExternalReference(string Source, string ExternalId);
+// The handle is the source's name for it in its own URLs (phase 16): it may
+// change while the id does not, so it rides along and is never the key. It is
+// changed in place rather than by swapping the reference: EF tracks an owned row
+// by its key, and a new instance under the same key is a second tracked entity.
+public sealed record ExternalReference(string Source, string ExternalId)
+{
+    public ExternalReference(string source, string externalId, string? handle)
+        : this(source, externalId) => Handle = handle;
+
+    public string? Handle { get; private set; }
+
+    internal bool Follow(string? handle)
+    {
+        if (Handle == handle)
+            return false;
+
+        Handle = handle;
+        return true;
+    }
+
+    public bool Is(string source, string externalId) =>
+        string.Equals(Source, source, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(ExternalId, externalId, StringComparison.Ordinal);
+}
 
 // The event the indexing worker consumes (Elasticsearch + Qdrant) via the Outbox.
 public sealed record ProductUpserted(ProductId ProductId, DateTimeOffset OccurredAt) : IDomainEvent;
@@ -118,6 +140,14 @@ public sealed class Product : AggregateRoot
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    /// <summary>
+    /// When it first went on sale, kept through every withdrawal (phase 16, P16-12):
+    /// a draft that was once published is in draft because a person put it there,
+    /// and publishing a migration in bulk must not undo that. Null for a product
+    /// never published, and for those published before it was kept.
+    /// </summary>
+    public DateTimeOffset? FirstPublishedAt { get; private set; }
+
     public IReadOnlyList<ProductImage> Images => this.images;
 
     /// <summary>
@@ -168,6 +198,10 @@ public sealed class Product : AggregateRoot
     public Variant? VariantBySku(string sku) =>
         this.variants.FirstOrDefault(variant =>
             string.Equals(variant.Sku, sku, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>The variant a source knows by its own id, if one was linked to it.</summary>
+    public Variant? VariantFromSource(string source, string externalId) =>
+        this.variants.FirstOrDefault(variant => variant.IsKnownTo(source, externalId));
 
     private Product() { } // EF Core
 
@@ -486,17 +520,45 @@ public sealed class Product : AggregateRoot
     }
 
     // Idempotent: re-importing from the same source does not duplicate references.
-    public void LinkExternal(TimeProvider clock, string source, string externalId)
+    // The handle follows the source, on the same reference.
+    public void LinkExternal(TimeProvider clock, string source, string externalId, string? handle = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(source);
         ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
 
-        var reference = new ExternalReference(source.ToLowerInvariant(), externalId);
-        if (!this.externalReferences.Contains(reference))
-        {
-            this.externalReferences.Add(reference);
+        var existing = this.externalReferences.FirstOrDefault(reference => reference.Is(source, externalId));
+
+        if (existing is null)
+            this.externalReferences.Add(new ExternalReference(source.ToLowerInvariant(), externalId, handle));
+        else if (!existing.Follow(handle))
+            return;
+
+        Touch(clock);
+    }
+
+    /// <summary>
+    /// Tells the catalogue which of the source's variants a SKU is (phase 16):
+    /// the variant is then found again by that id, whatever SKU the source
+    /// gives it next. Idempotent.
+    /// </summary>
+    public void LinkVariantExternal(TimeProvider clock, string sku, string source, string externalId)
+    {
+        if (Required(sku).LinkExternal(source, externalId))
             Touch(clock);
-        }
+    }
+
+    /// <summary>The variant's tax class, as its source says it (phase 16, S2a).</summary>
+    public void SetVariantTaxClass(TimeProvider clock, string sku, string taxClass)
+    {
+        if (Required(sku).SetTaxClass(taxClass))
+            Touch(clock);
+    }
+
+    /// <summary>The variant's barcode, as its source says it; null clears it.</summary>
+    public void SetVariantBarcode(TimeProvider clock, string sku, string? barcode)
+    {
+        if (Required(sku).SetBarcode(barcode))
+            Touch(clock);
     }
 
     /// <summary>
@@ -611,6 +673,7 @@ public sealed class Product : AggregateRoot
         if (Status == ProductStatus.Archived)
             throw new InvalidOperationException("Cannot publish an archived product.");
         Status = ProductStatus.Active;
+        FirstPublishedAt ??= clock.GetUtcNow();
         Touch(clock);
     }
 
@@ -644,58 +707,5 @@ public sealed class Product : AggregateRoot
 
     // One slug per culture, generated from the name in that culture (multilingual SEO).
     private static LocalizedText Slugify(LocalizedText name) =>
-        new(name.Values.ToDictionary(kv => kv.Key, kv => Slugify(kv.Value)));
-
-    /// <summary>
-    /// Explicit diacritic folding. The natural thing would be
-    /// <c>Normalize(NormalizationForm.FormD)</c> followed by dropping the
-    /// combining marks — and that is what was written first. It does not work:
-    /// the repository builds with <c>InvariantGlobalization=true</c>, and there
-    /// Unicode normalisation is a silent NO-OP. It returns the string intact,
-    /// with no exception and no warning, so the code looked correct while "café"
-    /// kept coming out as <c>café</c> inside the URL.
-    ///
-    /// A table is uglier and it is the one that works. It covers what an es/en
-    /// catalogue can bring; anything not here becomes a separator, which is the
-    /// safe failure: an ugly slug, never a character that has to be escaped.
-    /// </summary>
-    private const string Accented = "áàâäãåéèêëíìîïóòôöõúùûüñçýÿšžœæø";
-    private const string Folded = "aaaaaaeeeeiiiiooooouuuuncyyszoao";
-
-    /// <summary>
-    /// ASCII letters and digits; everything else separates. Splitting on spaces
-    /// alone left brackets and accents inside the URL — "Cafetera Espresso
-    /// (12 tazas)" came out as <c>cafetera-espresso-(12-tazas)</c>.
-    /// </summary>
-    private static string Slugify(string name)
-    {
-        var words = new List<string>();
-        var word = new StringBuilder(name.Length);
-
-        foreach (var character in name)
-        {
-            var lowered = char.ToLowerInvariant(character);
-            var index = Accented.IndexOf(lowered, StringComparison.Ordinal);
-            if (index >= 0)
-                lowered = Folded[index];
-
-            if (char.IsAsciiLetterOrDigit(lowered))
-            {
-                word.Append(lowered);
-                continue;
-            }
-
-            if (word.Length > 0)
-            {
-                words.Add(word.ToString());
-                word.Clear();
-            }
-        }
-
-        if (word.Length > 0)
-            words.Add(word.ToString());
-
-        return string.Join('-', words);
-    }
-
+        new(name.Values.ToDictionary(kv => kv.Key, kv => Slugs.Of(kv.Value)));
 }

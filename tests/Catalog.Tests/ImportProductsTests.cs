@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
+using ElGuerre.Tendero.Catalog.Adapters;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
@@ -147,12 +148,324 @@ public sealed class ImportProductsTests
         Assert.Equal(3, shop.Product.Variants.Count);
     }
 
+    // ---------- what the import says beside its counts (phase 16, P16-5) ----------
+
+    /// <summary>
+    /// What the source could not hand over cleanly comes back with the counts, a
+    /// note per thing: its code, the product it is about (or none, for the source
+    /// as a whole), and the sentence in the language asked, which an operator
+    /// reads instead of the logs.
+    /// </summary>
+    [Fact]
+    public async Task What_the_source_could_not_hand_over_comes_back_in_the_language_asked()
+    {
+        var shop = new Shop { Culture = "en" };
+        shop.Source.Notes = [new SourceNote(ImportNoteCode.CategoryNotMapped, OneProductConnector.ExternalId, "Coffee Makers")];
+        shop.Source.SourceNotes = [new SourceNote(ImportNoteCode.LocaleIgnored, null, "fr")];
+
+        await shop.ImportAsync();
+
+        Assert.Equal(
+            [(ImportNoteCode.CategoryNotMapped, OneProductConnector.ExternalId), (ImportNoteCode.LocaleIgnored, null)],
+            shop.Result.Notes.Select(note => (note.Code, note.About)));
+        Assert.Contains("“Coffee Makers”", shop.Result.Notes[0].Text, StringComparison.Ordinal);
+        Assert.StartsWith("The store publishes fr", shop.Result.Notes[1].Text, StringComparison.Ordinal);
+
+        shop.Culture = "es";
+        await shop.ImportAsync();
+        Assert.StartsWith("La tienda publica fr", shop.Result.Notes[1].Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_picture_that_could_not_be_read_is_said()
+    {
+        var shop = new Shop();
+
+        await shop.ImportAsync(Missing, Illustration);
+
+        var note = Assert.Single(shop.Result.Notes);
+        Assert.Equal((ImportNoteCode.ImageUnreadable, OneProductConnector.ExternalId), (note.Code, note.About));
+        Assert.Contains(Missing.ToString(), note.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A SKU the source renames is said, and ours stays: Inventory, the cart and
+    /// every order speak it (spec, *Re-importing*, corrected).
+    /// </summary>
+    [Fact]
+    public async Task A_sku_renamed_at_the_source_is_said_and_ours_stays()
+    {
+        var shop = new Shop { Variants = [new ExternalVariant("44001", new Dictionary<string, string>(), ExternalId: "44001", Sku: "MOKA-OLV")] };
+        await shop.ImportAsync();
+
+        shop.Variants = [new ExternalVariant("44001", new Dictionary<string, string>(), ExternalId: "44001", Sku: "MOKA-OLIVE")];
+        await shop.ImportAsync();
+
+        Assert.Equal("MOKA-OLV", Assert.Single(shop.Product.Variants).Sku);
+        var note = Assert.Single(shop.Result.Notes);
+        Assert.Equal(ImportNoteCode.SkuChangedAtSource, note.Code);
+        Assert.Contains("MOKA-OLV → MOKA-OLIVE", note.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// What is not a rename is not said as one: a variant the shop has never
+    /// sold (no SKU of ours yet), and one the source gives no SKU at all. Found by
+    /// phase 16's Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task A_new_variant_or_one_without_a_sku_at_the_source_is_no_rename()
+    {
+        var shop = new Shop { Variants = [new ExternalVariant("44001", new Dictionary<string, string>(), ExternalId: "44001", Sku: "MOKA-OLV")] };
+        await shop.ImportAsync();
+
+        shop.Variants =
+        [
+            new ExternalVariant("44001", new Dictionary<string, string>(), ExternalId: "44001", Sku: ""),
+            new ExternalVariant("44002", new Dictionary<string, string>(), ExternalId: "44002", Sku: "MOKA-BLK"),
+        ];
+        await shop.ImportAsync();
+
+        Assert.DoesNotContain(shop.Result.Notes, note => note.Code == ImportNoteCode.SkuChangedAtSource);
+    }
+
+    /// <summary>A product the shop already has is updated by what the source says now.</summary>
+    [Fact]
+    public async Task A_reimport_updates_what_the_source_says_now()
+    {
+        var shop = new Shop();
+        await shop.ImportAsync();
+
+        shop.Source.SpanishName = "Cafetera de goteo programable";
+        await shop.ImportAsync();
+
+        Assert.Equal("Cafetera de goteo programable", shop.Product.Name.In("es"));
+    }
+
+    /// <summary>
+    /// The run's last products and the collections are saved at the end, after
+    /// the batch: without that save the run would be recorded with no products
+    /// and no collection kept. Found by phase 16's Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task The_run_and_the_collections_are_saved_after_the_last_batch()
+    {
+        var shop = new Shop();
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId])];
+
+        await shop.ImportAsync();
+
+        Assert.Equal(2, shop.Saves);
+    }
+
+    /// <summary>
+    /// The proof the source is used and how much of a store comes across clean
+    /// (spec, *Evidence of use*; ADR 0036): products counted by source and
+    /// outcome, and the notes by code.
+    /// </summary>
+    [Fact]
+    public async Task An_import_counts_its_products_by_outcome_and_its_notes_by_code()
+    {
+        using var recorder = new InstrumentRecorder("tendero.catalog.import.products", "tendero.catalog.import.notes");
+        var shop = new Shop();
+        shop.Source.Notes = [new SourceNote(ImportNoteCode.CategoryNotMapped, OneProductConnector.ExternalId, "Coffee Makers")];
+
+        await shop.ImportAsync();
+        await shop.ImportAsync();
+
+        Assert.Equal(
+            [("test", "created"), ("test", "updated")],
+            recorder.Of("tendero.catalog.import.products").Select(tags => ((string)tags["catalog.source"]!, (string)tags["catalog.import.outcome"]!)));
+        Assert.Equal(2, recorder.Sum("tendero.catalog.import.products"));
+        Assert.All(recorder.Of("tendero.catalog.import.notes"), tags => Assert.Equal(("CategoryNotMapped", "test"), (tags["catalog.import.note"], tags["catalog.source"])));
+        Assert.Equal(2, recorder.Sum("tendero.catalog.import.notes"));
+    }
+
+    /// <summary>
+    /// A store's collection becomes the category its products share, so its old
+    /// address can be sent to the category's page (phase 16, P16-11). Kept by
+    /// the source's handle, the name in its URLs.
+    /// </summary>
+    [Fact]
+    public async Task A_collection_is_kept_as_the_category_its_products_share()
+    {
+        var shop = new Shop();
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId])];
+
+        await shop.ImportAsync();
+
+        Assert.Equal([("test", "menaje", "COOKWARE")], shop.Collections.Kept);
+        Assert.Empty(shop.Result.Notes);
+    }
+
+    /// <summary>
+    /// A collection that is no category's page — its products share none, or
+    /// none of them came in — is said, not sent somewhere close.
+    /// </summary>
+    [Theory]
+    [InlineData(null, OneProductConnector.ExternalId)]
+    [InlineData("COOKWARE", "NEVER_IMPORTED")]
+    public async Task A_collection_that_is_no_category_is_said(string? category, string member)
+    {
+        var shop = new Shop { Culture = "en" };
+        shop.Source.Category = category;
+        shop.Source.Collections = [new ExternalCollection("ofertas", "Ofertas", [member])];
+
+        await shop.ImportAsync();
+
+        Assert.Empty(shop.Collections.Kept);
+        var note = Assert.Single(shop.Result.Notes);
+        Assert.Equal((ImportNoteCode.CollectionNotMapped, "ofertas"), (note.Code, note.About));
+        Assert.Contains("Ofertas", note.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Each import is a run, and its answer names it (P16-12): what a person
+    /// publishes in one go once the notes are read. Only what the run created —
+    /// a product it updated was already the shop's, and its status a person's.
+    /// </summary>
+    [Fact]
+    public async Task An_import_is_a_run_that_names_the_products_it_created()
+    {
+        var shop = new Shop();
+
+        await shop.ImportAsync();
+        await shop.ImportAsync();
+
+        Assert.Equal(2, shop.Runs.Added.Count);
+        Assert.Equal([shop.Product.Id], shop.Runs.Added[0].Products);
+        Assert.Empty(shop.Runs.Added[1].Products);
+        Assert.Equal(shop.Runs.Added[1].Id.ToString(), shop.Result.ImportId);
+    }
+
+    /// <summary>
+    /// The rehearsal (P16-13): the import run with nothing written — no product,
+    /// no picture, no run, no collection — saying what would come and the notes.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_says_what_would_come_and_writes_nothing()
+    {
+        var shop = new Shop { Rehearse = true };
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId]), new ExternalCollection("ofertas", "Ofertas", [])];
+
+        await shop.ImportAsync(Illustration, Missing);
+
+        Assert.Equal((1, 0, 0), (shop.Result.Created, shop.Result.Updated, shop.Result.Failed));
+        Assert.Equal([ImportNoteCode.ImageUnreadable, ImportNoteCode.CollectionNotMapped], shop.Result.Notes.Select(note => note.Code));
+        Assert.Null(shop.Product);
+        Assert.Null(shop.Result.ImportId);
+        Assert.Equal((0, 0), (shop.Saves, shop.PicturesStored));
+        Assert.Empty(shop.Runs.Added);
+        Assert.Empty(shop.Collections.Kept);
+    }
+
+    /// <summary>
+    /// A rehearsal holds what it would bring for the rest of a migration rehearsed
+    /// in the same request (P16-21): the product it would create and the collection
+    /// it would keep, so the stock, the orders and the discounts are judged against
+    /// the catalogue the import would leave.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_holds_what_it_would_bring_for_the_rest_of_the_migration()
+    {
+        var shop = new Shop { Rehearse = true };
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId])];
+
+        await shop.ImportAsync(Illustration);
+
+        var brought = Assert.Single(shop.Rehearsed.Products);
+        Assert.Equal(OneProductConnector.ExternalId, Assert.Single(brought.ExternalReferences).ExternalId);
+        Assert.Equal("COOKWARE", shop.Rehearsed.CategoryOf("menaje"));
+    }
+
+    /// <summary>A product the shop already has is read from where it is stored, and an import for real holds nothing.</summary>
+    [Fact]
+    public async Task Neither_a_known_product_nor_an_import_for_real_is_held_as_rehearsed()
+    {
+        var shop = new Shop();
+        shop.Source.Category = "COOKWARE";
+        shop.Source.Collections = [new ExternalCollection("menaje", "Menaje", [OneProductConnector.ExternalId])];
+
+        await shop.ImportAsync(Illustration);
+        Assert.Empty(shop.Rehearsed.Products);
+        Assert.Null(shop.Rehearsed.CategoryOf("menaje"));
+
+        shop.Rehearse = true;
+        await shop.ImportAsync(Illustration);
+        Assert.Empty(shop.Rehearsed.Products);
+    }
+
+    /// <summary>
+    /// What the rehearsal says is what the import then does (spec, *Measures*):
+    /// the same counts and the same notes, for a new product and for one the shop
+    /// already has.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_says_what_the_import_then_does()
+    {
+        var shop = new Shop();
+        shop.Source.Collections = [new ExternalCollection("ofertas", "Ofertas", [])];
+
+        foreach (var _ in new[] { "new", "known" })
+        {
+            shop.Rehearse = true;
+            await shop.ImportAsync(Illustration, Missing);
+            var said = shop.Result;
+            shop.Rehearse = false;
+            await shop.ImportAsync(Illustration, Missing);
+
+            Assert.Equal((said.Created, said.Updated, said.Failed), (shop.Result.Created, shop.Result.Updated, shop.Result.Failed));
+            Assert.Equal(said.Notes, shop.Result.Notes);
+        }
+    }
+
+    /// <summary>A product the catalogue refuses is counted as failed, by its source. Found by phase 16's Stryker close.</summary>
+    [Fact]
+    public async Task A_product_the_catalogue_refuses_is_counted_as_failed()
+    {
+        using var recorder = new InstrumentRecorder("tendero.catalog.import.products");
+        var shop = new Shop();
+        shop.Source.Price = -1m;
+
+        await shop.ImportAsync();
+
+        Assert.Equal(1, shop.Result.Failed);
+        Assert.Equal(
+            [("test", "failed")],
+            recorder.Of("tendero.catalog.import.products").Select(tags => ((string)tags["catalog.source"]!, (string)tags["catalog.import.outcome"]!)));
+    }
+
     private sealed class Shop
     {
         private readonly InMemoryProductRepository repository = new();
+        private readonly ContentAddressedStore store = new();
+        private readonly CountingUnitOfWork unitOfWork = new();
+
+        /// <summary>The next import is a rehearsal.</summary>
+        public bool Rehearse { get; set; }
+
+        public int Saves => this.unitOfWork.SaveCount;
+
+        public int PicturesStored => this.store.Saved;
         private readonly OneProductConnector connector = new();
 
+        public KeptCollections Collections { get; } = new();
+
+        public RehearsedCatalogue Rehearsed { get; } = new();
+
+        public RecordedRuns Runs { get; } = new();
+
         public Product Product { get; private set; } = null!;
+
+        public ImportProductsResult Result { get; private set; } = null!;
+
+        /// <summary>The language the import's notes are asked in.</summary>
+        public string Culture { get; set; } = "es";
+
+        public OneProductConnector Source => this.connector;
 
         /// <summary>The ways the source sells it, from the next import on.</summary>
         public IReadOnlyList<ExternalVariant>? Variants
@@ -171,14 +484,18 @@ public sealed class ImportProductsTests
             var handler = new ImportProductsHandler(
                 new OneSourceRegistry(this.connector),
                 this.repository,
-                new CountingUnitOfWork(),
+                this.unitOfWork,
                 new ReadableImages(),
-                new ContentAddressedStore(),
+                this.store,
                 new NoAttributeDefinitions(),
+                new KitchenCategories(),
+                this.Collections,
+                this.Rehearsed,
+                this.Runs,
                 Clock,
                 NullLogger<ImportProductsHandler>.Instance);
 
-            await handler.HandleAsync(new ImportProductsCommand(OneProductConnector.Key), Ct);
+            Result = await handler.HandleAsync(new ImportProductsCommand(OneProductConnector.Key, Culture, Rehearse), Ct);
 
             Product = (await this.repository.FindByExternalReferenceAsync(
                 OneProductConnector.Key, OneProductConnector.ExternalId, Ct))!;
@@ -191,7 +508,7 @@ public sealed class ImportProductsTests
             new(Convert.ToHexStringLower(Encoding.UTF8.GetBytes(location.AbsolutePath)));
     }
 
-    private sealed class OneProductConnector : ICatalogSourceConnector
+    internal sealed class OneProductConnector : ICatalogSourceConnector
     {
         public const string Key = "test";
         public const string ExternalId = "B000000001";
@@ -202,7 +519,28 @@ public sealed class ImportProductsTests
 
         public Dictionary<Uri, IReadOnlyDictionary<string, string>> Shows { get; } = [];
 
+        public IReadOnlyList<SourceNote>? Notes { get; set; }
+
+        public IReadOnlyList<SourceNote> SourceNotes { get; set; } = [];
+
+        public string? Category { get; set; }
+
+        public string SpanishName { get; set; } = "Cafetera de goteo";
+
+        /// <summary>What it costs; a negative price is a product the catalogue refuses.</summary>
+        public decimal Price { get; set; } = 49.90m;
+
+        public IReadOnlyList<ExternalCollection> Collections { get; set; } = [];
+
         public string Source => Key;
+
+        public async IAsyncEnumerable<ExternalCollection> StreamCollectionsAsync(
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.CompletedTask;
+            foreach (var collection in Collections)
+                yield return collection;
+        }
 
         public async IAsyncEnumerable<ExternalProduct> StreamProductsAsync(
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -211,15 +549,16 @@ public sealed class ImportProductsTests
 
             yield return new ExternalProduct(
                 ExternalId,
-                new Dictionary<string, string> { ["es"] = "Cafetera de goteo", ["en"] = "Drip coffee maker" },
+                new Dictionary<string, string> { ["es"] = SpanishName, ["en"] = "Drip coffee maker" },
                 Descriptions: null,
                 Brand: "Kuisina",
-                Category: null,
-                PriceAmount: 49.90m,
+                Category: Category,
+                PriceAmount: Price,
                 PriceCurrency: "EUR",
                 [.. Images.Select(location => new ExternalImage(location, Shows: Shows.GetValueOrDefault(location)))],
                 new Dictionary<string, string>(),
-                Variants: Variants);
+                Variants: Variants,
+                Notes: Notes);
         }
     }
 
@@ -241,14 +580,48 @@ public sealed class ImportProductsTests
 
     private sealed class ContentAddressedStore : IImageStore
     {
+        public int Saved { get; private set; }
+
         public async Task<ImageId> SaveAsync(Stream content, string contentType, CancellationToken ct = default)
         {
+            Saved++;
             using var reader = new StreamReader(content);
             return new ImageId(Convert.ToHexStringLower(Encoding.UTF8.GetBytes(await reader.ReadToEndAsync(ct))));
         }
 
         public Task<StoredImage?> OpenAsync(ImageId id, CancellationToken ct = default) =>
             Task.FromResult<StoredImage?>(null);
+    }
+
+    private sealed class KitchenCategories : ICategoryReader
+    {
+        public Task<CategoryTree> AllAsync(CancellationToken cancellationToken = default)
+        {
+            var kitchen = Category.Define(Clock, "KITCHEN", LocalizedText.From("es", "Cocina"));
+            return Task.FromResult(new CategoryTree([kitchen, Category.Define(Clock, "COOKWARE", LocalizedText.From("es", "Menaje"), kitchen)]));
+        }
+    }
+
+    /// <summary>The collections an import kept, as (source, handle, category).</summary>
+    private sealed class KeptCollections : ISourceCollections
+    {
+        public List<(string Source, string Handle, string Category)> Kept { get; } = [];
+
+        public Task KeepAsync(string source, string handle, string categoryCode, CancellationToken ct)
+        {
+            Kept.Add((source, handle, categoryCode));
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class RecordedRuns : IImportRunRepository
+    {
+        public List<ImportRun> Added { get; } = [];
+
+        public void Add(ImportRun run) => Added.Add(run);
+
+        public Task<ImportRun?> FindAsync(ImportRunId id, CancellationToken ct) =>
+            Task.FromResult(Added.SingleOrDefault(run => run.Id == id));
     }
 
     private sealed class NoAttributeDefinitions : IAttributeDefinitionReader

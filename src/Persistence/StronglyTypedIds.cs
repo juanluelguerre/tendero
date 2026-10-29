@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Accounts.Domain;
+using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Pricing.Domain;
@@ -40,6 +41,7 @@ internal static class StronglyTypedIds
         conventions.Properties<SourceDocumentId>().HaveConversion<SourceDocumentIdConverter>();
         conventions.Properties<CampaignCode>().HaveConversion<CampaignCodeConverter>();
         conventions.Properties<ProposalId>().HaveConversion<ProposalIdConverter>();
+        conventions.Properties<ImportRunId>().HaveConversion<ImportRunIdConverter>();
     }
 
     private sealed class ProductIdConverter() : ValueConverter<ProductId, Guid>(id => id.Value, value => new ProductId(value));
@@ -58,4 +60,5 @@ internal static class StronglyTypedIds
     private sealed class SourceDocumentIdConverter() : ValueConverter<SourceDocumentId, string>(id => id.Value, value => new SourceDocumentId(value));
     private sealed class CampaignCodeConverter() : ValueConverter<CampaignCode, string>(code => code.Value, value => new CampaignCode(value));
     private sealed class ProposalIdConverter() : ValueConverter<ProposalId, Guid>(id => id.Value, value => new ProposalId(value));
+    private sealed class ImportRunIdConverter() : ValueConverter<ImportRunId, Guid>(id => id.Value, value => new ImportRunId(value));
 }

@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261020232809_WalletsPreferencesAndErasure";
+    public override string LastMigrationId => "20261024105812_ImportedCustomers";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -267,6 +267,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("character varying(200)")
                     .HasColumnName("display_name");
 
+                b.Property<string>("Email")
+                    .HasMaxLength(320)
+                    .HasColumnType("character varying(320)")
+                    .HasColumnName("email");
+
                 b.Property<DateTimeOffset?>("ErasedAt")
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("erased_at");
@@ -430,6 +435,33 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("action_proposals", "assist");
             });
 
+        modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.ImportRun", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<string>("Source")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)")
+                    .HasColumnName("source");
+
+                b.Property<DateTimeOffset>("StartedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("started_at");
+
+                b.PrimitiveCollection<Guid[]>("products")
+                    .IsRequired()
+                    .HasColumnType("uuid[]")
+                    .HasColumnName("products");
+
+                b.HasKey("Id")
+                    .HasName("pk_import_runs");
+
+                b.ToTable("import_runs", "catalog");
+            });
+
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>
             {
                 b.Property<Guid>("Id")
@@ -464,6 +496,10 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Description")
                     .HasColumnType("jsonb")
                     .HasColumnName("description");
+
+                b.Property<DateTimeOffset?>("FirstPublishedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("first_published_at");
 
                 b.Property<string>("Name")
                     .IsRequired()
@@ -548,11 +584,47 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("products", "catalog");
             });
 
+        modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.SourceCollection", b =>
+            {
+                b.Property<string>("Source")
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)")
+                    .HasColumnName("source");
+
+                b.Property<string>("Handle")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)")
+                    .HasColumnName("handle");
+
+                b.Property<string>("CategoryCode")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("category_code");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.HasKey("Source", "Handle")
+                    .HasName("pk_source_collections");
+
+                b.HasIndex("Handle")
+                    .HasDatabaseName("ix_source_collections_handle");
+
+                b.ToTable("source_collections", "catalog");
+            });
+
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Variant", b =>
             {
                 b.Property<Guid>("Id")
                     .HasColumnType("uuid")
                     .HasColumnName("id");
+
+                b.Property<string>("Barcode")
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("barcode");
 
                 b.Property<Guid?>("ProductId")
                     .HasColumnType("uuid")
@@ -1342,6 +1414,25 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .HasColumnType("jsonb");
                     });
 
+                b.ComplexProperty(typeof(Dictionary<string, object>), "ImportedFrom", "ElGuerre.Tendero.Ordering.Domain.Order.ImportedFrom#OrderOrigin", b1 =>
+                    {
+                        b1.Property<string>("ExternalId")
+                            .IsRequired()
+                            .HasJsonPropertyName("externalId");
+
+                        b1.Property<string>("Number")
+                            .IsRequired()
+                            .HasJsonPropertyName("number");
+
+                        b1.Property<string>("Source")
+                            .IsRequired()
+                            .HasJsonPropertyName("source");
+
+                        b1
+                            .ToJson("imported_from")
+                            .HasColumnType("jsonb");
+                    });
+
                 b.ComplexProperty(typeof(Dictionary<string, object>), "Mandate", "ElGuerre.Tendero.Ordering.Domain.Order.Mandate#OrderMandate", b1 =>
                     {
                         b1.Property<decimal>("ApprovedTotal")
@@ -1987,6 +2078,43 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("keys", "idempotency");
             });
 
+        modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.Customer", b =>
+            {
+                b.OwnsOne("ElGuerre.Tendero.Accounts.Domain.CustomerOrigin", "ImportedFrom", b1 =>
+                    {
+                        b1.Property<Guid>("Id")
+                            .HasColumnType("uuid")
+                            .HasColumnName("id");
+
+                        b1.Property<string>("ExternalId")
+                            .IsRequired()
+                            .HasMaxLength(200)
+                            .HasColumnType("character varying(200)")
+                            .HasColumnName("imported_external_id");
+
+                        b1.Property<string>("Source")
+                            .IsRequired()
+                            .HasMaxLength(50)
+                            .HasColumnType("character varying(50)")
+                            .HasColumnName("imported_source");
+
+                        b1.HasKey("Id")
+                            .HasName("pk_customers");
+
+                        b1.HasIndex("Source", "ExternalId")
+                            .IsUnique()
+                            .HasDatabaseName("ux_customers_imported_from");
+
+                        b1.ToTable("customers", "accounts");
+
+                        b1.WithOwner()
+                            .HasForeignKey("Id")
+                            .HasConstraintName("fk_customers_customers_id");
+                    });
+
+                b.Navigation("ImportedFrom");
+            });
+
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>
             {
                 b.OwnsMany("ElGuerre.Tendero.Catalog.Domain.ExternalReference", "ExternalReferences", b1 =>
@@ -2005,8 +2133,16 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .HasColumnType("character varying(400)")
                             .HasColumnName("external_id");
 
+                        b1.Property<string>("Handle")
+                            .HasMaxLength(255)
+                            .HasColumnType("character varying(255)")
+                            .HasColumnName("handle");
+
                         b1.HasKey("ProductId", "Source", "ExternalId")
                             .HasName("pk_product_external_references");
+
+                        b1.HasIndex("Handle")
+                            .HasDatabaseName("ix_product_external_references_handle");
 
                         b1.HasIndex("Source", "ExternalId")
                             .IsUnique()
@@ -2029,6 +2165,38 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("ProductId")
                     .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("fk_variants_products_product_id");
+
+                b.OwnsMany("ElGuerre.Tendero.Catalog.Domain.ExternalReference", "ExternalReferences", b1 =>
+                    {
+                        b1.Property<Guid>("VariantId")
+                            .HasColumnType("uuid")
+                            .HasColumnName("variant_id");
+
+                        b1.Property<string>("Source")
+                            .HasMaxLength(50)
+                            .HasColumnType("character varying(50)")
+                            .HasColumnName("source");
+
+                        b1.Property<string>("ExternalId")
+                            .HasMaxLength(400)
+                            .HasColumnType("character varying(400)")
+                            .HasColumnName("external_id");
+
+                        b1.HasKey("VariantId", "Source", "ExternalId")
+                            .HasName("pk_variant_external_references");
+
+                        b1.HasIndex("Source", "ExternalId")
+                            .IsUnique()
+                            .HasDatabaseName("ix_variant_external_references_source_external_id");
+
+                        b1.ToTable("variant_external_references", "catalog");
+
+                        b1.WithOwner()
+                            .HasForeignKey("VariantId")
+                            .HasConstraintName("fk_variant_external_references_variants_variant_id");
+                    });
+
+                b.Navigation("ExternalReferences");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>

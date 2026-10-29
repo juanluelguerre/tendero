@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ImportCustomers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/agent-denials": {
         parameters: {
             query?: never;
@@ -94,6 +110,22 @@ export interface paths {
         get: operations["AuthConfiguration"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/migration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MigrateStore"];
         delete?: never;
         options?: never;
         head?: never;
@@ -372,6 +404,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/imports/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublishImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products": {
         parameters: {
             query?: never;
@@ -516,6 +564,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exports/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExportOrders"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exports/catalogue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExportCatalogue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/restock": {
         parameters: {
             query?: never;
@@ -574,6 +654,22 @@ export interface paths {
         get?: never;
         put: operations["CountStock"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ImportStock"];
         delete?: never;
         options?: never;
         head?: never;
@@ -804,6 +900,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ImportOrders"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{orderId}": {
         parameters: {
             query?: never;
@@ -862,6 +974,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["QuoteCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/promotions/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProposePromotions"];
         delete?: never;
         options?: never;
         head?: never;
@@ -940,6 +1068,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["ListCampaigns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetProductCards"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1054,22 +1198,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ReindexProducts"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/search/cards": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["GetProductCards"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1850,6 +1978,7 @@ export interface components {
     schemas: {
         AccountData: {
             displayName: null | string;
+            email: null | string;
             culture: string;
             cultureChosen: boolean;
             marketingGiven: null | boolean;
@@ -2298,6 +2427,8 @@ export interface components {
             culture: null | string;
         };
         /** @enum {unknown} */
+        CustomerNoteCode: "FieldRedacted" | "NoEmail" | "AlreadyHere" | "IdentityNotProvisioned" | "AddressUnreadable" | "Erased";
+        /** @enum {unknown} */
         DashboardPeriod: "Day" | "Week" | "Month";
         /** @enum {unknown} */
         DealKind: "PercentOffLine" | "AmountOffOrder" | "BuyXGetY" | "FreeShipping";
@@ -2358,6 +2489,8 @@ export interface components {
             items: components["schemas"]["SkuDescriptionView"][];
         };
         /** @enum {unknown} */
+        DiscountNoteCode: "Expired" | "AlreadyHere" | "LimitNotExpressible" | "CustomersNotExpressible" | "ConditionNotExpressible" | "TargetNotExpressible" | "EffectNotExpressible" | "CombinationNarrowed" | "CodesNarrowed";
+        /** @enum {unknown} */
         DiscountOutcome: "Applied" | "Suppressed";
         DiscountRequirement: {
             minimumSubtotal: null | components["schemas"]["Money"];
@@ -2390,6 +2523,14 @@ export interface components {
             status: components["schemas"]["ProductStatus"];
             lacks: string[];
         };
+        GiftCardToReissue: {
+            lastCharacters: string;
+            balance: components["schemas"]["Money"];
+            /** Format: date */
+            expiresOn: null | string;
+            customer: null | string;
+            customerAtSource: null | string;
+        };
         HistorySettingsRequest: {
             enabled: boolean;
         };
@@ -2410,8 +2551,47 @@ export interface components {
         ImageAltOutcome: "Described" | "Unchanged" | "NoSuchImage" | "Archived" | "NotFound";
         /** @enum {unknown} */
         ImageShowsOutcome: "Shown" | "Unchanged" | "NoSuchImage" | "NotSold" | "Archived" | "NotFound";
+        ImportCustomersCommand: {
+            source: string;
+            /** @default es */
+            culture: string;
+            /** @default false */
+            rehearse: boolean;
+        };
+        ImportCustomersResult: {
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            alreadyImported: number;
+            /** Format: int32 */
+            linked: number;
+            notes: components["schemas"]["MessageOfCustomerNoteCode"][];
+        };
+        /** @enum {unknown} */
+        ImportNoteCode: "CategoryNotMapped" | "LocaleIgnored" | "DescriptionHadLayout" | "VariantWithoutSku" | "SkuSharedAtSource" | "SkuChangedAtSource" | "ImageUnreadable" | "CollectionNotMapped";
+        ImportOrdersCommand: {
+            source: string;
+            /** @default es */
+            culture: string;
+            /** @default false */
+            rehearse: boolean;
+        };
+        ImportOrdersResult: {
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            alreadyImported: number;
+            /** Format: int32 */
+            refunds: number;
+            notes: components["schemas"]["MessageOfOrderNoteCode"][];
+            giftCards: components["schemas"]["GiftCardToReissue"][];
+        };
         ImportProductsCommand: {
             source: string;
+            /** @default es */
+            culture: string;
+            /** @default false */
+            rehearse: boolean;
         };
         ImportProductsResult: {
             /** Format: int32 */
@@ -2422,6 +2602,23 @@ export interface components {
             failed: number;
             /** Format: double */
             elapsedSeconds: number;
+            notes: components["schemas"]["MessageOfImportNoteCode"][];
+            importId: null | string;
+        };
+        ImportStockCommand: {
+            source: string;
+            /** @default es */
+            culture: string;
+            /** @default false */
+            rehearse: boolean;
+        };
+        ImportStockResult: {
+            /** Format: int32 */
+            counted: number;
+            /** Format: int32 */
+            skipped: number;
+            proposedWarehouses: components["schemas"]["ProposedWarehouse"][];
+            notes: components["schemas"]["MessageOfStockNoteCode"][];
         };
         JsonElement: unknown;
         KeepCardRequest: {
@@ -2599,8 +2796,28 @@ export interface components {
             views: null | components["schemas"]["ViewedProduct"][];
             searches: null | components["schemas"]["PastSearch"][];
         };
+        MessageOfCustomerNoteCode: {
+            code: components["schemas"]["CustomerNoteCode"];
+            about: null | string;
+            text: string;
+        };
+        MessageOfDiscountNoteCode: {
+            code: components["schemas"]["DiscountNoteCode"];
+            about: null | string;
+            text: string;
+        };
+        MessageOfImportNoteCode: {
+            code: components["schemas"]["ImportNoteCode"];
+            about: null | string;
+            text: string;
+        };
         MessageOfKitSaid: {
             code: components["schemas"]["KitSaid"];
+            about: null | string;
+            text: string;
+        };
+        MessageOfOrderNoteCode: {
+            code: components["schemas"]["OrderNoteCode"];
             about: null | string;
             text: string;
         };
@@ -2608,6 +2825,16 @@ export interface components {
             code: components["schemas"]["ProductNote"];
             about: null | string;
             text: string;
+        };
+        MessageOfStockNoteCode: {
+            code: components["schemas"]["StockNoteCode"];
+            about: null | string;
+            text: string;
+        };
+        MigrateStoreRequest: {
+            source: string;
+            /** @default false */
+            rehearse: boolean;
         };
         MissingAttributeView: {
             code: string;
@@ -2725,6 +2952,8 @@ export interface components {
         OrderMode: "Live" | "Test";
         /** @enum {unknown} */
         OrderMove: "Ship" | "Deliver" | "Cancel";
+        /** @enum {unknown} */
+        OrderNoteCode: "StillOpen" | "ProductNotInCatalogue" | "CustomerNotImported" | "TotalsDoNotAddUp" | "RefundNotExpressed";
         /** @enum {unknown} */
         OrderStatus: "Pending" | "PaymentAuthorized" | "PaymentFailed" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
         OrderStatusCount: {
@@ -3104,6 +3333,55 @@ export interface components {
             /** Format: int32 */
             failed: number;
         };
+        ProposePromotionsCommand: {
+            source: string;
+            /** @default es */
+            culture: string;
+            /** @default false */
+            rehearse: boolean;
+        };
+        ProposePromotionsResult: {
+            proposed: components["schemas"]["ProposedPromotionView"][];
+            /** Format: int32 */
+            left: number;
+            file: null | string;
+            notes: components["schemas"]["MessageOfDiscountNoteCode"][];
+        };
+        ProposedPromotionView: {
+            code: string;
+            name: {
+                [key: string]: string;
+            };
+            effect: string;
+            combination: components["schemas"]["CombinationPolicy"];
+            /** Format: int32 */
+            priority: number;
+            couponCode: null | string;
+            categoryCode: null | string;
+            sku: null | string;
+            minimumSubtotal: null | components["schemas"]["Money"];
+            /** Format: int32 */
+            minimumQuantity: null | number;
+            /** Format: date-time */
+            validFrom: null | string;
+            /** Format: date-time */
+            validTo: null | string;
+        };
+        ProposedWarehouse: {
+            code: string;
+            name: string;
+            isActive: boolean;
+        };
+        PublishImportResponse: {
+            /** Format: int32 */
+            published: number;
+            /** Format: int32 */
+            alreadyActive: number;
+            /** Format: int32 */
+            withdrawn: number;
+            /** Format: int32 */
+            archived: number;
+        };
         /** @enum {unknown} */
         PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
         PublishProductResponse: {
@@ -3325,7 +3603,7 @@ export interface components {
             windowDays: number;
         };
         /** @enum {unknown} */
-        ReturnReason: "WrongSize" | "NotAsDescribed" | "Damaged" | "WrongItem" | "ChangedMind";
+        ReturnReason: "WrongSize" | "NotAsDescribed" | "Damaged" | "WrongItem" | "ChangedMind" | "Unstated";
         /** @enum {unknown} */
         ReturnStatus: "Requested" | "Approved" | "Received" | "Refunded" | "Rejected" | "Cancelled";
         ReturnView: {
@@ -3702,6 +3980,8 @@ export interface components {
             fastest: components["schemas"]["SkuSellThrough"][];
             slowest: components["schemas"]["SkuSellThrough"][];
         };
+        /** @enum {unknown} */
+        StockNoteCode: "LocationNotMapped" | "VariantNotInCatalogue" | "WarehouseUnknown";
         StockRowView: {
             sku: string;
             warehouseCode: string;
@@ -3714,6 +3994,16 @@ export interface components {
             available: number;
             /** Format: date-time */
             updatedAt: string;
+        };
+        StoreMigrationResult: {
+            source: string;
+            rehearsal: boolean;
+            catalogue: null | components["schemas"]["ImportProductsResult"];
+            stock: null | components["schemas"]["ImportStockResult"];
+            customers: null | components["schemas"]["ImportCustomersResult"];
+            orders: null | components["schemas"]["ImportOrdersResult"];
+            discounts: null | components["schemas"]["ProposePromotionsResult"];
+            notBrought: unknown[];
         };
         StrategyScore: {
             /** Format: double */
@@ -4060,6 +4350,56 @@ export interface operations {
             };
         };
     };
+    ImportCustomers: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCustomersCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCustomersResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     GetAgentDenials: {
         parameters: {
             query?: {
@@ -4206,6 +4546,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthConfiguration"];
+                };
+            };
+        };
+    };
+    MigrateStore: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MigrateStoreRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreMigrationResult"];
+                };
+            };
+            /** @description No part of the shop can be brought from that source. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "UnknownSource";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
                 };
             };
         };
@@ -5097,6 +5499,64 @@ export interface operations {
             };
         };
     };
+    PublishImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishImportResponse"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     ListProducts: {
         parameters: {
             query?: {
@@ -5216,7 +5676,9 @@ export interface operations {
     };
     ImportProducts: {
         parameters: {
-            query?: never;
+            query?: {
+                culture?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5493,6 +5955,98 @@ export interface operations {
             };
         };
     };
+    ExportOrders: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                format?: string;
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ExportCatalogue: {
+        parameters: {
+            query: {
+                format: string;
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     GetRestockList: {
         parameters: {
             query?: {
@@ -5709,6 +6263,56 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "UnknownWarehouse";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ImportStock: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportStockCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportStockResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
                     } & components["schemas"]["Problem"];
                 };
             };
@@ -6409,6 +7013,56 @@ export interface operations {
             };
         };
     };
+    ImportOrders: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportOrdersCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOrdersResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     GetOrder: {
         parameters: {
             query?: {
@@ -6572,6 +7226,56 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "MixedCurrencies" | "UnknownSkus";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ProposePromotions: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposePromotionsCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposePromotionsResult"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
                     } & components["schemas"]["Problem"];
                 };
             };
@@ -6749,6 +7453,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListCampaignsResult"];
+                };
+            };
+        };
+    };
+    GetProductCards: {
+        parameters: {
+            query?: {
+                ids?: string[];
+                codes?: string[];
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductCardsResult"];
                 };
             };
         };
@@ -7041,30 +7769,6 @@ export interface operations {
                         /** @enum {string} */
                         code?: "Forbidden";
                     } & components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    GetProductCards: {
-        parameters: {
-            query?: {
-                ids?: string[];
-                codes?: string[];
-                culture?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductCardsResult"];
                 };
             };
         };

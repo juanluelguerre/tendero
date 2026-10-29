@@ -12,8 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../src/Api/ElGuerre.Tendero.Api.csproj" />
     <ProjectReference Include="../../src/Assist/ElGuerre.Tendero.Assist.csproj" />
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../../src/Shopify/ElGuerre.Tendero.Shopify.csproj" />
     <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../../src/Knowledge/ElGuerre.Tendero.Knowledge.csproj" />
     <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
@@ -56,6 +58,15 @@
     <Compile Include="../IdempotencyStoreContract.cs" Link="IdempotencyStoreContract.cs" />
     <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
     <Compile Include="../OrderBuilder.cs" Link="OrderBuilder.cs" />
+  </ItemGroup>
+
+  <!-- A Shopify store from its recorded answers, shared from tests/Shopify.Tests:
+       the whole migration runs against the same fixtures the adapters are held to. -->
+  <ItemGroup>
+    <Compile Include="../Shopify.Tests/FakeShopify.cs" Link="FakeShopify.cs" />
+    <Content Include="../Shopify.Tests/Fixtures/**" LinkBase="Fixtures">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 

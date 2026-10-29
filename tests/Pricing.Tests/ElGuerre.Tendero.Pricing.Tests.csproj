@@ -17,9 +17,12 @@
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
-  <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
+  <!-- The fixed clock shared by the test projects (../TestClock.cs), and the
+       discounts port's contract every discount source passes. -->
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+    <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
+    <Compile Include="../DiscountSourceConnectorContract.cs" Link="DiscountSourceConnectorContract.cs" />
   </ItemGroup>
 
   <ItemGroup>

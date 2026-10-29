@@ -57,11 +57,20 @@ public sealed class SeedCorpus(IServiceProvider services)
             if (withPictures)
                 await IndexPicturesAsync(product, external, cancellationToken);
 
-            byInternalId[product.Id.ToString()] = external.ExternalId;
+            byInternalId[product.Id.ToString()] = JudgedAs(external, connector.Source);
         }
 
         return byInternalId;
     }
+
+    /// <summary>
+    /// The id the golden set judges a product by. The seed's is its item id; a
+    /// product read back from the Shopify round trip carries Shopify's own number,
+    /// and its handle is the item id lowercased (tools/shopify-seed/seed.mjs), so
+    /// the same judgments score it (phase 16, P16-6).
+    /// </summary>
+    private static string JudgedAs(ExternalProduct external, string source) =>
+        source == "shopify" && external.Handle is { Length: > 0 } handle ? handle.ToUpperInvariant() : external.ExternalId;
 
     /// <summary>
     /// The pictures the source lists, through the import's own reader and the

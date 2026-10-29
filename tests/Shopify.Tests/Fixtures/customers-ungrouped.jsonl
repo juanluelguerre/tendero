@@ -1,0 +1,2 @@
+{"id":"gid://shopify/Customer/6001","firstName":"Ana","lastName":"Ruiz","locale":"es","defaultEmailAddress":{"emailAddress":"ana@example.com","marketingState":"SUBSCRIBED","marketingUpdatedAt":"2025-11-03T18:00:00Z"},"defaultAddress":null}
+{"id":"gid://shopify/MailingAddress/9200?model_name=CustomerAddress","name":"Luis Gómez","address1":"Calle Sierpes 3","address2":null,"city":"Sevilla","provinceCode":"SE","zip":"41004","countryCodeV2":"ES","phone":null,"__parentId":"gid://shopify/Customer/6002"}

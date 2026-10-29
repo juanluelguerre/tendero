@@ -11,6 +11,13 @@
   "defaultLocale": "es",
   "sslRequired": "none",
   "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "tienda@tendero.dev",
+    "fromDisplayName": "Tendero"
+  },
   "loginWithEmailAllowed": true,
   "accessTokenLifespan": 1800,
   "roles": {
@@ -115,6 +122,17 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "tendero-provisioning",
+      "name": "Tendero provisioning",
+      "description": "Makes identities with no password for imported customers (ADR 0067). Manages users and nothing else.",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "secret": "tendero-provisioning-dev"
     }
   ],
   "users": [
@@ -161,6 +179,18 @@
       "realmRoles": [
         "agent"
       ]
+    },
+    {
+      "username": "service-account-tendero-provisioning",
+      "enabled": true,
+      "serviceAccountClientId": "tendero-provisioning",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
     }
   ]
 }

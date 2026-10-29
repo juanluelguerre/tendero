@@ -1,0 +1,35 @@
+<!doctype html>
+<!--
+  The hero's background in the Shopify store, in Tendero's look (phase 16, case
+  B): the page's warm stone and the floor the counter stands on. A theme lays a
+  hero's picture across the whole screen while its content keeps to the page's
+  width, so the shop front is not here: it is an image block in the hero's
+  content, on the right, lined up with the products below
+  (tools/shopify-theme/build.mjs).
+
+  No awning band: the stripe is the system's one decorative device and "never a
+  background fill" (design/theme.css, *The signature*). It is the thin rule under
+  the store's menu instead, as on our storefront (tendero.css).
+
+  Rendered at 2400×1000 by hero.mjs; the colours are the tokens' values:
+  stone-100 and stone-200.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 2400px; height: 1000px; overflow: hidden; }
+  body {
+    background: #F3F1ED;
+    position: relative;
+  }
+  .floor {
+    position: absolute; inset: auto 0 0 0; height: 90px;
+    background: #E4E0D9;
+  }
+</style>
+</head>
+<body>
+  <div class="floor"></div>
+</body>
+</html>

@@ -11,6 +11,14 @@ public sealed record CustomerRegistered(CustomerId CustomerId, DateTimeOffset Oc
 /// </summary>
 public sealed record MarketingConsent(bool Given, DateTimeOffset At, string Wording);
 
+/// <summary>
+/// Where an imported customer came from (phase 16, S2b): the platform and its id
+/// for them there. It is what a re-import finds them by, what an imported order is
+/// given its owner by, and — kept after an erasure — what stops the next import
+/// from bringing back somebody who asked to be forgotten.
+/// </summary>
+public sealed record CustomerOrigin(string Source, string ExternalId);
+
 /// <summary>A guest turned into somebody with a name. The event carries both
 /// facts because "this customer existed before they signed in" is the thing an
 /// audit reader wants and cannot reconstruct afterwards.</summary>
@@ -58,6 +66,16 @@ public sealed class Customer : AggregateRoot
 
     /// <summary>What the shop may send them: null until they say, then what they said, when, and to which wording.</summary>
     public MarketingConsent? Marketing { get; private set; }
+
+    /// <summary>
+    /// Their email, lowercase, when the shop has it: an imported customer brings one
+    /// (phase 16, S2b). Personal data, cleared by an erasure. Null for a customer
+    /// who signed in here, whose email is the identity provider's.
+    /// </summary>
+    public string? Email { get; private set; }
+
+    /// <summary>Where an imported customer came from; null for one who came to the shop here.</summary>
+    public CustomerOrigin? ImportedFrom { get; private set; }
 
     /// <summary>
     /// When the account was removed (P15-9): the customer is kept, anonymised, so an
@@ -126,6 +144,55 @@ public sealed class Customer : AggregateRoot
         customer.Raise(new CustomerIdentified(customer.Id, subject, customer.CreatedAt));
 
         return customer;
+    }
+
+    /// <summary>
+    /// Somebody who bought from a store the merchant is leaving (phase 16, S2b):
+    /// their email, the store's id for them, their name, and their marketing
+    /// consent exactly as the store recorded it — dated then, and worded as what it
+    /// was, a consent given to the store. With the identity provisioned for them
+    /// (<paramref name="subject"/>) they sign in as themselves; without one they are
+    /// a guest the shop can still address, and their orders still have an owner.
+    /// </summary>
+    public static Customer Imported(
+        TimeProvider clock, CustomerOrigin origin, string email, string? displayName, string culture,
+        MarketingConsent? marketing, string? subject)
+    {
+        ArgumentNullException.ThrowIfNull(origin);
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+
+        var customer = subject is null
+            ? Guest(clock, culture, Segments.Retail)
+            : Identified(clock, subject, displayName, culture, Segments.Retail);
+
+        customer.DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
+        customer.Email = email.Trim().ToLowerInvariant();
+        customer.ImportedFrom = origin;
+        customer.Marketing = marketing;
+        return customer;
+    }
+
+    /// <summary>
+    /// Somebody the shop already had, found in a store the merchant is leaving by
+    /// their email (phase 16, S2b): told where else they came from, so that store's
+    /// orders find them. Idempotent; a different id from the same or another store
+    /// is refused, because two store customers on one person is two people's orders
+    /// landing on one.
+    /// </summary>
+    public void LinkOrigin(TimeProvider clock, CustomerOrigin origin)
+    {
+        ArgumentNullException.ThrowIfNull(origin);
+        EnsureCurrent();
+
+        if (ImportedFrom == origin)
+            return;
+
+        if (ImportedFrom is { } existing)
+            throw new InvalidOperationException(
+                $"Customer {Id} already came from {existing.Source} {existing.ExternalId}; it cannot also be {origin.Source} {origin.ExternalId}.");
+
+        ImportedFrom = origin;
+        Touch(clock);
     }
 
     /// <summary>
@@ -260,6 +327,7 @@ public sealed class Customer : AggregateRoot
 
         Subject = null;
         DisplayName = null;
+        Email = null;
         CultureChosen = false;
         Marketing = null;
         ErasedAt = clock.GetUtcNow();

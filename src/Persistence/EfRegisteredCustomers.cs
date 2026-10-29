@@ -16,3 +16,26 @@ internal sealed class EfRegisteredCustomers(TenderoDbContext context) : IRegiste
             .AsNoTracking()
             .AnyAsync(candidate => candidate.Id == customer && candidate.Subject != null, cancellationToken);
 }
+
+/// <summary>
+/// Ordering's other question about Accounts (phase 16, S2b): which customer each of
+/// a store's buyers was imported as, by the origin columns Accounts keeps. Erased
+/// customers keep their origin and still own their orders, as every erased
+/// customer does.
+/// </summary>
+internal sealed class EfImportedCustomerIds(TenderoDbContext context) : IImportedCustomerIds
+{
+    public async Task<IReadOnlyDictionary<string, CustomerId>> ForAsync(
+        string source, IReadOnlyCollection<string> externalIds, CancellationToken cancellationToken = default)
+    {
+        var rows = await context.Customers
+            .AsNoTracking()
+            .Where(customer => customer.ImportedFrom != null
+                && customer.ImportedFrom.Source == source
+                && externalIds.Contains(customer.ImportedFrom.ExternalId))
+            .Select(customer => new { customer.ImportedFrom!.ExternalId, customer.Id })
+            .ToListAsync(cancellationToken);
+
+        return rows.ToDictionary(row => row.ExternalId, row => row.Id, StringComparer.Ordinal);
+    }
+}

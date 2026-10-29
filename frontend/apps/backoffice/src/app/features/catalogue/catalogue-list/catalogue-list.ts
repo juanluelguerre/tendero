@@ -8,6 +8,7 @@ import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
 import { Find } from '../../../worklist/find/find';
 import { ListState } from '../../../worklist/list-state/list-state';
 import { Pager } from '../../../worklist/pager/pager';
+import { CatalogueExports } from '../catalogue-exports/catalogue-exports';
 import { CatalogueStore } from '../catalogue.store';
 import { ProductStatusTags } from '../product-status-tags/product-status-tags';
 
@@ -18,7 +19,17 @@ import { ProductStatusTags } from '../product-status-tags/product-status-tags';
  */
 @Component({
   selector: 'backoffice-catalogue-list',
-  imports: [RouterLink, TranslocoDirective, FilterChips, Pager, ProductStatusTags, Find, ListState, PricePipe],
+  imports: [
+    RouterLink,
+    TranslocoDirective,
+    FilterChips,
+    Pager,
+    ProductStatusTags,
+    Find,
+    ListState,
+    PricePipe,
+    CatalogueExports,
+  ],
   templateUrl: './catalogue-list.html',
   styleUrl: './catalogue-list.css',
 })

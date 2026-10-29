@@ -261,6 +261,7 @@
     "reason.NotAsDescribed": "No es como se describía",
     "reason.WrongItem": "Ha llegado otro artículo",
     "reason.WrongSize": "Talla equivocada",
+    "reason.Unstated": "Reembolsado en nuestra tienda anterior",
     "reference": "Pedido {{id}}",
     "returnClosed": "El plazo de devolución ha terminado.",
     "returnFailed": "No se ha podido abrir la devolución: {{reason}}",

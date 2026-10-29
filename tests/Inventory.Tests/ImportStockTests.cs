@@ -1,0 +1,205 @@
+using System.Runtime.CompilerServices;
+using ElGuerre.Tendero.Inventory.Features.ImportStock;
+using ElGuerre.Tendero.Inventory.Ports;
+using ElGuerre.Tendero.Inventory.Tests.Sources;
+using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Tests;
+using Xunit;
+
+namespace ElGuerre.Tendero.Inventory.Tests;
+
+/// <summary>A stock source written in memory: the contract suite's control, and the slice's.</summary>
+internal sealed class FakeStockSource : IStockSourceConnector
+{
+    public const string Key = "fake";
+
+    public List<SourceWarehouse> Warehouses { get; } = [new("MAD", "Almacén central (Madrid)", true), new("VLC", "Almacén Valencia", true)];
+
+    public List<SourceStockLevel> Levels { get; } = [new("SKU-1", "MAD", 4), new("SKU-1", "VLC", 2), new("SKU-2", "MAD", 0)];
+
+    public List<StockNote> Notes { get; } = [];
+
+    public string Source => Key;
+
+    public IReadOnlyList<StockNote> SourceNotes => Notes;
+
+    public async IAsyncEnumerable<SourceWarehouse> StreamWarehousesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        await Task.CompletedTask;
+        foreach (var warehouse in Warehouses)
+            yield return warehouse;
+    }
+
+    public async IAsyncEnumerable<SourceStockLevel> StreamLevelsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        await Task.CompletedTask;
+        foreach (var level in Levels)
+            yield return level;
+    }
+}
+
+public sealed class FakeStockSourceContractTests : StockSourceConnectorContractTests
+{
+    protected override IStockSourceConnector CreateConnector() => new FakeStockSource();
+}
+
+/// <summary>
+/// Bringing a source's stock (phase 16, S2a, P16-10): each level enters the
+/// ledger as a **count** — what the shelf holds, whatever the system thought,
+/// zero included — and only in a warehouse the shop operates. The source's
+/// places the shop does not have come back as proposed warehouses, for a person
+/// to add to the warehouses file: nothing writes warehouses (spec, corrected).
+/// </summary>
+public sealed class ImportStockTests
+{
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    private static (ImportStockHandler Handler, CountingLedger Ledger, FakeStockSource Source) AnImport()
+    {
+        var source = new FakeStockSource();
+        var ledger = new CountingLedger();
+        return (new ImportStockHandler(new OneStockSource(source), ledger, new FakeWarehouses()), ledger, source);
+    }
+
+    [Fact]
+    public async Task Each_level_in_a_warehouse_the_shop_operates_is_counted_zero_included()
+    {
+        var (handler, ledger, _) = AnImport();
+
+        var result = await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key), Ct);
+
+        Assert.Equal([("SKU-1", "MAD", 4), ("SKU-2", "MAD", 0)], ledger.Counts);
+        Assert.Equal((2, 1), (result.Counted, result.Skipped));
+    }
+
+    /// <summary>
+    /// A level in a place the shop does not operate is not counted — it would
+    /// create a shelf in a building that does not exist — and is said; the place
+    /// comes back as a proposed warehouse.
+    /// </summary>
+    [Fact]
+    public async Task A_place_the_shop_does_not_operate_is_proposed_and_its_levels_said_not_counted()
+    {
+        var (handler, _, _) = AnImport();
+
+        var result = await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, "en"), Ct);
+
+        Assert.Equal([new ProposedWarehouse("VLC", "Almacén Valencia", true)], result.ProposedWarehouses);
+        var note = Assert.Single(result.Notes);
+        Assert.Equal((StockNoteCode.WarehouseUnknown, "SKU-1"), (note.Code, note.About));
+        Assert.Contains("VLC", note.Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task What_the_source_could_not_hand_over_comes_back_in_the_language_asked()
+    {
+        var (handler, _, source) = AnImport();
+        source.Notes.Add(new StockNote(StockNoteCode.LocationNotMapped, null, "Tienda de Bilbao"));
+
+        var spanish = await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, "es"), Ct);
+
+        var note = spanish.Notes.Single(each => each.Code == StockNoteCode.LocationNotMapped);
+        Assert.StartsWith("La ubicación «Tienda de Bilbao»", note.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// How much of a store's stock comes across (spec, *Evidence of use*; ADR
+    /// 0036): levels counted by source and outcome, and the notes by code, as
+    /// the catalogue's import counts its products.
+    /// </summary>
+    [Fact]
+    public async Task An_import_counts_its_levels_by_outcome_and_its_notes_by_code()
+    {
+        using var recorder = new InstrumentRecorder("tendero.inventory.import.levels", "tendero.inventory.import.notes");
+        var (handler, _, source) = AnImport();
+        source.Notes.Add(new StockNote(StockNoteCode.LocationNotMapped, null, "Tienda de Bilbao"));
+
+        await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key), Ct);
+
+        Assert.Equal(
+            [("fake", "counted"), ("fake", "skipped")],
+            recorder.Of("tendero.inventory.import.levels")
+                .Select(tags => ((string)tags["catalog.source"]!, (string)tags["inventory.import.outcome"]!)));
+        Assert.Equal(3, recorder.Sum("tendero.inventory.import.levels"));
+        Assert.Equal(
+            ["WarehouseUnknown", "LocationNotMapped"],
+            recorder.Of("tendero.inventory.import.notes").Select(tags => (string)tags["inventory.import.note"]!));
+        Assert.All(recorder.Of("tendero.inventory.import.notes"), tags => Assert.Equal("fake", tags["catalog.source"]));
+    }
+
+    /// <summary>
+    /// The rehearsal (P16-13): what would be counted, skipped and proposed, and
+    /// the notes, with nothing entered in the ledger and nothing counted as done.
+    /// </summary>
+    [Fact]
+    public async Task A_rehearsal_says_what_would_be_counted_and_enters_nothing()
+    {
+        using var recorder = new InstrumentRecorder("tendero.inventory.import.levels");
+        var (handler, ledger, _) = AnImport();
+
+        var rehearsal = await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, Rehearse: true), Ct);
+        var import = await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key), Ct);
+
+        Assert.Equal(
+            (import.Counted, import.Skipped, import.ProposedWarehouses.Count, import.Notes.Count),
+            (rehearsal.Counted, rehearsal.Skipped, rehearsal.ProposedWarehouses.Count, rehearsal.Notes.Count));
+        Assert.Equal(2, ledger.Counts.Count);
+        Assert.Equal(import.Counted + import.Skipped, recorder.Sum("tendero.inventory.import.levels"));
+    }
+
+    /// <summary>
+    /// Every note says its sentence in the language asked, with the source's detail,
+    /// and starts with what it is about when it is about a SKU. Found by phase 16's
+    /// Stryker close: the language and the prefix survived every mutation.
+    /// </summary>
+    [Theory]
+    [InlineData(StockNoteCode.LocationNotMapped)]
+    [InlineData(StockNoteCode.VariantNotInCatalogue)]
+    [InlineData(StockNoteCode.WarehouseUnknown)]
+    public async Task A_note_is_said_in_the_language_asked_and_starts_with_its_sku(StockNoteCode code)
+    {
+        var (handler, _, source) = AnImport();
+        source.Levels.Clear();
+        source.Notes.Add(new StockNote(code, "SKU-9", "Tienda de Bilbao"));
+
+        var spanish = Assert.Single((await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, "es", Rehearse: true), Ct)).Notes);
+        var english = Assert.Single((await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, "en", Rehearse: true), Ct)).Notes);
+
+        Assert.NotEqual(spanish.Text, english.Text);
+        Assert.All([spanish.Text, english.Text], text => Assert.Contains("Tienda de Bilbao", text, StringComparison.Ordinal));
+        // A location is no SKU's: its note has nothing in front.
+        Assert.Equal(code != StockNoteCode.LocationNotMapped, english.Text.StartsWith("SKU-9: ", StringComparison.Ordinal));
+
+        // A note about no SKU in particular — Shopify's variant the catalogue lacks — has nothing in front either.
+        source.Notes.Clear();
+        source.Notes.Add(new StockNote(code, null, "Tienda de Bilbao"));
+        var aboutNothing = Assert.Single((await handler.HandleAsync(new ImportStockCommand(FakeStockSource.Key, "en", Rehearse: true), Ct)).Notes);
+        var expected = code == StockNoteCode.LocationNotMapped ? english.Text : Sentences.StartingUpper(english.Text["SKU-9: ".Length..]);
+        Assert.Equal(expected, aboutNothing.Text);
+    }
+
+    private sealed class OneStockSource(IStockSourceConnector source) : IStockSourceRegistry
+    {
+        public IReadOnlyCollection<string> Sources => [source.Source];
+
+        public IStockSourceConnector Get(string name) => source;
+    }
+
+    /// <summary>The ledger as the slice uses it: a count, recorded.</summary>
+    private sealed class CountingLedger : IStockLedger
+    {
+        public List<(string Sku, string Warehouse, int OnHand)> Counts { get; } = [];
+
+        public Task<CountedShelf> CountAsync(string sku, string warehouseCode, int onHand, CancellationToken cancellationToken = default)
+        {
+            Counts.Add((sku, warehouseCode, onHand));
+            return Task.FromResult(new CountedShelf(onHand, onHand));
+        }
+
+        public Task<ReservationOutcome> ReserveAsync(OrderId orderId, IReadOnlyList<StockRequest> requests, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task CommitAsync(OrderId orderId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<bool> IsHeldAsync(OrderId orderId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task ReleaseAsync(OrderId orderId, string reason, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task ReceiveAsync(string sku, string warehouseCode, int quantity, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+}

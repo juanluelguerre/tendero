@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Exports and feeds (phase 16, E-1; spec docs/specs/exports.md): what leaves
+       Tendero — a product feed for Merchant Center, the catalogue as another
+       platform imports it, orders for the accountant. One slice per export, and
+       one keyed adapter per format, behind the outbound port IExportFormat.
+
+       It is not a context: it owns no state and declares no domain. It reads the
+       contexts through read ports of values (Catalog's, Inventory's, Ordering's)
+       and never reaches a domain, which an architecture rule holds, as it does
+       for Shopify on the way in. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Exports</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
+    <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

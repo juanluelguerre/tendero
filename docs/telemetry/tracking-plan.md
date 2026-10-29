@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-49 features: **44** answered by a signal emitted today,
+52 features: **47** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -40,6 +40,7 @@ everything here that is not *planned* is emitted.
 | Speak to the shop | Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send? | If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop. | `voice_input_heard`, `voice_transcript_used` | emitted |
 | Kits | Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit? | A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant. | `kit_built`, `kit_added_to_cart`, `kit_sentence_read` | emitted |
 | The shopper's account | Do returning shoppers use what the account remembers at checkout, is checkout where the address book gets filled, do saved cards go stale, and is erasure used? | If almost every signed-in order still types its address, the book is not reachable enough at checkout, and checkout changes before the account grows another section; if checkout fills the book, the account's own form stays plain; a high share of saved cards declined means the wallet warns before expiry, not at the till. Erasure changes nothing in the product: it is the evidence the operation is real, and the number the article quotes. | `checkout_prefilled`, `address_kept_at_checkout`, `saved_method_declined`, `tendero.accounts.erased` | emitted |
+| A store's old addresses | After a shop leaves its store, are the store's old addresses still visited, and do they still lead somewhere? | When redirected requests fall to nothing the table of collections can go; a high share of missing ones says which handles or collections the import did not keep (docs/specs/shopify-leave.md, decision 7). | `tendero.catalog.source_addresses` | emitted |
 
 ### Backoffice
 
@@ -64,6 +65,8 @@ everything here that is not *planned* is emitted.
 | Steward | Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? | Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. | `steward_opened`, `steward_answered`, `proposals_reviewed`, `steward_unavailable` | emitted |
 | Alt text for pictures | Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read? | Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes. | `tendero.alt_text.pictures`, `image_alt_proposal_decided` | emitted |
 | Pictures read for claims | Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for? | Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events. | `tendero.picture_reading.pictures` | emitted |
+| Importing a store | Is the Shopify source used, and how much of a store comes across clean, per context? | A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. Gift cards listed for reissue, counted per store, say whether Tendero needs gift cards of its own (docs/specs/shopify-leave.md, decision 6). A rehearsal of the whole migration never followed by one for real says the answer stopped the merchant, and its notes say which step to work on first. | `tendero.catalog.import.products`, `tendero.catalog.import.notes`, `tendero.inventory.import.levels`, `tendero.inventory.import.notes`, `tendero.accounts.import.customers`, `tendero.accounts.import.notes`, `tendero.ordering.import.orders`, `tendero.ordering.import.notes`, `tendero.ordering.import.gift_cards`, `tendero.pricing.import.discounts`, `tendero.pricing.import.notes`, `tendero.migration.runs` | emitted |
+| Exports and feeds | Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant? | Orders exported often in CSV decide whether XLSX earns its dependency (docs/specs/exports.md, decision 3); a feed fetched every day decides whether a Merchant API client is worth building over a fetched file. The rows each feed carries, against the products on sale, say whether the feed loses any on the way. | `tendero.exports.generated`, `tendero.exports.rows` | emitted |
 
 ### Agents
 
@@ -689,7 +692,7 @@ No attributes.
 
 ### `tendero.returns.requested`
 
-counter, unit `{line}`. Lines of the returns opened, by their reason: the closed set of five the domain keeps for exactly this analysis.
+counter, unit `{line}`. Lines of the returns opened, by their reason: the closed set of five a buyer chooses from, kept by the domain for exactly this analysis.
 
 Answers:
 
@@ -697,7 +700,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `reason` | string | `wrong_size`, `not_as_described`, `damaged`, `wrong_item`, `changed_mind` | ReturnReason, labelled by MetricLabels. |
+| `reason` | string | `wrong_size`, `not_as_described`, `damaged`, `wrong_item`, `changed_mind`, `unstated` | ReturnReason, labelled by MetricLabels. unstated is never counted: it is the reason of a refund an import brought (ADR 0066), which no buyer opened, and opening a return refuses it. |
 
 ### `tendero.catalog.products.published`
 
@@ -710,6 +713,200 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
+
+### `tendero.catalog.import.products`
+
+counter, unit `{product}`. Products an import created, updated or failed, by source.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from: seed, shopify (phase 16). |
+| `catalog.import.outcome` | string | `created`, `updated`, `failed` | What happened to the product, counted once its batch is saved. |
+
+### `tendero.catalog.import.notes`
+
+counter, unit `{note}`. What a source did not hand over cleanly, by source and code.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from. |
+| `catalog.import.note` | string | `CategoryNotMapped`, `LocaleIgnored`, `DescriptionHadLayout`, `VariantWithoutSku`, `SkuSharedAtSource`, `SkuChangedAtSource`, `ImageUnreadable`, `CollectionNotMapped` | The note's code (ImportNoteCode). |
+
+### `tendero.catalog.source_addresses`
+
+counter, unit `{request}`. A store's old addresses asked for, by kind and whether they led somewhere.
+
+Answers:
+
+- **A store's old addresses** — After a shop leaves its store, are the store's old addresses still visited, and do they still lead somewhere?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.address.kind` | string | `product`, `collection` | What the old address named: /products/<handle>, or /collections/<handle>. |
+| `catalog.address.outcome` | string | `redirected`, `missing` | Answered with a 301 to a page on sale, or with a 404. |
+
+### `tendero.inventory.import.levels`
+
+counter, unit `{level}`. Stock levels an import counted or skipped, by source.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from; the same label as the catalogue import, so one query reads a store across contexts. |
+| `inventory.import.outcome` | string | `counted`, `skipped` | Counted into a warehouse the shop operates, or skipped because the shop does not operate it. |
+
+### `tendero.inventory.import.notes`
+
+counter, unit `{note}`. What a stock source did not hand over cleanly, by source and code.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from. |
+| `inventory.import.note` | string | `LocationNotMapped`, `VariantNotInCatalogue`, `WarehouseUnknown` | The note's code (StockNoteCode). |
+
+### `tendero.accounts.import.customers`
+
+counter, unit `{customer}`. Customers an import created, found already imported or linked, by source.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from; the same label as the catalogue and stock imports. |
+| `accounts.import.outcome` | string | `created`, `already_imported`, `linked` | Made here, brought by an earlier import, or a person the shop already had, linked through their identity. |
+
+### `tendero.accounts.import.notes`
+
+counter, unit `{note}`. What a customer source did not hand over cleanly, by source and code.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from. |
+| `accounts.import.note` | string | `FieldRedacted`, `NoEmail`, `AlreadyHere`, `IdentityNotProvisioned`, `AddressUnreadable`, `Erased` | The note's code (CustomerNoteCode). |
+
+### `tendero.ordering.import.orders`
+
+counter, unit `{order}`. Orders an import created or found already imported, and refunds it brought, by source.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from; the same label as the catalogue, stock and customer imports. |
+| `ordering.import.outcome` | string | `created`, `already_imported`, `refund` | An order made here, one an earlier import brought, or a refund brought as a return born refunded. |
+
+### `tendero.ordering.import.notes`
+
+counter, unit `{note}`. What an order source did not hand over cleanly, by source and code.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from. |
+| `ordering.import.note` | string | `StillOpen`, `ProductNotInCatalogue`, `CustomerNotImported`, `TotalsDoNotAddUp`, `RefundNotExpressed` | The note's code (OrderNoteCode). |
+
+### `tendero.ordering.import.gift_cards`
+
+counter, unit `{card}`. Gift cards an import listed for the merchant to reissue, by source.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from. |
+
+### `tendero.exports.generated`
+
+counter, unit `{export}`. Exports and feeds written, by kind and format.
+
+Answers:
+
+- **Exports and feeds** — Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `export.kind` | string | `feed`, `catalogue`, `orders` | What left the shop: the product feed, the catalogue for another platform, orders for the accountant. |
+| `export.format` | string | — | The format it was written in: google-merchant, shopify-csv, csv. |
+
+### `tendero.exports.rows`
+
+histogram, unit `{row}`. The rows an export or a feed carried, by kind and format.
+
+Answers:
+
+- **Exports and feeds** — Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `export.kind` | string | `feed`, `catalogue`, `orders` | What left the shop. |
+| `export.format` | string | — | The format it was written in. |
+
+### `tendero.migration.runs`
+
+counter, unit `{run}`. A store's migrations run as one operation, rehearsed or for real, by source.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The store being left. |
+| `migration.rehearsal` | string | `true`, `false` | Whether the run was a rehearsal, which wrote nothing. |
+
+### `tendero.pricing.import.discounts`
+
+counter, unit `{discount}`. Discounts a proposal turned into promotions or left out, by source.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from; the same label as the other imports. |
+| `pricing.import.outcome` | string | `proposed`, `left` | Written to the proposal of promotions, or left out with a note saying why. |
+
+### `tendero.pricing.import.notes`
+
+counter, unit `{note}`. What a discount source could not hand over as the store ran it, by source and code.
+
+Answers:
+
+- **Importing a store** — Is the Shopify source used, and how much of a store comes across clean, per context?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `catalog.source` | string | — | The source imported from. |
+| `pricing.import.note` | string | `Expired`, `AlreadyHere`, `LimitNotExpressible`, `CustomersNotExpressible`, `ConditionNotExpressible`, `TargetNotExpressible`, `EffectNotExpressible`, `CombinationNarrowed`, `CodesNarrowed` | The note's code (DiscountNoteCode). |
 
 ### `tendero.catalog.products.withdrawn`
 

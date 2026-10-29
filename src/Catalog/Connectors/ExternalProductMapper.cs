@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Catalog.Connectors;
 
@@ -38,9 +39,9 @@ public static class ExternalProductMapper
             external.Category);
 
         product.SetAvailableFrom(clock, external.AvailableFrom);
-        product.LinkExternal(clock, source, external.ExternalId);
+        product.LinkExternal(clock, source, external.ExternalId, external.Handle);
         CopyAttributes(external, product, clock, definitions);
-        EnsureVariants(external, product, clock, definitions);
+        EnsureVariants(external, product, clock, definitions, source);
 
         return product;
     }
@@ -50,20 +51,43 @@ public static class ExternalProductMapper
     /// status — an already published product does not go back to Draft because
     /// its supplier changed a description (ADR 0012).
     /// </summary>
+    /// <param name="source">The source it comes from again, when the caller knows
+    /// it: its handle then follows, and its variants are found by the source's own
+    /// ids. Without it a re-import finds variants by SKU alone, as it always did.</param>
     public static void ApplyTo(
         this ExternalProduct external, Product product, TimeProvider clock,
-        AttributeDefinitions? definitions = null)
+        AttributeDefinitions? definitions = null, string? source = null)
     {
         product.UpdateDetails(
             clock, external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
         product.SetPrice(clock, external.Price);
         product.SetAvailableFrom(clock, external.AvailableFrom);
+        if (source is not null)
+            product.LinkExternal(clock, source, external.ExternalId, external.Handle);
         CopyAttributes(external, product, clock, definitions);
-        EnsureVariants(external, product, clock, definitions);
+        EnsureVariants(external, product, clock, definitions, source);
     }
 
     /// <summary>The SKU a source's variant has here: the product's external id and what the source tells it apart by.</summary>
     public static string SkuOf(ExternalProduct external, ExternalVariant variant) => $"{external.ExternalId}-{variant.Key}";
+
+    /// <summary>
+    /// The SKU a new variant is given: the source's own when it has one and no
+    /// sibling shares it — a merchant keeps the labels on its shelves (phase 16,
+    /// spec decision 1) — and ours otherwise. A shared SKU would make two
+    /// variants one in every context that speaks SKUs.
+    /// </summary>
+    private static string NewSkuOf(ExternalProduct external, ExternalVariant variant)
+    {
+        if (string.IsNullOrWhiteSpace(variant.Sku))
+            return SkuOf(external, variant);
+
+        var sku = variant.Sku.Trim();
+        var shared = external.Variants!.Count(sibling =>
+            string.Equals(sibling.Sku?.Trim(), sku, StringComparison.OrdinalIgnoreCase)) > 1;
+
+        return shared ? SkuOf(external, variant) : sku;
+    }
 
     /// <summary>
     /// The source's words for what a variant varies by, or for what a picture
@@ -87,10 +111,12 @@ public static class ExternalProductMapper
     /// declaring them retires a default variant an earlier import left: the
     /// product stops having exactly one way of being bought the moment the
     /// source says it has two. Re-importing adds nothing: a variant is found by
-    /// its SKU, and only its price follows the source.
+    /// the source's id for it when there is one, by its SKU otherwise, and only
+    /// its price, barcode and tax class follow the source. Its SKU never does (phase 16).
     /// </summary>
     private static void EnsureVariants(
-        ExternalProduct external, Product product, TimeProvider clock, AttributeDefinitions? definitions)
+        ExternalProduct external, Product product, TimeProvider clock, AttributeDefinitions? definitions,
+        string? source)
     {
         if (external.Variants is not { Count: > 0 } declared)
         {
@@ -100,7 +126,8 @@ public static class ExternalProductMapper
 
         var placed = declared
             .Select(variant => (
-                Sku: SkuOf(external, variant),
+                Source: variant,
+                Existing: Existing(product, source, external, variant),
                 Coordinates: Coordinates(variant.Attributes, definitions)))
             .ToList();
 
@@ -112,14 +139,25 @@ public static class ExternalProductMapper
             || axes.Any(axis => product.AttributeFor(axis) is not null))
             product.DefineAxes(clock, axes);
 
-        foreach (var (sku, coordinates) in placed)
+        foreach (var (variant, existing, coordinates) in placed)
         {
-            if (product.Variants.Any(variant => string.Equals(variant.Sku, sku, StringComparison.OrdinalIgnoreCase)))
-                product.SetVariantPrice(clock, sku, external.Price);
-            else
-                product.AddVariant(clock, sku, external.Price, coordinates);
+            var price = variant.PriceAmount is { } amount ? new Money(amount, external.PriceCurrency) : external.Price;
+            var sku = existing?.Sku ?? product.AddVariant(clock, NewSkuOf(external, variant), price, coordinates).Sku;
+
+            product.SetVariantPrice(clock, sku, price);
+            product.SetVariantBarcode(clock, sku, variant.Barcode);
+            // A source that says nothing of tax leaves the variant's class as it is.
+            if (variant.TaxClass is { Length: > 0 } taxClass)
+                product.SetVariantTaxClass(clock, sku, taxClass);
+            if (source is not null && variant.ExternalId is { } id)
+                product.LinkVariantExternal(clock, sku, source, id);
         }
     }
+
+    private static Variant? Existing(Product product, string? source, ExternalProduct external, ExternalVariant variant) =>
+        (source is not null && variant.ExternalId is { } id ? product.VariantFromSource(source, id) : null)
+        ?? product.VariantBySku(NewSkuOf(external, variant))
+        ?? product.VariantBySku(SkuOf(external, variant));
 
     /// <summary>
     /// Everything purchasable is a variant, including what arrives with none.

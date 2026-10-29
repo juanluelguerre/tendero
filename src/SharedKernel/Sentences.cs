@@ -13,6 +13,14 @@ namespace ElGuerre.Tendero.SharedKernel;
 /// </summary>
 public static class Sentences
 {
+    /// <summary>
+    /// A sentence starting with a capital: a note composed from what it is about
+    /// and what happened reads "the source counts…" when it is about nothing in
+    /// particular, and a sentence does not begin in lowercase (phase 16's close).
+    /// </summary>
+    public static string StartingUpper(string sentence) =>
+        sentence.Length == 0 ? sentence : string.Concat(char.ToUpperInvariant(sentence[0]).ToString(), sentence[1..]);
+
     public static IReadOnlyList<string> Of(string? text, int most)
     {
         if (string.IsNullOrWhiteSpace(text) || most <= 0)

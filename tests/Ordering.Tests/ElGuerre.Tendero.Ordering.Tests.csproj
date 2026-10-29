@@ -15,11 +15,14 @@
     <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
   </ItemGroup>
 
-  <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
+  <!-- The fixed clock shared by the test projects (../TestClock.cs), and the
+       orders port's contract every order source passes. -->
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
     <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
     <Compile Include="../OrderBuilder.cs" Link="OrderBuilder.cs" />
+    <Compile Include="../OrderSourceConnectorContract.cs" Link="OrderSourceConnectorContract.cs" />
+    <Compile Include="../GiftCardSourceConnectorContract.cs" Link="GiftCardSourceConnectorContract.cs" />
   </ItemGroup>
 
 </Project>

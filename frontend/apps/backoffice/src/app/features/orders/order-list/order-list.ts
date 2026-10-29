@@ -11,6 +11,7 @@ import { placedAgo } from '../order-display';
 import { primaryMove } from '../order-moves';
 import { OrderPayment } from '../order-payment/order-payment';
 import { OrderStatusLabel } from '../order-status-label/order-status-label';
+import { OrdersExport } from '../orders-export/orders-export';
 import { OrdersStore } from '../orders.store';
 
 /**
@@ -20,7 +21,17 @@ import { OrdersStore } from '../orders.store';
  */
 @Component({
   selector: 'backoffice-order-list',
-  imports: [TranslocoDirective, FilterChips, Pager, OrderStatusLabel, OrderPayment, Find, ListState, PricePipe],
+  imports: [
+    TranslocoDirective,
+    FilterChips,
+    Pager,
+    OrderStatusLabel,
+    OrderPayment,
+    Find,
+    ListState,
+    PricePipe,
+    OrdersExport,
+  ],
   templateUrl: './order-list.html',
 })
 export class OrderList {

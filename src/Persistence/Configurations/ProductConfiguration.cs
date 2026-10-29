@@ -70,6 +70,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.CreatedAt);
         builder.Property(p => p.UpdatedAt);
+        builder.Property(p => p.FirstPublishedAt);
 
         // Images are not queried separately: a complex collection in a JSON
         // column. EF knows the shape, so it is still a model and not a blob.
@@ -113,8 +114,13 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             reference.WithOwner().HasForeignKey("ProductId");
             reference.Property(r => r.Source).HasMaxLength(50).IsRequired();
             reference.Property(r => r.ExternalId).HasMaxLength(400).IsRequired();
+            // The source's name for it in its URLs (phase 16), for the redirects
+            // a shop leaving the source needs.
+            reference.Property(r => r.Handle).HasMaxLength(255);
             reference.HasKey("ProductId", nameof(ExternalReference.Source), nameof(ExternalReference.ExternalId));
             reference.HasIndex(r => new { r.Source, r.ExternalId }).IsUnique();
+            // An old address names a handle and not its source (P16-11).
+            reference.HasIndex(r => r.Handle);
         });
 
         builder.Navigation(p => p.ExternalReferences).AutoInclude();

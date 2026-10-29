@@ -157,6 +157,10 @@ const runs = bins.map((bin, i) => {
   // 5 s let a share that ran a little slower call 140 of Search's mutants Timeouts
   // (2026-10-18), 63 of them 13a's survivors: a margin that wide hides survivors.
   tuned['stryker-config']['additional-timeout'] = Number(option('timeout-ms', 30_000));
+  // Stryker's embedded Roslyn is older than the SDK's, and to it C# 15's closed records
+  // are a preview feature: without this, a project with one (Pricing, SharedKernel)
+  // does not build at all and every share ends with no report (phase 16 S2b's close).
+  tuned['stryker-config']['language-version'] = 'Preview';
   writeFileSync(configPath, JSON.stringify(tuned, null, 2));
   const cwd = join(tree, project);
   const log = join(work, `shard-${i}.log`);

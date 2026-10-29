@@ -1,0 +1,82 @@
+{
+  "data": {
+    "orders": {
+      "pageInfo": { "hasNextPage": true, "endCursor": "c2" },
+      "nodes": [
+        {
+          "id": "gid://shopify/Order/5001",
+          "name": "#1001",
+          "processedAt": "2026-04-02T10:00:00Z",
+          "cancelledAt": null,
+          "displayFulfillmentStatus": "FULFILLED",
+          "email": "ana@example.com",
+          "customerLocale": "es-ES",
+          "customer": { "id": "gid://shopify/Customer/6001" },
+          "totalDiscountsSet": { "shopMoney": { "amount": "5.0", "currencyCode": "EUR" } },
+          "totalTaxSet": { "shopMoney": { "amount": "6.92", "currencyCode": "EUR" } },
+          "totalPriceSet": { "shopMoney": { "amount": "39.85", "currencyCode": "EUR" } },
+          "taxLines": [{ "title": "IVA", "rate": 0.21, "priceSet": { "shopMoney": { "amount": "6.92", "currencyCode": "EUR" } } }],
+          "shippingAddress": { "name": "Ana Ruiz", "address1": "Calle Mayor 1", "address2": null, "city": "Madrid", "provinceCode": "M", "zip": "28013", "countryCodeV2": "ES", "phone": null },
+          "billingAddress": null,
+          "shippingLine": { "title": "Envío estándar", "originalPriceSet": { "shopMoney": { "amount": "4.95", "currencyCode": "EUR" } }, "discountAllocations": [] },
+          "fulfillments": [{ "createdAt": "2026-04-03T09:00:00Z" }],
+          "discountApplications": { "nodes": [{ "index": 0, "code": "KITCHEN5" }] },
+          "lineItems": {
+            "nodes": [
+              {
+                "id": "gid://shopify/LineItem/11", "title": "Cafetera Moka", "variantTitle": "Oliva", "quantity": 1,
+                "variant": { "id": "gid://shopify/ProductVariant/44001" },
+                "originalUnitPriceSet": { "shopMoney": { "amount": "29.9", "currencyCode": "EUR" } },
+                "discountAllocations": [{ "allocatedAmountSet": { "shopMoney": { "amount": "5.0", "currencyCode": "EUR" } }, "discountApplication": { "index": 0 } }]
+              },
+              {
+                "id": "gid://shopify/LineItem/12", "title": "Taza de gres", "variantTitle": null, "quantity": 1,
+                "variant": { "id": "gid://shopify/ProductVariant/44003" },
+                "originalUnitPriceSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+                "discountAllocations": []
+              }
+            ]
+          },
+          "refunds": [
+            {
+              "id": "gid://shopify/Refund/7001",
+              "processedAt": "2026-04-20T16:00:00Z",
+              "totalRefundedSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+              "refundLineItems": { "nodes": [{ "quantity": 1, "lineItem": { "id": "gid://shopify/LineItem/12" } }] }
+            }
+          ]
+        },
+        {
+          "id": "gid://shopify/Order/5002",
+          "name": "#1002",
+          "processedAt": "2026-05-10T12:00:00Z",
+          "cancelledAt": "2026-05-10T13:00:00Z",
+          "displayFulfillmentStatus": "UNFULFILLED",
+          "email": null,
+          "customerLocale": "en",
+          "customer": null,
+          "totalDiscountsSet": { "shopMoney": { "amount": "0.0", "currencyCode": "EUR" } },
+          "totalTaxSet": { "shopMoney": { "amount": "1.74", "currencyCode": "EUR" } },
+          "totalPriceSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+          "taxLines": [{ "title": "IVA", "rate": 0.21, "priceSet": { "shopMoney": { "amount": "1.74", "currencyCode": "EUR" } } }],
+          "shippingAddress": null,
+          "billingAddress": { "name": "Luis Gómez", "address1": "Calle Sierpes 3", "address2": null, "city": "Sevilla", "provinceCode": "SE", "zip": "41004", "countryCodeV2": "ES", "phone": null },
+          "shippingLine": null,
+          "fulfillments": [],
+          "discountApplications": { "nodes": [] },
+          "lineItems": {
+            "nodes": [
+              {
+                "id": "gid://shopify/LineItem/21", "title": "Taza de gres", "variantTitle": null, "quantity": 1,
+                "variant": { "id": "gid://shopify/ProductVariant/44003" },
+                "originalUnitPriceSet": { "shopMoney": { "amount": "10.0", "currencyCode": "EUR" } },
+                "discountAllocations": []
+              }
+            ]
+          },
+          "refunds": []
+        }
+      ]
+    }
+  }
+}

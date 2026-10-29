@@ -58,7 +58,10 @@
       "DefineVariantsCommand": "Definir variantes",
       "EndCampaignCommand": "Terminar una campaña",
       "ForgetBrowsingCommand": "Quitar una entrada del historial de navegación",
+      "ImportCustomersCommand": "Importar clientes",
+      "ImportOrdersCommand": "Importar el historial de pedidos",
       "ImportProductsCommand": "Importar productos",
+      "ImportStockCommand": "Importar existencias",
       "LinkIdentityCommand": "Vincular un inicio de sesión a un cliente",
       "MergeBrowsingCommand": "Conservar el historial de un invitado al iniciar sesión",
       "MoveOrderCommand": "Avanzar un pedido",
@@ -68,6 +71,8 @@
       "ProposeActionsCommand": "Proponer cambios",
       "ProposeAltTextCommand": "Proponer texto alternativo para imágenes",
       "ProposeClaimsCommand": "Proponer afirmaciones de una descripción o de la lectura de una imagen",
+      "ProposePromotionsCommand": "Proponer promociones a partir de los descuentos de una tienda",
+      "PublishImportCommand": "Publicar lo que trajo una importación",
       "PublishProductCommand": "Publicar un producto",
       "ReadPicturesCommand": "Leer imágenes de productos",
       "RecordBrowsingCommand": "Registrar un producto visto o una búsqueda",
@@ -104,7 +109,9 @@
       "UseCardByDefaultCommand": "Elegir una forma de pago por defecto",
       "ChooseCultureCommand": "Elegir el idioma de la tienda",
       "SetMarketingConsentCommand": "Dar o retirar el consentimiento de marketing",
-      "RemoveAccountCommand": "Borrar una cuenta"
+      "RemoveAccountCommand": "Borrar una cuenta",
+      "ExportCatalogueCommand": "Exportar el catálogo",
+      "ExportOrdersCommand": "Exportar pedidos para la contabilidad"
     },
     "fromProposal": "Propuesto por Steward"
   },
@@ -147,6 +154,20 @@
     "language": {
       "en": "inglés",
       "es": "español"
+    },
+    "exports": {
+      "catalogueHint": "Para irte a otra plataforma, o probarla: todo el catálogo, a la venta y en borrador, en el formato que importa. Las fotos se descargan de la API, así que esa plataforma tiene que poder llegar a ella.",
+      "copied": "Copiada",
+      "copy": "Copiar",
+      "downloading": "Preparando el archivo…",
+      "failed": "No se ha podido exportar el catálogo.",
+      "feed": {
+        "en": "Feed en inglés",
+        "es": "Feed en español"
+      },
+      "feedHint": "Dale a Merchant Center la dirección de cada idioma: la consulta cuando quiere y lee cada variante a la venta, con su precio y su stock. Usa la dirección pública de la API, no la de tu equipo.",
+      "shopify": "Descargar el catálogo para Shopify (CSV)",
+      "title": "Feeds y exportaciones"
     }
   },
   "charts": {
@@ -265,7 +286,17 @@
     "paneFailed": "No se han podido cargar las líneas de este pedido.",
     "paneId": "Id del pedido",
     "copyId": "Copiar el id del pedido",
-    "copied": "Id copiado"
+    "copied": "Id copiado",
+    "export": {
+      "badSpan": "Elige un día de inicio y uno de fin que no sea anterior.",
+      "download": "Descargar la hoja de cálculo",
+      "downloading": "Preparando el archivo…",
+      "failed": "No se han podido exportar los pedidos.",
+      "from": "Desde",
+      "hint": "Las ventas de esos días, una fila por línea, descuento, envío y tipo de IVA, con su base: los importes de cada pedido suman su total. Lleva el nombre y el país de facturación, nunca el email ni el teléfono.",
+      "title": "Exportar para la contabilidad",
+      "to": "Hasta"
+    }
   },
   "promotions": {
     "title": "Promociones",
@@ -414,7 +445,8 @@
       "NotAsDescribed": "No es como se describía",
       "Damaged": "Dañado",
       "WrongItem": "Artículo equivocado",
-      "ChangedMind": "Cambió de opinión"
+      "ChangedMind": "Cambió de opinión",
+      "Unstated": "Reembolsado en la tienda anterior"
     },
     "status": {
       "Requested": "Solicitada",
@@ -1224,7 +1256,8 @@
       "NotAsDescribed": "No era como se describía",
       "Damaged": "Dañado",
       "WrongItem": "Artículo equivocado",
-      "ChangedMind": "Cambió de idea"
+      "ChangedMind": "Cambió de idea",
+      "Unstated": "Reembolsado en la tienda anterior"
     },
     "card": {
       "heading": "{{count}} propuestas · {{topic}}",

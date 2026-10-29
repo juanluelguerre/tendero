@@ -60,6 +60,22 @@ public sealed class ReturnRequestTests
         Assert.Equal(3, order.Lines.First(line => line.Sku == "SHIRT").Quantity);
     }
 
+    /// <summary>
+    /// Opening a return is news the shop acts on, unlike an imported refund, which
+    /// raises nothing. Found by phase 16 S2b's Stryker close: the event survived
+    /// being removed.
+    /// </summary>
+    [Fact]
+    public void Opening_a_return_says_so()
+    {
+        var order = Delivered(("SHIRT", 20m, 3));
+
+        var request = ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: []);
+
+        var opened = Assert.IsType<ReturnRequested>(Assert.Single(request.DomainEvents));
+        Assert.Equal((request.Id, order.Id), (opened.ReturnId, opened.OrderId));
+    }
+
     [Theory]
     [InlineData(OrderStatus.Pending)]
     [InlineData(OrderStatus.PaymentAuthorized)]

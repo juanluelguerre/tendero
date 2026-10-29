@@ -54,7 +54,20 @@ export default [
     // `/mcp` and `/.well-known` too (R-8, H-5): *Compra con tu agente* shows the
     // shop's own address for its MCP server and UCP profile, and in development
     // the shop's address is this server's.
-    context: ['/api', '/mcp', '/.well-known'],
+    // And a Shopify store's old addresses (P16-11): the API answers them with a
+    // 301 to the page here, from what the import kept. A production host forwards
+    // the same paths. No route of the shop's starts with them, so nothing is lost.
+    context: [
+      '/api',
+      '/mcp',
+      '/.well-known',
+      '/products',
+      '/collections',
+      '/es/products',
+      '/es/collections',
+      '/en/products',
+      '/en/collections',
+    ],
     target: api,
     secure: false,
     changeOrigin: true,

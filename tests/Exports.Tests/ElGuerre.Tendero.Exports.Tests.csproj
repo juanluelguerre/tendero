@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Exports.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Exports/ElGuerre.Tendero.Exports.csproj" />
+  </ItemGroup>
+
+  <!-- Shared with the other test projects: listening to the exports' counters. -->
+  <ItemGroup>
+    <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
+  </ItemGroup>
+
+</Project>

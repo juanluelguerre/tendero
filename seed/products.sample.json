@@ -20,7 +20,7 @@
     ],
     "attributes": {
       "color": "azul marino",
-      "material": "malla sintetica",
+      "material": "malla sintética",
       "genero": "mujer",
       "tallas": "36-42",
       "drop_mm": "8"
@@ -180,7 +180,7 @@
     ],
     "attributes": {
       "color": "verde bosque",
-      "material": "malla sintetica",
+      "material": "malla sintética",
       "genero": "mujer",
       "tallas": "36-42",
       "drop_mm": "8"
@@ -208,7 +208,7 @@
     ],
     "attributes": {
       "color": "negro",
-      "material": "malla sintetica",
+      "material": "malla sintética",
       "genero": "hombre",
       "tallas": "40-44",
       "drop_mm": "6"
@@ -236,7 +236,7 @@
     ],
     "attributes": {
       "color": "gris",
-      "material": "malla sintetica",
+      "material": "malla sintética",
       "genero": "mujer",
       "tallas": "36-42"
     },
@@ -290,7 +290,7 @@
     ],
     "attributes": {
       "color": "gris",
-      "material": "malla sintetica",
+      "material": "malla sintética",
       "genero": "hombre",
       "tallas": "40-44",
       "drop_mm": "10"
@@ -344,7 +344,7 @@
     ],
     "attributes": {
       "color": "negro",
-      "material": "malla sintetica",
+      "material": "malla sintética",
       "genero": "hombre",
       "tallas": "40-44",
       "drop_mm": "4"
@@ -2516,7 +2516,7 @@
     ],
     "attributes": {
       "color": "blanco",
-      "material": "malla sintetica",
+      "material": "malla sintética",
       "genero": "hombre",
       "tallas": "40-44"
     },

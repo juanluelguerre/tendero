@@ -12,6 +12,7 @@ using ElGuerre.Tendero.Search.Reranking;
 using ElGuerre.Tendero.Search.Strategies;
 using ElGuerre.Tendero.SearchEval.Diagnostics;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Shopify;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -75,6 +76,8 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         {
             ["Catalog:Connectors:Seed:FilePath"] = options.SeedPath
         });
+        if (options.Source == "shopify")
+            ShopifySource.Configure(builder.Configuration);
 
         // The seed's pictures in memory, before the catalogue registers its folder:
         // only a run that measures the pictures reads them (--siglip).
@@ -83,6 +86,7 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
             builder.Services.AddSingleton<IImageStore>(held);
 
         builder.Services.AddCatalog(builder.Configuration);
+        builder.Services.AddShopify(builder.Configuration);
         builder.Services.AddLexicalSearch(options.Elasticsearch);
         builder.Services.AddSearchIndexInitializer();
 
@@ -160,11 +164,11 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
             await host.Services.GetRequiredService<IPictureVectorIndexer>().RecreateAsync(cancellationToken);
 
         var indexing = System.Diagnostics.Stopwatch.StartNew();
-        var corpus = await new SeedCorpus(host.Services).IndexAsync("seed", options.IsHybrid, options.Siglip is not null, cancellationToken);
+        var corpus = await new SeedCorpus(host.Services).IndexAsync(options.Source, options.IsHybrid, options.Siglip is not null, cancellationToken);
         indexing.Stop();
         await IndexAdmin.RefreshAsync(options.Elasticsearch, indexNames, cancellationToken);
 
-        Console.WriteLine($"Indexed {corpus.Count} seed products into {options.Elasticsearch}" +
+        Console.WriteLine($"Indexed {corpus.Count} products from {options.Source} into {options.Elasticsearch}" +
                           (options.IsHybrid ? $" and {options.Qdrant}" : "") +
                           (options.Siglip is not null ? $", with {held.All.Count} pictures embedded on the CPU, in {indexing.Elapsed.TotalSeconds:F1}s all told" : ""));
 

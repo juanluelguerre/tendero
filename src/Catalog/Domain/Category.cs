@@ -121,6 +121,28 @@ public sealed class CategoryTree(IReadOnlyList<Category> categories)
         code is null ? null : this.byCode.GetValueOrDefault(AttributeDefinition.Normalise(code));
 
     /// <summary>
+    /// The deepest category every one of these is in, itself or below it (phase
+    /// 16, P16-11): how a store's collection becomes a category. Null when they
+    /// share none — or one has no category, or one this tree does not know —
+    /// because a collection that is no category's page is said, never guessed.
+    /// </summary>
+    public string? SharedBy(IEnumerable<string?> codes)
+    {
+        IReadOnlyList<string>? shared = null;
+        foreach (var code in codes)
+        {
+            if (ByCode(code) is not { } category)
+                return null;
+
+            shared = shared is null
+                ? category.Ancestry
+                : [.. shared.Zip(category.Ancestry).TakeWhile(pair => pair.First == pair.Second).Select(pair => pair.First)];
+        }
+
+        return shared is { Count: > 0 } ? shared[^1] : null;
+    }
+
+    /// <summary>
     /// The attributes a product of this category has: what its whole branch
     /// declares, root first, each code once (ADR 0056).
     ///

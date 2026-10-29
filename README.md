@@ -932,6 +932,7 @@ Each phase ships with an article, in English, on
 | 01 | [Why design before code when an AI agent builds the screen in minutes: sketch, mockup and prototype](https://elguerre.com/2026/10/08/design-system-before-code/) | `blog/01-design-before-code` |
 | 02 | [One port, N catalogs](https://elguerre.com/2026/10/15/one-port-n-catalogs/) | `blog/02-one-port-n-catalogs` |
 | 03 | [Your build is green and your shop's search is broken: NDCG as a CI gate in .NET](https://elguerre.com/2026/10/22/ndcg-as-a-ci-gate/) | `blog/03-ndcg-as-a-ci-gate` |
+| 04 | [Tests that had never failed, written by an AI and passed by everyone: mutation testing with Stryker.NET](https://elguerre.com/2026/10/29/tests-that-had-never-failed/) | `blog/04-tests-that-had-never-failed` |
 
 Every article links a tag of this repository named after it, `blog/NN-slug`,
 cut once its snippets and numbers had been checked against the code. Clone that

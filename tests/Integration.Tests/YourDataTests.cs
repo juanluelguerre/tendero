@@ -32,7 +32,9 @@ public sealed class YourDataTests(PostgresFixture postgres)
         postgres.SkipIfUnavailable();
         var ct = TestContext.Current.CancellationToken;
         var clock = new TestClock();
-        var ana = Customer.Identified(clock, "ana", "Ana García", "es", Segments.Retail);
+        // Imported from a store, with the identity provisioned for her (phase 16, S2b):
+        // a signed-in shopper in every way, and one the shop also holds an email for.
+        var ana = Customer.Imported(clock, new CustomerOrigin("shopify", "6001"), "ana@example.com", "Ana García", "es", null, "ana");
         var principal = new Shopper(ana.Id);
 
         await using var shop = await Shop.OpenAsync(postgres, "your_data", principal);
@@ -57,7 +59,7 @@ public sealed class YourDataTests(PostgresFixture postgres)
         var export = await shop.AskAsync(new ExportPersonalDataQuery(), ct);
 
         Assert.NotNull(export);
-        Assert.Equal(("Ana García", "es"), (export.Account.DisplayName, export.Account.Culture));
+        Assert.Equal(("Ana García", "ana@example.com", "es"), (export.Account.DisplayName, export.Account.Email, export.Account.Culture));
         Assert.Equal(["addresses", "orders", "paymentMethods"], export.Sections.Keys.Order(StringComparer.Ordinal));
         var downloaded = System.Text.Json.JsonSerializer.Serialize(export);
         Assert.DoesNotContain("tok_", downloaded, StringComparison.Ordinal);

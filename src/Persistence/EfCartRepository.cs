@@ -42,24 +42,55 @@ internal sealed class EfCartRepository(TenderoDbContext context) : ICartReposito
 /// review queue — the same rule the priced-item reader states, for the same
 /// reason.
 /// </summary>
-internal sealed class EfPurchasableReader(
-    TenderoDbContext context, IAttributeDefinitionReader definitions, ICategoryReader categories) : IPurchasableReader
+internal sealed class EfPurchasableReader(CatalogueLines lines) : IPurchasableReader
 {
-    public async Task<IReadOnlyDictionary<string, PurchasableVariant>> FindBySkusAsync(
-        IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyDictionary<string, PurchasableVariant>> FindBySkusAsync(
+        IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default) =>
+        lines.FindAsync(skus, onSaleOnly: true, cancellationToken);
+}
+
+/// <summary>
+/// The catalogue's variants by SKU whatever their status (phase 16, S2b): what an
+/// imported order's lines snapshot. A catalogue just imported is all in Draft, and
+/// an order already placed is history, not a purchase.
+/// </summary>
+internal sealed class EfCatalogueVariants(CatalogueLines lines) : ICatalogueVariants
+{
+    public Task<IReadOnlyDictionary<string, PurchasableVariant>> FindBySkusAsync(
+        IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default) =>
+        lines.FindAsync(skus, onSaleOnly: false, cancellationToken);
+}
+
+/// <summary>
+/// A variant as Ordering sees it, for both readers above and for the rehearsal's
+/// (<see cref="RehearsalCatalogueVariants"/>): one mapping, so a product the
+/// rehearsal would bring reads exactly as the stored one will.
+/// </summary>
+internal sealed class CatalogueLines(
+    TenderoDbContext context, IAttributeDefinitionReader definitions, ICategoryReader categories)
+{
+    public async Task<IReadOnlyDictionary<string, PurchasableVariant>> FindAsync(
+        IReadOnlyCollection<string> skus, bool onSaleOnly, CancellationToken cancellationToken)
     {
         if (skus.Count == 0)
             return new Dictionary<string, PurchasableVariant>(StringComparer.OrdinalIgnoreCase);
 
         var wanted = skus.Select(sku => sku.Trim()).ToArray();
-        var attributes = await definitions.AllAsync(cancellationToken);
-        var tree = await categories.AllAsync(cancellationToken);
-
         var products = await context.Products
             .AsNoTracking()
-            .Where(product => product.Status == ProductStatus.Active
+            .Where(product => (!onSaleOnly || product.Status == ProductStatus.Active)
                               && product.Variants.Any(variant => wanted.Contains(variant.Sku)))
             .ToListAsync(cancellationToken);
+
+        return await OfAsync(products, wanted, cancellationToken);
+    }
+
+    /// <summary>The variants of these products whose SKU is wanted, keyed by SKU.</summary>
+    public async Task<IReadOnlyDictionary<string, PurchasableVariant>> OfAsync(
+        IEnumerable<Product> products, IReadOnlyCollection<string> wanted, CancellationToken cancellationToken)
+    {
+        var attributes = await definitions.AllAsync(cancellationToken);
+        var tree = await categories.AllAsync(cancellationToken);
 
         return (
             from product in products

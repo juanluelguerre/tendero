@@ -1,0 +1,8 @@
+{
+  "data": {
+    "giftCards": {
+      "pageInfo": { "hasNextPage": true, "endCursor": "x1" },
+      "nodes": [{ "id": "gid://shopify/GiftCard/8006" }]
+    }
+  }
+}
