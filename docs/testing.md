@@ -441,7 +441,7 @@ Reports are in `docs/blog/reports/2026-09-28-redesign/stryker/`.
   already classified at phase 11's close: `Concat`/`Except` over one currency
   and `First` over a non-empty group (**equivalent**), and the returns window's
   edges (**boundaries accepted**, the window is half-open).
-- **Not mutated, and why.** The redesign's Angular code has no mutation runner;
+- **Not mutated, and why.** The redesign's Angular code has no mutation runner yet;
   its behaviour is held by the unit specs and the end-to-end tests named in the
   spec, and its hand mutations are listed in the commits that wrote them.
 
