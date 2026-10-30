@@ -1,0 +1,7 @@
+<section *transloco="let t" class="not-found">
+  <h1 class="not-found__title">{{ t('notFound.title') }}</h1>
+  <div class="blank">
+    <p class="blank__hint">{{ t('notFound.text') }}</p>
+    <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
+  </div>
+</section>

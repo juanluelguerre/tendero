@@ -203,5 +203,9 @@
     "more": "Show more products",
     "loadingMore": "Loading…",
     "title": "Section"
+  },
+  "notFound": {
+    "title": "That page does not exist",
+    "text": "The link may be wrong, or the page may be gone."
   }
 }

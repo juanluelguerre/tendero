@@ -188,6 +188,38 @@ describe('the mockups', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('draw nothing in Excalidraw the design system does not own', () => {
+    // The same rule, one canvas further out. The sketches were redrawn in
+    // Excalidraw on 2026-10-02 to compare it with pen.dev, and Excalidraw has no
+    // variables: every stroke and fill is a literal hex in the file. So the file
+    // is held the way an export is - every hex in it, wherever it sits, must be
+    // the palette's. Without this test the `.excalidraw` files would have been
+    // the 575 colours of `docs/design/` again: JSON beside the rule, never read.
+    const allowed = proposed();
+    const sketches = artefacts('.excalidraw');
+
+    const offenders = sketches.flatMap((path) =>
+      [...new Set((readFileSync(path, 'utf8').match(HEX) ?? []).map((hex) => hex.toLowerCase()))]
+        .filter((hex) => !palette.has(hex) && !(hex in allowed))
+        .map((hex) => `${relative(repository, path).replaceAll('\\', '/')}: ${hex}`),
+    );
+
+    expect(offenders).toEqual([]);
+
+    // And the parser reached inside each one: a drawing with elements and no
+    // colour at all would mean the format changed under us, not a clean file.
+    for (const path of sketches) {
+      const { elements } = JSON.parse(readFileSync(path, 'utf8')) as {
+        elements?: { strokeColor?: string }[];
+      };
+      if (elements && elements.length > 0) {
+        expect(elements.some((element) => /^#[0-9a-f]{3,8}$/i.test(element.strokeColor ?? ''))).toBe(
+          true,
+        );
+      }
+    }
+  });
+
   it('are actually there, so the rule is not passing over nothing', () => {
     // The same guard every architecture rule in this repository carries: a scan
     // that walks a directory which is not there finds no offenders and reports

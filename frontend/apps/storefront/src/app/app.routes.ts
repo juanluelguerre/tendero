@@ -61,6 +61,13 @@ const shopRoutes: Route[] = [
     title: 'order.title',
     loadComponent: () => import('./features/order/order-page').then((m) => m.OrderPage),
   },
+  {
+    // Anything else inside a language is a page that does not exist, answered at
+    // the address asked for. Without it the path fell through to the redirect
+    // below, which added the language again, and again (app.routes.spec.ts).
+    path: '**',
+    loadComponent: () => import('./features/not-found/not-found-page').then((m) => m.NotFoundPage),
+  },
 ];
 
 /**
@@ -78,7 +85,8 @@ export const useCultureFromUrl: CanActivateFn = (route) => {
 };
 
 /**
- * Anything with no language segment gets one, keeping the rest of the path.
+ * Anything with no language segment gets one, keeping the rest of the path. Only
+ * that: a path that has one and matches nothing is the language's own `**`.
  *
  * So `/cart` becomes `/es/cart` rather than a 404, which matters because every
  * link that existed before this change had no language in it — including the
