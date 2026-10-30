@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ElGuerre.Tendero.Ucp;
 using Xunit;
 
 namespace ElGuerre.Tendero.Api.Tests;
@@ -100,8 +101,9 @@ public sealed class UcpProfileDocumentTests
             var declaration = capability.Value!.AsArray()[0]!;
 
             Assert.NotNull(declaration["version"]);
+            // Under the version: the unversioned address answers 404 (found 2026-10-13).
             Assert.StartsWith(
-                "https://ucp.dev/schemas/",
+                $"https://ucp.dev/{UcpSpecification.Version}/schemas/",
                 declaration["schema"]!.GetValue<string>(),
                 StringComparison.Ordinal);
         }

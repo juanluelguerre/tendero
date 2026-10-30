@@ -24,11 +24,14 @@ public static class UcpSpecification
     public const string BaseUrl = $"https://ucp.dev/{Version}/specification";
 
     /// <summary>
-    /// Where the protocol's own JSON Schemas live. Unversioned in the URL,
-    /// which is the specification's choice and not ours: the schema documents
-    /// carry the version inside them.
+    /// Where the protocol's own JSON Schemas are published: under the version
+    /// (<c>https://ucp.dev/2026-04-08/schemas/shopping/catalog_search.json</c>).
+    /// It was the unversioned address the schema documents carry as their
+    /// <c>$id</c>, and that address answers 404: a platform that fetched what the
+    /// profile advertises got nothing (found 2026-10-13, an audit against the live
+    /// specification).
     /// </summary>
-    public const string SchemaBaseUrl = "https://ucp.dev/schemas";
+    public const string SchemaBaseUrl = $"https://ucp.dev/{Version}/schemas";
 
     /// <summary>
     /// The path the specification fixes. It is not configurable and must not
