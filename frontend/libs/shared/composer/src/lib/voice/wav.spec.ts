@@ -26,6 +26,18 @@ describe('a question as a WAV', () => {
     ]).toEqual(['RIFF', 'WAVE', 'fmt ', 1, 1, 16_000, 16, 'data', 32_000, 44 + 32_000]);
   });
 
+  /** The sizes a reader trusts to find the samples, little-endian like every field of a WAV. */
+  it('writes the sizes and rates the header promises', () => {
+    const wav = wavOf(new Float32Array(16_000));
+
+    expect([
+      view(wav).getUint32(4, true),
+      view(wav).getUint32(16, true),
+      view(wav).getUint32(28, true),
+      view(wav).getUint16(32, true),
+    ]).toEqual([36 + 32_000, 16, 32_000, 2]);
+  });
+
   it('turns each sample into a signed 16-bit value, and clips what is louder than full scale', () => {
     const wav = wavOf(new Float32Array([0, 0.5, -1, 2, -2]));
     const samples = [0, 1, 2, 3, 4].map((i) => view(wav).getInt16(44 + i * 2, true));

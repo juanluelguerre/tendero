@@ -56,6 +56,30 @@ describe('a conversation', () => {
 
     expect(second).not.toBe(first);
     expect(store.exchanges().map((exchange) => exchange.state)).toEqual(['answered', 'asking']);
+
+    store.answer(second, 'b');
+    expect(store.exchanges().map((exchange) => exchange.answer)).toEqual(['a', 'b']);
+  });
+
+  it('stops only the turn on its way, never one already answered', () => {
+    const store = made();
+    store.answer(store.ask('una'), 'a');
+    store.ask('otra');
+
+    store.stop();
+
+    expect(store.exchanges().map((exchange) => exchange.state)).toEqual(['answered', 'stopped']);
+  });
+
+  it('stops with nothing on its way and leaves the conversation as it was', () => {
+    const store = made();
+    let told = 0;
+    store.stopped().subscribe(() => told++);
+    store.answer(store.ask('una'), 'a');
+
+    store.stop();
+
+    expect([told, store.exchanges().map((exchange) => exchange.state)]).toEqual([1, ['answered']]);
   });
 
   it('stops the turn on its way: whoever sent it is told, and the exchange says stopped', () => {

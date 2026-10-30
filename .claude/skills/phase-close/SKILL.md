@@ -113,6 +113,22 @@ initialised once, so a mutant inside it cannot be switched on and off and
 survives whatever the tests say (13c's price cues, 14's number words: 89 of
 103 survivors). Make it a property before reading those survivors as gaps.
 
+### The frontend's shared libraries
+
+`git diff --stat <previous phase tag>...HEAD -- frontend/libs/shared/`, and for
+each library it names:
+
+```bash
+cd frontend && npm run mutate -- <library>   # the report: frontend/reports/mutation/<library>/
+```
+
+StrykerJS, one library a run, from `frontend/` so the libraries' paths resolve.
+A library is seconds to minutes, so it is always run whole and its run is
+compared with its baseline in `docs/testing.md`. The same rules apply: `of
+covered` is the score, every survivor is classified, and a mutant inside a
+store feature's or a module's top-level body is the same static artefact.
+`tokens` holds no code, and the applications are not run (angular-cli#32182).
+
 ## 3. Read and classify
 
 ```bash
@@ -142,9 +158,11 @@ Survivors older than the phase are counted, not classified one by one.
   *Left, and what each is*, following the block before it.
 - The **baselines** table: a whole run that rose sets the new baseline, with
   the date and the old value beside it.
-- **Reports**: each HTML report goes to
-  `docs/blog/reports/<date>-phase-<n>-<name>/stryker/<project>-run<k>.html`
-  (private). Then delete this run's `StrykerOutput/<timestamp>` folders.
+- **Reports are never committed** (decided 2026-10-30): the HTML stays in the
+  ignored `StrykerOutput/` or `frontend/reports/` until the survivors are
+  classified, and then those folders are deleted. What the repository keeps is
+  the numbers and the classification above; an article that needs the report
+  keeps a screenshot of it in `docs/blog/assets/`.
 - `docs/delivery-plan.md`: the phase's status line, with its scores.
 - `docs/blog/notebook.md`: what the run taught, with the numbers.
 - `docs/book/material-map.md`: a row for the close in the phase's section

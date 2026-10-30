@@ -17,4 +17,9 @@ describe('scrubUrl', () => {
     expect(scrubUrl('/api/catalog/products/B13BAG0710')).toBe('/api/catalog/products/B13BAG0710');
     expect(scrubUrl('/es/p/B13BAG0710/mochila-urbana-azul-marino')).toBe('/es/p/B13BAG0710/mochila-urbana-azul-marino');
   });
+
+  /** Key material has digits in it; a long word without one is still a word. */
+  it('keeps a long word with no digit in it', () => {
+    expect(scrubUrl('/es/c/electrodomesticosdecocina')).toBe('/es/c/electrodomesticosdecocina');
+  });
 });
