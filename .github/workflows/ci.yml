@@ -320,6 +320,15 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: frontend
 
+      # **Built before the gate's clock starts.** `dotnet run` compiled the
+      # AppHost and everything it references inside the five minutes the gate
+      # below waits: 4 min 05 s from start to "up" on 2026-10-24, and phase 16's
+      # two projects pushed the build alone to three minutes, so on 2026-10-29
+      # the gate gave up with the containers 58 seconds old. The build is its
+      # own step now, and the gate measures only the stack coming up.
+      - name: Build the stack
+        run: dotnet build src/AppHost
+
       # Aspire IS the composition. A workflow that started each container and
       # each process by hand would be a second, worse AppHost — and the one
       # thing this repository has learned five times over is that composition
@@ -332,7 +341,7 @@ jobs:
           export Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json
           # And the ear (phase 14): no speech model fits a runner, so any audio is the script's words.
           export Tendero__SpeechScript=frontend/apps/storefront-e2e/speech.script.json
-          dotnet run --project src/AppHost > "$RUNNER_TEMP/aspire.log" 2>&1 &
+          dotnet run --project src/AppHost --no-build > "$RUNNER_TEMP/aspire.log" 2>&1 &
 
           # **Not port 4201.** The dev server answers within seconds of starting
           # and says nothing whatsoever about the API: the AppHost references the
