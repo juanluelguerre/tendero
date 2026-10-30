@@ -97,6 +97,7 @@ dotnet run --project tools/SearchEval -- --suite objects --owl models/owlv2 [--s
 dotnet run --project tools/TrafficSim -- --TrafficSim:Seed=42  # simulated shoppers and agents (ADR 0037); also a resource in Aspire
 npx nx serve storefront|backoffice            # from frontend/
 npm run format                                # from frontend/: Prettier, Tailwind classes sorted; CI runs format:check
+npm run mutate -- util                        # from frontend/: StrykerJS over one shared library, at phase close (frontend/README.md, Mutation testing)
 UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
 node tools/c4.mjs                             # validate docs/c4/tendero.c4 against the AppHost, redraw its diagrams
 node tools/tracking-plan.mjs                   # docs/telemetry/tracking-plan.json → its .md and the browser's event types
@@ -521,7 +522,12 @@ name.
   `of covered` score may not fall below that project's recorded baseline, and
   every survivor is classified — a real gap is closed with a test or written
   down, an equivalent mutant or noise is said to be one. Never per pull request
-  while its Microsoft.Testing.Platform runner is in preview.
+  while its Microsoft.Testing.Platform runner is in preview. **StrykerJS does the
+  same for each shared library the phase touched** (`npm run mutate -- <lib>`),
+  held to its own baseline; the applications wait for angular-cli#32182, which
+  leaves Angular's test builder no hook for it. **A mutation report is never
+  committed**: it stays in an ignored folder until its survivors are classified;
+  the repository keeps the numbers and the classification.
 
 ## Definition of done
 

@@ -9,6 +9,7 @@
     "build:backoffice": "nx build backoffice",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "mutate": "node tools/mutate.mjs",
     "generate:api-types": "npx --yes openapi-typescript@7.13.0 ../docs/openapi/tendero.json -o libs/shared/api/src/lib/generated/schema.ts"
   },
   "private": true,
@@ -60,6 +61,8 @@
     "@oxc-project/runtime": "^0.152.0",
     "@playwright/test": "^1.63.0",
     "@schematics/angular": "22.2.0",
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@swc-node/register": "1.12.1",
     "@swc/core": "1.16.13",
     "@swc/helpers": "0.5.23",

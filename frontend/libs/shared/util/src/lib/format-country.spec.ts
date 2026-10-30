@@ -9,6 +9,12 @@ describe('a country in the reader language', () => {
 
   it('takes the code in any case, as a typed address held it', () => {
     expect(formatCountry('pt', 'en')).toBe('Portugal');
+    expect(formatCountry(' pt ', 'en')).toBe('Portugal');
+  });
+
+  /** Only two letters are a code here: ISO's three-letter one is said back, never half read. */
+  it('says back a code of three letters', () => {
+    expect(formatCountry('ESP', 'es')).toBe('ESP');
   });
 
   /** Two letters the browser cannot name are still the address the shopper wrote. */

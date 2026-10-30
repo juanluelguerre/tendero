@@ -49,6 +49,7 @@ libs/shared/
   telemetry/        browser telemetry behind a port: OpenTelemetry, later Faro, or none (ADR 0036)
   composer/         the box Tino and Steward share, and voice behind a port: the microphone, the
                     browser's and the shop's engines (ADR 0061); `/testing` for the apps' test providers
+tools/              mutation testing of the shared libraries: the runner and its Angular plugin (below)
 ```
 
 Inside each app: `layout/` (its own shell, which is **not** shared),
@@ -148,4 +149,64 @@ npx nx affected -t build     # only what your change touched
 
 npx nx e2e storefront-e2e    # needs the stack up: dotnet run --project src/AppHost
 npx nx e2e backoffice-e2e
+
+npm run mutate -- util       # mutation testing of one shared library (below)
 ```
+
+## Mutation testing
+
+A green test proves the code ran, not that the test would notice it being wrong.
+Mutation testing asks that: StrykerJS changes the code one small mutation at a
+time (a `>` into `>=`, a condition into `true`, a string into `""`) and runs the
+library's specs against each one. A mutant no spec fails on is a **survivor**:
+either a missing test, or a change nothing can tell apart. It is the frontend's
+half of level 2 in `docs/testing.md`, which holds the rules and each library's
+baseline.
+
+**What runs it, and what it covers.** The shared libraries in `libs/shared/`
+whose specs are plain Vitest: `a11y`, `agent`, `auth`, `composer`, `i18n`,
+`telemetry`, `ui`, `util`. Not `api` (types) nor `tokens` (no code), and not the
+applications: their specs run through `@angular/build:unit-test`, which gives
+StrykerJS no hook into its Vitest
+([angular-cli#32182](https://github.com/angular/angular-cli/issues/32182)).
+
+**How to run it**, from `frontend/`, one library at a time — the machine is the
+run's alone (a build or the stack beside it makes mutants time out):
+
+```bash
+npm run mutate -- util                  # any of the libraries above; no name lists them
+node ../.claude/skills/phase-close/stryker-read.mjs frontend/util --detail   # the scores and every survivor
+```
+
+It prints a table at the end and writes the full report to
+`reports/mutation/<library>/mutation.html` (open it in a browser: each survivor
+in its source line) and `mutation.json`. `reports/` and the sandboxes in
+`.stryker-tmp/` are ignored, and **a report is never committed**: classify its
+survivors in `docs/testing.md`, then delete it. A library takes from about ten
+seconds (`a11y`) to four and a half minutes (`telemetry`). It runs at a phase
+close over each library the phase touched, never per pull request.
+
+**Reading the score.** `of covered` is the one that counts: of the mutants some
+spec runs, the share a spec kills. `of total` also counts code no spec reaches,
+which in a library is mostly code only a browser runs. Every survivor gets a
+name — a real gap (write the test, see it kill that mutant), equivalent, a
+static artefact (a module's top-level body runs once, before Stryker can switch
+a mutant on), configuration, or unreachable in jsdom.
+
+**The two files in `tools/`:**
+
+- **`mutate.mjs`** — what `npm run mutate` runs. It starts StrykerJS from
+  `frontend/`, not from the library's folder, because the libraries import each
+  other through `tsconfig.base.json`'s paths, which a sandbox of one folder
+  could not resolve. It mutates only that library's production code — not its
+  specs, contract suites (`*-contract.ts`), test helpers (`testing.ts`) or
+  generated files — against that library's own Vitest project. It runs four
+  runners with 30 s of grace per mutant: one per core starved them, and a mutant
+  that times out counts as killed, so composer's first run claimed 73 kills no
+  test had made.
+- **`angular-literals.ignorer.mjs`** — a StrykerJS plugin, loaded by
+  `mutate.mjs`, that makes no mutant where Angular's compiler reads the code as
+  a literal at build time: a decorator's argument (`@Component({ … })`) and the
+  options of `input()`, `output()`, `model()` and the view and content queries.
+  Instrumented, those are refused (NG1010) and a library with a component cannot
+  run at all. It is never run by hand.

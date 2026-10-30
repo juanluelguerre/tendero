@@ -2,6 +2,7 @@
 // file — all of them, or only in the files named.
 //
 //   node .claude/skills/phase-close/stryker-read.mjs <Project> [file filters...] [--detail]
+//   node .claude/skills/phase-close/stryker-read.mjs frontend/<library> [...]   # npm run mutate's report
 //
 // The score that counts is `of covered`: killed ÷ (killed + survived), with
 // timeouts counted as killed (docs/testing.md, Level 2).
@@ -20,27 +21,37 @@ const only = rest.filter((arg) => !arg.startsWith('--')).map((name) => name.toLo
 const ordinal = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const wanted = (name) => only.length === 0 || only.some((part) => name.toLowerCase().includes(part));
 
+// A frontend library's report is one file, rewritten by every run.
+const library = project.startsWith('frontend/') ? project.slice('frontend/'.length) : null;
+const prefix = library ? `/libs/shared/${library}/src/` : `/src/${project}/`;
 const output = join(root, project, 'StrykerOutput');
-const reports = existsSync(output)
-  ? readdirSync(output)
-      .map((run) => join(output, run, 'reports', 'mutation-report.json'))
-      .filter((path) => existsSync(path))
-      .sort((a, b) => statSync(a).mtimeMs - statSync(b).mtimeMs)
-  : [];
+const reports = library
+  ? [join(root, '..', 'frontend', 'reports', 'mutation', library, 'mutation.json')].filter((path) => existsSync(path))
+  : existsSync(output)
+    ? readdirSync(output)
+        .map((run) => join(output, run, 'reports', 'mutation-report.json'))
+        .filter((path) => existsSync(path))
+        .sort((a, b) => statSync(a).mtimeMs - statSync(b).mtimeMs)
+    : [];
 if (reports.length === 0) {
-  console.error(`No Stryker report under src/${project}/StrykerOutput: run it first (stryker-run.sh).`);
+  console.error(
+    library
+      ? `No report for ${library}: run it first (cd frontend && npm run mutate -- ${library}).`
+      : `No Stryker report under src/${project}/StrykerOutput: run it first (stryker-run.sh).`,
+  );
   process.exit(1);
 }
 
 const newest = reports.at(-1);
 const report = JSON.parse(readFileSync(newest, 'utf8'));
-console.log(`== ${project} · ${newest.split(/[\\/]/).at(-3)}`);
+const run = library ? statSync(newest).mtime.toISOString() : newest.split(/[\\/]/).at(-3);
+console.log(`== ${project} · ${run}`);
 
 const status = {};
 const byFile = new Map();
 const survivors = [];
 for (const [path, entry] of Object.entries(report.files)) {
-  const name = path.replaceAll('\\', '/').split(`/src/${project}/`).at(-1);
+  const name = `/${path.replaceAll('\\', '/')}`.split(prefix).at(-1);
   const lines = (entry.source ?? '').split(/\r?\n/);
   for (const mutant of entry.mutants) {
     status[mutant.status] = (status[mutant.status] ?? 0) + 1;

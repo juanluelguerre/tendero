@@ -19,6 +19,7 @@ describe('a refusal from the API', () => {
     expect(problemOf(priceChanged)?.code).toBe('PriceChanged');
     expect(problemOf('The cart refused that change.')).toBeNull();
     expect(problemOf({ title: 'No code' })).toBeNull();
+    expect(problemOf({ code: 'NoTitle' })).toBeNull();
     expect(problemOf(null)).toBeNull();
   });
 
