@@ -16,6 +16,9 @@ internal sealed class InMemorySalesChannel : ISalesChannel
 
     public List<ChannelShipment> Shipped { get; } = [];
 
+    /// <summary>Every stock publication it was sent, refused ones included, in order.</summary>
+    public List<ChannelStock> StockSent { get; } = [];
+
     public ChannelProductStatus? StatusOf(string code) => products.TryGetValue(code, out var held) ? held.Product.Status : null;
 
     public int? AvailableOf(string sku, string location) => stock.TryGetValue((sku, location), out var held) ? held : null;
@@ -51,6 +54,7 @@ internal sealed class InMemorySalesChannel : ISalesChannel
 
     public Task<StockPublication> SetAvailableAsync(ChannelStock publication, CancellationToken cancellationToken = default)
     {
+        StockSent.Add(publication);
         if (!products.Values.Any(held => held.Ids.VariantIdsBySku.ContainsKey(publication.Sku)))
             return Task.FromResult<StockPublication>(new StockPublication.Refused($"No variant {publication.Sku} on this channel."));
 

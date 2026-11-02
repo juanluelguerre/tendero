@@ -31,7 +31,7 @@ public sealed class ReceiveChannelOrdersTests
             new SourceOrderTotals(Eur(25m), Eur(0m), Eur(4.95m), Eur(5.20m), Eur(29.95m)),
             [], [new SourceTax("IVA", 0.21m, Eur(5.20m))], [], Since.AddMinutes(minutes));
 
-    private static ReceiveChannelOrdersHandler Handler(ChannelOrders channel, Orders orders) =>
+    private static ReceiveChannelOrdersHandler Handler(IChannelOrderSource channel, Orders orders) =>
         new(new OneChannel(channel), orders, new Catalogue(), orders, Clock);
 
     [Fact]
@@ -113,6 +113,139 @@ public sealed class ReceiveChannelOrdersTests
 
         Assert.Empty(orders.All);
         Assert.Equal((0, 0, 0), (result.Received, result.AlreadyHere, result.Skipped));
+    }
+
+    // What follows was found by S3's Stryker close: each test holds a line no other one did.
+
+    /// <summary>Changes older than where the pass began do not move it back.</summary>
+    [Fact]
+    public async Task The_pass_never_reads_back_before_where_it_began()
+    {
+        var orders = new Orders();
+        var late = Taken("7001") with { UpdatedAt = Since.AddMinutes(-30) };
+
+        var result = await Handler(new LateChannel(late), orders).HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+
+        Assert.Equal(Since, result.ReadUntil);
+    }
+
+    /// <summary>A pass that received nothing writes nothing.</summary>
+    [Fact]
+    public async Task A_pass_that_received_nothing_saves_nothing()
+    {
+        var orders = new Orders();
+
+        await Handler(new ChannelOrders(Taken("7001", SourceOrderState.Cancelled)), orders).HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+
+        Assert.Equal(0, orders.Saves);
+    }
+
+    /// <summary>Every order read is counted by the path it came by and what became of it.</summary>
+    [Fact]
+    public async Task Each_order_read_is_counted_by_its_path_and_its_outcome()
+    {
+        using var recorder = new InstrumentRecorder("tendero.channel.orders.received");
+        var orders = new Orders();
+        var channel = new ChannelOrders(Taken("7001"), Taken("7002", SourceOrderState.Cancelled), Taken("7003", sku: "NOT-SOLD"));
+
+        await Handler(channel, orders).HandleAsync(new ReceiveChannelOrderCommand("shopify", "7001"), Ct);
+        await Handler(channel, orders).HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+
+        Assert.Equal(
+            [
+                ("shopify", "webhook", "received"),
+                ("shopify", "reconciliation", "already_here"),
+                ("shopify", "reconciliation", "not_open"),
+                ("shopify", "reconciliation", "not_in_catalogue"),
+            ],
+            recorder.Of("tendero.channel.orders.received")
+                .Select(tags => ((string?)tags["channel"], (string?)tags["path"], (string?)tags["outcome"])));
+    }
+
+    [Fact]
+    public async Task An_order_that_is_not_open_is_said_why()
+    {
+        var result = await Handler(new ChannelOrders(Taken("7001", SourceOrderState.Cancelled)), new Orders())
+            .HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+
+        Assert.Contains("cancelled", Assert.Single(result.Notes), StringComparison.Ordinal);
+    }
+
+    /// <summary>One address is both: an order with only a billing or only a shipping address ships to it; with none it is skipped.</summary>
+    [Fact]
+    public async Task One_address_serves_as_both_and_none_is_skipped()
+    {
+        var luis = Address.Create("Luis Gil", "Calle Real 2", null, "Sevilla", null, "41001", "ES");
+        var orders = new Orders();
+        var channel = new ChannelOrders(
+            Taken("7001") with { ShippingAddress = null, BillingAddress = luis },
+            Taken("7002") with { ShippingAddress = luis, BillingAddress = null },
+            Taken("7003") with { ShippingAddress = null, BillingAddress = null });
+
+        var result = await Handler(channel, orders).HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+
+        Assert.All(orders.All, order => Assert.Equal((luis, luis), (order.ShippingAddress, order.BillingAddress)));
+        Assert.Equal((2, 1), (result.Received, result.Skipped));
+    }
+
+    /// <summary>The order keeps the channel's shipping as a method of its own, and the culture the customer bought in.</summary>
+    [Fact]
+    public async Task The_order_keeps_the_channels_shipping_and_the_customers_culture()
+    {
+        var orders = new Orders();
+
+        await Handler(new ChannelOrders(Taken("7001") with { Culture = "en" }), orders).HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+
+        var order = Assert.Single(orders.All);
+        Assert.Equal(("shopify:shipping", "en"), (order.Shipping.OptionCode, order.Culture));
+    }
+
+    /// <summary>What does not make an order is skipped, counted by why, and said: the shopkeeper reads the note.</summary>
+    [Fact]
+    public async Task What_cannot_be_an_order_is_skipped_and_said_why()
+    {
+        using var recorder = new InstrumentRecorder("tendero.channel.orders.received");
+        var orders = new Orders();
+        var wrong = Taken("7002") with { Totals = new SourceOrderTotals(Eur(25m), Eur(0m), Eur(4.95m), Eur(5.20m), Eur(99m)) };
+        var nowhere = Taken("7003") with { ShippingAddress = null, BillingAddress = null };
+
+        var shopify = await Handler(new ChannelOrders(wrong, nowhere), orders).HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+        var market = await Handler(new ChannelOrders(Taken("7004")), orders).HandleAsync(new ReceiveChannelOrdersCommand("market", Since), Ct);
+
+        Assert.Empty(orders.All);
+        Assert.Collection(
+            [.. shopify.Notes, .. market.Notes],
+            note => Assert.StartsWith("#7002's figures do not make an order", note, StringComparison.Ordinal),
+            note => Assert.Equal("#7003 has nowhere to be sent.", note),
+            note => Assert.Equal("market is not a channel an order can come from.", note));
+        Assert.Equal(
+            ["totals_do_not_add_up", "no_address", "unknown_channel"],
+            recorder.Of("tendero.channel.orders.received").Select(tags => (string?)tags["outcome"]));
+    }
+
+    /// <summary>A channel that does not say the customer's culture leaves the shop's.</summary>
+    [Fact]
+    public async Task Without_a_culture_the_order_is_in_the_shops()
+    {
+        var orders = new Orders();
+
+        await Handler(new ChannelOrders(Taken("7001") with { Culture = null }), orders).HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+
+        Assert.Equal("es", Assert.Single(orders.All).Culture);
+    }
+
+    /// <summary>A channel whose search returns a change from before the pass began, as a clock skew would.</summary>
+    private sealed class LateChannel(SourceOrder order) : IChannelOrderSource
+    {
+        public string Channel => "shopify";
+
+        public async IAsyncEnumerable<SourceOrder> UpdatedSinceAsync(DateTimeOffset since, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.CompletedTask;
+            yield return order;
+        }
+
+        public Task<SourceOrder?> FindAsync(string externalId, CancellationToken cancellationToken = default) => Task.FromResult<SourceOrder?>(order);
     }
 
     private sealed class ChannelOrders(params SourceOrder[] orders) : IChannelOrderSource

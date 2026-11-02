@@ -120,6 +120,62 @@ public sealed class PublishStockToChannelTests
         Assert.Equal(0, state.Saves);
     }
 
+    /// <summary>The channel already holds what a stale mark expected: agreeing with it clears the mark, sending nothing.</summary>
+    [Fact]
+    public async Task The_channels_own_number_published_again_clears_the_stale_mark()
+    {
+        var (channel, state) = await Published();
+        await Handler(channel, state).HandleAsync(Stock(5), Ct);
+        channel.Sell("TAZ-001-BLU", "MAD", 1);
+        await Handler(channel, state).HandleAsync(Stock(6), Ct);
+        var sent = channel.StockSent.Count;
+
+        var outcome = await Handler(channel, state).HandleAsync(Stock(4), Ct);
+
+        Assert.Equal(StockOutcome.Unchanged, outcome);
+        Assert.Null(state.Levels[0].StaleSince);
+        Assert.Equal(sent, channel.StockSent.Count);
+    }
+
+    /// <summary>
+    /// The key names the change — channel, SKU, warehouse, from and to — so a retry of the
+    /// same publication is the same key and the channel changes nothing twice, and a new
+    /// change is a new key.
+    /// </summary>
+    [Fact]
+    public async Task Each_change_carries_a_key_that_names_it()
+    {
+        var (channel, state) = await Published();
+
+        await Handler(channel, state).HandleAsync(Stock(5), Ct);
+        await Handler(channel, state).HandleAsync(Stock(8), Ct);
+
+        Assert.Equal(
+            ["memory:TAZ-001-BLU:MAD:none>3", "memory:TAZ-001-BLU:MAD:3>6"],
+            channel.StockSent.Select(stock => stock.IdempotencyKey));
+        Assert.Equal(2, state.Saves);
+    }
+
+    /// <summary>Only what reached the channel is counted: nothing listed and nothing changed are not publications.</summary>
+    [Fact]
+    public async Task Publications_are_counted_by_what_the_channel_answered()
+    {
+        using var recorder = new InstrumentRecorder("tendero.channel.publications");
+        var (channel, state) = await Published();
+
+        await Handler(channel, state).HandleAsync(Stock(5), Ct);
+        await Handler(channel, state).HandleAsync(Stock(5), Ct);
+        channel.Sell("TAZ-001-BLU", "MAD", 1);
+        await Handler(channel, state).HandleAsync(Stock(9), Ct);
+        await Handler(channel, new InMemoryChannelState()).HandleAsync(Stock(5), Ct);
+
+        Assert.Equal(
+            ["published", "stale"],
+            recorder.Of("tendero.channel.publications")
+                .Where(tags => (string?)tags["kind"] == "stock" && (string?)tags["channel"] == "memory")
+                .Select(tags => (string?)tags["outcome"]));
+    }
+
     [Fact]
     public async Task A_refusal_is_counted_and_nothing_is_remembered_as_set()
     {

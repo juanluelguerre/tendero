@@ -33,6 +33,26 @@ internal sealed partial class FakeShopify
 
     public sealed record FulfillmentOrder(string Id, string Status);
 
+    /// <summary>What each productSet named its product by: its id once the store holds it, null before.</summary>
+    public List<string?> Identifiers { get; } = [];
+
+    /// <summary>What each inventorySetQuantities sent as its input, in order.</summary>
+    public List<JsonElement> InventoryInputs { get; } = [];
+
+    /// <summary>The publications each publishablePublish named, in order.</summary>
+    public List<string> PublishedTo { get; } = [];
+
+    /// <summary>The writes the store refuses, by mutation name, with the user error it answers.</summary>
+    public Dictionary<string, string> Refusing { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>False, the store has no Online Store channel: only Point of Sale.</summary>
+    public bool HasOnlineStore { get; set; } = true;
+
+    private object Errors(string mutation) =>
+        Refusing.TryGetValue(mutation, out var refusal)
+            ? new[] { new { field = new[] { "input" }, message = refusal } }
+            : NoErrors;
+
     /// <summary>What each productSet sent as its input, in order.</summary>
     public List<JsonObject> ProductInputs { get; } = [];
 
@@ -68,8 +88,10 @@ internal sealed partial class FakeShopify
         {
             var update = variables.GetProperty("product");
             var product = shelf.Values.Single(held => (string?)held["id"] == update.GetProperty("id").GetString());
-            product["status"] = update.GetProperty("status").GetString();
-            return Data(new { productUpdate = new { product = Answer(product), userErrors = NoErrors } });
+            var errors = Errors("productUpdate");
+            if (errors == NoErrors)
+                product["status"] = update.GetProperty("status").GetString();
+            return Data(new { productUpdate = new { product = Answer(product), userErrors = errors } });
         }
 
         if (query.Contains("{ publications(", StringComparison.Ordinal))
@@ -77,14 +99,16 @@ internal sealed partial class FakeShopify
             {
                 publications = new
                 {
-                    nodes = new[] { new { id = "gid://shopify/Publication/9", name = "Point of Sale" }, new { id = OnlineStore, name = "Online Store" } },
+                    nodes = new[] { new { id = "gid://shopify/Publication/9", name = "Point of Sale" }, new { id = OnlineStore, name = "Online Store" } }
+                        .Where(publication => HasOnlineStore || publication.id != OnlineStore),
                 },
             });
 
         if (query.Contains("publishablePublish", StringComparison.Ordinal))
         {
             OnTheOnlineStore.Add(variables.GetProperty("id").GetString()!);
-            return Data(new { publishablePublish = new { userErrors = NoErrors } });
+            PublishedTo.Add(variables.GetProperty("input")[0].GetProperty("publicationId").GetString()!);
+            return Data(new { publishablePublish = new { userErrors = Errors("publishablePublish") } });
         }
 
         if (query.Contains("productVariants(first: 1, query: $query)", StringComparison.Ordinal))
@@ -119,7 +143,7 @@ internal sealed partial class FakeShopify
                             nodes[i] = nodes[i] with { Status = "CLOSED" };
             }
 
-            return Data(new { fulfillmentCreate = new { fulfillment = new { id = "gid://shopify/Fulfillment/1" }, userErrors = NoErrors } });
+            return Data(new { fulfillmentCreate = new { fulfillment = new { id = "gid://shopify/Fulfillment/1" }, userErrors = Errors("fulfillmentCreate") } });
         }
 
         if (query.Contains("inventoryLevel(locationId: $location)", StringComparison.Ordinal))
@@ -136,6 +160,11 @@ internal sealed partial class FakeShopify
     {
         var input = JsonNode.Parse(variables.GetProperty("input").GetRawText())!.AsObject();
         ProductInputs.Add(input);
+        Identifiers.Add(variables.TryGetProperty("identifier", out var identifier) && identifier.ValueKind == JsonValueKind.Object
+            ? identifier.GetProperty("id").GetString()
+            : null);
+        if (Errors("productSet") is var refused && refused != NoErrors)
+            return Data(new { productSet = new { product = (object?)null, userErrors = refused } });
         var handle = (string)input["handle"]!;
 
         if (!shelf.TryGetValue(handle, out var product))
@@ -171,6 +200,7 @@ internal sealed partial class FakeShopify
     private string SetQuantity(JsonElement variables)
     {
         var key = variables.GetProperty("key").GetString()!;
+        InventoryInputs.Add(variables.GetProperty("input").Clone());
         var quantity = variables.GetProperty("input").GetProperty("quantities")[0];
         var at = (quantity.GetProperty("inventoryItemId").GetString()!, quantity.GetProperty("locationId").GetString()!);
         int? expected = quantity.GetProperty("changeFromQuantity").ValueKind == JsonValueKind.Null
