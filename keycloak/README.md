@@ -66,7 +66,20 @@ culture (invariant 6) — and `loginTheme: "tendero"`.
   email and shows it at `http://localhost:38025`. Nothing reaches a real inbox.
 
 A machine that started Keycloak before this has none of the three: see the next
-paragraph. Changing the running realm by hand means creating the client with a
+paragraph.
+
+**The browser test of the first visit** is `frontend/apps/storefront-e2e/src/forgot-password.spec.ts`:
+an identity with no password, *forgot password* at this page, the link read from
+Mailpit, a password set, and the shop signed in. It needs all three above, so it
+runs with `Tendero__Issuer=keycloak` and skips against the development issuer:
+
+```bash
+cd frontend && npx playwright test --config apps/storefront-e2e/playwright.config.ts forgot-password
+```
+
+On 2026-10-30 a volume from 2026-09-14 had none of the three; they were added to
+the running realm through the admin API's `partialImport` (with `SKIP`) and a
+realm update, which kept every user. Changing the running realm by hand means creating the client with a
 service account and those three roles, turning *Forgot password* on (Realm settings
 → Login) and setting the SMTP host and port (Realm settings → Email).
 
