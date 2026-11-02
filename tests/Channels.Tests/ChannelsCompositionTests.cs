@@ -25,13 +25,16 @@ public sealed class ChannelsCompositionTests
     }
 
     [Fact]
-    public void The_margin_is_two_unless_the_configuration_says_otherwise()
+    public void The_margin_is_two_and_the_culture_spanish_unless_the_configuration_says_otherwise()
     {
         using var unsaid = Compose([]);
         using var said = Compose(new() { ["Channels:StockMargin"] = "3" });
+        using var none = Compose(new() { ["Channels:StockMargin"] = "0" });
 
         Assert.Equal(2, unsaid.GetRequiredService<StockMargin>().Units);
+        Assert.Equal("es", unsaid.GetRequiredService<IOptions<ChannelOptions>>().Value.Culture);
         Assert.Equal(3, said.GetRequiredService<StockMargin>().Units);
+        Assert.Equal(0, none.GetRequiredService<StockMargin>().Units);
     }
 
     [Theory]
@@ -49,11 +52,11 @@ public sealed class ChannelsCompositionTests
     public void The_channels_registered_are_the_ones_found_by_their_key()
     {
         var channel = new InMemorySalesChannel();
-        using var provider = Compose([], channel);
+        using var provider = Compose([], new NamedChannel("zeta"), channel, new NamedChannel("alpha"));
         using var scope = provider.CreateScope();
         var channels = scope.ServiceProvider.GetRequiredService<ISalesChannels>();
 
-        Assert.Equal(["memory"], channels.Channels);
+        Assert.Equal(["alpha", "memory", "zeta"], channels.Channels);
         Assert.Same(channel, channels.Get("memory"));
         Assert.Throws<InvalidOperationException>(() => channels.Get("shopify"));
     }
@@ -65,5 +68,16 @@ public sealed class ChannelsCompositionTests
         using var scope = provider.CreateScope();
 
         Assert.Empty(scope.ServiceProvider.GetRequiredService<ISalesChannels>().Channels);
+    }
+
+    private sealed class NamedChannel(string channel) : ISalesChannel
+    {
+        public string Channel => channel;
+
+        public Task<ChannelListingIds> PublishAsync(ChannelProduct product, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<StockPublication> SetAvailableAsync(ChannelStock stock, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task MarkShippedAsync(ChannelShipment shipment, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }
