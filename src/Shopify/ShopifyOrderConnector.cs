@@ -27,29 +27,41 @@ namespace ElGuerre.Tendero.Shopify;
 /// Registered with the other Shopify adapters when the store's credentials are
 /// configured.
 /// </summary>
-internal sealed class ShopifyOrderConnector(ShopifyAdmin admin, ISourceVariantSkus catalogue) : IOrderSourceConnector
+internal sealed class ShopifyOrderConnector(ShopifyAdmin admin, ISourceVariantSkus catalogue) : IOrderSourceConnector, IChannelOrderSource
 {
     public const string Key = "shopify";
 
     public string Source => Key;
 
-    public async IAsyncEnumerable<SourceOrder> StreamOrdersAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public string Channel => Key;
+
+    public IAsyncEnumerable<SourceOrder> StreamOrdersAsync(CancellationToken cancellationToken = default) =>
+        PagesAsync(ShopifyQueries.Orders, cancellationToken);
+
+    /// <summary>The store as a sales channel (S3): its orders changed since the reconciliation's mark.</summary>
+    public IAsyncEnumerable<SourceOrder> UpdatedSinceAsync(DateTimeOffset since, CancellationToken cancellationToken = default) =>
+        PagesAsync(after => ShopifyQueries.OrdersUpdatedSince(since, after), cancellationToken);
+
+    /// <summary>One order, by the id a webhook names (S3): read with the same fields and mapping as the rest.</summary>
+    public async Task<SourceOrder?> FindAsync(string externalId, CancellationToken cancellationToken = default)
+    {
+        var id = externalId.StartsWith("gid://", StringComparison.Ordinal) ? externalId : $"gid://shopify/Order/{externalId}";
+        var order = (await admin.QueryAsync(ShopifyQueries.Order(id), cancellationToken)).GetProperty("order");
+        if (order.ValueKind != JsonValueKind.Object)
+            return null;
+
+        return Order(order, await SkusAsync([order], cancellationToken));
+    }
+
+    private async IAsyncEnumerable<SourceOrder> PagesAsync(
+        Func<string?, string> query, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         string? after = null;
         do
         {
-            var page = (await admin.QueryAsync(ShopifyQueries.Orders(after), cancellationToken)).GetProperty("orders");
+            var page = (await admin.QueryAsync(query(after), cancellationToken)).GetProperty("orders");
             var orders = page.GetProperty("nodes").EnumerateArray().ToList();
-
-            var variants = orders
-                .SelectMany(order => order.GetProperty("lineItems").GetProperty("nodes").EnumerateArray())
-                .Select(VariantOf)
-                .OfType<string>()
-                .Distinct(StringComparer.Ordinal)
-                .ToList();
-            var skus = variants.Count == 0
-                ? new Dictionary<string, string>()
-                : await catalogue.SkusOfAsync(Key, variants, cancellationToken);
+            var skus = await SkusAsync(orders, cancellationToken);
 
             foreach (var order in orders)
                 yield return Order(order, skus);
@@ -58,6 +70,20 @@ internal sealed class ShopifyOrderConnector(ShopifyAdmin admin, ISourceVariantSk
             after = info.GetProperty("hasNextPage").GetBoolean() ? info.GetProperty("endCursor").GetString() : null;
         }
         while (after is not null);
+    }
+
+    private async Task<IReadOnlyDictionary<string, string>> SkusAsync(IReadOnlyList<JsonElement> orders, CancellationToken cancellationToken)
+    {
+        var variants = orders
+            .SelectMany(order => order.GetProperty("lineItems").GetProperty("nodes").EnumerateArray())
+            .Select(VariantOf)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        return variants.Count == 0
+            ? new Dictionary<string, string>()
+            : await catalogue.SkusOfAsync(Key, variants, cancellationToken);
     }
 
     private static SourceOrder Order(JsonElement order, IReadOnlyDictionary<string, string> skus)
@@ -104,7 +130,8 @@ internal sealed class ShopifyOrderConnector(ShopifyAdmin admin, ISourceVariantSk
                 .. order.GetProperty("taxLines").EnumerateArray().Select(tax => new SourceTax(
                     Text(tax, "title") ?? "", tax.GetProperty("rate").GetDecimal(), MoneyOf(tax.GetProperty("priceSet")))),
             ],
-            [.. order.GetProperty("refunds").EnumerateArray().Select(Refund)]);
+            [.. order.GetProperty("refunds").EnumerateArray().Select(Refund)],
+            At(order, "updatedAt"));
     }
 
     /// <summary>Cancelled when the store cancelled it; fulfilled only when all of it left; anything else is still on its way.</summary>

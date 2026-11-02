@@ -112,6 +112,38 @@ public sealed class CatalogueExportReaderTests
         Assert.Empty(exported.Category);
     }
 
+    /// <summary>
+    /// One product by its code, as the whole export says it (phase 16, S3): what a sales
+    /// channel is told when that product changes. Archived or unknown, it is not there.
+    /// </summary>
+    [Fact]
+    public async Task One_product_leaves_by_its_code_as_the_whole_export_says_it_and_an_archived_one_does_not()
+    {
+        var shirt = AShirt();
+        var archived = Product.Create(Clock, Text("Vaso", "Glass"), new Money(5m, "EUR"));
+        archived.AddVariant(Clock, "GLASS-DEFAULT", new Money(5m, "EUR"));
+        archived.Archive(Clock);
+        var reader = Reader(shirt, archived);
+
+        var one = await reader.ProductAsync(shirt.Code, "en", Ct);
+
+        Assert.Equal(Assert.Single(await reader.ProductsAsync("en", Ct)), one, ExportedProductComparer.Instance);
+        Assert.Null(await reader.ProductAsync(archived.Code, "en", Ct));
+        Assert.Null(await reader.ProductAsync("NO-SUCH-CODE", "en", Ct));
+    }
+
+    /// <summary>Records holding lists compare by reference; the same product compared by what it says.</summary>
+    private sealed class ExportedProductComparer : IEqualityComparer<ExportedProduct?>
+    {
+        public static readonly ExportedProductComparer Instance = new();
+
+        public bool Equals(ExportedProduct? x, ExportedProduct? y) =>
+            x is not null && y is not null
+            && System.Text.Json.JsonSerializer.Serialize(x) == System.Text.Json.JsonSerializer.Serialize(y);
+
+        public int GetHashCode(ExportedProduct? obj) => obj?.Code.GetHashCode(StringComparison.Ordinal) ?? 0;
+    }
+
     // The tests below were found by the exports' Stryker close: each mutant they name survived the suite above.
 
     /// <summary>The products leave by their code, so two exports of an unchanged catalogue are the same file.</summary>

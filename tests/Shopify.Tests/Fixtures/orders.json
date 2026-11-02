@@ -5,6 +5,7 @@
       "nodes": [
         {
           "id": "gid://shopify/Order/5001",
+          "updatedAt": "2026-04-03T09:00:00Z",
           "name": "#1001",
           "processedAt": "2026-04-02T10:00:00Z",
           "cancelledAt": null,
@@ -48,6 +49,7 @@
         },
         {
           "id": "gid://shopify/Order/5002",
+          "updatedAt": "2026-05-10T13:00:00Z",
           "name": "#1002",
           "processedAt": "2026-05-10T12:00:00Z",
           "cancelledAt": "2026-05-10T13:00:00Z",

@@ -51,6 +51,13 @@ public sealed record OrderSummary(
     string? StopDetail,
 
     /// <summary>
+    /// Why the stock of an order a sales channel took could not be held (phase 16, S3;
+    /// ADR 0070), in the ledger's words: the channel took the money, a person must act.
+    /// Null for every other order.
+    /// </summary>
+    string? Oversold,
+
+    /// <summary>
     /// The first few things in the order, so a person can tell one from another.
     ///
     /// **A preview and not the lines**, which is the distinction this record's
@@ -96,6 +103,7 @@ public sealed record OrderSummary(
         order.Payment?.CaptureId is not null,
         order.Stop?.Code,
         order.Stop?.Detail,
+        order.Oversold,
         [
             .. order.Lines.Take(PreviewLines)
                 .Select(line => new OrderLinePreview(line.Sku, line.ProductName, line.ImageId))

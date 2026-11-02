@@ -6890,6 +6890,70 @@
         }
       }
     },
+    "/api/channels/shopify/webhooks": {
+      "post": {
+        "tags": [
+          "Channels"
+        ],
+        "operationId": "ShopifyWebhook",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is nothing at this address.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "NotFound"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/accounts/me/data": {
       "get": {
         "tags": [
@@ -16190,6 +16254,7 @@
           "Web",
           "Mcp",
           "Ucp",
+          "Shopify",
           null
         ]
       },
@@ -16384,6 +16449,7 @@
           "isCaptured",
           "stopCode",
           "stopDetail",
+          "oversold",
           "preview",
           "createdAt"
         ],
@@ -16434,6 +16500,12 @@
             ]
           },
           "stopDetail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "oversold": {
             "type": [
               "null",
               "string"
@@ -21335,6 +21407,9 @@
     },
     {
       "name": "Catalog"
+    },
+    {
+      "name": "Channels"
     },
     {
       "name": "Checkout"

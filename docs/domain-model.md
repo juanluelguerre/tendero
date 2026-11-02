@@ -645,6 +645,8 @@ classDiagram
         +DateTimeOffset? ConfirmedAt
         +DateTimeOffset? ShippedAt
         +OrderOrigin? ImportedFrom
+        +OrderOrigin? ReceivedFrom
+        +string? Oversold
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment
@@ -658,6 +660,7 @@ classDiagram
         Web
         Mcp
         Ucp
+        Shopify
     }
     class OrderDiscount {
         <<record>>
@@ -826,6 +829,7 @@ classDiagram
     Order --> OrderTotals : Totals
     Order --> OrderMandate : Mandate
     Order --> OrderOrigin : ImportedFrom
+    Order --> OrderOrigin : ReceivedFrom
     Order "1" --> "*" OrderDiscount : Discounts
     Order "1" --> "*" OrderTax : Taxes
     Order --> OrderPayment : Payment
@@ -847,6 +851,7 @@ classDiagram
 | `OrderCancelled` | `OrderId: OrderId`, `Reason: string` |
 | `OrderConfirmed` | `OrderId: OrderId` |
 | `OrderDelivered` | `OrderId: OrderId` |
+| `OrderOversold` | `OrderId: OrderId`, `Reason: string` |
 | `OrderPaymentAuthorized` | `OrderId: OrderId` |
 | `OrderPaymentCaptured` | `OrderId: OrderId`, `Provider: string`, `CaptureId: string` |
 | `OrderPaymentFailed` | `OrderId: OrderId`, `Reason: string` |
@@ -1253,4 +1258,46 @@ stateDiagram-v2
     Proposed --> Stale
     Approved --> Applied
     Approved --> Failed
+```
+
+## Channels
+
+```mermaid
+classDiagram
+    class ChannelCursor {
+        <<aggregate>>
+        +string Channel
+        +DateTimeOffset OrdersReadUntil
+    }
+    class ChannelListing {
+        <<aggregate>>
+        +string Channel
+        +string Code
+        +string? ExternalProductId
+        +ChannelProductStatus? Status
+        +ChannelListingOutcome Outcome
+        +DateTimeOffset? PublishedAt
+        +string? Refusal
+        +DateTimeOffset? RefusedAt
+        +Map~string, string~ VariantIds
+    }
+    class ChannelListingOutcome {
+        <<enumeration>>
+        Unpublished
+        Published
+        Refused
+    }
+    class ChannelStockLevel {
+        <<aggregate>>
+        +string Channel
+        +string Sku
+        +string Location
+        +int? Expected
+        +DateTimeOffset? PublishedAt
+        +DateTimeOffset? StaleSince
+    }
+    class StockMargin {
+        <<record>>
+        +int Units
+    }
 ```

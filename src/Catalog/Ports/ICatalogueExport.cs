@@ -19,6 +19,13 @@ public interface ICatalogueExport
     /// fallback. A discontinued variant is left out: nothing anywhere may sell it.
     /// </summary>
     Task<IReadOnlyList<ExportedProduct>> ProductsAsync(string culture, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// One live product by its code, said as <see cref="ProductsAsync"/> says it; null when it
+    /// is archived or unknown. What a sales channel is told when that product changes
+    /// (phase 16, S3).
+    /// </summary>
+    Task<ExportedProduct?> ProductAsync(string code, string culture, CancellationToken cancellationToken = default);
 }
 
 /// <param name="Code">The public code: what the storefront's address and a feed's group are made of (ADR 0026).</param>

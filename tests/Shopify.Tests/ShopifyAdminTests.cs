@@ -44,6 +44,21 @@ public sealed class ShopifyAdminTests
     }
 
     /// <summary>
+    /// A mutation's data travels as GraphQL variables, never spliced into its text:
+    /// a product's name or description is the shopkeeper's, quotes and all (phase 16, S3).
+    /// </summary>
+    [Fact]
+    public async Task Variables_travel_beside_the_query_and_are_not_spliced_into_it()
+    {
+        var (admin, store, _) = AStore();
+
+        await admin.QueryAsync("query ($handle: String!) { shop { currencyCode } }", new { handle = "taza \"de\" gres" }, Ct);
+
+        Assert.Equal("query ($handle: String!) { shop { currencyCode } }", store.Queries.Last());
+        Assert.Equal("taza \"de\" gres", store.Variables.Last().GetProperty("handle").GetString());
+    }
+
+    /// <summary>
     /// A token lasts 24 hours; it is asked for once and kept, and asked for again
     /// a few minutes before it would expire rather than after a refusal.
     /// </summary>

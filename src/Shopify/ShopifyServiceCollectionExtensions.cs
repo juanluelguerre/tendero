@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Accounts.Ports;
 using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Channels.Ports;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Pricing.Ports;
@@ -52,6 +53,10 @@ public static class ShopifyServiceCollectionExtensions
         services.AddKeyedScoped<IOrderSourceConnector, ShopifyOrderConnector>(ShopifyOrderConnector.Key);
         services.AddKeyedScoped<IGiftCardSourceConnector, ShopifyGiftCardConnector>(ShopifyGiftCardConnector.Key);
         services.AddKeyedScoped<IDiscountSourceConnector, ShopifyDiscountConnector>(ShopifyDiscountConnector.Key);
+
+        // And the other way (S3, ADR 0070): the store as a sales channel Tendero publishes to.
+        services.AddKeyedScoped<ISalesChannel, ShopifySalesChannel>(ShopifySalesChannel.Key);
+        services.AddKeyedScoped<IChannelOrderSource, ShopifyOrderConnector>(ShopifyOrderConnector.Key);
 
         return services;
     }

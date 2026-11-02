@@ -29,6 +29,14 @@ public sealed class CatalogueExportReader(
         ];
     }
 
+    public async Task<ExportedProduct?> ProductAsync(string code, string culture, CancellationToken cancellationToken = default)
+    {
+        if (await products.FindByCodeAsync(code, cancellationToken) is not { Status: not ProductStatus.Archived } product)
+            return null;
+
+        return Export(product, await definitions.AllAsync(cancellationToken), await categories.AllAsync(cancellationToken), culture);
+    }
+
     private static ExportedProduct Export(Product product, AttributeDefinitions attributes, CategoryTree tree, string culture) => new(
         product.Code,
         product.Status == ProductStatus.Active,

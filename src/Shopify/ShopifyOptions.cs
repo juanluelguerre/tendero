@@ -77,6 +77,21 @@ public sealed class ShopifyOptions
     /// </summary>
     public string AttributesNamespace { get; set; } = DefaultAttributesNamespace;
 
+    /// <summary>
+    /// Where the store can fetch Tendero's pictures from when it publishes a product
+    /// (phase 16, S3): Shopify downloads a file from its URL, and a laptop's image
+    /// store is not on the internet. Unset, a published product keeps the pictures
+    /// the store already has.
+    /// </summary>
+    public Uri? PublicImagesBaseUrl { get; set; }
+
+    /// <summary>
+    /// The secret the store signs its webhooks with (phase 16, S3): the app's client
+    /// secret, unless the store was connected with an offline token and the app's
+    /// secret is kept here apart.
+    /// </summary>
+    public string? WebhookSecret { get; set; }
+
     public const string DefaultAttributesNamespace = "tendero";
 
     /// <summary>A store, and a way in: its own token, or the app's credentials.</summary>

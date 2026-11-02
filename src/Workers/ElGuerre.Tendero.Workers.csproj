@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Channels/ElGuerre.Tendero.Channels.csproj" />
     <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../Knowledge/ElGuerre.Tendero.Knowledge.csproj" />
     <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
@@ -16,6 +17,7 @@
     <ProjectReference Include="../Pricing/ElGuerre.Tendero.Pricing.csproj" />
     <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
+    <ProjectReference Include="../Shopify/ElGuerre.Tendero.Shopify.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 

@@ -2,6 +2,7 @@ using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Channels.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
@@ -44,6 +45,11 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<PictureDoubt> PictureDoubts => Set<PictureDoubt>();
     public DbSet<ActionProposal> Proposals => Set<ActionProposal>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();
+
+    /// <summary>What each sales channel has been told (phase 16, S3; ADR 0070).</summary>
+    public DbSet<ChannelListing> ChannelListings => Set<ChannelListing>();
+    public DbSet<ChannelStockLevel> ChannelStockLevels => Set<ChannelStockLevel>();
+    public DbSet<ChannelCursor> ChannelCursors => Set<ChannelCursor>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     /// <summary>
@@ -94,6 +100,9 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new PictureDoubtConfiguration());
         modelBuilder.ApplyConfiguration(new ActionProposalConfiguration());
         modelBuilder.ApplyConfiguration(new CampaignConfiguration());
+        modelBuilder.ApplyConfiguration(new ChannelListingConfiguration());
+        modelBuilder.ApplyConfiguration(new ChannelStockLevelConfiguration());
+        modelBuilder.ApplyConfiguration(new ChannelCursorConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
         modelBuilder.ApplyConfiguration(new AIInvocationConfiguration());
         modelBuilder.ApplyConfiguration(new IdempotencyRecordConfiguration());

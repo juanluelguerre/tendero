@@ -10,6 +10,11 @@
   @if (order().mandate; as mandate) {
     <span class="tag tag--code ms-2" [title]="t('mandateHint', { issuer: mandate.issuer })">{{ t('mandate') }}</span>
   }
+  <!-- A sales channel took the money for stock the shop could not hold (ADR 0070):
+       kept, not cancelled, and said where nobody misses it. -->
+  @if (order().oversold; as reason) {
+    <span class="tag tag--danger ms-2" [title]="reason">{{ t('oversold') }}</span>
+  }
   @if (order().stopCode) {
     <!-- Why an order stopped, under its status: one size down, read second. -->
     <span class="mt-1 block text-xs text-muted" [title]="order().stopDetail ?? ''">

@@ -1268,6 +1268,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/channels/shopify/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ShopifyWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/me/data": {
         parameters: {
             query?: never;
@@ -2916,7 +2932,7 @@ export interface components {
             lateShipmentStanding: null | string;
         };
         /** @enum {unknown} */
-        OrderChannel: "Web" | "Mcp" | "Ucp" | null;
+        OrderChannel: "Web" | "Mcp" | "Ucp" | "Shopify" | null;
         OrderDetail: {
             order: components["schemas"]["OrderView"];
             returns: components["schemas"]["ReturnView"][];
@@ -2975,6 +2991,7 @@ export interface components {
             isCaptured: boolean;
             stopCode: null | string;
             stopDetail: null | string;
+            oversold: null | string;
             preview: components["schemas"]["OrderLinePreview"][];
             /** Format: date-time */
             createdAt: string;
@@ -7954,6 +7971,50 @@ export interface operations {
                     "application/problem+json": {
                         /** @enum {string} */
                         code?: "TooManyRequests";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ShopifyWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description There is nothing at this address. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "NotFound";
                     } & components["schemas"]["Problem"];
                 };
             };

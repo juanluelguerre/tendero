@@ -3,6 +3,8 @@ using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.SetImageShows;
 using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
+using ElGuerre.Tendero.Channels;
+using ElGuerre.Tendero.Channels.Features.PublishToChannel;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
@@ -16,6 +18,8 @@ using ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Shopify;
+using ElGuerre.Tendero.Workers.Channels;
 using ElGuerre.Tendero.Workers.Knowledge;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -58,7 +62,10 @@ public static class WorkerServices
             // Knowledge's slices, and the worker's own handler that feeds them
             // Catalog's descriptions as values (Workers/Knowledge, ADR 0014).
             typeof(RecordDescriptionHandler).Assembly,
-            typeof(RecordDescriptionOnProductUpserted).Assembly);
+            typeof(RecordDescriptionOnProductUpserted).Assembly,
+            // The sales channels (phase 16, S3; ADR 0070): Channels' slices, and the
+            // worker's bridge from Catalog's changes is in this assembly already.
+            typeof(PublishToChannelCommand).Assembly);
 
         // One slice of Catalog's write side, not the assembly: an approved claim
         // becomes an attribute through Catalog's own command (P10-6), and the rest
@@ -81,6 +88,14 @@ public static class WorkerServices
         // search projection reads availability, and the development seeder
         // receives goods.
         builder.Services.AddInventory(builder.Configuration);
+
+        // The sales channels Tendero publishes to (S3, ADR 0070): the context always,
+        // and Shopify's channel only when a store is configured — none, and nothing
+        // is published.
+        builder.Services.AddChannels(builder.Configuration);
+        builder.Services.AddShopify(builder.Configuration);
+        builder.Services.AddChannelBridges();
+        builder.Services.AddHostedService<ChannelReconciliationWorker>();
 
         // And it takes the money: the saga captures on shipping and releases the
         // hold on cancellation, both through the payment port.

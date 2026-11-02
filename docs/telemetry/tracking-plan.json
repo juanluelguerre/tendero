@@ -504,6 +504,16 @@
       ]
     },
     {
+      "name": "Sales channels",
+      "area": "backoffice",
+      "question": "Does a sales channel keep up with the catalogue, how often does it refuse what it is told, and do its orders arrive — by which path?",
+      "decision": "A refusal rate above a few in a hundred means the mapping loses data, fixed before a second channel is added; failures that pile up mean the reconciliation, not the outbox, is carrying the channel (docs/specs/shopify-channel.md, Evidence of use). Orders found only by the reconciliation mean the webhooks are failing — the subscription or the URL, not the code.",
+      "signals": [
+        "tendero.channel.publications",
+        "tendero.channel.orders.received"
+      ]
+    },
+    {
       "name": "A store's old addresses",
       "area": "storefront",
       "question": "After a shop leaves its store, are the store's old addresses still visited, and do they still lead somewhere?",
@@ -1888,6 +1898,71 @@
         "export.format": {
           "type": "string",
           "description": "The format it was written in."
+        }
+      }
+    },
+    {
+      "name": "tendero.channel.publications",
+      "instrument": "counter",
+      "unit": "{publication}",
+      "description": "Every product, stock or shipment publication to a sales channel, by its outcome.",
+      "attributes": {
+        "channel": {
+          "type": "string",
+          "description": "The channel told: shopify."
+        },
+        "kind": {
+          "type": "string",
+          "values": [
+            "product",
+            "stock",
+            "shipment"
+          ],
+          "description": "What was published: a product, a SKU's available quantity, or that an order the channel took was shipped."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "published",
+            "stale",
+            "refused",
+            "unpublished",
+            "failed"
+          ],
+          "description": "Published; stale (the channel sold since, kept its number, and the sale's order will move Tendero's); refused by the channel; nothing to tell (archived before it was ever published); or failed, left to the reconciliation."
+        }
+      }
+    },
+    {
+      "name": "tendero.channel.orders.received",
+      "instrument": "counter",
+      "unit": "{order}",
+      "description": "Every order a sales channel took that Tendero read, by the path it came by and what became of it.",
+      "attributes": {
+        "channel": {
+          "type": "string",
+          "description": "The channel that took it: shopify."
+        },
+        "path": {
+          "type": "string",
+          "values": [
+            "webhook",
+            "reconciliation"
+          ],
+          "description": "How Tendero heard of it: the channel's webhook, or the reconciliation's pass."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "received",
+            "already_here",
+            "not_open",
+            "not_in_catalogue",
+            "no_address",
+            "unknown_channel",
+            "totals_do_not_add_up"
+          ],
+          "description": "Received to be shipped; already received by the other path; or skipped, and why."
         }
       }
     },

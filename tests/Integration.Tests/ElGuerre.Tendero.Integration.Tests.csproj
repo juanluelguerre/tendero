@@ -64,6 +64,7 @@
        the whole migration runs against the same fixtures the adapters are held to. -->
   <ItemGroup>
     <Compile Include="../Shopify.Tests/FakeShopify.cs" Link="FakeShopify.cs" />
+    <Compile Include="../Shopify.Tests/FakeShopifyChannel.cs" Link="FakeShopifyChannel.cs" />
     <Content Include="../Shopify.Tests/Fixtures/**" LinkBase="Fixtures">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

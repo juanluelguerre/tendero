@@ -94,7 +94,14 @@ public sealed class ReserveStockOnOrderPlaced(
         // The refusal, in the customer's words rather than a code. It is the
         // most interesting row in the system, and it is why the ledger writes a
         // released reservation instead of failing silently.
-        order.Cancel(clock, OrderStop.OutOfStock, outcome.Reason);
+        //
+        // An order a channel took is not cancelled (ADR 0070): the channel already
+        // took the money, and cancelling would hide what the margin exists to bound.
+        // It is kept, flagged, and left unconfirmed for a person to act on.
+        if (order.ReceivedFrom is not null)
+            order.MarkOversold(clock, outcome.Reason ?? "The stock could not be held.");
+        else
+            order.Cancel(clock, OrderStop.OutOfStock, outcome.Reason);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         activity?.SetTag("ordering.cancelled_reason", outcome.Reason);

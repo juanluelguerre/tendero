@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261024105812_ImportedCustomers";
+    public override string LastMigrationId => "20261030234058_ReceivedOrders";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -679,6 +679,112 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDatabaseName("ix_variants_sku");
 
                 b.ToTable("variants", "catalog");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Channels.Domain.ChannelCursor", b =>
+            {
+                b.Property<string>("Channel")
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("channel");
+
+                b.Property<DateTimeOffset>("OrdersReadUntil")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("orders_read_until");
+
+                b.HasKey("Channel")
+                    .HasName("pk_cursors");
+
+                b.ToTable("cursors", "channels");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Channels.Domain.ChannelListing", b =>
+            {
+                b.Property<string>("Channel")
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("channel");
+
+                b.Property<string>("Code")
+                    .HasMaxLength(60)
+                    .HasColumnType("character varying(60)")
+                    .HasColumnName("code");
+
+                b.Property<string>("ExternalProductId")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("external_product_id");
+
+                b.Property<string>("Outcome")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("outcome");
+
+                b.Property<DateTimeOffset?>("PublishedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("published_at");
+
+                b.Property<string>("Refusal")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)")
+                    .HasColumnName("refusal");
+
+                b.Property<DateTimeOffset?>("RefusedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("refused_at");
+
+                b.Property<string>("Status")
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<string>("variantIds")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("variant_ids")
+                    .HasDefaultValueSql("'{}'::jsonb");
+
+                b.HasKey("Channel", "Code")
+                    .HasName("pk_listings");
+
+                b.ToTable("listings", "channels");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Channels.Domain.ChannelStockLevel", b =>
+            {
+                b.Property<string>("Channel")
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("channel");
+
+                b.Property<string>("Sku")
+                    .HasMaxLength(80)
+                    .HasColumnType("character varying(80)")
+                    .HasColumnName("sku");
+
+                b.Property<string>("Location")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("location");
+
+                b.Property<int?>("Expected")
+                    .HasColumnType("integer")
+                    .HasColumnName("expected");
+
+                b.Property<DateTimeOffset?>("PublishedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("published_at");
+
+                b.Property<DateTimeOffset?>("StaleSince")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("stale_since");
+
+                b.HasKey("Channel", "Sku", "Location")
+                    .HasName("pk_stock_levels");
+
+                b.ToTable("stock_levels", "channels");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Inventory.Domain.Reservation", b =>
@@ -1357,6 +1463,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDefaultValue("Live")
                     .HasColumnName("mode");
 
+                b.Property<string>("Oversold")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("oversold");
+
                 b.Property<string>("PlacedBy")
                     .HasMaxLength(100)
                     .HasColumnType("character varying(100)")
@@ -1497,6 +1608,25 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
 
                         b1
                             .ToJson("quote")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "ReceivedFrom", "ElGuerre.Tendero.Ordering.Domain.Order.ReceivedFrom#OrderOrigin", b1 =>
+                    {
+                        b1.Property<string>("ExternalId")
+                            .IsRequired()
+                            .HasJsonPropertyName("externalId");
+
+                        b1.Property<string>("Number")
+                            .IsRequired()
+                            .HasJsonPropertyName("number");
+
+                        b1.Property<string>("Source")
+                            .IsRequired()
+                            .HasJsonPropertyName("source");
+
+                        b1
+                            .ToJson("received_from")
                             .HasColumnType("jsonb");
                     });
 
