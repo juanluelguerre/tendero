@@ -54,9 +54,13 @@ public static class ShopifyServiceCollectionExtensions
         services.AddKeyedScoped<IGiftCardSourceConnector, ShopifyGiftCardConnector>(ShopifyGiftCardConnector.Key);
         services.AddKeyedScoped<IDiscountSourceConnector, ShopifyDiscountConnector>(ShopifyDiscountConnector.Key);
 
-        // And the other way (S3, ADR 0070): the store as a sales channel Tendero publishes to.
-        services.AddKeyedScoped<ISalesChannel, ShopifySalesChannel>(ShopifySalesChannel.Key);
-        services.AddKeyedScoped<IChannelOrderSource, ShopifyOrderConnector>(ShopifyOrderConnector.Key);
+        // And the other way (S3, ADR 0070): the store as a sales channel Tendero publishes
+        // to and receives orders from — only when said, never because it can be imported.
+        if (section.Get<ShopifyOptions>() is { SalesChannel: true })
+        {
+            services.AddKeyedScoped<ISalesChannel, ShopifySalesChannel>(ShopifySalesChannel.Key);
+            services.AddKeyedScoped<IChannelOrderSource, ShopifyOrderConnector>(ShopifyOrderConnector.Key);
+        }
 
         return services;
     }

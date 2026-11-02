@@ -17,6 +17,12 @@
         </div>
         <!-- MCP and UCP are both agents, so both clay: told apart in words, not in a third colour. -->
         <p class="muted text-3xs">{{ t('agentsBy', { mcp: store.agentsBy().mcp, ucp: store.agentsBy().ucp }) }}</p>
+        <!-- People on the storefront and on Shopify are both people: told apart in words, as agents are. -->
+        @if (store.peopleBy().shopify > 0) {
+          <p class="muted text-3xs">
+            {{ t('peopleBy', { web: store.peopleBy().web, shopify: store.peopleBy().shopify }) }}
+          </p>
+        }
         <p class="muted text-3xs">{{ t('revenueShare', { share: share(store.revenueShare()) }) }}</p>
       } @else {
         <!-- The size contract holds when empty too: the S figure's place says so, as the M chart's does. -->

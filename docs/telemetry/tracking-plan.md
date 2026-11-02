@@ -67,7 +67,7 @@ everything here that is not *planned* is emitted.
 | Pictures read for claims | Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for? | Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events. | `tendero.picture_reading.pictures` | emitted |
 | Importing a store | Is the Shopify source used, and how much of a store comes across clean, per context? | A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. Gift cards listed for reissue, counted per store, say whether Tendero needs gift cards of its own (docs/specs/shopify-leave.md, decision 6). A rehearsal of the whole migration never followed by one for real says the answer stopped the merchant, and its notes say which step to work on first. | `tendero.catalog.import.products`, `tendero.catalog.import.notes`, `tendero.inventory.import.levels`, `tendero.inventory.import.notes`, `tendero.accounts.import.customers`, `tendero.accounts.import.notes`, `tendero.ordering.import.orders`, `tendero.ordering.import.notes`, `tendero.ordering.import.gift_cards`, `tendero.pricing.import.discounts`, `tendero.pricing.import.notes`, `tendero.migration.runs` | emitted |
 | Exports and feeds | Which exports are used, and in which format: is the product feed fetched, is the catalogue taken to another platform, do orders go to an accountant? | Orders exported often in CSV decide whether XLSX earns its dependency (docs/specs/exports.md, decision 3); a feed fetched every day decides whether a Merchant API client is worth building over a fetched file. The rows each feed carries, against the products on sale, say whether the feed loses any on the way. | `tendero.exports.generated`, `tendero.exports.rows` | emitted |
-| Sales channels | Does a sales channel keep up with the catalogue, how often does it refuse what it is told, and do its orders arrive — by which path? | A refusal rate above a few in a hundred means the mapping loses data, fixed before a second channel is added; failures that pile up mean the reconciliation, not the outbox, is carrying the channel (docs/specs/shopify-channel.md, Evidence of use). Orders found only by the reconciliation mean the webhooks are failing — the subscription or the URL, not the code. | `tendero.channel.publications`, `tendero.channel.orders.received` | emitted |
+| Sales channels | Does a sales channel keep up with the catalogue, how often does it refuse what it is told, and do its orders arrive — by which path? | A refusal rate above a few in a hundred means the mapping loses data, fixed before a second channel is added; failures that pile up mean the reconciliation, not the outbox, is carrying the channel (docs/specs/shopify-channel.md, Evidence of use). Orders found only by the reconciliation mean the webhooks are failing — the subscription or the URL, not the code. Any oversold order raises the stock margin (2 units today) or shortens the reconciliation. | `tendero.channel.publications`, `tendero.channel.orders.received`, `tendero.channel.oversold` | emitted |
 
 ### Agents
 
@@ -897,6 +897,18 @@ Answers:
 | `channel` | string | — | The channel that took it: shopify. |
 | `path` | string | `webhook`, `reconciliation` | How Tendero heard of it: the channel's webhook, or the reconciliation's pass. |
 | `outcome` | string | `received`, `already_here`, `not_open`, `not_in_catalogue`, `no_address`, `unknown_channel`, `totals_do_not_add_up` | Received to be shipped; already received by the other path; or skipped, and why. |
+
+### `tendero.channel.oversold`
+
+counter, unit `{order}`. Orders a sales channel took for stock that could not be held: the evidence the stock margin is judged by.
+
+Answers:
+
+- **Sales channels** — Does a sales channel keep up with the catalogue, how often does it refuse what it is told, and do its orders arrive — by which path?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `channel` | string | — | The channel that took it: shopify. |
 
 ### `tendero.migration.runs`
 

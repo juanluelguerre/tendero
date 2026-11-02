@@ -77,6 +77,31 @@ public sealed class ShopifyRegistrationTests
         Assert.Null(scope.ServiceProvider.GetKeyedService<IStockSourceConnector>("shopify"));
     }
 
+    /// <summary>
+    /// A store connected to import from is not, by that alone, a place Tendero writes to
+    /// (phase 16, S3; ADR 0070): a merchant leaving Shopify must not find their store
+    /// rewritten. Being a sales channel is said, apart.
+    /// </summary>
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("false", false)]
+    [InlineData("true", true)]
+    public void A_store_is_a_sales_channel_only_when_it_is_said_to_be(string? salesChannel, bool registered)
+    {
+        using var provider = Compose(new()
+        {
+            ["Shopify:Store"] = FakeShopify.Store,
+            ["Shopify:ClientId"] = "client-id",
+            ["Shopify:ClientSecret"] = "client-secret",
+            ["Shopify:SalesChannel"] = salesChannel,
+        });
+        using var scope = provider.CreateScope();
+
+        Assert.Equal(registered, scope.ServiceProvider.GetKeyedService<ElGuerre.Tendero.Channels.Ports.ISalesChannel>("shopify") is not null);
+        Assert.Equal(registered, scope.ServiceProvider.GetKeyedService<ElGuerre.Tendero.Ordering.Ports.IChannelOrderSource>("shopify") is not null);
+        Assert.NotNull(scope.ServiceProvider.GetKeyedService<ICatalogSourceConnector>("shopify"));
+    }
+
     private static ServiceProvider Compose(Dictionary<string, string?> settings)
     {
         var services = new ServiceCollection();

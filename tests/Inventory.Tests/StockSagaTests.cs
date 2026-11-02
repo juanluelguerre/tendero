@@ -138,11 +138,14 @@ public sealed class StockSagaTests
         order.ClearDomainEvents();
         this.orders.Add(order);
         this.ledger.Refuse("PANS: 2 asked for, 0 available.");
+        using var recorder = new InstrumentRecorder("tendero.channel.oversold");
 
         await OnPlaced().HandleAsync(new OrderPlaced(order.Id, this.clock.GetUtcNow()), Ct);
 
         Assert.Equal(OrderStatus.PaymentAuthorized, order.Status);
         Assert.Equal("PANS: 2 asked for, 0 available.", order.Oversold);
+        // The evidence the margin is judged by: any of these raises it (ADR 0070).
+        Assert.Equal(["shopify"], recorder.Of("tendero.channel.oversold").Select(tags => (string?)tags["channel"]));
         Assert.Empty(order.DomainEvents.OfType<OrderCancelled>());
         Assert.Equal(1, this.saves);
     }

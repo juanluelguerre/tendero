@@ -743,6 +743,7 @@
       "byAgents": "de los pedidos, por agentes",
       "revenueShare": "{{share}} de las ventas llegó por agentes",
       "agentsBy": "Agentes: {{mcp}} por MCP · {{ucp}} por UCP",
+      "peopleBy": "Personas: {{web}} en la tienda · {{shopify}} en Shopify",
       "unrecorded": "{{count}} pedidos anteriores no tienen canal registrado y quedan fuera",
       "nothingRecorded": "No se vendió nada por un canal registrado en este periodo."
     },

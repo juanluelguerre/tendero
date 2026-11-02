@@ -23,13 +23,17 @@ public sealed class ShopifyWebhookEndpointTests
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private static (HttpClient Client, Recording Dispatcher, IDisposable Owner) Compose(string? secret = Secret)
+    private static (HttpClient Client, Recording Dispatcher, IDisposable Owner) Compose(string? secret = Secret, bool salesChannel = true)
     {
         var dispatcher = new Recording();
         var root = new TenderoApiFactory();
         var factory = root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
-            services.Configure<ShopifyOptions>(options => options.ClientSecret = secret);
+            services.Configure<ShopifyOptions>(options =>
+            {
+                options.ClientSecret = secret;
+                options.SalesChannel = salesChannel;
+            });
             services.AddScoped<ICommandDispatcher>(_ => dispatcher);
         }));
         return (factory.CreateClient(), dispatcher, root);
@@ -92,6 +96,20 @@ public sealed class ShopifyWebhookEndpointTests
     public async Task With_no_store_connected_there_is_no_webhook()
     {
         var (client, dispatcher, owner) = Compose(secret: null);
+        using (owner)
+        {
+            using var answer = await client.SendAsync(Delivery(NewOrder), Ct);
+
+            Assert.Equal(HttpStatusCode.NotFound, answer.StatusCode);
+            Assert.Empty(dispatcher.Sent);
+        }
+    }
+
+    /// <summary>A store connected only to import from: Tendero takes no orders from it.</summary>
+    [Fact]
+    public async Task A_store_that_is_not_a_sales_channel_has_no_webhook()
+    {
+        var (client, dispatcher, owner) = Compose(salesChannel: false);
         using (owner)
         {
             using var answer = await client.SendAsync(Delivery(NewOrder), Ct);

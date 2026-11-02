@@ -743,6 +743,7 @@
       "byAgents": "of orders by agents",
       "revenueShare": "{{share}} of sales came through agents",
       "agentsBy": "Agents: {{mcp}} over MCP · {{ucp}} over UCP",
+      "peopleBy": "People: {{web}} on the storefront · {{shopify}} on Shopify",
       "unrecorded": "{{count}} earlier orders have no channel recorded and are left out",
       "nothingRecorded": "Nothing sold through a recorded channel in this period."
     },

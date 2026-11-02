@@ -507,10 +507,11 @@
       "name": "Sales channels",
       "area": "backoffice",
       "question": "Does a sales channel keep up with the catalogue, how often does it refuse what it is told, and do its orders arrive — by which path?",
-      "decision": "A refusal rate above a few in a hundred means the mapping loses data, fixed before a second channel is added; failures that pile up mean the reconciliation, not the outbox, is carrying the channel (docs/specs/shopify-channel.md, Evidence of use). Orders found only by the reconciliation mean the webhooks are failing — the subscription or the URL, not the code.",
+      "decision": "A refusal rate above a few in a hundred means the mapping loses data, fixed before a second channel is added; failures that pile up mean the reconciliation, not the outbox, is carrying the channel (docs/specs/shopify-channel.md, Evidence of use). Orders found only by the reconciliation mean the webhooks are failing — the subscription or the URL, not the code. Any oversold order raises the stock margin (2 units today) or shortens the reconciliation.",
       "signals": [
         "tendero.channel.publications",
-        "tendero.channel.orders.received"
+        "tendero.channel.orders.received",
+        "tendero.channel.oversold"
       ]
     },
     {
@@ -1963,6 +1964,18 @@
             "totals_do_not_add_up"
           ],
           "description": "Received to be shipped; already received by the other path; or skipped, and why."
+        }
+      }
+    },
+    {
+      "name": "tendero.channel.oversold",
+      "instrument": "counter",
+      "unit": "{order}",
+      "description": "Orders a sales channel took for stock that could not be held: the evidence the stock margin is judged by.",
+      "attributes": {
+        "channel": {
+          "type": "string",
+          "description": "The channel that took it: shopify."
         }
       }
     },

@@ -86,6 +86,13 @@ public sealed class ShopifyOptions
     public Uri? PublicImagesBaseUrl { get; set; }
 
     /// <summary>
+    /// Whether the store is also a sales channel Tendero publishes to and receives orders
+    /// from (phase 16, S3; ADR 0070). Off unless said: a store connected to import from —
+    /// a merchant leaving Shopify — must not find itself rewritten by Tendero.
+    /// </summary>
+    public bool SalesChannel { get; set; }
+
+    /// <summary>
     /// The secret the store signs its webhooks with (phase 16, S3): the app's client
     /// secret, unless the store was connected with an offline token and the app's
     /// secret is kept here apart.

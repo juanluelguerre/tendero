@@ -54,8 +54,8 @@ public sealed class ShopifyWebhookEndpoint : ICarterModule
             async Task<Results<Ok<string>, UnauthorizedHttpResult, NotFound>> (
                 HttpContext http, IOptions<ShopifyOptions> options, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
-                // No store connected, no webhook: the shop runs as it always has.
-                if ((options.Value.WebhookSecret ?? options.Value.ClientSecret) is not { Length: > 0 } secret)
+                // No store connected as a channel, no webhook: the shop runs as it always has.
+                if (!options.Value.SalesChannel || (options.Value.WebhookSecret ?? options.Value.ClientSecret) is not { Length: > 0 } secret)
                     return TypedResults.NotFound();
 
                 using var buffer = new MemoryStream();

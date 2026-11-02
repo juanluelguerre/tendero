@@ -1,6 +1,29 @@
 # Spec: Shopify as a sales channel (phase 16, stage S3)
 
 **Status: accepted, 2026-10-30, with its seven decisions as proposed (the margin kept at 2); ADR 0070.**
+
+## As built (2026-10-31)
+
+P16-22 to P16-27 built (plan: `docs/plans/2026-10-30-shopify-channel.md`). What changed
+from the text below, each said where it applies:
+
+- **Orders through Ordering's inbound port** (the author's yes, 2026-10-31):
+  `IChannelOrderSource` reuses `SourceOrder` and Shopify's tested GraphQL mapping;
+  the webhook is a signed notice and the order is fetched by GraphQL. `ISalesChannel`
+  keeps publishing, stock and fulfilment.
+- **A channel is said, not assumed**: `Shopify:SalesChannel`, off by default
+  (`Tendero__ShopifyChannel=true` in the AppHost). A store connected to import from —
+  a merchant leaving Shopify — is never written to by that alone.
+- **The handle is the code in lower case**, the lab store seed's, not the slug: stable
+  on a rename, and publishing updates the seeded products rather than copying them.
+- **Stock is published for drafts too**, ready the day they go on sale.
+- **Bridges never fail the outbox message**; the reconciliation repairs.
+- **The first bulk publication is deferred** with its number.
+- **Oversold** is a column on the order, a tag on the backoffice's status label and
+  `tendero.channel.oversold`; the saga flags an order a channel took instead of
+  cancelling it.
+- **The dashboard's by-channel widget** counts Shopify's buyers with the storefront's
+  people and says how many in words.
 Case B of [`../analysis/tendero-suite-shopify.md`](../analysis/tendero-suite-shopify.md),
 §11: the merchant keeps Shopify's storefront and checkout, and Tendero is the
 system of record behind it. S1 brought a store's catalogue in and S2 the rest of
@@ -112,7 +135,11 @@ port (the first draft put it in SharedKernel) — **values only** — the shape 
   location, with the quantity last published as the expected one (compare-and-swap)
   and an idempotency key. Answers `Set`, `Stale` (the channel moved since: it sold
   something) or a refusal.
-- `ReadOrdersSinceAsync(DateTimeOffset since)` — for reconciliation.
+- `MarkShippedAsync(ChannelShipment shipment)` — fulfilment back (decision 5).
+
+*As built*: orders are not this port's. They arrive through Ordering's inbound
+order port, `IChannelOrderSource` beside `IOrderSourceConnector`, as the
+`SourceOrder` S2 already maps (see *As built*, below).
 
 Adapters register keyed by channel (`"shopify"`), invariant 3; a fake channel with
 the same contract suite proves the port without a store
@@ -129,10 +156,9 @@ in Shopify (`productSet` by the product's handle and Tendero's id in a metafield
 
 - **Draft never reaches the shelf**: a Draft product is sent as draft or not at all
   (ADR 0012 holds on every channel).
-- **The first publication** of a whole catalogue is one bulk mutation
-  (`bulkOperationRunMutation` with `productSet` lines): 120 products, not 120
-  calls. Later changes go one product at a time; the budget is a lab's, and the
-  number is recorded rather than optimised (scale rule).
+- **The first publication** of a whole catalogue goes one product at a time, like
+  every later change; one bulk mutation (`bulkOperationRunMutation` with `productSet`
+  lines) is deferred with its number, measured at the round trip (scale rule).
 - **Prices** travel with the product. A price list read from files raises nothing,
   so a change to one reaches the channel at the next reconciliation (below).
 
@@ -160,9 +186,10 @@ bounded by the margin and the delay, not left open.
 
 1. The HMAC is checked in constant time against the client secret, before the body
    is parsed; a bad one is 401, never logged with its body.
-2. `X-Shopify-Webhook-Id` is claimed in the idempotency store (scope
-   `shopify-webhook`): `Replayed` answers 200 at once.
-3. The topic `orders/create` becomes `ReceiveChannelOrder` — the slice's command —
+2. *As built*: no webhook id is claimed — the order's own key,
+   `channel:shopify:{id}`, makes a duplicate delivery and the reconciliation one.
+3. The topic `orders/create` is a notice: its id is read and the order fetched by
+   GraphQL through the mapping the reconciliation uses, then `ReceiveChannelOrder` — the slice's command —
    inside the five seconds: the order is created, nothing more. Stock is held by
    the existing saga on `OrderPlaced`, through the outbox (invariant 7).
 4. Any topic it does not handle answers 200 and is counted, never retried by
@@ -178,16 +205,18 @@ received: the money is taken. It is flagged *oversold*, shown in the backoffice'
 orders to act on, and counted. Refusing it would hide the problem the margin exists
 to bound.
 
-**Reconciliation**, every few minutes in the worker: `ReadOrdersSinceAsync` from
-the last run's mark, each order through the same `ReceiveChannelOrder`; and the
-catalogue's and stock's last published values compared with Tendero's, republishing
-what drifted (a price list changed, a webhook lost, a publication that failed five
-times). This is the path that works on a laptop Shopify cannot reach (below).
+**Reconciliation**, in the worker: every 5 minutes the orders changed since each
+channel's mark, through the same command (a channel seen for the first time starts
+now); at start and every 6 hours the whole catalogue and stock told again — what did
+not change is not sent twice — repairing a price list changed, a webhook lost or a
+publication a channel refused while it was down. This is the path that works on a laptop Shopify cannot reach (below).
 
 ### The degraded path
 
 Shopify down, throttled or misconfigured never touches Tendero's own storefront: the
-channel's handlers fail and retry in the outbox, and reconciliation repairs the rest
+channel's bridges never fail the outbox message — the projections beside them would
+be replayed — so a failure is counted (`outcome=failed`) and the reconciliation
+repairs it
 (invariant 8's rule, generalised: the shop sells without the channel). A store
 whose `taxesIncluded` is false is refused at start, with the reason, before
 anything is published.

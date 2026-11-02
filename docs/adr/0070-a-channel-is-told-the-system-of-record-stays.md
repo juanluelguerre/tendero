@@ -45,13 +45,18 @@ master, and the other side holds a copy it is sent:
   available **minus a margin of 2 units per variant**, never below zero, so the
   window between a sale there and its order arriving here cannot oversell by more
   than the margin.
-- **Orders arrive by a signed, deduplicated webhook and by a reconciliation** that
-  reads what the channel took since its last mark — because the channel guarantees
+- **Orders arrive by a signed webhook and by a reconciliation**, through Ordering's
+  own inbound order port (`IChannelOrderSource`, the `SourceOrder` the import already
+  maps) rather than the channel's: a channel is a source too, and one mapping of an
+  order is enough. The webhook is a notice — the order is fetched by its id. The
+  reconciliation reads what the channel took since its last mark — because the channel guarantees
   neither delivery nor order. Both feed one command, so the same order received
   twice is one. A received order enters the state machine as any order does
   (`Pending` → `PaymentAuthorized`, the payment the channel took), raising
   `OrderPlaced` so stock is held for it; no new status. One that cannot be held is
   received anyway — the money was taken — and flagged *oversold*.
+- **A store is a channel only when said** (`Shopify:SalesChannel`, off by default):
+  connected to import from, it is never written to by that alone.
 - **A channel that would sell at the wrong price is refused at start**: Tendero's
   prices include VAT, so a store that adds it at the till is not connected.
 
