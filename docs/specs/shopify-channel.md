@@ -340,6 +340,103 @@ because the mark moves past it.
    owned by Persistence with no context, which hides state the backoffice will want
    to show.
 
+## Orders held, never lost (P16-29) — *accepted 2026-11-04 with its three decisions as proposed; built the same day*
+
+### The problem, found by the round trip
+
+Shopify charges at its checkout and Tendero ships, and only the reconciliation (or
+the webhook) joins the two. `ReceiveChannelOrders` skips an order it cannot make into
+one of Tendero's, says why in the log and the trace, and moves the mark past it
+(`ReadUntil` is the latest change read, received or not). The next pass starts after
+it, so **a skipped order is never read again**: paid in Shopify, unfulfilled there,
+unknown here. Nobody in the backoffice knows it exists. The webhook path ends the same
+way, because it goes through the same command. Only three things bring it back today,
+none of them by design: the merchant editing the order in Shopify (its `updatedAt`
+moves), the mark rewound by hand, or a second webhook. #1013 was exactly this case,
+and was received only after rewinding the mark.
+
+A failure (Shopify down, the database not answering) does not move the mark: the
+whole pass is retried. What is lost is what is skipped on purpose.
+
+### Not every skip is the same
+
+| outcome (the slice's own) | why | held? |
+|---|---|---|
+| `not_open` | cancelled or fulfilled in Shopify before Tendero saw it | **no** — nothing to ship; forgetting it is right |
+| `not_in_catalogue` | a line sells a SKU the catalogue does not (a product made in Shopify by hand; #1013 before its fix) | **yes** — mended by publishing or importing the product |
+| `no_address` | nowhere to send it | **yes** — mended by correcting the order in Shopify |
+| `totals_do_not_add_up` | Shopify's figures do not make an order by our arithmetic | **yes** — a bug of ours, which someone must see |
+| `unknown_channel` | the channel is not one an order can come from | **no** — configuration, every order at once: a guard of the slice, not an order to mend |
+
+### Proposed behaviour
+
+- **The mark keeps moving.** One order that is never mended must not hold the window
+  open for every other.
+- **A held order is recorded** in `Channels` — `channels.held_orders`: the channel, the
+  channel's order id and number, the outcome as an enum (ADR 0043), the sentence, when
+  it was first held, when it was last tried. Keyed by channel and id, so holding the
+  same order twice is one row.
+- **Every pass retries the held orders first, by id** — `ReceiveChannelOrderCommand`,
+  the one the webhook already uses, through `IChannelOrderSource.FindAsync`. Received,
+  already here, or `not_open` (the merchant cancelled and refunded it in Shopify) →
+  the row goes. Still skipped → the outcome and the time tried are updated. Receiving
+  is idempotent by `channel:shopify:{id}`, so a retry cannot make a second order.
+- **The receiving slice says each skip as a value**, not only a sentence:
+  `ChannelOrdersReceived` grows the skipped orders (id, number, outcome, sentence), so
+  the worker — which composes Ordering and Channels, neither reaching the other —
+  writes the rows. Ordering stays unaware of where they are kept.
+- **The backoffice shows them** on the orders screen, above the list, only when there
+  are any: "2 orders taken in Shopify could not be received", each with its number,
+  the reason in the reader's language (a `Message<HeldOrderReason>`, ADR 0059), since
+  when, and a link to the order in Shopify's admin. Read by
+  `GET /api/channels/held-orders`, for the roles that see orders.
+- **No dismiss button.** A held order is money taken; it leaves the list only by being
+  received or by being closed in Shopify. Hiding it in Tendero would make the list lie.
+- **Evidence of use (ADR 0036)**: `tendero.channel.orders.held` (channel, outcome) when
+  an order is held and `tendero.channel.orders.released` (channel, outcome: received,
+  closed) when it leaves. *The question*: does the channel lose orders, and why? *The
+  decision*: any held order older than a day is a mapping to fix, not a list to watch;
+  `totals_do_not_add_up` at all is a bug.
+
+### As built (2026-11-04)
+
+- `ReceiveChannelOrders` says each skip as a value (`SkippedChannelOrder`: id, number,
+  `ChannelOrderSkip`, what it concerns, the sentence) and reads one order by id on a path of
+  its own (`ChannelOrderPath.Held`), counted as `path=held`.
+- `HeldChannelOrder` in Channels, `channels.held_orders` keyed by channel and id; the
+  reconciliation retries the held ones first, then holds what the pass skipped, in one save.
+  An order the channel no longer has is released as `closed`, like one cancelled there.
+- The order's page comes from the channel: `ISalesChannel.OrderPage`, null by default,
+  Shopify's admin for Shopify. Taken when the order is held.
+- `GET /api/channels/held-orders` (shopkeeper), each reason a `Message<HeldOrderReason>`;
+  the API now composes Channels (`AddChannels`) to read it.
+- The band, `backoffice-held-orders`, under the orders screen's hint, composes each
+  sentence from the code in the reader's language.
+
+### Decisions (accepted as proposed)
+
+1. **Where the list lives.** *Proposed*: `Channels` — it is what a channel was told and
+   what it sent that Tendero could not take; it references SharedKernel only. The
+   alternative, Ordering, would keep in Ordering's tables something that is not an
+   order.
+2. **Where it is shown.** *Proposed*: a band on the orders screen, only when not empty,
+   since that is where the person who ships works. The alternative, a dashboard widget,
+   is seen by someone who does not ship.
+3. **When to stop retrying.** *Proposed*: never by time — until received or closed in
+   Shopify. A paid order does not become less paid; at lab scale one read per held
+   order every 5 minutes costs a point of Shopify's budget each.
+
+### Testing
+
+- The slice: each outcome says itself as a value; `not_open` and `unknown_channel` are
+  never held.
+- The worker (integration): a skipped order is held while the mark moves past it; the
+  next pass, with the product published, receives it and the row goes; one closed in
+  Shopify goes as `closed`; a retry still skipped updates the row and makes no order.
+- The endpoint: its policy, the reason in es and en, an empty list when there are none.
+- The backoffice: the band appears only with held orders, with the link to Shopify.
+- A hand mutation for each test written against the slice that already exists.
+
 ## Tasks (S3)
 
 Numbered on from S2's.
@@ -362,3 +459,7 @@ Numbered on from S2's.
   drift; fulfilment back to Shopify on `OrderShipped` — **M**
 - `P16-28` The metrics in the tracking plan, the round trip on the lab store with
   its measures, the notebook, S3's close (Stryker over what it touched) — **M**
+- `P16-29` Orders held, never lost: the skips said as values, `channels.held_orders`
+  and its migration, the retry by id each pass, `GET /api/channels/held-orders`, the
+  band on the backoffice's orders screen, the two counters in the tracking plan — **M**
+  (*accepted and built 2026-11-04*, after the round trip)
