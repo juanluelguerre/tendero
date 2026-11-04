@@ -1915,9 +1915,9 @@ which only EF's private constructor leaves in place and every factory overwrites
 one is `mark > OrdersReadUntil` made `>=`, which assigns the same value; five are
 messages (the options' validations, an unknown channel). S3's recorded run did not
 report the six initialisers on the same, unchanged lines, so the fall is in what
-was counted, not in what is tested; the baseline is **not lowered**, and this is
-written down for the author to decide whether the initialisers are worth a test
-that reads a default nobody uses. Shopify stays above its 92.64 % baseline.
+was counted, not in what is tested; the baseline is **not lowered**. The author
+accepted it as it stands (2026-11-04): no test is written to read a default
+nobody uses. Shopify stays above its 92.64 % baseline.
 
 **What Stryker found, and what closed it** (two commits, *what the Stryker run
 after P16-29 found unheld*, each test seen red by the run after it):
