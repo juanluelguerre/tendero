@@ -499,4 +499,11 @@ public sealed class ShopifySalesChannelTests
         Assert.Equal(("1Z999", "UPS"), (tracked.GetProperty("trackingInfo").GetProperty("number").GetString(), tracked.GetProperty("trackingInfo").GetProperty("company").GetString()));
         Assert.Equal(System.Text.Json.JsonValueKind.Null, store.Fulfilled[1].GetProperty("trackingInfo").ValueKind);
     }
+
+    /// <summary>A held order links to its page in the store's admin, where it is mended or closed (P16-29), by its number or its gid.</summary>
+    [Theory]
+    [InlineData("8720535781562")]
+    [InlineData("gid://shopify/Order/8720535781562")]
+    public void An_orders_page_is_in_the_stores_admin(string id) =>
+        Assert.Equal("https://tendero-dev.myshopify.com/admin/orders/8720535781562", ((ISalesChannel)ChannelStore.Open().Channel).OrderPage(id));
 }

@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261030234058_ReceivedOrders";
+    public override string LastMigrationId => "20261104105104_HeldChannelOrders";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -785,6 +785,54 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasName("pk_stock_levels");
 
                 b.ToTable("stock_levels", "channels");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Channels.Domain.HeldChannelOrder", b =>
+            {
+                b.Property<string>("Channel")
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("channel");
+
+                b.Property<string>("ExternalId")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("external_id");
+
+                b.Property<string>("About")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("about");
+
+                b.Property<DateTimeOffset>("HeldSince")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("held_since");
+
+                b.Property<DateTimeOffset>("LastTriedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("last_tried_at");
+
+                b.Property<string>("Number")
+                    .IsRequired()
+                    .HasMaxLength(60)
+                    .HasColumnType("character varying(60)")
+                    .HasColumnName("number");
+
+                b.Property<string>("Page")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("page");
+
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(30)
+                    .HasColumnType("character varying(30)")
+                    .HasColumnName("reason");
+
+                b.HasKey("Channel", "ExternalId")
+                    .HasName("pk_held_orders");
+
+                b.ToTable("held_orders", "channels");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Inventory.Domain.Reservation", b =>

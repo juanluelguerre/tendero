@@ -42,6 +42,12 @@ public interface ISalesChannel
 
     /// <summary>Tells the channel an order of its was shipped, so its customer hears it from the channel.</summary>
     Task MarkShippedAsync(ChannelShipment shipment, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Where the channel's own admin shows one of its orders, for a person to mend or close
+    /// one Tendero holds (P16-29); null for a channel with no such page.
+    /// </summary>
+    string? OrderPage(string orderExternalId) => null;
 }
 
 /// <param name="Code">The product's public code (ADR 0026): how the channel and Tendero recognise it.</param>

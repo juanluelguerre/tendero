@@ -39,3 +39,16 @@ internal sealed class EfChannelCursors(TenderoDbContext context) : IChannelCurso
 
     public void Add(ChannelCursor cursor) => context.ChannelCursors.Add(cursor);
 }
+
+internal sealed class EfHeldChannelOrders(TenderoDbContext context) : IHeldChannelOrders
+{
+    public async Task<IReadOnlyList<HeldChannelOrder>> OfAsync(string channel, CancellationToken cancellationToken = default) =>
+        await context.HeldChannelOrders.Where(order => order.Channel == channel).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<HeldChannelOrder>> AllAsync(CancellationToken cancellationToken = default) =>
+        await context.HeldChannelOrders.AsNoTracking().OrderBy(order => order.HeldSince).ToListAsync(cancellationToken);
+
+    public void Add(HeldChannelOrder order) => context.HeldChannelOrders.Add(order);
+
+    public void Remove(HeldChannelOrder order) => context.HeldChannelOrders.Remove(order);
+}

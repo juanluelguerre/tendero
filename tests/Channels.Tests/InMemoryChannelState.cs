@@ -5,11 +5,23 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Channels.Tests;
 
 /// <summary>Channels' state in memory, and a unit of work that counts its saves: the slices' fakes.</summary>
-internal sealed class InMemoryChannelState : IChannelListings, IChannelStockLevels, IChannelCursors, IUnitOfWork
+internal sealed class InMemoryChannelState : IChannelListings, IChannelStockLevels, IChannelCursors, IHeldChannelOrders, IUnitOfWork
 {
     public List<ChannelListing> Listings { get; } = [];
     public List<ChannelStockLevel> Levels { get; } = [];
     public List<ChannelCursor> Cursors { get; } = [];
+    public List<HeldChannelOrder> Held { get; } = [];
+
+    public Task<IReadOnlyList<HeldChannelOrder>> OfAsync(string channel, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<HeldChannelOrder>>([.. Held.Where(order => order.Channel == channel)]);
+
+    // In the order added, not by when: the handler is the one that sorts.
+    public Task<IReadOnlyList<HeldChannelOrder>> AllAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<HeldChannelOrder>>([.. Held]);
+
+    public void Add(HeldChannelOrder order) => Held.Add(order);
+
+    public void Remove(HeldChannelOrder order) => Held.Remove(order);
     public int Saves { get; private set; }
 
     public Task<ChannelListing?> FindAsync(string channel, string code, CancellationToken cancellationToken = default) =>

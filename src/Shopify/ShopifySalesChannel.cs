@@ -14,18 +14,27 @@ namespace ElGuerre.Tendero.Shopify;
 /// are the ones <c>tools/shopify-seed</c> proved against the lab store — productSet,
 /// publishablePublish, inventorySetQuantities — sent with their data as variables.
 ///
-/// A product is found by its handle, the code in lower case: stable when the product
-/// is renamed, and the handle the seed gave the lab store's products, so publishing
-/// updates them rather than making a second copy.
+/// A product is found by the id Tendero last published it as, then by the id the
+/// import recorded, then by its SKUs, and last by its handle — the code in lower case,
+/// the one the seed gave the lab store's products — so publishing updates what the
+/// store holds rather than making a second copy (the round trip, P16-28).
 /// </summary>
 internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOptions> options) : ISalesChannel
 {
     public const string Key = "shopify";
+    private const string OrderGid = "gid://shopify/Order/";
 
     private bool? taxesIncluded;
     private string? onlineStore;
 
     public string Channel => Key;
+
+    /// <summary>The order in the store's admin, by its number however it was named (P16-29).</summary>
+    public string? OrderPage(string orderExternalId)
+    {
+        var id = orderExternalId.StartsWith(OrderGid, StringComparison.Ordinal) ? orderExternalId[OrderGid.Length..] : orderExternalId;
+        return $"https://{options.Value.Store}/admin/orders/{id}";
+    }
 
     public async Task<ChannelListingIds> PublishAsync(ChannelProduct product, CancellationToken cancellationToken = default)
     {

@@ -1296,6 +1296,23 @@ classDiagram
         +DateTimeOffset? PublishedAt
         +DateTimeOffset? StaleSince
     }
+    class HeldChannelOrder {
+        <<aggregate>>
+        +string Channel
+        +string ExternalId
+        +string Number
+        +HeldOrderReason Reason
+        +string? About
+        +string? Page
+        +DateTimeOffset HeldSince
+        +DateTimeOffset LastTriedAt
+    }
+    class HeldOrderReason {
+        <<enumeration>>
+        NotInCatalogue
+        NoAddress
+        TotalsDoNotAddUp
+    }
     class StockMargin {
         <<record>>
         +int Units

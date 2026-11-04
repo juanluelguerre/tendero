@@ -507,10 +507,12 @@
       "name": "Sales channels",
       "area": "backoffice",
       "question": "Does a sales channel keep up with the catalogue, how often does it refuse what it is told, and do its orders arrive — by which path?",
-      "decision": "A refusal rate above a few in a hundred means the mapping loses data, fixed before a second channel is added; failures that pile up mean the reconciliation, not the outbox, is carrying the channel (docs/specs/shopify-channel.md, Evidence of use). Orders found only by the reconciliation mean the webhooks are failing — the subscription or the URL, not the code. Any oversold order raises the stock margin (2 units today) or shortens the reconciliation.",
+      "decision": "A refusal rate above a few in a hundred means the mapping loses data, fixed before a second channel is added; failures that pile up mean the reconciliation, not the outbox, is carrying the channel (docs/specs/shopify-channel.md, Evidence of use). Orders found only by the reconciliation mean the webhooks are failing — the subscription or the URL, not the code. Any oversold order raises the stock margin (2 units today) or shortens the reconciliation. Any order held longer than a day is a mapping to fix, not a list to watch, and an order held because its figures do not add up is a bug (P16-29).",
       "signals": [
         "tendero.channel.publications",
         "tendero.channel.orders.received",
+        "tendero.channel.orders.held",
+        "tendero.channel.orders.released",
         "tendero.channel.oversold"
       ]
     },
@@ -1948,9 +1950,10 @@
           "type": "string",
           "values": [
             "webhook",
-            "reconciliation"
+            "reconciliation",
+            "held"
           ],
-          "description": "How Tendero heard of it: the channel's webhook, or the reconciliation's pass."
+          "description": "How Tendero heard of it: the channel's webhook, the reconciliation's pass, or read again by its id while held (P16-29)."
         },
         "outcome": {
           "type": "string",
@@ -1964,6 +1967,47 @@
             "totals_do_not_add_up"
           ],
           "description": "Received to be shipped; already received by the other path; or skipped, and why."
+        }
+      }
+    },
+    {
+      "name": "tendero.channel.orders.held",
+      "instrument": "counter",
+      "unit": "{order}",
+      "description": "Every order a sales channel took that Tendero could not receive and holds to read again, by why (P16-29).",
+      "attributes": {
+        "channel": {
+          "type": "string",
+          "description": "The channel that took it: shopify."
+        },
+        "reason": {
+          "type": "string",
+          "values": [
+            "not_in_catalogue",
+            "no_address",
+            "totals_do_not_add_up"
+          ],
+          "description": "Why it could not be received: each a reason that can be mended."
+        }
+      }
+    },
+    {
+      "name": "tendero.channel.orders.released",
+      "instrument": "counter",
+      "unit": "{order}",
+      "description": "Every held order that left the list: received at last, or closed on the channel (P16-29).",
+      "attributes": {
+        "channel": {
+          "type": "string",
+          "description": "The channel that took it: shopify."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "received",
+            "closed"
+          ],
+          "description": "Received at last, or cancelled, fulfilled or gone on the channel."
         }
       }
     },

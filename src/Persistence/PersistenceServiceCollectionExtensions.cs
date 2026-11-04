@@ -153,6 +153,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IChannelListings, EfChannelListings>();
         services.AddScoped<IChannelStockLevels, EfChannelStockLevels>();
         services.AddScoped<IChannelCursors, EfChannelCursors>();
+        services.AddScoped<IHeldChannelOrders, EfHeldChannelOrders>();
 
         return services;
     }

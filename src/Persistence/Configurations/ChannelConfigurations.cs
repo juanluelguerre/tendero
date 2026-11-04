@@ -76,3 +76,22 @@ internal sealed class ChannelCursorConfiguration : IEntityTypeConfiguration<Chan
         builder.Ignore(cursor => cursor.DomainEvents);
     }
 }
+
+/// <summary>The orders a channel took that Tendero could not receive (P16-29): read again by the channel's id.</summary>
+internal sealed class HeldChannelOrderConfiguration : IEntityTypeConfiguration<HeldChannelOrder>
+{
+    public void Configure(EntityTypeBuilder<HeldChannelOrder> builder)
+    {
+        builder.ToTable("HeldOrders", "channels");
+        builder.HasKey(order => new { order.Channel, order.ExternalId });
+        builder.Property(order => order.Channel).HasMaxLength(40);
+        builder.Property(order => order.ExternalId).HasMaxLength(200);
+        builder.Property(order => order.Number).HasMaxLength(60).IsRequired();
+        builder.Property(order => order.Reason).HasConversion<string>().HasMaxLength(30).IsRequired();
+        builder.Property(order => order.About).HasMaxLength(500);
+        builder.Property(order => order.Page).HasMaxLength(500);
+        builder.Property(order => order.HeldSince);
+        builder.Property(order => order.LastTriedAt);
+        builder.Ignore(order => order.DomainEvents);
+    }
+}

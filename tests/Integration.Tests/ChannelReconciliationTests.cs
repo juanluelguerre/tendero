@@ -128,6 +128,135 @@ public sealed class ChannelReconciliationTests(PostgresFixture postgres)
             channel.Stock.Where(stock => stock.Sku == sku).Select(stock => (stock.Location, stock.Available)).Order());
     }
 
+    /// <summary>
+    /// An order that cannot be received yet is held, not lost (P16-29): the mark moves past
+    /// it, the next passes read it again by its id, and once mended — the product
+    /// published — it is received and leaves the list. The lab store's #1013 was this
+    /// order, and was received only after rewinding the mark by hand.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task An_order_that_cannot_be_received_is_held_past_the_mark_and_received_once_mended()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        using var recorder = new InstrumentRecorder("tendero.channel.orders.held", "tendero.channel.orders.released", "tendero.channel.orders.received");
+        var (provider, clock, taken, sku) = await StartAsync("channels_held_received", ct);
+        await using var _ = provider;
+
+        await PassAsync(provider, ct);
+        clock.Advance(TimeSpan.FromMinutes(5));
+        var unsold = Taken("7002", "NOT-SOLD", clock.GetUtcNow());
+        taken.Orders.Add(unsold);
+        await PassAsync(provider, ct);
+
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var held = Assert.Single(await scope.ServiceProvider.GetRequiredService<IHeldChannelOrders>().AllAsync(ct));
+            Assert.Equal(("7002", "#7002", HeldOrderReason.NotInCatalogue, "NOT-SOLD", "page/7002", clock.GetUtcNow()),
+                (held.ExternalId, held.Number, held.Reason, held.About, held.Page, held.HeldSince));
+            Assert.Equal(clock.GetUtcNow(), (await scope.ServiceProvider.GetRequiredService<IChannelCursors>().FindAsync("shopify", ct))?.OrdersReadUntil);
+        }
+
+        // Mended on the channel's side without changing the order: the mark alone would never read it again.
+        taken.Orders[taken.Orders.IndexOf(unsold)] = unsold with { Lines = [unsold.Lines[0] with { Sku = sku }] };
+        clock.Advance(TimeSpan.FromMinutes(5));
+        await PassAsync(provider, ct);
+
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            Assert.NotNull(await scope.ServiceProvider.GetRequiredService<IOrderRepository>().FindByIdempotencyKeyAsync(Order.ReceivedKey("shopify", "7002"), ct));
+            Assert.Empty(await scope.ServiceProvider.GetRequiredService<IHeldChannelOrders>().AllAsync(ct));
+        }
+
+        Assert.Equal(("shopify", "not_in_catalogue"), Tags(Assert.Single(recorder.Of("tendero.channel.orders.held")), "reason"));
+        Assert.Equal(("shopify", "received"), Tags(Assert.Single(recorder.Of("tendero.channel.orders.released")), "outcome"));
+        Assert.Contains(recorder.Of("tendero.channel.orders.received"), tags => (string?)tags["path"] == "held" && (string?)tags["outcome"] == "received");
+    }
+
+    /// <summary>Tried again and still not receivable: it stays, with why it is held now; no order is made.</summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_held_order_still_not_receivable_stays_with_its_new_reason()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var (provider, clock, taken, sku) = await StartAsync("channels_held_still", ct);
+        await using var _ = provider;
+
+        await PassAsync(provider, ct);
+        clock.Advance(TimeSpan.FromMinutes(5));
+        var unsold = Taken("7003", "NOT-SOLD", clock.GetUtcNow());
+        var heldAt = clock.GetUtcNow();
+        taken.Orders.Add(unsold);
+        await PassAsync(provider, ct);
+
+        taken.Orders[taken.Orders.IndexOf(unsold)] = unsold with { Lines = [unsold.Lines[0] with { Sku = sku }], ShippingAddress = null, BillingAddress = null };
+        clock.Advance(TimeSpan.FromMinutes(5));
+        await PassAsync(provider, ct);
+
+        await using var scope = provider.CreateAsyncScope();
+        var held = Assert.Single(await scope.ServiceProvider.GetRequiredService<IHeldChannelOrders>().AllAsync(ct));
+        Assert.Equal((HeldOrderReason.NoAddress, (string?)null, heldAt, clock.GetUtcNow()), (held.Reason, held.About, held.HeldSince, held.LastTriedAt));
+        Assert.Null(await scope.ServiceProvider.GetRequiredService<IOrderRepository>().FindByIdempotencyKeyAsync(Order.ReceivedKey("shopify", "7003"), ct));
+    }
+
+    /// <summary>
+    /// Closed on the channel — cancelled and refunded, or gone — a held order has nothing
+    /// left to ship and leaves the list. One cancelled before Tendero saw it is never held.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_held_order_closed_on_the_channel_leaves_and_one_never_open_is_never_held()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        using var recorder = new InstrumentRecorder("tendero.channel.orders.released");
+        var (provider, clock, taken, _) = await StartAsync("channels_held_closed", ct);
+        await using var __ = provider;
+
+        await PassAsync(provider, ct);
+        clock.Advance(TimeSpan.FromMinutes(5));
+        var cancelled = Taken("7004", "NOT-SOLD", clock.GetUtcNow());
+        var deleted = Taken("7005", "NOT-SOLD", clock.GetUtcNow());
+        taken.Orders.AddRange([cancelled, deleted, Taken("7006", "NOT-SOLD", clock.GetUtcNow()) with { State = SourceOrderState.Cancelled }]);
+        await PassAsync(provider, ct);
+
+        await using (var scope = provider.CreateAsyncScope())
+            Assert.Equal(["7004", "7005"], (await scope.ServiceProvider.GetRequiredService<IHeldChannelOrders>().AllAsync(ct)).Select(held => held.ExternalId).Order());
+
+        taken.Orders[taken.Orders.IndexOf(cancelled)] = cancelled with { State = SourceOrderState.Cancelled };
+        taken.Orders.Remove(deleted);
+        clock.Advance(TimeSpan.FromMinutes(5));
+        await PassAsync(provider, ct);
+
+        await using (var scope = provider.CreateAsyncScope())
+            Assert.Empty(await scope.ServiceProvider.GetRequiredService<IHeldChannelOrders>().AllAsync(ct));
+        Assert.Equal(["closed", "closed"], recorder.Of("tendero.channel.orders.released").Select(tags => (string?)tags["outcome"]));
+    }
+
+    private static (string?, string?) Tags(IReadOnlyDictionary<string, object?> tags, string second) =>
+        ((string?)tags["channel"], (string?)tags[second]);
+
+    /// <summary>A migrated database with the seed imported, and the channel's orders empty.</summary>
+    private async Task<(ServiceProvider Provider, TestClock Clock, TakenOrders Taken, string Sku)> StartAsync(string database, CancellationToken ct)
+    {
+        var factory = await postgres.CreateDatabaseAsync(database);
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var clock = new TestClock(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
+        var taken = new TakenOrders();
+        var provider = Compose(factory.ConnectionString, clock, new RecordingChannel(), taken);
+        await using (var scope = provider.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new ImportProductsCommand("seed"), ct);
+        while (await WorkerOutbox.PassAsync(provider, ct) > 0) { }
+
+        await using var context = factory.Create();
+        var sku = (await context.Products.Include(product => product.Variants).OrderBy(product => product.Code).FirstAsync(ct)).Variants.First().Sku;
+        return (provider, clock, taken, sku);
+    }
+
     private static async Task PassAsync(ServiceProvider provider, CancellationToken ct)
     {
         await using var scope = provider.CreateAsyncScope();
@@ -200,6 +329,8 @@ public sealed class ChannelReconciliationTests(PostgresFixture postgres)
         public List<ChannelStock> Stock { get; } = [];
 
         public string Channel => "shopify";
+
+        public string? OrderPage(string orderExternalId) => "page/" + orderExternalId;
 
         public Task<ChannelListingIds> PublishAsync(ChannelProduct product, CancellationToken cancellationToken = default)
         {

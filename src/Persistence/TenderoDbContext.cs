@@ -50,6 +50,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<ChannelListing> ChannelListings => Set<ChannelListing>();
     public DbSet<ChannelStockLevel> ChannelStockLevels => Set<ChannelStockLevel>();
     public DbSet<ChannelCursor> ChannelCursors => Set<ChannelCursor>();
+    public DbSet<HeldChannelOrder> HeldChannelOrders => Set<HeldChannelOrder>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     /// <summary>
@@ -103,6 +104,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ChannelListingConfiguration());
         modelBuilder.ApplyConfiguration(new ChannelStockLevelConfiguration());
         modelBuilder.ApplyConfiguration(new ChannelCursorConfiguration());
+        modelBuilder.ApplyConfiguration(new HeldChannelOrderConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
         modelBuilder.ApplyConfiguration(new AIInvocationConfiguration());
         modelBuilder.ApplyConfiguration(new IdempotencyRecordConfiguration());

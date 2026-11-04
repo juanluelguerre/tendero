@@ -21,6 +21,7 @@ namespace ElGuerre.Tendero.Workers.Channels;
 public sealed partial class ChannelReconciliation(
     ISalesChannels channels,
     IChannelCursors cursors,
+    IHeldChannelOrders held,
     IUnitOfWork unitOfWork,
     ICommandDispatcher commands,
     ICatalogueExport catalogue,
@@ -34,6 +35,10 @@ public sealed partial class ChannelReconciliation(
     /// Every channel's orders changed since its mark, received, and the mark moved on. A
     /// channel seen for the first time starts now: what it sold before it was connected is
     /// the import's history, not orders to ship.
+    ///
+    /// The mark moves past an order that cannot be received yet, so one never mended does
+    /// not hold every other back; that order is held instead (P16-29), and each pass first
+    /// reads the held ones again by their id.
     /// </summary>
     public async Task ReceiveOrdersAsync(CancellationToken ct)
     {
@@ -48,8 +53,10 @@ public sealed partial class ChannelReconciliation(
                     cursors.Add(cursor);
                 }
 
+                var retried = await RetryHeldAsync(channel, ct);
                 var received = await commands.SendAsync(new ReceiveChannelOrdersCommand(channel, cursor.OrdersReadUntil), ct);
                 cursor.ReadUntil(received.ReadUntil);
+                Hold(channel, received.SkippedOrders, retried);
                 await unitOfWork.SaveChangesAsync(ct);
 
                 foreach (var note in received.Notes)
@@ -61,6 +68,64 @@ public sealed partial class ChannelReconciliation(
             }
         }
     }
+
+    /// <summary>
+    /// Each held order read again by its id: received at last, or closed on the channel, it
+    /// leaves; still not receivable, it stays with why it is held now. Answers the ids
+    /// tried, so the pass after does not hold one of them a second time.
+    /// </summary>
+    private async Task<HashSet<string>> RetryHeldAsync(string channel, CancellationToken ct)
+    {
+        var tried = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var order in await held.OfAsync(channel, ct))
+        {
+            tried.Add(order.ExternalId);
+            var again = await commands.SendAsync(new ReceiveChannelOrderCommand(channel, order.ExternalId, ChannelOrderPath.Held), ct);
+
+            if (again.Received + again.AlreadyHere > 0)
+                Release(order, ChannelMetrics.ReleasedReceived);
+            else if (again.SkippedOrders is [var still] && ReasonOf(still.Why) is { } reason)
+                order.StillHeld(reason, still.About, clock.GetUtcNow());
+            else
+                // Cancelled or fulfilled there, or gone: nothing is left to ship.
+                Release(order, ChannelMetrics.ReleasedClosed);
+        }
+
+        return tried;
+    }
+
+    private void Release(HeldChannelOrder order, string outcome)
+    {
+        held.Remove(order);
+        ChannelMetrics.OrderReleased(order.Channel, outcome);
+    }
+
+    private void Hold(string channel, IReadOnlyList<SkippedChannelOrder> skipped, HashSet<string> tried)
+    {
+        foreach (var order in skipped)
+        {
+            if (tried.Contains(order.ExternalId) || ReasonOf(order.Why) is not { } reason)
+                continue;
+
+            held.Add(HeldChannelOrder.Hold(
+                channel, order.ExternalId, order.Number, reason, order.About, channels.Get(channel).OrderPage(order.ExternalId), clock.GetUtcNow()));
+            ChannelMetrics.OrderHeld(channel, reason);
+        }
+    }
+
+    /// <summary>
+    /// Which skips are worth holding: the ones that can be mended. One closed on the channel
+    /// before Tendero saw it has nothing to ship, and a channel no order can come from is
+    /// configuration, not an order.
+    /// </summary>
+    private static HeldOrderReason? ReasonOf(ChannelOrderSkip why) => why switch
+    {
+        ChannelOrderSkip.NotInCatalogue => HeldOrderReason.NotInCatalogue,
+        ChannelOrderSkip.NoAddress => HeldOrderReason.NoAddress,
+        ChannelOrderSkip.TotalsDoNotAddUp => HeldOrderReason.TotalsDoNotAddUp,
+        ChannelOrderSkip.NotOpen or ChannelOrderSkip.UnknownChannel => null,
+        _ => throw new ArgumentOutOfRangeException(nameof(why), why, "Not a skip the reconciliation knows."),
+    };
 
     /// <summary>Every live product and every SKU's stock, told again to every channel; what did not change is not sent twice.</summary>
     public async Task RepublishAsync(CancellationToken ct)

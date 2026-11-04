@@ -30,3 +30,17 @@ public interface IChannelCursors
 
     void Add(ChannelCursor cursor);
 }
+
+/// <summary>The orders a channel took that Tendero could not receive, held to be read again (P16-29).</summary>
+public interface IHeldChannelOrders
+{
+    /// <summary>One channel's, tracked: the reconciliation tries each again and changes or removes it.</summary>
+    Task<IReadOnlyList<HeldChannelOrder>> OfAsync(string channel, CancellationToken cancellationToken = default);
+
+    /// <summary>Every channel's, oldest held first, untracked: what the shopkeeper is shown.</summary>
+    Task<IReadOnlyList<HeldChannelOrder>> AllAsync(CancellationToken cancellationToken = default);
+
+    void Add(HeldChannelOrder order);
+
+    void Remove(HeldChannelOrder order);
+}
