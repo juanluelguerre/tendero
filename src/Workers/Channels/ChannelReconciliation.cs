@@ -68,7 +68,8 @@ public sealed partial class ChannelReconciliation(
         if (channels.Channels.Count == 0)
             return;
 
-        foreach (var product in await catalogue.ProductsAsync(options.Value.Culture, ct))
+        var products = await catalogue.ProductsAsync(options.Value.Culture, ct);
+        foreach (var product in products)
         {
             var told = ChannelProducts.From(product);
             foreach (var channel in channels.Channels)
@@ -85,7 +86,14 @@ public sealed partial class ChannelReconciliation(
             }
         }
 
-        await stockToChannels.TellAsync([.. (await stock.AllAsync(ct)).Select(row => row.Sku).Distinct(StringComparer.Ordinal)], ct);
+        // Every variant the catalogue sells, held or not, and any SKU stock is kept for.
+        await stockToChannels.TellAsync(
+            [
+                .. products.SelectMany(product => product.Variants).Select(variant => variant.Sku)
+                    .Concat((await stock.AllAsync(ct)).Select(row => row.Sku))
+                    .Distinct(StringComparer.Ordinal),
+            ],
+            ct);
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "An order {Channel} took was not received: {Note}")]

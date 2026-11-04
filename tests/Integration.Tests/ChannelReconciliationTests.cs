@@ -93,6 +93,41 @@ public sealed class ChannelReconciliationTests(PostgresFixture postgres)
         Assert.Equal("7001", Assert.Single(channel.Shipped).OrderExternalId);
     }
 
+    /// <summary>
+    /// Tendero is the system of record for stock: a variant it holds none of is told zero
+    /// at every warehouse. Republishing told only the SKUs with a stock row, so on the lab
+    /// store's round trip (2026-11-03) three variants the shop has none of kept the
+    /// store's own numbers, and the store would have sold them.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task Republishing_tells_every_listed_sku_at_every_warehouse_and_none_held_is_zero()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("channels_republish_stock");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var channel = new RecordingChannel();
+        await using var provider = Compose(factory.ConnectionString, new TestClock(), channel, new TakenOrders());
+        await using (var scope = provider.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new ImportProductsCommand("seed"), ct);
+        while (await WorkerOutbox.PassAsync(provider, ct) > 0) { }
+
+        string sku;
+        await using (var context = factory.Create())
+            sku = (await context.Products.Include(product => product.Variants).OrderBy(product => product.Code).FirstAsync(ct)).Variants.First().Sku;
+        channel.Stock.Clear();
+
+        await using (var scope = provider.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<ChannelReconciliation>().RepublishAsync(ct);
+
+        Assert.Equal(
+            [("BCN", 0), ("MAD", 0)],
+            channel.Stock.Where(stock => stock.Sku == sku).Select(stock => (stock.Location, stock.Available)).Order());
+    }
+
     private static async Task PassAsync(ServiceProvider provider, CancellationToken ct)
     {
         await using var scope = provider.CreateAsyncScope();
@@ -162,6 +197,8 @@ public sealed class ChannelReconciliationTests(PostgresFixture postgres)
 
         public List<ChannelShipment> Shipped { get; } = [];
 
+        public List<ChannelStock> Stock { get; } = [];
+
         public string Channel => "shopify";
 
         public Task<ChannelListingIds> PublishAsync(ChannelProduct product, CancellationToken cancellationToken = default)
@@ -172,8 +209,11 @@ public sealed class ChannelReconciliationTests(PostgresFixture postgres)
                 product.Variants.ToDictionary(variant => variant.Sku, variant => "variant/" + variant.Sku, StringComparer.Ordinal)));
         }
 
-        public Task<StockPublication> SetAvailableAsync(ChannelStock stock, CancellationToken cancellationToken = default) =>
-            Task.FromResult<StockPublication>(new StockPublication.Set());
+        public Task<StockPublication> SetAvailableAsync(ChannelStock stock, CancellationToken cancellationToken = default)
+        {
+            Stock.Add(stock);
+            return Task.FromResult<StockPublication>(new StockPublication.Set());
+        }
 
         public Task MarkShippedAsync(ChannelShipment shipment, CancellationToken cancellationToken = default)
         {

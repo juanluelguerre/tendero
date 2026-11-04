@@ -14,11 +14,15 @@ namespace ElGuerre.Tendero.Workers.Channels;
 /// <summary>
 /// What every channel may sell of a set of SKUs, told warehouse by warehouse. Used when
 /// stock moves and when a product is first published, so a product never reaches a
-/// channel with no stock until its next movement. Never fails its caller: a channel
-/// that is down is counted and logged, and the reconciliation repairs it.
+/// channel with no stock until its next movement. Every warehouse of the shop is told,
+/// and one that holds none of a SKU is told zero: Tendero is the system of record, and
+/// a channel left with its own number would sell what the shop has not got (the lab
+/// store's round trip, 2026-11-03). Never fails its caller: a channel that is down is
+/// counted and logged, and the reconciliation repairs it.
 /// </summary>
 public sealed partial class StockToChannels(
     IStockRepository stock,
+    IWarehouseReader warehouses,
     ISalesChannels channels,
     ICommandDispatcher commands,
     ILogger<StockToChannels> logger)
@@ -32,20 +36,25 @@ public sealed partial class StockToChannels(
         if (told.Count == 0 || skus.Count == 0)
             return;
 
-        var rows = await stock.ForSkusAsync(skus, ct);
+        var rows = (await stock.ForSkusAsync(skus, ct)).ToDictionary(row => (row.Sku, row.WarehouseCode));
+        var codes = (await warehouses.AllAsync(ct)).Select(warehouse => warehouse.Code).ToList();
 
         foreach (var channel in told)
         {
-            foreach (var row in rows)
+            foreach (var sku in skus)
             {
-                try
+                foreach (var code in codes)
                 {
-                    await commands.SendAsync(new PublishStockToChannelCommand(channel, row.Sku, row.WarehouseCode, row.Available), ct);
-                }
-                catch (Exception exception) when (exception is not OperationCanceledException)
-                {
-                    ChannelMetrics.Publication(channel, ChannelMetrics.StockKind, "failed");
-                    LogFailed(logger, exception, row.Sku, row.WarehouseCode, channel);
+                    var available = rows.TryGetValue((sku, code), out var row) ? row.Available : 0;
+                    try
+                    {
+                        await commands.SendAsync(new PublishStockToChannelCommand(channel, sku, code, available), ct);
+                    }
+                    catch (Exception exception) when (exception is not OperationCanceledException)
+                    {
+                        ChannelMetrics.Publication(channel, ChannelMetrics.StockKind, "failed");
+                        LogFailed(logger, exception, sku, code, channel);
+                    }
                 }
             }
         }

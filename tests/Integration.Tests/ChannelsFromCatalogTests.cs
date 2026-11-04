@@ -54,6 +54,7 @@ public sealed class ChannelsFromCatalogTests(PostgresFixture postgres)
 
         // Five in Madrid while it is a draft: the channel holds the draft, so it is told
         // three — the margin held back — and has it ready for the day it goes on sale.
+        // Barcelona, which holds none, is told zero: the channel keeps no number of its own.
         var sku = mug.Variants.First().Sku;
         await using (var scope = provider.CreateAsyncScope())
         {
@@ -61,14 +62,14 @@ public sealed class ChannelsFromCatalogTests(PostgresFixture postgres)
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
         }
         while (await WorkerOutbox.PassAsync(provider, ct) > 0) { }
-        Assert.Equal((sku, "MAD", 3), channel.Stock.Select(told => (told.Sku, told.Location, told.Available)).Single());
+        Assert.Equal([(sku, "BCN", 0), (sku, "MAD", 3)], channel.Stock.Select(told => (told.Sku, told.Location, told.Available)).Order());
 
         await using (var scope = provider.CreateAsyncScope())
             await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new PublishProductCommand(mug.Id), ct);
         while (await WorkerOutbox.PassAsync(provider, ct) > 0) { }
 
         // Published, its stock is told again only if it differs: it does not, so nothing is sent twice.
-        Assert.Single(channel.Stock);
+        Assert.Equal(2, channel.Stock.Count);
 
         var onSale = channel.Told.Last(told => told.Code == mug.Code);
         Assert.Equal(ChannelProductStatus.OnSale, onSale.Status);
