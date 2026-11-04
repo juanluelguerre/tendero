@@ -161,7 +161,7 @@ internal static class ShopifyQueries
               shippingLine { title originalPriceSet {{Money}} {{Allocations}} }
               fulfillments { createdAt }
               discountApplications(first: 20) { nodes { index ... on DiscountCodeApplication { code } ... on AutomaticDiscountApplication { title } ... on ManualDiscountApplication { title } } }
-              lineItems(first: 250) { nodes { id title variantTitle quantity variant { id } originalUnitPriceSet {{Money}} {{Allocations}} } }
+              lineItems(first: 250) { nodes { id title variantTitle quantity variant { id sku } originalUnitPriceSet {{Money}} {{Allocations}} } }
               refunds { id processedAt totalRefundedSet {{Money}} refundLineItems(first: 250) { nodes { quantity lineItem { id } } } }
         """;
 

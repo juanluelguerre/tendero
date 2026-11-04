@@ -46,6 +46,40 @@ public sealed class ShopifyChannelOrdersTests
         Assert.Equal("MOKA-OLV", order?.Lines[0].Sku);
     }
 
+    /// <summary>
+    /// The lab store's round trip (2026-11-03): an order for a product Tendero published,
+    /// not imported, had no imported variant to map, and was skipped as "not in the
+    /// catalogue". On the channel the store's SKU is the one Tendero gave it: it is read.
+    /// </summary>
+    [Fact]
+    public async Task A_line_for_a_variant_tendero_published_is_read_by_the_stores_sku()
+    {
+        var (connector, store) = ShopifyOrderConnectorTests.AConnector();
+        store.OrdersFixture = "orders-published.json";
+
+        var found = await connector.FindAsync("5003", Ct);
+        var passed = new List<SourceOrder>();
+        await foreach (var order in connector.UpdatedSinceAsync(DateTimeOffset.UnixEpoch, Ct))
+            passed.Add(order);
+
+        Assert.Equal("B073WXYZ01-DEFAULT", found?.Lines.Single().Sku);
+        Assert.Equal("B073WXYZ01-DEFAULT", passed.Single().Lines.Single().Sku);
+    }
+
+    /// <summary>Imported (leaving Shopify, S2), the store's SKU is not ours: only the variants the catalogue imported are mapped.</summary>
+    [Fact]
+    public async Task An_imported_line_is_never_read_by_the_stores_sku()
+    {
+        var (connector, store) = ShopifyOrderConnectorTests.AConnector();
+        store.OrdersFixture = "orders-published.json";
+
+        var imported = new List<SourceOrder>();
+        await foreach (var order in connector.StreamOrdersAsync(Ct))
+            imported.Add(order);
+
+        Assert.Null(imported.Single().Lines.Single().Sku);
+    }
+
     [Fact]
     public async Task An_order_the_store_does_not_have_is_none() =>
         Assert.Null(await ShopifyOrderConnectorTests.AConnector().Connector.FindAsync("999999", Ct));

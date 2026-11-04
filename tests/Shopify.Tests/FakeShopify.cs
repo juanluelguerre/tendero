@@ -157,7 +157,7 @@ internal sealed partial class FakeShopify : HttpMessageHandler
         // One order by id, from the first page: what a webhook names.
         if (query.Contains("{ order(id:", StringComparison.Ordinal))
         {
-            var orders = JsonDocument.Parse(File.ReadAllText(Fixture("orders.json"))).RootElement.GetProperty("data").GetProperty("orders").GetProperty("nodes");
+            var orders = JsonDocument.Parse(File.ReadAllText(Fixture(OrdersFixture ?? "orders.json"))).RootElement.GetProperty("data").GetProperty("orders").GetProperty("nodes");
             var match = orders.EnumerateArray().FirstOrDefault(order => query.Contains($"\"{order.GetProperty("id").GetString()}\"", StringComparison.Ordinal));
             return Json(match.ValueKind == JsonValueKind.Object ? $"{{\"data\":{{\"order\":{match.GetRawText()}}}}}" : """{"data":{"order":null}}""");
         }
