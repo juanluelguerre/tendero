@@ -95,7 +95,6 @@ public static class WorkerServices
         builder.Services.AddChannels(builder.Configuration);
         builder.Services.AddShopify(builder.Configuration);
         builder.Services.AddChannelBridges();
-        builder.Services.AddHostedService<ChannelReconciliationWorker>();
 
         // And it takes the money: the saga captures on shipping and releases the
         // hold on cancellation, both through the payment port.
@@ -173,6 +172,12 @@ public static class WorkerServices
         builder.Services.AddHostedService<ForgetSavedCardsWorker>();
 
         builder.Services.AddHostedService<OutboxWorker>();
+
+        // The channels' reconciliation (S3) republishes the catalogue as it starts, so
+        // after the migrator too: registered beside the channels above, it raced the
+        // migration that creates their tables on the lab store's round trip, and
+        // every product failed to publish.
+        builder.Services.AddHostedService<ChannelReconciliationWorker>();
 
         return builder;
     }
