@@ -78,6 +78,17 @@ public sealed class ShopifyOptions
     public string AttributesNamespace { get; set; } = DefaultAttributesNamespace;
 
     /// <summary>
+    /// An attribute's code in Tendero to the key the store keeps it under, in the store's
+    /// words (<c>GENDER</c> → <c>genero</c>), for the channel to write the merchant's own
+    /// metafields — the ones their filters list — rather than a second set beside them. A
+    /// code not in it is written in lower case. Written by a person, like the locations.
+    /// </summary>
+    public Dictionary<string, string> AttributeKeys { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The JSON file <see cref="AttributeKeys"/> is read from, for the same reason as the categories'.</summary>
+    public string? AttributeKeysFile { get; set; }
+
+    /// <summary>
     /// Where the store can fetch Tendero's pictures from when it publishes a product
     /// (phase 16, S3): Shopify downloads a file from its URL, and a laptop's image
     /// store is not on the internet. Unset, a published product keeps the pictures
@@ -100,6 +111,12 @@ public sealed class ShopifyOptions
     public string? WebhookSecret { get; set; }
 
     public const string DefaultAttributesNamespace = "tendero";
+
+    /// <summary>
+    /// The key, in the attributes' namespace, the channel writes a product's code under
+    /// (S3): the listing's key the importer recognises a product by, never an attribute.
+    /// </summary>
+    public const string CodeKey = "code";
 
     /// <summary>A store, and a way in: its own token, or the app's credentials.</summary>
     public bool IsConfigured =>

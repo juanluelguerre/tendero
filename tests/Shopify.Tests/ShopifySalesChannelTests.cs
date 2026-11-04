@@ -13,7 +13,7 @@ internal static class ChannelStore
 {
     public const string Madrid = "gid://shopify/Location/71";
 
-    public static (ShopifySalesChannel Channel, FakeShopify Store) Open(Uri? images = null)
+    public static (ShopifySalesChannel Channel, FakeShopify Store) Open(Uri? images = null, Dictionary<string, string>? attributeKeys = null)
     {
         var store = new FakeShopify();
         var clock = new TestClock();
@@ -25,6 +25,7 @@ internal static class ChannelStore
             ThrottleBackoff = TimeSpan.Zero,
             Locations = new(StringComparer.Ordinal) { [Madrid] = "MAD" },
             PublicImagesBaseUrl = images,
+            AttributeKeys = attributeKeys ?? new(StringComparer.OrdinalIgnoreCase),
         });
         var http = new HttpClient(store);
         return (new ShopifySalesChannel(new ShopifyAdmin(http, new ShopifyAccessTokens(http, options, clock), options, clock), options), store);
@@ -121,7 +122,8 @@ public sealed class ShopifySalesChannelTests
         Assert.True((bool?)variant["inventoryItem"]!["tracked"]);
         Assert.Equal("Azul", (string?)variant["optionValues"]![0]!["name"]);
         Assert.Equal("Color", (string?)input["productOptions"]![0]!["name"]);
-        Assert.Equal("TAZ-001", (string?)input["metafields"]![0]!["value"]);
+        // Never in productSet, whose metafields replace every one the store holds (the round trip, 2026-11-04).
+        Assert.False(input.ContainsKey("metafields"));
     }
 
     /// <summary>A description written as markup is the shopkeeper's text, not HTML the store would run.</summary>
@@ -237,6 +239,7 @@ public sealed class ShopifySalesChannelTests
     [InlineData("productSet")]
     [InlineData("productUpdate")]
     [InlineData("publishablePublish")]
+    [InlineData("metafieldsSet")]
     [InlineData("fulfillmentCreate")]
     public async Task A_write_the_store_refuses_is_refused_with_its_reason(string mutation)
     {
@@ -434,18 +437,53 @@ public sealed class ShopifySalesChannelTests
         Assert.Equal(["TAZ-001-DEFAULT"], ids.VariantIdsBySku.Keys);
     }
 
-    /// <summary>The code travels as a metafield the importer reads back, and a picture is declared an image.</summary>
+    /// <summary>The code travels as a metafield the importer reads back, written on the product the store holds, and a picture is declared an image.</summary>
     [Fact]
     public async Task The_code_is_a_text_metafield_and_a_picture_an_image()
     {
         var (channel, store) = ChannelStore.Open(new Uri("https://shop.example.com/"));
 
-        await channel.PublishAsync(Mug(), Ct);
+        var ids = await channel.PublishAsync(Mug(), Ct);
 
-        var input = store.ProductInputs.Single();
-        var metafield = input["metafields"]![0]!;
-        Assert.Equal(("code", "single_line_text_field"), ((string?)metafield["key"], (string?)metafield["type"]));
-        Assert.Equal("IMAGE", (string?)input["files"]![0]!["contentType"]);
+        var code = store.MetafieldsSet.Single(metafield => metafield.GetProperty("key").GetString() == "code");
+        Assert.Equal(
+            (ids.ProductId, "tendero", "single_line_text_field", "TAZ-001"),
+            (code.GetProperty("ownerId").GetString(), code.GetProperty("namespace").GetString(), code.GetProperty("type").GetString(), code.GetProperty("value").GetString()));
+        Assert.Equal("IMAGE", (string?)store.ProductInputs.Single()["files"]![0]!["contentType"]);
+    }
+
+    /// <summary>
+    /// The attributes are written as the store's own metafields, under the keys its filters
+    /// use (the store's words, from the attribute keys file) or the code in lower case when
+    /// it has none — and with a write that leaves every other metafield alone. Publishing
+    /// through productSet wiped the lab store's: 120 products lost colour, material and size
+    /// (2026-11-04).
+    /// </summary>
+    [Fact]
+    public async Task The_attributes_are_written_under_the_stores_keys_without_touching_its_other_metafields()
+    {
+        var (channel, store) = ChannelStore.Open(attributeKeys: new(StringComparer.OrdinalIgnoreCase) { ["GENDER"] = "genero" });
+        var mug = Mug() with { Attributes = [new ChannelAttribute("GENDER", "mujer"), new ChannelAttribute("COLOR", "azul")] };
+
+        await channel.PublishAsync(mug, Ct);
+
+        Assert.Equal(
+            [("code", "TAZ-001"), ("genero", "mujer"), ("color", "azul")],
+            store.MetafieldsSet.Select(metafield => (metafield.GetProperty("key").GetString(), metafield.GetProperty("value").GetString())));
+        Assert.All(store.MetafieldsSet, metafield => Assert.Equal("tendero", metafield.GetProperty("namespace").GetString()));
+    }
+
+    /// <summary>An archived product is archived, and nothing else is written on it.</summary>
+    [Fact]
+    public async Task An_archived_product_has_no_metafields_written()
+    {
+        var (channel, store) = ChannelStore.Open();
+        await channel.PublishAsync(Mug(), Ct);
+        store.MetafieldsSet.Clear();
+
+        await channel.PublishAsync(ChannelProduct.Archived("TAZ-001"), Ct);
+
+        Assert.Empty(store.MetafieldsSet);
     }
 
     /// <summary>Paragraphs split on either line ending, trimmed, blank ones dropped; a blank description is none.</summary>

@@ -1069,7 +1069,9 @@ if (builder.Configuration["Parameters:shopify-store"] is { Length: > 0 } shopify
             // writes their file; until then each is proposed as a warehouse.
             service.WithEnvironment("Shopify__ClientId", clientId)
                 .WithEnvironment("Shopify__ClientSecret", clientSecret)
-                .WithEnvironment("Shopify__LocationsFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "locations.json"));
+                .WithEnvironment("Shopify__LocationsFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "locations.json"))
+                // The keys its seed wrote each attribute under, for the channel to write the same ones.
+                .WithEnvironment("Shopify__AttributeKeysFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "attribute-keys.json"));
         }
 
         if (merchantsToken || appCredentials)

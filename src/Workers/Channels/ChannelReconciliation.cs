@@ -136,7 +136,7 @@ public sealed partial class ChannelReconciliation(
         var products = await catalogue.ProductsAsync(options.Value.Culture, ct);
         foreach (var product in products)
         {
-            var told = ChannelProducts.From(product);
+            var told = ChannelProducts.From(product, options.Value.Culture);
             foreach (var channel in channels.Channels)
             {
                 try

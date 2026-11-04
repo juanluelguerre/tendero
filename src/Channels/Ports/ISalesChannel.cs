@@ -70,6 +70,13 @@ public sealed record ChannelProduct(
     /// </summary>
     public IReadOnlyDictionary<string, string> References { get; init; } = None;
 
+    /// <summary>
+    /// What the product is, beside its variants: colour, material, capacity — each in the
+    /// words a store's filter lists, in the channel's language. A channel that keeps them
+    /// writes them all, since Tendero is the system of record for the catalogue.
+    /// </summary>
+    public IReadOnlyList<ChannelAttribute> Attributes { get; init; } = [];
+
     // One instance, so two products with no references are equal as records are.
     private static readonly IReadOnlyDictionary<string, string> None = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -81,6 +88,10 @@ public sealed record ChannelProduct(
 }
 
 public sealed record ChannelPicture(string ImageId, string? Alt);
+
+/// <param name="Code">The attribute's code in Tendero (<c>COLOR</c>); the adapter maps it to the store's own key.</param>
+/// <param name="Value">As a filter lists it: an option's label, a number without its unit, a yes or no as a word.</param>
+public sealed record ChannelAttribute(string Code, string Value);
 
 /// <param name="Price">What the channel sells it for, VAT included, as every price in Tendero (ADR 0028).</param>
 /// <param name="Options">What it varies by, in the product's order of axes.</param>

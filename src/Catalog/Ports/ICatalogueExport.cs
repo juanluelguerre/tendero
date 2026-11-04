@@ -63,7 +63,20 @@ public sealed record ExportedPicture(string ImageId, string? Alt);
 
 /// <param name="Key">The value free of any culture — an option's code, a number in invariant form — for whoever maps it to another vocabulary.</param>
 /// <param name="Value">The value as a shopper reads it in the culture; null for a yes or no.</param>
-public sealed record ExportedAttribute(string Code, string Label, string Key, string? Value);
+public sealed record ExportedAttribute(string Code, string Label, string Key, string? Value)
+{
+    /// <summary>What kind of value it is, so another vocabulary writes each the way it should: an option's label, a number without its unit, a yes or no as a word.</summary>
+    public ExportedAttributeKind Kind { get; init; }
+}
+
+/// <summary>The kinds of value an attribute leaves the shop as; a text, translated or not, is a text.</summary>
+public enum ExportedAttributeKind
+{
+    Text,
+    Option,
+    Number,
+    YesNo,
+}
 
 /// <param name="Options">What it varies by, in the product's order of axes.</param>
 /// <param name="PictureIds">Its gallery: its colour's pictures, then the ones every variant shares.</param>

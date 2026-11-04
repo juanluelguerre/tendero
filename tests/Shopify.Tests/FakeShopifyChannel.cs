@@ -42,6 +42,9 @@ internal sealed partial class FakeShopify
     /// <summary>The publications each publishablePublish named, in order.</summary>
     public List<string> PublishedTo { get; } = [];
 
+    /// <summary>Every metafield each metafieldsSet wrote, in order: a write that leaves the store's others alone.</summary>
+    public List<JsonElement> MetafieldsSet { get; } = [];
+
     /// <summary>The writes the store refuses, by mutation name, with the user error it answers.</summary>
     public Dictionary<string, string> Refusing { get; } = new(StringComparer.Ordinal);
 
@@ -145,6 +148,12 @@ internal sealed partial class FakeShopify
                         .Where(publication => HasOnlineStore || publication.id != OnlineStore),
                 },
             });
+
+        if (query.Contains("metafieldsSet(metafields: $metafields)", StringComparison.Ordinal))
+        {
+            MetafieldsSet.AddRange(variables.GetProperty("metafields").EnumerateArray().Select(metafield => metafield.Clone()));
+            return Data(new { metafieldsSet = new { userErrors = Errors("metafieldsSet") } });
+        }
 
         if (query.Contains("publishablePublish", StringComparison.Ordinal))
         {

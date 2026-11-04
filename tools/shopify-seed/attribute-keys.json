@@ -1,0 +1,19 @@
+{
+  "CAPACITY_L": "capacidad_l",
+  "COLOUR_TEMPERATURE": "temperatura_color",
+  "CUPS": "capacidad_tazas",
+  "DEPTH_CM": "fondo_cm",
+  "DIAMETERS_CM": "diametros_cm",
+  "GENDER": "genero",
+  "HEIGHT_CM": "alto_cm",
+  "INDUCTION": "induccion",
+  "LAPTOP_MAX_IN": "portatil_max",
+  "LIGHT_NEEDS": "luz",
+  "PET_SAFE": "apta_mascotas",
+  "PIECES": "piezas",
+  "POWER_W": "potencia_w",
+  "SEATS": "plazas",
+  "SIZE_RANGE": "tallas",
+  "UV_PROTECTION": "proteccion_uv",
+  "WIDTH_CM": "ancho_cm"
+}

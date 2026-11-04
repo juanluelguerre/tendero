@@ -83,6 +83,15 @@ public sealed class CatalogueExportReader(
         var text = value.Kind == AttributeKind.Number && value.Number is { } number
             ? $"{number.ToString(CultureInfo.InvariantCulture)} {definition.Unit}".TrimEnd()
             : view.Value;
-        return new ExportedAttribute(value.Code, view.Label, value.Key, text);
+        return new ExportedAttribute(value.Code, view.Label, value.Key, text) { Kind = KindOf(value.Kind) };
     }
+
+    private static ExportedAttributeKind KindOf(AttributeKind kind) => kind switch
+    {
+        AttributeKind.Option => ExportedAttributeKind.Option,
+        AttributeKind.Number => ExportedAttributeKind.Number,
+        AttributeKind.Boolean => ExportedAttributeKind.YesNo,
+        AttributeKind.Text or AttributeKind.LocalizedText => ExportedAttributeKind.Text,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a kind of attribute the export knows."),
+    };
 }

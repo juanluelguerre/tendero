@@ -41,7 +41,7 @@ public sealed partial class PublishToChannelsOnProductChange(
 
         // The export says a live product; an archived one it does not say at all.
         var told = await catalogue.ProductAsync(product.Code, options.Value.Culture, ct) is { } exported
-            ? ChannelProducts.From(exported)
+            ? ChannelProducts.From(exported, options.Value.Culture)
             : ChannelProduct.Archived(product.Code);
 
         foreach (var channel in channels.Channels)
@@ -69,7 +69,8 @@ public sealed partial class PublishToChannelsOnProductChange(
 /// <summary>A product as the exports say it, as a channel is told it.</summary>
 public static class ChannelProducts
 {
-    public static ChannelProduct From(ExportedProduct product) => new(
+    /// <param name="culture">The channel's language, the one the export was read in: a yes or no is a word in it.</param>
+    public static ChannelProduct From(ExportedProduct product, string culture) => new(
         product.Code,
         product.OnSale ? ChannelProductStatus.OnSale : ChannelProductStatus.NotOnSale,
         product.Name,
@@ -89,5 +90,21 @@ public static class ChannelProducts
         References = product.References
             .GroupBy(reference => reference.Source, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First().ExternalId, StringComparer.Ordinal),
+        Attributes = [.. product.Attributes.Select(attribute => new ChannelAttribute(attribute.Code, Said(attribute, culture)))],
+    };
+
+    /// <summary>
+    /// The value as a store's filter should list it, the way the lab store's seed wrote it:
+    /// an option by its label, a number without its unit (the importer reads it back as a
+    /// number), a yes or no as the word a shopper reads.
+    /// </summary>
+    private static string Said(ExportedAttribute attribute, string culture) => attribute.Kind switch
+    {
+        ExportedAttributeKind.Option or ExportedAttributeKind.Text => attribute.Value ?? attribute.Key,
+        ExportedAttributeKind.Number => attribute.Key,
+        ExportedAttributeKind.YesNo => attribute.Key == "true"
+            ? (culture.StartsWith("es", StringComparison.OrdinalIgnoreCase) ? "sí" : "yes")
+            : "no",
+        _ => throw new ArgumentOutOfRangeException(nameof(attribute), attribute.Kind, "Not a kind of attribute a channel is told."),
     };
 }

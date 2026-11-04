@@ -65,6 +65,7 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
         Refuse(answer, product.Code);
 
         var ids = IdsOf(answer.GetProperty("product"));
+        await WriteMetafieldsAsync(ids.ProductId, product, cancellationToken);
 
         if (product.Status == ChannelProductStatus.OnSale)
             await PutOnTheOnlineStoreAsync(ids.ProductId, product.Code, cancellationToken);
@@ -318,7 +319,6 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
                 values = product.Variants.SelectMany(variant => variant.Options).Where(option => option.Axis == axis)
                     .Select(option => option.Value).Distinct().Select(value => new { name = value }),
             }),
-            metafields = new[] { new { @namespace = options.Value.AttributesNamespace, key = "code", type = "single_line_text_field", value = product.Code } },
             variants = product.Variants.Select(variant => new
             {
                 sku = variant.Sku,
@@ -404,6 +404,44 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
         return level.ValueKind == JsonValueKind.Object
             ? level.GetProperty("quantities").EnumerateArray().Select(quantity => quantity.GetProperty("quantity").GetInt32()).FirstOrDefault()
             : null;
+    }
+
+    // Shopify's limit for one metafieldsSet.
+    private const int MetafieldsPerWrite = 25;
+
+    /// <summary>
+    /// The code the importer reads back and every attribute, as the store's own metafields:
+    /// under the key its filters list (<see cref="ShopifyOptions.AttributeKeys"/>) or the code
+    /// in lower case. Written with metafieldsSet, which leaves every other metafield alone —
+    /// productSet's metafields replace them all, and publishing that way wiped the lab
+    /// store's attributes (2026-11-04).
+    /// </summary>
+    private async Task WriteMetafieldsAsync(string productId, ChannelProduct product, CancellationToken cancellationToken)
+    {
+        var metafields = product.Attributes
+            .Select(attribute => (Key: options.Value.AttributeKeys.GetValueOrDefault(attribute.Code) ?? attribute.Code.ToLowerInvariant(), attribute.Value))
+            .Prepend((Key: ShopifyOptions.CodeKey, Value: product.Code))
+            .Select(metafield => new
+            {
+                ownerId = productId,
+                @namespace = options.Value.AttributesNamespace,
+                key = metafield.Key,
+                type = "single_line_text_field",
+                value = metafield.Value,
+            });
+
+        foreach (var chunk in metafields.Chunk(MetafieldsPerWrite))
+        {
+            var answer = (await admin.QueryAsync(
+                """
+                mutation ($metafields: [MetafieldsSetInput!]!) {
+                  metafieldsSet(metafields: $metafields) { userErrors { field message } }
+                }
+                """,
+                new { metafields = chunk },
+                cancellationToken)).GetProperty("metafieldsSet");
+            Refuse(answer, product.Code);
+        }
     }
 
     private static void Refuse(JsonElement payload, string code)

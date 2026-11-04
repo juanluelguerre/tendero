@@ -24,6 +24,8 @@ public sealed class ShopifyRegistrationTests
         var locations = Path.Combine(Path.GetTempPath(), $"locations-{Guid.NewGuid():N}.json");
         File.WriteAllText(categories, """{ "gid://shopify/TaxonomyCategory/hg-11-1-3": "COFFEE_MAKER" }""");
         File.WriteAllText(locations, """{ "gid://shopify/Location/71": "MAD" }""");
+        var keys = Path.Combine(Path.GetTempPath(), $"attribute-keys-{Guid.NewGuid():N}.json");
+        File.WriteAllText(keys, """{ "GENDER": "genero" }""");
         try
         {
             using var provider = Compose(new()
@@ -33,6 +35,7 @@ public sealed class ShopifyRegistrationTests
                 ["Shopify:ClientSecret"] = "client-secret",
                 ["Shopify:CategoriesFile"] = categories,
                 ["Shopify:LocationsFile"] = locations,
+                ["Shopify:AttributeKeysFile"] = keys,
             });
             using var scope = provider.CreateScope();
 
@@ -45,11 +48,14 @@ public sealed class ShopifyRegistrationTests
             var options = provider.GetRequiredService<IOptions<ShopifyOptions>>().Value;
             Assert.Equal("COFFEE_MAKER", options.Categories["gid://shopify/TaxonomyCategory/hg-11-1-3"]);
             Assert.Equal("MAD", options.Locations["gid://shopify/Location/71"]);
+            // Looked up by the attribute's code whatever its case (the fix after P16-28).
+            Assert.Equal("genero", options.AttributeKeys["gender"]);
         }
         finally
         {
             File.Delete(categories);
             File.Delete(locations);
+            File.Delete(keys);
         }
     }
 

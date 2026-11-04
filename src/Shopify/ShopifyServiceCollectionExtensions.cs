@@ -34,6 +34,7 @@ public static class ShopifyServiceCollectionExtensions
         {
             Merge(options.CategoriesFile, options.Categories);
             Merge(options.LocationsFile, options.Locations);
+            Merge(options.AttributeKeysFile, options.AttributeKeys);
         });
 
         services.AddHttpClient(Client);

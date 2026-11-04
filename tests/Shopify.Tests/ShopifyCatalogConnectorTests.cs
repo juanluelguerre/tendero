@@ -192,6 +192,22 @@ public sealed class ShopifyCatalogConnectorTests
     }
 
     /// <summary>
+    /// A product Tendero published carries its code as a metafield in the same namespace
+    /// (the channel, S3): that is the listing's key, not an attribute, and is not read as
+    /// one. The lab store's round trip read it back as "code" (2026-11-04).
+    /// </summary>
+    [Fact]
+    public async Task The_code_tendero_published_is_not_read_as_an_attribute()
+    {
+        var (connector, store) = AConnector();
+        store.ResultsFixture = "products-listed.jsonl";
+
+        var products = await Imported(connector);
+
+        Assert.Equal(new Dictionary<string, string> { ["material"] = "vidrio y acero", ["capacidad_tazas"] = "10" }, Assert.Single(products).Attributes);
+    }
+
+    /// <summary>
     /// Each variant carries what the store knows it by — its id, SKU, barcode and
     /// price — and what it varies by, in the store's words; a picture a variant
     /// names shows that variant's options.

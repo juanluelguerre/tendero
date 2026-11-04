@@ -80,7 +80,7 @@ public sealed class CatalogueExportReaderTests
             (exported.Code, exported.OnSale, exported.Name, exported.Slug, exported.Description, exported.Brand));
         Assert.Equal([new ExportedCategoryStep("APPAREL", "Clothing"), new ExportedCategoryStep("SHIRT", "T-shirts")], exported.Category);
         Assert.Equal([new ExportedPicture("front", "Front"), new ExportedPicture("back", null)], exported.Pictures);
-        Assert.Equal([new ExportedAttribute("GENDER", "gender", "WOMEN", "women")], exported.Attributes);
+        Assert.Equal([new ExportedAttribute("GENDER", "gender", "WOMEN", "women") { Kind = ExportedAttributeKind.Option }], exported.Attributes);
     }
 
     /// <summary>Each variant with its options labelled in the culture and in the product's order of axes; a discontinued one is not there.</summary>
@@ -183,7 +183,35 @@ public sealed class CatalogueExportReaderTests
             new StaticDefinitions(new AttributeDefinitions([.. Definitions().All, capacity])),
             new StaticCategories(Tree)).ProductsAsync("es", Ct));
 
-        Assert.Equal(new ExportedAttribute("CAPACITY_L", "capacidad", "1.5", "1.5 L"), exported.Attributes.Single(attribute => attribute.Code == "CAPACITY_L"));
+        Assert.Equal(new ExportedAttribute("CAPACITY_L", "capacidad", "1.5", "1.5 L") { Kind = ExportedAttributeKind.Number }, exported.Attributes.Single(attribute => attribute.Code == "CAPACITY_L"));
+    }
+
+    /// <summary>
+    /// Each attribute says what kind of value it is (the channel fix after P16-28): a channel
+    /// writes an option's label, a number without its unit and a yes or no as a word, and
+    /// cannot tell them apart from the rendered text alone.
+    /// </summary>
+    [Fact]
+    public async Task Each_attribute_says_what_kind_of_value_it_is()
+    {
+        var pan = AShirt();
+        pan.SetAttribute(Clock, AttributeValue.Numeric("CAPACITY_L", 1.5m));
+        pan.SetAttribute(Clock, AttributeValue.Boolean("INDUCTION", true));
+        pan.SetAttribute(Clock, AttributeValue.Plain("MPN", "TC-2026"));
+        var definitions = new AttributeDefinitions(
+        [
+            .. Definitions().All,
+            AttributeDefinition.Define(Clock, "CAPACITY_L", Text("capacidad", "capacity"), AttributeKind.Number, unit: "L"),
+            AttributeDefinition.Define(Clock, "INDUCTION", Text("inducción", "induction"), AttributeKind.Boolean),
+            AttributeDefinition.Define(Clock, "MPN", Text("referencia", "part number"), AttributeKind.Text),
+        ]);
+
+        var exported = Assert.Single(await new CatalogueExportReader(
+            new InMemoryProductCatalogReader(pan), new StaticDefinitions(definitions), new StaticCategories(Tree)).ProductsAsync("es", Ct));
+
+        Assert.Equal(
+            [("CAPACITY_L", ExportedAttributeKind.Number), ("GENDER", ExportedAttributeKind.Option), ("INDUCTION", ExportedAttributeKind.YesNo), ("MPN", ExportedAttributeKind.Text)],
+            exported.Attributes.Select(attribute => (attribute.Code, attribute.Kind)).Order());
     }
 
     private sealed class StaticDefinitions(AttributeDefinitions definitions) : IAttributeDefinitionReader
