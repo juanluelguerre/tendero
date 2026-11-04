@@ -261,6 +261,38 @@ Recorded at the round trip, not optimised: the first publication's time and
 calls, a product change's time to reach Shopify, a sale's time to come back
 through reconciliation, and Shopify's query cost per operation.
 
+### Measured at the round trip (2026-11-03, the lab store)
+
+| measure | value |
+|---|---|
+| First publication | 120 products in **111 s** (about 0.9 s each, one at a time), 0 refused; 18 drafts reached the store as `DRAFT` |
+| Calls per product | 1–4 reads to find it (the listed id first, so 1 after the first publication), `productSet`, and `publishablePublish` for one on sale |
+| Stock | 244 levels (every listed SKU at both warehouses), the first 196 in 94 s; none stale |
+| An order, Shopify → Tendero | **3 min 27 s** (± 10 s), by reconciliation every 5 min; the mark left at the order's time |
+| A shipment, Tendero → Shopify | **4 s** from the backoffice's *Ship* to `fulfillmentCreate`, with Shopify's email to the customer |
+| A sale's stock | Barcelona marked stale when the order arrived, set again by the next publication: 4 on hand, 1 reserved, margin 2 → Shopify 1 |
+| Query cost (reads) | `product(id:)` 1 point; the SKU search over 250 variants 24 requested, 2 actual; `productByIdentifier` 1; `shop { taxesIncluded }` 1 — against a bucket of 2,000 restoring 100 a second |
+
+A product change goes through the same outbox path as the shipment; its latency was
+not measured on its own. The mutations' cost was not read.
+
+**The bulk publication stays deferred** (scale rule): the whole catalogue takes
+under two minutes, once, and the reads cost a few points against a bucket of 2,000,
+so the limit is latency, not Shopify's budget. It is worth building only when a
+catalogue's first publication takes longer than a shopkeeper would wait — at this
+pace, some thousands of products.
+
+**Found by the round trip**, each fixed with a test first (notebook item 41): the
+reconciliation registered before the migrator; `productOptions` required for a
+product with no axes; a second copy of a product whose SKUs had changed since the
+seed — identity is now the listed id, the imported id, the SKUs, then the handle,
+and two holders of the SKUs are refused; an order for a published product skipped
+because only imported variants were mapped; listed SKUs with no stock row left at the
+store's own numbers, now 0; `files: null` sent as a value.
+
+**Open, for the author**: an order the reconciliation skips is never read again,
+because the mark moves past it.
+
 ## Evidence of use (ADR 0036)
 
 | signal | the question | the decision its value changes |
