@@ -365,6 +365,54 @@ public sealed class ShopifySalesChannelTests
         Assert.Empty(store.ProductInputs);
     }
 
+    // The three below were found by the Stryker run after P16-28 and P16-29.
+
+    /// <summary>Every SKU is asked for: the store may hold the product under its second variant's alone.</summary>
+    [Fact]
+    public async Task A_product_is_found_by_any_of_its_skus()
+    {
+        var (channel, store) = ChannelStore.Open();
+        var held = store.Hold("taza-de-gres", "TAZ-001-RED");
+        var twoColours = Mug() with
+        {
+            Variants =
+            [
+                new ChannelVariant("TAZ-001-BLU", null, new Money(12.5m, "EUR"), [new("Color", "Azul")]),
+                new ChannelVariant("TAZ-001-RED", null, new Money(12.5m, "EUR"), [new("Color", "Rojo")]),
+            ],
+        };
+
+        await channel.PublishAsync(twoColours, Ct);
+
+        Assert.Equal([held], store.Identifiers);
+    }
+
+    /// <summary>The SKUs are what both sides share: a store product holding them wins over another that happens to have the code's handle.</summary>
+    [Fact]
+    public async Task The_skus_are_asked_before_the_codes_handle()
+    {
+        var (channel, store) = ChannelStore.Open();
+        store.Hold("taz-001", "SOMETHING-ELSE");
+        var bySkus = store.Hold("taza-de-gres", "TAZ-001-BLU");
+
+        await channel.PublishAsync(Mug(), Ct);
+
+        Assert.Equal([bySkus], store.Identifiers);
+    }
+
+    /// <summary>A variant without a SKU is not searched for: an empty SKU would match whatever the store left without one.</summary>
+    [Fact]
+    public async Task A_variant_without_a_sku_is_not_searched_for()
+    {
+        var (channel, store) = ChannelStore.Open();
+        store.Hold("unrelated", "");
+        var withoutSku = Mug() with { Variants = [.. Mug().Variants, new ChannelVariant("", null, new Money(12.5m, "EUR"), [new("Color", "Verde")])] };
+
+        await channel.PublishAsync(withoutSku, Ct);
+
+        Assert.Equal([null], store.Identifiers);
+    }
+
     /// <summary>
     /// A product without axes still has an option in Shopify, its default one: the store
     /// refused all 101 such products on the lab store's round trip (2026-11-03) with
