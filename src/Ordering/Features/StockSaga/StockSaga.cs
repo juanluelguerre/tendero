@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
@@ -46,6 +47,11 @@ public sealed class ReserveStockOnOrderPlaced(
     ILogger<ReserveStockOnOrderPlaced> logger) : IDomainEventHandler<OrderPlaced>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
+    private static readonly Meter Meter = new(TelemetrySources.Ordering);
+
+    private static readonly Counter<long> Oversold = Meter.CreateCounter<long>(
+        "tendero.channel.oversold", unit: "{order}",
+        description: "Orders a sales channel took for stock that could not be held: the evidence the stock margin is judged by.");
 
     public async Task HandleAsync(OrderPlaced domainEvent, CancellationToken cancellationToken)
     {
@@ -94,7 +100,17 @@ public sealed class ReserveStockOnOrderPlaced(
         // The refusal, in the customer's words rather than a code. It is the
         // most interesting row in the system, and it is why the ledger writes a
         // released reservation instead of failing silently.
-        order.Cancel(clock, OrderStop.OutOfStock, outcome.Reason);
+        //
+        // An order a channel took is not cancelled (ADR 0070): the channel already
+        // took the money, and cancelling would hide what the margin exists to bound.
+        // It is kept, flagged, and left unconfirmed for a person to act on.
+        if (order.ReceivedFrom is { } origin)
+        {
+            order.MarkOversold(clock, outcome.Reason ?? "The stock could not be held.");
+            Oversold.Add(1, new KeyValuePair<string, object?>("channel", origin.Source));
+        }
+        else
+            order.Cancel(clock, OrderStop.OutOfStock, outcome.Reason);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         activity?.SetTag("ordering.cancelled_reason", outcome.Reason);

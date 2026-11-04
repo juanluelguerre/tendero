@@ -22,7 +22,14 @@ internal sealed class ShopifyAdmin(
     private const int Attempts = 5;
 
     /// <summary>Sends a query or mutation and returns its <c>data</c>.</summary>
-    public async Task<JsonElement> QueryAsync(string query, CancellationToken ct)
+    public Task<JsonElement> QueryAsync(string query, CancellationToken ct) => QueryAsync(query, null, ct);
+
+    /// <summary>
+    /// Sends a query or mutation with its variables, and returns its <c>data</c>. A
+    /// mutation's data travels as variables and never inside its text (phase 16, S3):
+    /// a product's name is the shopkeeper's, quotes and all.
+    /// </summary>
+    public async Task<JsonElement> QueryAsync(string query, object? variables, CancellationToken ct)
     {
         var refused = false;
 
@@ -30,7 +37,7 @@ internal sealed class ShopifyAdmin(
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, Endpoint())
             {
-                Content = JsonContent.Create(new { query }),
+                Content = variables is null ? JsonContent.Create(new { query }) : JsonContent.Create(new { query, variables }),
             };
             request.Headers.Add("X-Shopify-Access-Token", await tokens.CurrentAsync(ct));
 

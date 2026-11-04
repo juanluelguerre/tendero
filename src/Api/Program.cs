@@ -14,6 +14,8 @@ using ElGuerre.Tendero.Assist.Steward;
 using ElGuerre.Tendero.Assist.Tino;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
+using ElGuerre.Tendero.Channels;
+using ElGuerre.Tendero.Channels.Features.ListHeldOrders;
 using ElGuerre.Tendero.DevIssuer;
 using ElGuerre.Tendero.Exports;
 using ElGuerre.Tendero.Exports.Features.ProductFeed;
@@ -57,7 +59,8 @@ builder.Services.AddTenderoCqrs(
     typeof(ReviewClaimsEndpoints).Assembly,
     typeof(ApproveProposalsCommand).Assembly,
     typeof(TranscribeSpeechQuery).Assembly,
-    typeof(ProductFeedQuery).Assembly);
+    typeof(ProductFeedQuery).Assembly,
+    typeof(ListHeldOrdersQuery).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -70,6 +73,9 @@ builder.Services.Configure<PrivacyOptions>(builder.Configuration.GetSection(Priv
 builder.Services.AddCatalog(builder.Configuration);
 // A Shopify store as a catalogue source, only when its credentials are set (phase 16).
 builder.Services.AddShopify(builder.Configuration);
+// The sales channels' context (ADR 0070): the API reads what it holds — the orders a channel
+// took that could not be received (P16-29) — while the worker publishes and reconciles.
+builder.Services.AddChannels(builder.Configuration);
 // A store's migration as one operation across the contexts (P16-21): composed here, where they all are.
 builder.Services.AddScoped<StoreMigration>();
 // What leaves the shop: the product feed, the catalogue for another platform, orders for the accountant (phase 16, E-1).

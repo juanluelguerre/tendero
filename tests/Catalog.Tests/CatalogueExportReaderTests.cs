@@ -80,7 +80,7 @@ public sealed class CatalogueExportReaderTests
             (exported.Code, exported.OnSale, exported.Name, exported.Slug, exported.Description, exported.Brand));
         Assert.Equal([new ExportedCategoryStep("APPAREL", "Clothing"), new ExportedCategoryStep("SHIRT", "T-shirts")], exported.Category);
         Assert.Equal([new ExportedPicture("front", "Front"), new ExportedPicture("back", null)], exported.Pictures);
-        Assert.Equal([new ExportedAttribute("GENDER", "gender", "WOMEN", "women")], exported.Attributes);
+        Assert.Equal([new ExportedAttribute("GENDER", "gender", "WOMEN", "women") { Kind = ExportedAttributeKind.Option }], exported.Attributes);
     }
 
     /// <summary>Each variant with its options labelled in the culture and in the product's order of axes; a discontinued one is not there.</summary>
@@ -97,6 +97,19 @@ public sealed class CatalogueExportReaderTests
         Assert.Equal("reduced", exported.Variants[1].TaxClass);
     }
 
+    /// <summary>Where it came from leaves with it, so a channel that is also a source (Shopify) finds its own product.</summary>
+    [Fact]
+    public async Task A_product_leaves_with_the_sources_it_was_imported_from()
+    {
+        var shirt = AShirt();
+        shirt.LinkExternal(Clock, "seed", "B0SHIRT01");
+        shirt.LinkExternal(Clock, "Shopify", "gid://shopify/Product/7", "technical-t-shirt");
+
+        var exported = Assert.Single(await Reader(shirt).ProductsAsync("es", Ct));
+
+        Assert.Equal([new ExportedReference("seed", "B0SHIRT01"), new ExportedReference("shopify", "gid://shopify/Product/7")], exported.References);
+    }
+
     [Fact]
     public async Task A_draft_leaves_said_as_not_on_sale_and_an_archived_product_does_not_leave()
     {
@@ -110,6 +123,38 @@ public sealed class CatalogueExportReaderTests
 
         Assert.Equal((draft.Code, false), (exported.Code, exported.OnSale));
         Assert.Empty(exported.Category);
+    }
+
+    /// <summary>
+    /// One product by its code, as the whole export says it (phase 16, S3): what a sales
+    /// channel is told when that product changes. Archived or unknown, it is not there.
+    /// </summary>
+    [Fact]
+    public async Task One_product_leaves_by_its_code_as_the_whole_export_says_it_and_an_archived_one_does_not()
+    {
+        var shirt = AShirt();
+        var archived = Product.Create(Clock, Text("Vaso", "Glass"), new Money(5m, "EUR"));
+        archived.AddVariant(Clock, "GLASS-DEFAULT", new Money(5m, "EUR"));
+        archived.Archive(Clock);
+        var reader = Reader(shirt, archived);
+
+        var one = await reader.ProductAsync(shirt.Code, "en", Ct);
+
+        Assert.Equal(Assert.Single(await reader.ProductsAsync("en", Ct)), one, ExportedProductComparer.Instance);
+        Assert.Null(await reader.ProductAsync(archived.Code, "en", Ct));
+        Assert.Null(await reader.ProductAsync("NO-SUCH-CODE", "en", Ct));
+    }
+
+    /// <summary>Records holding lists compare by reference; the same product compared by what it says.</summary>
+    private sealed class ExportedProductComparer : IEqualityComparer<ExportedProduct?>
+    {
+        public static readonly ExportedProductComparer Instance = new();
+
+        public bool Equals(ExportedProduct? x, ExportedProduct? y) =>
+            x is not null && y is not null
+            && System.Text.Json.JsonSerializer.Serialize(x) == System.Text.Json.JsonSerializer.Serialize(y);
+
+        public int GetHashCode(ExportedProduct? obj) => obj?.Code.GetHashCode(StringComparison.Ordinal) ?? 0;
     }
 
     // The tests below were found by the exports' Stryker close: each mutant they name survived the suite above.
@@ -138,7 +183,35 @@ public sealed class CatalogueExportReaderTests
             new StaticDefinitions(new AttributeDefinitions([.. Definitions().All, capacity])),
             new StaticCategories(Tree)).ProductsAsync("es", Ct));
 
-        Assert.Equal(new ExportedAttribute("CAPACITY_L", "capacidad", "1.5", "1.5 L"), exported.Attributes.Single(attribute => attribute.Code == "CAPACITY_L"));
+        Assert.Equal(new ExportedAttribute("CAPACITY_L", "capacidad", "1.5", "1.5 L") { Kind = ExportedAttributeKind.Number }, exported.Attributes.Single(attribute => attribute.Code == "CAPACITY_L"));
+    }
+
+    /// <summary>
+    /// Each attribute says what kind of value it is (the channel fix after P16-28): a channel
+    /// writes an option's label, a number without its unit and a yes or no as a word, and
+    /// cannot tell them apart from the rendered text alone.
+    /// </summary>
+    [Fact]
+    public async Task Each_attribute_says_what_kind_of_value_it_is()
+    {
+        var pan = AShirt();
+        pan.SetAttribute(Clock, AttributeValue.Numeric("CAPACITY_L", 1.5m));
+        pan.SetAttribute(Clock, AttributeValue.Boolean("INDUCTION", true));
+        pan.SetAttribute(Clock, AttributeValue.Plain("MPN", "TC-2026"));
+        var definitions = new AttributeDefinitions(
+        [
+            .. Definitions().All,
+            AttributeDefinition.Define(Clock, "CAPACITY_L", Text("capacidad", "capacity"), AttributeKind.Number, unit: "L"),
+            AttributeDefinition.Define(Clock, "INDUCTION", Text("inducción", "induction"), AttributeKind.Boolean),
+            AttributeDefinition.Define(Clock, "MPN", Text("referencia", "part number"), AttributeKind.Text),
+        ]);
+
+        var exported = Assert.Single(await new CatalogueExportReader(
+            new InMemoryProductCatalogReader(pan), new StaticDefinitions(definitions), new StaticCategories(Tree)).ProductsAsync("es", Ct));
+
+        Assert.Equal(
+            [("CAPACITY_L", ExportedAttributeKind.Number), ("GENDER", ExportedAttributeKind.Option), ("INDUCTION", ExportedAttributeKind.YesNo), ("MPN", ExportedAttributeKind.Text)],
+            exported.Attributes.Select(attribute => (attribute.Code, attribute.Kind)).Order());
     }
 
     private sealed class StaticDefinitions(AttributeDefinitions definitions) : IAttributeDefinitionReader

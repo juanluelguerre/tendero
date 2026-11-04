@@ -78,6 +78,9 @@ public sealed record OrderPaymentFailed(OrderId OrderId, string Reason, DateTime
 public sealed record OrderConfirmed(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
 public sealed record OrderCancelled(OrderId OrderId, string Reason, DateTimeOffset OccurredAt) : IDomainEvent;
 
+/// <summary>A channel took money for stock Tendero could not hold (phase 16, S3; ADR 0070): a person must act.</summary>
+public sealed record OrderOversold(OrderId OrderId, string Reason, DateTimeOffset OccurredAt) : IDomainEvent;
+
 /// <summary>
 /// Why an order stopped, in the shape `AppliedDiscount` already established: a
 /// CODE the interface localizes, and a DETAIL carrying the specifics.
@@ -262,6 +265,19 @@ public sealed class Order : AggregateRoot
     public OrderOrigin? ImportedFrom { get; private set; }
 
     /// <summary>
+    /// Where an order a sales channel took came from (phase 16, S3; ADR 0070): the
+    /// channel, its id there and the number its customer was told. Unlike an imported
+    /// one it is live — Tendero ships it.
+    /// </summary>
+    public OrderOrigin? ReceivedFrom { get; private set; }
+
+    /// <summary>
+    /// Why the stock of an order a channel took could not be held, in the ledger's
+    /// words; null the rest of the time. The order is kept, for a person to act on.
+    /// </summary>
+    public string? Oversold { get; private set; }
+
+    /// <summary>
     /// What came off, frozen as codes and labels. Backed by a list for the same
     /// reason the lines are: EF maps a private collection into one JSON column,
     /// and the aggregate keeps the only way to add to it.
@@ -385,6 +401,67 @@ public sealed class Order : AggregateRoot
         order.taxes.AddRange(taxes ?? []);
         order.Raise(new OrderPlaced(order.Id, now));
         return order;
+    }
+
+    /// <summary>
+    /// An order a sales channel took (phase 16, S3; ADR 0070). It is placed as any
+    /// order is — every check, <c>Pending</c>, <c>OrderPlaced</c> so the saga holds its
+    /// stock — on the day the channel says, and authorised at once with the payment the
+    /// channel already captured, so nothing here captures or voids money that is not
+    /// Tendero's. No new status: what a shopkeeper does with it is what they do with any.
+    ///
+    /// Keyed by its channel (<c>channel:shopify:…</c>), so the webhook and the
+    /// reconciliation that both bring it make one order.
+    /// </summary>
+    public static Order Received(
+        TimeProvider clock,
+        OrderOrigin origin,
+        OrderChannel channel,
+        CustomerId customerId,
+        IReadOnlyList<OrderLine> lines,
+        Address shippingAddress,
+        Address billingAddress,
+        OrderShipping shipping,
+        OrderTotals totals,
+        DateTimeOffset placedAt,
+        IReadOnlyList<OrderDiscount>? discounts = null,
+        IReadOnlyList<OrderTax>? taxes = null,
+        string culture = "es",
+        string? contactEmail = null)
+    {
+        ArgumentNullException.ThrowIfNull(origin);
+        var key = ReceivedKey(origin.Source, origin.ExternalId);
+
+        var order = Place(
+            clock, customerId, key, lines, shippingAddress, billingAddress, shipping,
+            new OrderQuote(key, origin.Source, placedAt), totals, discounts, taxes, culture,
+            contactEmail: contactEmail, channel: channel);
+        order.ReceivedFrom = origin;
+        order.CreatedAt = placedAt;
+        order.AuthorizePayment(clock, new OrderPayment(origin.Source, origin.ExternalId, origin.ExternalId));
+        return order;
+    }
+
+    /// <summary>The key an order a channel took is found by: the same however it arrived.</summary>
+    public static string ReceivedKey(string channel, string externalId) => $"channel:{channel}:{externalId}";
+
+    /// <summary>
+    /// The channel took the money and the stock is not there (ADR 0070). The order is
+    /// kept and marked: cancelling it would hide what the margin exists to bound. Only an
+    /// order a channel took can be oversold; one placed here was refused at checkout.
+    /// </summary>
+    public void MarkOversold(TimeProvider clock, string reason)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        if (ReceivedFrom is null)
+            throw new InvalidOperationException($"Order {Id} was placed here: its stock is refused at checkout, never oversold.");
+
+        if (Oversold is not null)
+            return;
+
+        Oversold = reason;
+        UpdatedAt = clock.GetUtcNow();
+        Raise(new OrderOversold(Id, reason, UpdatedAt));
     }
 
     /// <summary>

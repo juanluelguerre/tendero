@@ -20,6 +20,30 @@ public interface IOrderSourceConnector
     IReadOnlyList<OrderNote> SourceNotes => [];
 }
 
+/// <summary>
+/// A sales channel's orders (phase 16, S3; ADR 0070): the orders a channel Tendero
+/// publishes to took, read so Tendero can ship them. A channel is a source too, so the
+/// orders come as <see cref="SourceOrder"/> through the mapping the import already holds;
+/// keyed by the channel's name, like the import's sources.
+/// </summary>
+public interface IChannelOrderSource
+{
+    /// <summary>The channel's stable lowercase key: <c>shopify</c>.</summary>
+    string Channel { get; }
+
+    /// <summary>The orders changed at or after <paramref name="since"/>, oldest change first.</summary>
+    IAsyncEnumerable<SourceOrder> UpdatedSinceAsync(DateTimeOffset since, CancellationToken cancellationToken = default);
+
+    /// <summary>One order by the channel's id for it; null when the channel has none.</summary>
+    Task<SourceOrder?> FindAsync(string externalId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>The channels Tendero receives orders from, by key (ADR 0003).</summary>
+public interface IChannelOrderSources
+{
+    IChannelOrderSource Get(string channel);
+}
+
 /// <summary>Where an order stands at the source: finished, cancelled, or still on its way.</summary>
 public enum SourceOrderState
 {
@@ -32,6 +56,7 @@ public enum SourceOrderState
 /// <param name="Number">The number the merchant and the buyer knew it by (<c>#1001</c>).</param>
 /// <param name="CustomerExternalId">The source's id for the buyer, when it had one: the imported customer it belongs to.</param>
 /// <param name="ShippedAt">When it left, for a fulfilled order: the returns window counts from it.</param>
+/// <param name="UpdatedAt">When the source last changed it: where a sales channel's reconciliation goes on from (phase 16, S3).</param>
 public sealed record SourceOrder(
     string ExternalId,
     string Number,
@@ -48,7 +73,8 @@ public sealed record SourceOrder(
     SourceOrderTotals Totals,
     IReadOnlyList<SourceDiscount> Discounts,
     IReadOnlyList<SourceTax> Taxes,
-    IReadOnlyList<SourceRefund> Refunds);
+    IReadOnlyList<SourceRefund> Refunds,
+    DateTimeOffset? UpdatedAt = null);
 
 /// <param name="Sku">The SKU the catalogue sells it under; null when the catalogue never had it.</param>
 /// <param name="ExternalId">The source's id for the line: what a refund names it by.</param>

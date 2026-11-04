@@ -429,6 +429,29 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
+    /// Channels references SharedKernel and nothing else (phase 16, S3; ADR 0070):
+    /// a product reaches it by its code and stock by its SKU, as values the worker's
+    /// bridge reads from Catalog's and Inventory's ports. The moment it references a
+    /// context, a channel's state starts to depend on that context's entities.
+    /// </summary>
+    [Fact]
+    public void Channels_knows_only_the_shared_kernel()
+    {
+        var sharedKernel = Solution.SharedKernel.GetName().Name;
+
+        var contexts = Solution.Channels.GetReferencedAssemblies()
+            .Select(reference => reference.Name)
+            .OfType<string>()
+            .Where(name => name.StartsWith("ElGuerre.Tendero.", StringComparison.Ordinal)
+                           && name != sharedKernel)
+            .ToArray();
+
+        Assert.True(contexts.Length == 0,
+            $"Channels references {string.Join(", ", contexts)}. It may reference only {sharedKernel} — "
+            + "a channel is told values, by code and SKU, never another context's entities (ADR 0070).");
+    }
+
+    /// <summary>
     /// And Ordering only ever sees Inventory's PORTS.
     ///
     /// The reference exists, deliberately, and this is what keeps it to an

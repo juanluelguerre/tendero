@@ -19,6 +19,13 @@ public interface ICatalogueExport
     /// fallback. A discontinued variant is left out: nothing anywhere may sell it.
     /// </summary>
     Task<IReadOnlyList<ExportedProduct>> ProductsAsync(string culture, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// One live product by its code, said as <see cref="ProductsAsync"/> says it; null when it
+    /// is archived or unknown. What a sales channel is told when that product changes
+    /// (phase 16, S3).
+    /// </summary>
+    Task<ExportedProduct?> ProductAsync(string code, string culture, CancellationToken cancellationToken = default);
 }
 
 /// <param name="Code">The public code: what the storefront's address and a feed's group are made of (ADR 0026).</param>
@@ -36,7 +43,18 @@ public sealed record ExportedProduct(
     IReadOnlyList<ExportedCategoryStep> Category,
     IReadOnlyList<ExportedPicture> Pictures,
     IReadOnlyList<ExportedAttribute> Attributes,
-    IReadOnlyList<ExportedVariant> Variants);
+    IReadOnlyList<ExportedVariant> Variants)
+{
+    /// <summary>
+    /// Where the product came from: each source it was imported from, by that source's
+    /// id. A channel that is also a source (Shopify, S1 then S3) finds its own product by it.
+    /// </summary>
+    public IReadOnlyList<ExportedReference> References { get; init; } = [];
+}
+
+/// <param name="Source">The source's key, lower case: <c>shopify</c>, <c>seed</c>.</param>
+/// <param name="ExternalId">The source's own id for it, such as <c>gid://shopify/Product/123</c>.</param>
+public sealed record ExportedReference(string Source, string ExternalId);
 
 public sealed record ExportedCategoryStep(string Code, string Name);
 
@@ -45,7 +63,20 @@ public sealed record ExportedPicture(string ImageId, string? Alt);
 
 /// <param name="Key">The value free of any culture — an option's code, a number in invariant form — for whoever maps it to another vocabulary.</param>
 /// <param name="Value">The value as a shopper reads it in the culture; null for a yes or no.</param>
-public sealed record ExportedAttribute(string Code, string Label, string Key, string? Value);
+public sealed record ExportedAttribute(string Code, string Label, string Key, string? Value)
+{
+    /// <summary>What kind of value it is, so another vocabulary writes each the way it should: an option's label, a number without its unit, a yes or no as a word.</summary>
+    public ExportedAttributeKind Kind { get; init; }
+}
+
+/// <summary>The kinds of value an attribute leaves the shop as; a text, translated or not, is a text.</summary>
+public enum ExportedAttributeKind
+{
+    Text,
+    Option,
+    Number,
+    YesNo,
+}
 
 /// <param name="Options">What it varies by, in the product's order of axes.</param>
 /// <param name="PictureIds">Its gallery: its colour's pictures, then the ones every variant shares.</param>

@@ -4,6 +4,7 @@ using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Channels.Ports;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Mcp;
@@ -29,6 +30,7 @@ internal static class Solution
     public static readonly Assembly Assist = typeof(ActionProposal).Assembly;
     public static readonly Assembly AI = typeof(ModelProfile).Assembly;
     public static readonly Assembly Catalog = typeof(Product).Assembly;
+    public static readonly Assembly Channels = typeof(ISalesChannel).Assembly;
     public static readonly Assembly Ordering = typeof(Order).Assembly;
     public static readonly Assembly Search = typeof(IProductIndexer).Assembly;
     public static readonly Assembly Inventory = typeof(StockItem).Assembly;
@@ -44,7 +46,7 @@ internal static class Solution
     public static readonly Assembly Ucp = typeof(UcpProfile).Assembly;
 
     /// <summary>Contexts and capabilities: where the domain and the slices live.</summary>
-    public static readonly Assembly[] Contexts = [Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search];
+    public static readonly Assembly[] Contexts = [Accounts, Assist, Catalog, Channels, Inventory, Knowledge, Ordering, Pricing, Search];
 
     /// <summary>
     /// Transports, which are deliberately NOT in <see cref="Contexts"/>: they own
@@ -72,7 +74,7 @@ internal static class Solution
 
     public static readonly Assembly[] All =
     [
-        SharedKernel, AI, Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search,
+        SharedKernel, AI, Accounts, Assist, Catalog, Channels, Inventory, Knowledge, Ordering, Pricing, Search,
         Mcp, Ucp, Shopify, Exports, Persistence, ServiceDefaults, Api, Workers, SearchEval
     ];
 }

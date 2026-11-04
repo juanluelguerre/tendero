@@ -110,32 +110,60 @@ internal static class ShopifyQueries
     /// order's day, and a refund's, is when it was processed: an order the store
     /// imported from elsewhere was created on the day it arrived (P16-16).
     /// </summary>
-    public static string Orders(string? after)
+    public static string Orders(string? after) => OrdersPage(after, "PROCESSED_AT", search: null);
+
+    /// <summary>
+    /// A page of the orders updated at or after <paramref name="since"/>, oldest change
+    /// first (phase 16, S3): what a sales channel's reconciliation reads, from where its
+    /// last run got to. The same fields as an import's, so one mapping serves both.
+    /// </summary>
+    public static string OrdersUpdatedSince(DateTimeOffset since, string? after) =>
+        OrdersPage(after, "UPDATED_AT", $"updated_at:>='{since.UtcDateTime:yyyy-MM-ddTHH:mm:ssZ}'");
+
+    /// <summary>One order by its id, with the same fields: what a webhook names (phase 16, S3).</summary>
+    public static string Order(string id) =>
+        $$"""
+        { order(id: {{JsonSerializer.Serialize(id)}}) {
+            {{OrderFields}}
+          } }
+        """;
+
+    private static string OrdersPage(string? after, string sortKey, string? search)
     {
         var cursor = after is null ? "" : $", after: {JsonSerializer.Serialize(after)}";
-        const string money = "{ shopMoney { amount currencyCode } }";
-        const string address = "{ name address1 address2 city provinceCode zip countryCodeV2 phone }";
-        const string allocations = $"discountAllocations {{ allocatedAmountSet {money} discountApplication {{ index }} }}";
+        // A search reads as written in a trace: it goes into GraphQL, never into a page.
+        var query = search is null ? "" : $", query: {JsonSerializer.Serialize(search, Readable)}";
 
         return
             $$"""
-            { orders(first: 50, sortKey: PROCESSED_AT{{cursor}}) {
+            { orders(first: 50, sortKey: {{sortKey}}{{query}}{{cursor}}) {
                 pageInfo { hasNextPage endCursor }
                 nodes {
-                  id name processedAt cancelledAt displayFulfillmentStatus email customerLocale
-                  customer { id }
-                  totalDiscountsSet {{money}} totalTaxSet {{money}} totalPriceSet {{money}}
-                  taxLines { title rate priceSet {{money}} }
-                  shippingAddress {{address}} billingAddress {{address}}
-                  shippingLine { title originalPriceSet {{money}} {{allocations}} }
-                  fulfillments { createdAt }
-                  discountApplications(first: 20) { nodes { index ... on DiscountCodeApplication { code } ... on AutomaticDiscountApplication { title } ... on ManualDiscountApplication { title } } }
-                  lineItems(first: 250) { nodes { id title variantTitle quantity variant { id } originalUnitPriceSet {{money}} {{allocations}} } }
-                  refunds { id processedAt totalRefundedSet {{money}} refundLineItems(first: 250) { nodes { quantity lineItem { id } } } }
+                  {{OrderFields}}
                 }
               } }
             """;
     }
+
+    private static readonly JsonSerializerOptions Readable = new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+    private const string Money = "{ shopMoney { amount currencyCode } }";
+    private const string Address = "{ name address1 address2 city provinceCode zip countryCodeV2 phone }";
+    private const string Allocations = $"discountAllocations {{ allocatedAmountSet {Money} discountApplication {{ index }} }}";
+
+    private const string OrderFields =
+        $$"""
+        id name processedAt updatedAt cancelledAt displayFulfillmentStatus email customerLocale
+              customer { id }
+              totalDiscountsSet {{Money}} totalTaxSet {{Money}} totalPriceSet {{Money}}
+              taxLines { title rate priceSet {{Money}} }
+              shippingAddress {{Address}} billingAddress {{Address}}
+              shippingLine { title originalPriceSet {{Money}} {{Allocations}} }
+              fulfillments { createdAt }
+              discountApplications(first: 20) { nodes { index ... on DiscountCodeApplication { code } ... on AutomaticDiscountApplication { title } ... on ManualDiscountApplication { title } } }
+              lineItems(first: 250) { nodes { id title variantTitle quantity variant { id sku } originalUnitPriceSet {{Money}} {{Allocations}} } }
+              refunds { id processedAt totalRefundedSet {{Money}} refundLineItems(first: 250) { nodes { quantity lineItem { id } } } }
+        """;
 
     /// <summary>
     /// A page of discounts, every kind the store runs (S2b, P16-19), with what the

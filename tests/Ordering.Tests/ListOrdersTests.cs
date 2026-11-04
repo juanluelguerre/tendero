@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Features.ListOrders;
 using ElGuerre.Tendero.Ordering.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
 
@@ -83,6 +84,25 @@ public sealed class ListOrdersTests
         Assert.Equal((true, true), Paid(OrderSummary.Of(captured)));
 
         static (bool, bool) Paid(OrderSummary row) => (row.IsPaid, row.IsCaptured);
+    }
+
+    /// <summary>An order a channel took for stock Tendero could not hold says why on its row (phase 16, S3; ADR 0070).</summary>
+    [Fact]
+    public void A_row_says_when_a_channel_sold_what_could_not_be_held()
+    {
+        var clock = TimeProvider.System;
+        var lines = new[] { OrderBuilder.Line(10m, "EUR") };
+        var address = Address.Create("Ana Ruiz", "Calle Mayor 1", null, "Madrid", null, "28013", "ES");
+        var received = Order.Received(clock, new OrderOrigin("shopify", "7001", "#1042"), OrderChannel.Shopify, CustomerId.New(), lines,
+            address, address, new OrderShipping("shopify:shipping", "Envío", Money.Zero("EUR"), null),
+            new OrderTotals(new Money(10m, "EUR"), Money.Zero("EUR"), Money.Zero("EUR"), Money.Zero("EUR"), new Money(10m, "EUR")),
+            clock.GetUtcNow());
+
+        Assert.Null(OrderSummary.Of(received).Oversold);
+
+        received.MarkOversold(clock, "TAZ-001-BLU: 2 asked for, 1 available.");
+
+        Assert.Equal("TAZ-001-BLU: 2 asked for, 1 available.", OrderSummary.Of(received).Oversold);
     }
 
     [Fact]

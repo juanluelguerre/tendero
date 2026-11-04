@@ -2,6 +2,7 @@ using ElGuerre.Tendero.Accounts.Ports;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Ports;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Channels.Ports;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.Ordering.Ports;
@@ -147,6 +148,12 @@ public static class PersistenceServiceCollectionExtensions
         // repository and the shop's reader, one instance per scope.
         services.AddScoped<ICampaignRepository, EfCampaignRepository>();
         services.AddScoped<ICampaignReader, EfCampaignReader>();
+
+        // What each sales channel has been told (phase 16, S3; ADR 0070).
+        services.AddScoped<IChannelListings, EfChannelListings>();
+        services.AddScoped<IChannelStockLevels, EfChannelStockLevels>();
+        services.AddScoped<IChannelCursors, EfChannelCursors>();
+        services.AddScoped<IHeldChannelOrders, EfHeldChannelOrders>();
 
         return services;
     }

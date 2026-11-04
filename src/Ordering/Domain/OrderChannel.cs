@@ -3,8 +3,8 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Ordering.Domain;
 
 /// <summary>
-/// The way an order came in (R-9, D-7): the storefront, an agent over MCP, or an
-/// agent over UCP's REST. Recorded on the order when it is placed, from the
+/// The way an order came in (R-9, D-7): the storefront, an agent over MCP, an
+/// agent over UCP's REST, or a sales channel that took it (phase 16, S3: Shopify). Recorded on the order when it is placed, from the
 /// request's <see cref="Actor.Surface"/>, because afterwards nothing tells them
 /// apart — an order placed over MCP and one over UCP leave the same checkout
 /// session behind. Null on an order placed before it was recorded.
@@ -14,6 +14,9 @@ public enum OrderChannel
     Web,
     Mcp,
     Ucp,
+
+    /// <summary>Taken by a Shopify store Tendero publishes to (ADR 0070); never a request's surface.</summary>
+    Shopify,
 }
 
 public static class OrderChannels

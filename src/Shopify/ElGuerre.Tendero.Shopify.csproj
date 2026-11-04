@@ -20,9 +20,15 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <!-- The store's webhook (S3): one Carter module, the package the contexts already use. -->
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="../Accounts/ElGuerre.Tendero.Accounts.csproj" />
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Channels/ElGuerre.Tendero.Channels.csproj" />
     <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
     <ProjectReference Include="../Pricing/ElGuerre.Tendero.Pricing.csproj" />

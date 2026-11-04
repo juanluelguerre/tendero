@@ -28,12 +28,15 @@ public sealed class SalesMixTests
     [Fact]
     public void Sales_split_by_the_channel_they_came_through()
     {
-        List<Order> orders = [Sale(OrderChannel.Web), Sale(OrderChannel.Web), Sale(OrderChannel.Mcp), Sale(OrderChannel.Ucp)];
+        List<Order> orders = [Sale(OrderChannel.Web), Sale(OrderChannel.Web), Sale(OrderChannel.Mcp), Sale(OrderChannel.Ucp), Sale(OrderChannel.Shopify)];
 
         var mix = SalesMixFigures.Of(DashboardPeriod.Week, orders);
 
         Assert.Equal(
-            [new ChannelSales(OrderChannel.Web, 2, Eur(29.90m)), new ChannelSales(OrderChannel.Mcp, 1, Eur(14.95m)), new ChannelSales(OrderChannel.Ucp, 1, Eur(14.95m))],
+            [
+                new ChannelSales(OrderChannel.Web, 2, Eur(29.90m)), new ChannelSales(OrderChannel.Mcp, 1, Eur(14.95m)),
+                new ChannelSales(OrderChannel.Ucp, 1, Eur(14.95m)), new ChannelSales(OrderChannel.Shopify, 1, Eur(14.95m)),
+            ],
             mix.ByChannel);
     }
 

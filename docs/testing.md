@@ -99,6 +99,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `src/AI` | `AI.Tests` | 89.10 % | 71.93 % | 2026-10-17 · phase 14's close, the parallel method with coverage per mutant (75.00 % since 2026-10-09, measured per test) |
 | `src/Shopify` | `Shopify.Tests` | 92.64 % | 86.29 % | 2026-10-24 · phase 16 S2a's close, first baseline, third run, coverage per mutant (81.63 % on run 1) |
 | `src/Exports` | `Exports.Tests` | 92.97 % | 87.19 % | 2026-10-28 · the exports' close (E-1 to E-4), first baseline, second run, coverage per mutant (63.04 % on run 1) |
+| `src/Channels` | `Channels.Tests` | 91.78 % | 90.54 % | 2026-11-02 · phase 16 S3's close, first baseline, third run (83.93 % on run 1) |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -1815,6 +1816,139 @@ Hand mutations after run 2, each red, each restored: a missing vendor written as
 word, a missing picture given a position, an English header renamed, shipping said
 in English to a Spanish reader, the counter renamed. Reports:
 `docs/blog/reports/2026-10-28-phase-16-exports/stryker/`.
+
+### Phase 16 S3's close: Shopify as a sales channel (P16-22 to P16-27)
+
+2026-11-02. Mutated: the files changed since S2's tag (`phase/shopify`), project by
+project, with `stryker-parallel.mjs --since phase/shopify` from `HEAD` — the tests
+that closed each round were committed before the next, since a worktree is made
+from `HEAD`. `src/Channels` is a new context, measured whole (every file is the
+phase's). No report is kept (rule 6).
+
+| Project | Mutated with | Run 1 | Last run | Survivors |
+|---|---|---|---|---|
+| `src/Channels`, whole (new) | `Channels.Tests` | 83.93 % (63.51 % of total) | **91.78 %** (90.54 % of total), third run, first baseline | 9 → 9 → 6 |
+| `src/Shopify`, 7 files | `Shopify.Tests` | 87.84 % | **94.61 %** (87.33 % of total) | 49 → 22 |
+| `src/Ordering`, 11 files | `Ordering.Tests`, `Integration.Tests` | 69.79 % | **78.63 %** | 103 → 75, 3 of them on S3's lines |
+| `src/Catalog`, `ICatalogueExport`'s reader | `Catalog.Tests` | **100 %** (9 mutants) | — | 0 |
+
+Channels' second run found nothing new in the slices and reached the composition
+the first left uncovered, which is why its survivors stayed nine while what they
+were changed. Shopify stays above its 92.64 % baseline. Every gap below was closed
+with a test and each proven by a hand mutation, 56 of them (Channels 9, Shopify 25,
+Ordering 22), each seen red and restored, listed in the two commits' messages.
+
+**What Stryker found, and what closed it.**
+
+- **The stock slice's bookkeeping**: the stale mark cleared when the channel's own
+  number is published again, the key that names each change (`none>3`, `3>6`), the
+  save after a set, and the counter's `stale` outcome — the in-memory channel now
+  keeps what it was sent (`StockSent`).
+- **The composition had no test**: `AddChannels` was only ever composed by the
+  integration tests. `ChannelsCompositionTests` holds the margin (2, configured, and
+  0 allowed), the culture, the three validations, and the channels found by key and
+  listed in order.
+- **Shopify's fake never refused a write**: four `Refuse` calls (productSet,
+  productUpdate, publishablePublish, fulfillmentCreate) could be deleted. The fake
+  now refuses by mutation name, and records the identifier a productSet named, the
+  inventory input and the publication published to. With it: the product the store
+  holds named on the next publication (else a second copy), an archive sent whole,
+  each axis's own values, a variant without a SKU left unlisted, the metafield's
+  key and type, the image's content type, a description's paragraphs on either
+  line ending, the store's settings and its Online Store asked once (both `??=`),
+  the Online Store found by name and refused when absent, stock sent as an
+  `available` correction naming its SKU, a stale answer where the store holds no
+  level (`null`, not zero), an `IN_PROGRESS` fulfilment order, and the tracking.
+- **Receiving orders**: the counter (its path and its outcome) had no listener;
+  nothing saved when nothing came; a cursor that never reads back before where the
+  pass began; the notes and outcomes of what is skipped (not open, not in the
+  catalogue, no address, an unknown channel, figures that do not add up); one
+  address serving as both; the shipping option's code and the buyer's culture.
+
+**Left, and what each is.**
+
+- **Equivalent**: an archive's empty name (`ChannelProduct.Archived`, never sent);
+  `Any` made `All` over the stale check, since one quantity per call answers at most
+  one error; `First` for `FirstOrDefault` over a level's `available`, which a level
+  always carries; `identifier: { id: null }` for no identifier, which the fake reads
+  the same (the lab round trip sends the real one); sending `variables: null` instead
+  of none; asking the catalogue with no SKUs.
+- **A gap written down**: escaping a double quote in a SKU's search
+  (`ShopifySalesChannel.cs`, `InventoryItemOfAsync`). Tendero's SKUs carry none, and
+  the fake reads Shopify's search syntax by splitting on quotes; it waits for a SKU
+  that does.
+- **Noise**: the refusal and exception messages (Channels 5, Shopify 6), two argument
+  guards and a message in `Order.Received` and `MarkOversold`.
+- **Held by suites out of the configuration**: the webhook endpoint (25 uncovered,
+  `ShopifyWebhookEndpointTests` in `Api.Tests`), `StockSaga`'s oversold branch and its
+  counter (`StockSagaTests` in `Inventory.Tests`), the registration of
+  `KeyedChannelOrderSources` (`Api.Tests`' composition tests).
+- **Older than the phase**, counted, not classified: Ordering 72 (`Order.cs` 24,
+  `ImportOrders.cs` 14, the module's registrations 28, `ListOrders`' refusals 6),
+  Shopify 9 (`ShopifyAdmin.cs`' backoff and messages, `ShopifyOrderConnector.cs` 2,
+  the mapping file's `??`), all classified at S2's closes.
+
+`Workers` and `Persistence` have no Stryker configuration; the bridges, the
+reconciliation and the channel state are proven by the integration tests
+(`ChannelsFromCatalogTests`, `ChannelReconciliationTests`, `ChannelStateTests`,
+`ReceivedOrderRowsTests`) and the hand mutations in P16-22 to P16-27's commit.
+
+### P16-28 and P16-29: the round trip's fixes and the held orders
+
+2026-11-04. Mutated after the round trip on the lab store (P16-28) and the held
+orders (P16-29), with `stryker-parallel.mjs` in three shares (two for the smaller
+runs) instead of four, because the machine had twice run short of memory that day.
+`src/Channels` whole, the others `--since` S3's close commit (*docs: phase 16 S3's
+close, measured with Stryker*). No report is kept (rule 6).
+
+| Project | Mutated with | Run 1 | Last run | Survivors |
+|---|---|---|---|---|
+| `src/Channels`, whole | `Channels.Tests` | 81.19 % (71.93 % of total) | **88.89 %** (84.21 % of total), second run | 19 → 12 |
+| `src/Shopify`, 3 files | `Shopify.Tests` | 93.66 % | **94.56 %** (92.60 % of total) | 21 → 18 |
+| `src/Ordering`, `ReceiveChannelOrders.cs` | `Ordering.Tests` | **100 %** (59 mutants) | — | 0 |
+| `src/Catalog`, the export port and its reader | `Catalog.Tests` | **100 %** (9 mutants) | — | 0 |
+
+**Channels is below its 91.78 % baseline, and every survivor left is equivalent or
+noise.** Twelve survive: six are the `= ""` initialisers of `ChannelListing`,
+`ChannelStockLevel` and `ChannelCursor` (`ChannelState.cs`, unchanged since S3),
+which only EF's private constructor leaves in place and every factory overwrites;
+one is `mark > OrdersReadUntil` made `>=`, which assigns the same value; five are
+messages (the options' validations, an unknown channel). S3's recorded run did not
+report the six initialisers on the same, unchanged lines, so the fall is in what
+was counted, not in what is tested; the baseline is **not lowered**. The author
+accepted it as it stands (2026-11-04): no test is written to read a default
+nobody uses. Shopify stays above its 92.64 % baseline.
+
+**What Stryker found, and what closed it** (two commits, *what the Stryker run
+after P16-29 found unheld*, each test seen red by the run after it):
+
+- **Channels**: the guards of `ChannelStockLevel.For`, `ChannelCursor.For`, a
+  publication without the channel's id and a refusal without a reason; an empty
+  cursor passing the only cursor test, which moved it before reading it; the held
+  and released counters, which only the integration tests listened to.
+- **Shopify**: the SKU search could keep only the first SKU (`" OR "` made empty),
+  the code's handle could be asked before the SKUs, and a variant without a SKU
+  could be searched for and match whatever the store left without one.
+
+**Left, and what each is.**
+
+- **Equivalent**: an empty listed id asked for (`Length: > 0` made `>= 0`; a blank id
+  is never stored, `ChannelListing.Published` refuses it); asking the catalogue with
+  no variants (the order connector, re-classified on its rewritten line); the
+  `PathTag` arm for a path that does not exist (Ordering's one uncovered mutant).
+- **A Stryker artefact**: the two-holders refusal's first sentence reported as
+  surviving, though `Skus_the_store_sells_under_two_products_are_refused` asserts it;
+  made empty by hand, that test is red.
+- **Static fields**: `DefaultOption`'s two strings, a `static readonly` initialiser
+  Stryker cannot switch per mutant (the fourth time); the default option's names are
+  asserted by `A_product_without_axes_is_sent_the_stores_default_option`.
+- **Noise and held elsewhere**, as at S3's close: refusal messages, the
+  stale check's `Any`/`All`, a level's `First`, `identifier: { id: null }`, the
+  endpoint's lambda (`HeldOrdersEndpointTests` in `Api.Tests`).
+
+`Workers`, `Persistence` and `Api` are not mutated here: the reconciliation's
+holding and retrying, the table and the host's composition are proven by
+`ChannelReconciliationTests`, the API's tests and P16-29's 13 hand mutations.
 
 ## Property-based (CsCheck)
 

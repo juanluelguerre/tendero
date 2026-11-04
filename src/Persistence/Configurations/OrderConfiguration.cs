@@ -131,6 +131,14 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         // which the unique index above already serves.
         builder.ComplexProperty(o => o.ImportedFrom, origin => origin.ToJson("imported_from"));
 
+        // Null for every order a channel did not take; jsonb like the import's (ADR 0070),
+        // found again by its key, channel:<channel>:<id>, which the same index serves.
+        builder.ComplexProperty(o => o.ReceivedFrom, origin => origin.ToJson("received_from"));
+
+        // The ledger's reason, when a channel sold what could not be held. A column of
+        // its own: the backoffice lists the orders to act on by it.
+        builder.Property(o => o.Oversold).HasMaxLength(500);
+
         builder.Ignore(o => o.LinesTotal);
         builder.Ignore(o => o.Total);
         builder.Ignore(o => o.DomainEvents);

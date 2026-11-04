@@ -29,6 +29,14 @@ public sealed class CatalogueExportReader(
         ];
     }
 
+    public async Task<ExportedProduct?> ProductAsync(string code, string culture, CancellationToken cancellationToken = default)
+    {
+        if (await products.FindByCodeAsync(code, cancellationToken) is not { Status: not ProductStatus.Archived } product)
+            return null;
+
+        return Export(product, await definitions.AllAsync(cancellationToken), await categories.AllAsync(cancellationToken), culture);
+    }
+
     private static ExportedProduct Export(Product product, AttributeDefinitions attributes, CategoryTree tree, string culture) => new(
         product.Code,
         product.Status == ProductStatus.Active,
@@ -63,7 +71,10 @@ public sealed class CatalogueExportReader(
                                 attributes.ByCode(axis)?.LabelForOption(variant.AxisValues[axis], culture) ?? variant.AxisValues[axis])),
                     ],
                     [.. product.PicturesOf(variant).Select(image => image.Id.Value)])),
-        ]);
+        ])
+    {
+        References = [.. product.ExternalReferences.Select(reference => new ExportedReference(reference.Source, reference.ExternalId))],
+    };
 
     /// <summary>The value as the page reads it; a number with its unit, since another vocabulary has no definition to render it by.</summary>
     private static ExportedAttribute Attribute(AttributeValue value, AttributeDefinition definition, string culture)
@@ -72,6 +83,15 @@ public sealed class CatalogueExportReader(
         var text = value.Kind == AttributeKind.Number && value.Number is { } number
             ? $"{number.ToString(CultureInfo.InvariantCulture)} {definition.Unit}".TrimEnd()
             : view.Value;
-        return new ExportedAttribute(value.Code, view.Label, value.Key, text);
+        return new ExportedAttribute(value.Code, view.Label, value.Key, text) { Kind = KindOf(value.Kind) };
     }
+
+    private static ExportedAttributeKind KindOf(AttributeKind kind) => kind switch
+    {
+        AttributeKind.Option => ExportedAttributeKind.Option,
+        AttributeKind.Number => ExportedAttributeKind.Number,
+        AttributeKind.Boolean => ExportedAttributeKind.YesNo,
+        AttributeKind.Text or AttributeKind.LocalizedText => ExportedAttributeKind.Text,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a kind of attribute the export knows."),
+    };
 }

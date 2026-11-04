@@ -24,6 +24,8 @@ public sealed class ShopifyRegistrationTests
         var locations = Path.Combine(Path.GetTempPath(), $"locations-{Guid.NewGuid():N}.json");
         File.WriteAllText(categories, """{ "gid://shopify/TaxonomyCategory/hg-11-1-3": "COFFEE_MAKER" }""");
         File.WriteAllText(locations, """{ "gid://shopify/Location/71": "MAD" }""");
+        var keys = Path.Combine(Path.GetTempPath(), $"attribute-keys-{Guid.NewGuid():N}.json");
+        File.WriteAllText(keys, """{ "GENDER": "genero" }""");
         try
         {
             using var provider = Compose(new()
@@ -33,6 +35,7 @@ public sealed class ShopifyRegistrationTests
                 ["Shopify:ClientSecret"] = "client-secret",
                 ["Shopify:CategoriesFile"] = categories,
                 ["Shopify:LocationsFile"] = locations,
+                ["Shopify:AttributeKeysFile"] = keys,
             });
             using var scope = provider.CreateScope();
 
@@ -45,11 +48,14 @@ public sealed class ShopifyRegistrationTests
             var options = provider.GetRequiredService<IOptions<ShopifyOptions>>().Value;
             Assert.Equal("COFFEE_MAKER", options.Categories["gid://shopify/TaxonomyCategory/hg-11-1-3"]);
             Assert.Equal("MAD", options.Locations["gid://shopify/Location/71"]);
+            // Looked up by the attribute's code whatever its case (the fix after P16-28).
+            Assert.Equal("genero", options.AttributeKeys["gender"]);
         }
         finally
         {
             File.Delete(categories);
             File.Delete(locations);
+            File.Delete(keys);
         }
     }
 
@@ -75,6 +81,31 @@ public sealed class ShopifyRegistrationTests
 
         Assert.Null(scope.ServiceProvider.GetKeyedService<ICatalogSourceConnector>("shopify"));
         Assert.Null(scope.ServiceProvider.GetKeyedService<IStockSourceConnector>("shopify"));
+    }
+
+    /// <summary>
+    /// A store connected to import from is not, by that alone, a place Tendero writes to
+    /// (phase 16, S3; ADR 0070): a merchant leaving Shopify must not find their store
+    /// rewritten. Being a sales channel is said, apart.
+    /// </summary>
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("false", false)]
+    [InlineData("true", true)]
+    public void A_store_is_a_sales_channel_only_when_it_is_said_to_be(string? salesChannel, bool registered)
+    {
+        using var provider = Compose(new()
+        {
+            ["Shopify:Store"] = FakeShopify.Store,
+            ["Shopify:ClientId"] = "client-id",
+            ["Shopify:ClientSecret"] = "client-secret",
+            ["Shopify:SalesChannel"] = salesChannel,
+        });
+        using var scope = provider.CreateScope();
+
+        Assert.Equal(registered, scope.ServiceProvider.GetKeyedService<ElGuerre.Tendero.Channels.Ports.ISalesChannel>("shopify") is not null);
+        Assert.Equal(registered, scope.ServiceProvider.GetKeyedService<ElGuerre.Tendero.Ordering.Ports.IChannelOrderSource>("shopify") is not null);
+        Assert.NotNull(scope.ServiceProvider.GetKeyedService<ICatalogSourceConnector>("shopify"));
     }
 
     private static ServiceProvider Compose(Dictionary<string, string?> settings)

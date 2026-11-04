@@ -2,6 +2,8 @@ using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Catalog.Features.SetImageShows;
+using ElGuerre.Tendero.Channels;
+using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Features.PictureDoubts;
@@ -11,6 +13,7 @@ using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
+using ElGuerre.Tendero.Workers.Channels;
 using ElGuerre.Tendero.Workers.Knowledge;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -107,7 +110,13 @@ public sealed class DecidedDoubtRetagsThePictureTests(PostgresFixture postgres)
     /// <summary>The worker's container, as <c>AddTenderoWorker</c> composes it: Catalog's slices by name, not its assembly.</summary>
     private static ServiceProvider Compose(string connectionString)
     {
-        var configuration = new ConfigurationBuilder().Build();
+        // The channel bridges tell stock by warehouse (P16-28): the warehouses come with Inventory.
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Inventory:Warehouses:FilePath"] = Path.Combine(AppContext.BaseDirectory, "TestData", "warehouses.sample.json"),
+            })
+            .Build();
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddTenderoCqrs(
@@ -117,6 +126,9 @@ public sealed class DecidedDoubtRetagsThePictureTests(PostgresFixture postgres)
         services.AddTenderoSlices(typeof(SetImageShowsCommand));
         services.AddTenderoPersistence(connectionString);
         services.AddCatalog(configuration);
+        services.AddInventory(configuration);
+        services.AddChannels(configuration);
+        services.AddChannelBridges();
         services.AddKnowledge(configuration);
         services.AddHybridSearch(configuration);
         services.AddSingleton<IProductIndexer>(new NoIndex());

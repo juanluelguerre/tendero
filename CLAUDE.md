@@ -80,6 +80,7 @@ Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana st
 Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (6 GB, on the GPU when there is one; ADR 0053; or profile https-steward; profile https-all turns on vectors, knowledge, Steward and Tino, with Keycloak as the issuer; profile https-mock writes every switch off, the dev issuer included)
 Tendero__Tino=true dotnet run --project src/AppHost           # + Tino, the storefront's assistant, on the same local model and the support scorer — only on a GPU; without one it stays off and says so; or profile https-tino
 Tendero__Voice=true dotnet run --project src/AppHost          # + speaking to the shop: Whisper large-v3-turbo q8_0 on whisper.cpp, prepared by the AppHost in the background on a first start (1.6 GB); the API does not wait, and the microphone appears once the server answers (docs/analysis/voice-models.md; profile https-voice; https-tino and https-all include it)
+Tendero__ShopifyChannel=true dotnet run --project src/AppHost  # + the lab Shopify store as a sales channel: the worker publishes the catalogue and stock to it and reconciles its orders every 5 minutes (ADR 0070; needs the store's user secrets, and its prices must include tax; or profile https-shopify-channel, never part of https-all: it writes to a store outside the machine)
 Tendero__Vision=true dotnet run --project src/AppHost         # + the local model's eyes: its vision projector, converted once (8.8 GB of download), so the same model reads pictures — only on a GPU (ADR 0031; docs/specs/images.md)
 Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json dotnet run --project src/AppHost  # Steward from a script (CI's browser spec): no model fits a runner, so the wiring is tested with scripted answers — anything else gets "I was not scripted for that" (docs/specs/steward.md, Evaluation and tests)
 Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json dotnet run --project src/AppHost      # Tino from a script, on any machine (CI's browser spec; TINO_SCRIPTED=1 to run it locally); the same script answers which kit a sentence names (K-6), since that runs on Tino's profile
@@ -148,8 +149,9 @@ node tools/api-map.mjs --schema CartView
    `Assist` (phase 12: proposals a model makes and a person decides; it runs
    other contexts' commands only through `IProposableCommand` and reads them only
    through `IReadTool` — ADR 0052, ADR 0054 — and besides the kernel references
-   only the model port, `AI`).
-   `Pricing` and `Inventory` reference
+   only the model port, `AI`), `Channels` (phase 16, S3: what each sales channel
+   was told — listings, stock published, the reconciliation's mark; ADR 0070).
+   `Pricing`, `Inventory` and `Channels` reference
    SharedKernel and nothing else, and an architecture rule computes that by
    reflection — that purity is what makes the promotion engine verifiable with
    properties and the allocation strategies testable without a database.

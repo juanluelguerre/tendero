@@ -74,7 +74,11 @@
       "ProposePromotionsCommand": "Proponer promociones a partir de los descuentos de una tienda",
       "PublishImportCommand": "Publicar lo que trajo una importación",
       "PublishProductCommand": "Publicar un producto",
+      "PublishStockToChannelCommand": "Publicar el stock de un producto en un canal de venta",
+      "PublishToChannelCommand": "Publicar un producto en un canal de venta",
       "ReadPicturesCommand": "Leer imágenes de productos",
+      "ReceiveChannelOrderCommand": "Recibir un pedido de un canal de venta",
+      "ReceiveChannelOrdersCommand": "Recibir los pedidos de un canal de venta",
       "RecordBrowsingCommand": "Registrar un producto visto o una búsqueda",
       "RecordClaimApplicationCommand": "Aplicar una afirmación aprobada",
       "RecordDescriptionCommand": "Registrar una descripción",
@@ -220,6 +224,20 @@
     },
     "empty": "Todavía no hay pedidos. Compra algo en la tienda y aparecerá aquí.",
     "failed": "No se han podido cargar los pedidos.",
+    "held": {
+      "title": "{{count}} pedidos cobrados no se han podido recibir",
+      "hint": "Cada uno se cobró en su canal y no está entre los pedidos de abajo. Arréglalo allí, o cancélalo allí, y saldrá solo de esta lista.",
+      "reason": {
+        "NotInCatalogue": "Vende {{about}}, que el catálogo no tiene.",
+        "NoAddress": "No tiene adónde enviarse.",
+        "TotalsDoNotAddUp": "Sus importes no cuadran con los de la tienda."
+      },
+      "since": "retenido desde {{when}}",
+      "open": "Abrir en {{channel}}",
+      "channel": {
+        "shopify": "Shopify"
+      }
+    },
     "hint": "Primero lo que espera envío. Abre un pedido para verlo junto a la lista; un movimiento rechazado vuelve con el motivo.",
     "loading": "Cargando pedidos...",
     "move": {
@@ -250,6 +268,7 @@
     "testHint": "Pedido de prueba de una credencial de prueba: no se envía y su stock ya se ha devuelto.",
     "mandate": "Mandato",
     "mandateHint": "Lo compró un agente con un mandato AP2 firmado por {{issuer}}: la persona aprobó exactamente este total.",
+    "oversold": "Sobrevendido",
     "filterLabel": "Mostrar pedidos",
     "findLabel": "Buscar un pedido",
     "find": "Id del pedido, nombre o ciudad",
@@ -738,6 +757,7 @@
       "byAgents": "de los pedidos, por agentes",
       "revenueShare": "{{share}} de las ventas llegó por agentes",
       "agentsBy": "Agentes: {{mcp}} por MCP · {{ucp}} por UCP",
+      "peopleBy": "Personas: {{web}} en la tienda · {{shopify}} en Shopify",
       "unrecorded": "{{count}} pedidos anteriores no tienen canal registrado y quedan fuera",
       "nothingRecorded": "No se vendió nada por un canal registrado en este periodo."
     },

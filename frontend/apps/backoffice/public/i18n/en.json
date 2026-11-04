@@ -74,7 +74,11 @@
       "ProposePromotionsCommand": "Propose promotions from a store's discounts",
       "PublishImportCommand": "Publish what an import brought",
       "PublishProductCommand": "Publish a product",
+      "PublishStockToChannelCommand": "Publish a product's stock to a sales channel",
+      "PublishToChannelCommand": "Publish a product to a sales channel",
       "ReadPicturesCommand": "Read product pictures",
+      "ReceiveChannelOrderCommand": "Receive an order from a sales channel",
+      "ReceiveChannelOrdersCommand": "Receive a sales channel's orders",
       "RecordBrowsingCommand": "Record a product viewed or a search",
       "RecordClaimApplicationCommand": "Apply an approved claim",
       "RecordDescriptionCommand": "Record a description",
@@ -220,6 +224,20 @@
     },
     "empty": "No orders yet. Buy something from the storefront and it lands here.",
     "failed": "Could not load the orders.",
+    "held": {
+      "title": "{{count}} paid orders could not be received",
+      "hint": "Each one was charged in its channel and is not among the orders below. Mend it there, or cancel it there, and it leaves this list by itself.",
+      "reason": {
+        "NotInCatalogue": "It sells {{about}}, which the catalogue does not have.",
+        "NoAddress": "It has nowhere to be sent.",
+        "TotalsDoNotAddUp": "Its figures do not add up by the shop's arithmetic."
+      },
+      "since": "held since {{when}}",
+      "open": "Open in {{channel}}",
+      "channel": {
+        "shopify": "Shopify"
+      }
+    },
     "hint": "What is waiting to ship comes first. Open an order to see it beside the list; a refused move comes back with the reason.",
     "loading": "Loading orders...",
     "move": {
@@ -250,6 +268,7 @@
     "testHint": "A test order placed with a test credential: never shipped, its stock already given back.",
     "mandate": "Mandate",
     "mandateHint": "Bought by an agent under an AP2 mandate signed by {{issuer}}: the person approved exactly this total.",
+    "oversold": "Oversold",
     "filterLabel": "Show orders",
     "findLabel": "Find an order",
     "find": "Order id, name or city",
@@ -738,6 +757,7 @@
       "byAgents": "of orders by agents",
       "revenueShare": "{{share}} of sales came through agents",
       "agentsBy": "Agents: {{mcp}} over MCP · {{ucp}} over UCP",
+      "peopleBy": "People: {{web}} on the storefront · {{shopify}} on Shopify",
       "unrecorded": "{{count}} earlier orders have no channel recorded and are left out",
       "nothingRecorded": "Nothing sold through a recorded channel in this period."
     },

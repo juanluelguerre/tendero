@@ -132,7 +132,10 @@ internal sealed class ShopifyCatalogConnector(ShopifyAdmin admin, IOptions<Shopi
             PriceAmount: product.Variants.Count > 0 ? product.Variants.Min(variant => variant.Price) : 0m,
             PriceCurrency: currency,
             Images: [.. product.Images.Select(image => Image(image, product, language))],
-            Attributes: new Dictionary<string, string>(product.Metafields, StringComparer.OrdinalIgnoreCase),
+            // The code a channel published is the listing's key, not one of the product's attributes.
+            Attributes: new Dictionary<string, string>(
+                product.Metafields.Where(metafield => !string.Equals(metafield.Key, ShopifyOptions.CodeKey, StringComparison.OrdinalIgnoreCase)),
+                StringComparer.OrdinalIgnoreCase),
             AvailableFrom: product.PublishedAt is { } published ? DateOnly.FromDateTime(published.UtcDateTime) : null,
             Variants: variants,
             Handle: product.Handle,

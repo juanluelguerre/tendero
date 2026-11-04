@@ -10,7 +10,7 @@ namespace ElGuerre.Tendero.Shopify.Tests;
 /// started, polled and finished, the shop's facts — and the signed file a
 /// finished bulk operation points at. No network, the same answers every run.
 /// </summary>
-internal sealed class FakeShopify : HttpMessageHandler
+internal sealed partial class FakeShopify : HttpMessageHandler
 {
     public const string Store = "tendero-dev.myshopify.com";
     public static readonly Uri ResultsFile = new("https://storage.googleapis.com/shopify-bulk/results.jsonl");
@@ -21,6 +21,9 @@ internal sealed class FakeShopify : HttpMessageHandler
 
     /// <summary>Every GraphQL query the store was asked, in order.</summary>
     public List<string> Queries { get; } = [];
+
+    /// <summary>The variables each GraphQL call carried, in order; an empty object when it carried none.</summary>
+    public List<JsonElement> Variables { get; } = [];
 
     public int TokensIssued { get; private set; }
 
@@ -111,8 +114,13 @@ internal sealed class FakeShopify : HttpMessageHandler
             return Json("""{"errors":[{"message":"Throttled","extensions":{"code":"THROTTLED"}}]}""");
         }
 
-        var query = JsonDocument.Parse(body).RootElement.GetProperty("query").GetString()!;
+        var sent = JsonDocument.Parse(body).RootElement;
+        var query = sent.GetProperty("query").GetString()!;
         Queries.Add(query);
+        Variables.Add(sent.TryGetProperty("variables", out var variables) ? variables.Clone() : JsonDocument.Parse("{}").RootElement.Clone());
+
+        if (AnswerTheChannel(query, Variables[^1]) is { } channel)
+            return Json(channel);
 
         // A query the store finds wrong: GraphQL answers 200 with errors.
         if (query.Contains("{ wrong }", StringComparison.Ordinal))
@@ -144,6 +152,14 @@ internal sealed class FakeShopify : HttpMessageHandler
         {
             var page = OrdersFixture ?? (query.Contains("after: \"c2\"", StringComparison.Ordinal) ? "orders-page2.json" : "orders.json");
             return Json(File.ReadAllText(Fixture(page)));
+        }
+
+        // One order by id, from the first page: what a webhook names.
+        if (query.Contains("{ order(id:", StringComparison.Ordinal))
+        {
+            var orders = JsonDocument.Parse(File.ReadAllText(Fixture(OrdersFixture ?? "orders.json"))).RootElement.GetProperty("data").GetProperty("orders").GetProperty("nodes");
+            var match = orders.EnumerateArray().FirstOrDefault(order => query.Contains($"\"{order.GetProperty("id").GetString()}\"", StringComparison.Ordinal));
+            return Json(match.ValueKind == JsonValueKind.Object ? $"{{\"data\":{{\"order\":{match.GetRawText()}}}}}" : """{"data":{"order":null}}""");
         }
 
         if (query.Contains("{ discountNodes(", StringComparison.Ordinal))

@@ -16,6 +16,10 @@ public static class TelemetrySources
 {
     public const string Accounts = "ElGuerre.Tendero.Accounts";
     public const string Catalog = "ElGuerre.Tendero.Catalog";
+
+    /// <summary>The sales channels Tendero publishes to, and the orders they take (phase 16, S3).</summary>
+    public const string Channels = "ElGuerre.Tendero.Channels";
+
     public const string Inventory = "ElGuerre.Tendero.Inventory";
     public const string Ordering = "ElGuerre.Tendero.Ordering";
     public const string Pricing = "ElGuerre.Tendero.Pricing";
@@ -47,5 +51,5 @@ public static class TelemetrySources
     public const string SharedKernel = "ElGuerre.Tendero.SharedKernel";
 
     public static readonly string[] All =
-        [Accounts, AI, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search, Outbox, Agents, Migration, Exports, SharedKernel];
+        [Accounts, AI, Assist, Catalog, Channels, Inventory, Knowledge, Ordering, Pricing, Search, Outbox, Agents, Migration, Exports, SharedKernel];
 }

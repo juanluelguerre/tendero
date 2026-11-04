@@ -102,6 +102,9 @@ public sealed class ExportCatalogueTests
     {
         public Task<IReadOnlyList<ExportedProduct>> ProductsAsync(string culture, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<ExportedProduct>>(products);
+
+        public Task<ExportedProduct?> ProductAsync(string code, string culture, CancellationToken cancellationToken = default) =>
+            Task.FromResult(products.FirstOrDefault(product => product.Code == code));
     }
 
     private sealed class Shelves(Dictionary<string, int> available) : IAvailabilityReader

@@ -35,7 +35,8 @@ public sealed record GetSalesMixQuery(DashboardPeriod Period) : IQuery<SalesMix>
 /// <summary>The arithmetic, with no database: what counts as a sale is <see cref="SalesRanking.IsSale"/>, as everywhere.</summary>
 public static class SalesMixFigures
 {
-    private static readonly OrderChannel[] Channels = [OrderChannel.Web, OrderChannel.Mcp, OrderChannel.Ucp];
+    // Shopify too since phase 16 (S3): its orders are people buying through another storefront.
+    private static readonly OrderChannel[] Channels = [OrderChannel.Web, OrderChannel.Mcp, OrderChannel.Ucp, OrderChannel.Shopify];
 
     public static SalesMix Of(DashboardPeriod period, IReadOnlyList<Order> placed)
     {

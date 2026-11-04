@@ -119,6 +119,37 @@ public sealed class StockSagaTests
         Assert.Equal("PANS: 2 asked for, 0 available.", cancelled.Reason);
     }
 
+    /// <summary>
+    /// A channel took the money for it (phase 16, S3; ADR 0070): cancelling would hide
+    /// what the margin exists to bound, so the order is kept, flagged oversold, and not
+    /// confirmed until a person acts.
+    /// </summary>
+    [Fact]
+    public async Task An_order_a_channel_took_that_cannot_be_filled_is_flagged_oversold_not_cancelled()
+    {
+        var order = Order.Received(
+            this.clock, new OrderOrigin("shopify", "gid://shopify/Order/7001", "#1042"), OrderChannel.Shopify, CustomerId.New(),
+            [new OrderLine(ProductId.New(), VariantId.New(), "PANS", "A pan", null, ImageId: null, new Money(10m, "EUR"), 2)],
+            Address.Create("Ana Ruiz", "Calle Mayor 1", null, "Madrid", null, "28013", "ES"),
+            Address.Create("Ana Ruiz", "Calle Mayor 1", null, "Madrid", null, "28013", "ES"),
+            new OrderShipping("shopify:shipping", "Envío", Money.Zero("EUR"), null),
+            new OrderTotals(new Money(20m, "EUR"), Money.Zero("EUR"), Money.Zero("EUR"), Money.Zero("EUR"), new Money(20m, "EUR")),
+            this.clock.GetUtcNow());
+        order.ClearDomainEvents();
+        this.orders.Add(order);
+        this.ledger.Refuse("PANS: 2 asked for, 0 available.");
+        using var recorder = new InstrumentRecorder("tendero.channel.oversold");
+
+        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, this.clock.GetUtcNow()), Ct);
+
+        Assert.Equal(OrderStatus.PaymentAuthorized, order.Status);
+        Assert.Equal("PANS: 2 asked for, 0 available.", order.Oversold);
+        // The evidence the margin is judged by: any of these raises it (ADR 0070).
+        Assert.Equal(["shopify"], recorder.Of("tendero.channel.oversold").Select(tags => (string?)tags["channel"]));
+        Assert.Empty(order.DomainEvents.OfType<OrderCancelled>());
+        Assert.Equal(1, this.saves);
+    }
+
     [Fact]
     public async Task Cancelling_an_order_gives_the_hold_back()
     {

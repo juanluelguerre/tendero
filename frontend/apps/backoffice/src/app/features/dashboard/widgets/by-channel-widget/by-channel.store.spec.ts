@@ -65,6 +65,23 @@ describe('the by-channel store', () => {
     ]);
   });
 
+  /**
+   * A Shopify store Tendero sells through (phase 16, S3): its buyers are people, so
+   * they count with the storefront's, and the two are told apart in words.
+   */
+  it('counts the people who bought on Shopify with the storefront and says how many', async () => {
+    const store = await answered({
+      ...MIX,
+      byChannel: [...MIX.byChannel, { channel: 'Shopify', orders: 2, revenue: eur(100) }],
+    });
+
+    expect([store.chart()?.series.map((series) => series.values[0]), store.peopleBy(), store.agentShare()]).toEqual([
+      [8, 4],
+      { web: 6, shopify: 2 },
+      4 / 12,
+    ]);
+  });
+
   /** Orders placed before the channel was recorded are their own line — never counted as the storefront's. */
   it('keeps the orders before channels apart', async () => {
     const store = await answered(MIX);

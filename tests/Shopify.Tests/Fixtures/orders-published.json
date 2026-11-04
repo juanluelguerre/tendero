@@ -1,0 +1,91 @@
+{
+  "data": {
+    "orders": {
+      "nodes": [
+        {
+          "id": "gid://shopify/Order/5003",
+          "updatedAt": "2026-05-10T13:00:00Z",
+          "name": "#1003",
+          "processedAt": "2026-05-10T12:00:00Z",
+          "cancelledAt": null,
+          "displayFulfillmentStatus": "UNFULFILLED",
+          "email": null,
+          "customerLocale": "en",
+          "customer": null,
+          "totalDiscountsSet": {
+            "shopMoney": {
+              "amount": "0.0",
+              "currencyCode": "EUR"
+            }
+          },
+          "totalTaxSet": {
+            "shopMoney": {
+              "amount": "1.74",
+              "currencyCode": "EUR"
+            }
+          },
+          "totalPriceSet": {
+            "shopMoney": {
+              "amount": "10.0",
+              "currencyCode": "EUR"
+            }
+          },
+          "taxLines": [
+            {
+              "title": "IVA",
+              "rate": 0.21,
+              "priceSet": {
+                "shopMoney": {
+                  "amount": "1.74",
+                  "currencyCode": "EUR"
+                }
+              }
+            }
+          ],
+          "shippingAddress": null,
+          "billingAddress": {
+            "name": "Luis Gómez",
+            "address1": "Calle Sierpes 3",
+            "address2": null,
+            "city": "Sevilla",
+            "provinceCode": "SE",
+            "zip": "41004",
+            "countryCodeV2": "ES",
+            "phone": null
+          },
+          "shippingLine": null,
+          "fulfillments": [],
+          "discountApplications": {
+            "nodes": []
+          },
+          "lineItems": {
+            "nodes": [
+              {
+                "id": "gid://shopify/LineItem/21",
+                "title": "Zapatillas de running",
+                "variantTitle": null,
+                "quantity": 1,
+                "variant": {
+                  "id": "gid://shopify/ProductVariant/44009",
+                  "sku": "B073WXYZ01-DEFAULT"
+                },
+                "originalUnitPriceSet": {
+                  "shopMoney": {
+                    "amount": "10.0",
+                    "currencyCode": "EUR"
+                  }
+                },
+                "discountAllocations": []
+              }
+            ]
+          },
+          "refunds": []
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": null
+      }
+    }
+  }
+}

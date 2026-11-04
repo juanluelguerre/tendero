@@ -1049,24 +1049,50 @@ if (builder.Configuration["Parameters:shopify-store"] is { Length: > 0 } shopify
     var appCredentials = builder.Configuration["Parameters:shopify-client-id"] is { Length: > 0 }
         && builder.Configuration["Parameters:shopify-client-secret"] is { Length: > 0 };
 
-    if (merchantsToken)
+    // Declared once each, however many services read them: a parameter is a resource.
+    var accessToken = merchantsToken ? builder.AddParameter("shopify-access-token", secret: true) : null;
+    var clientId = !merchantsToken && appCredentials ? builder.AddParameter("shopify-client-id", secret: true) : null;
+    var clientSecret = !merchantsToken && appCredentials ? builder.AddParameter("shopify-client-secret", secret: true) : null;
+
+    // The same store for the API, which imports from it and takes its webhooks, and
+    // for the worker, which publishes to it and reconciles when it is a sales channel.
+    foreach (var service in new[] { api, workers })
     {
-        api.WithEnvironment("Shopify__AccessToken", builder.AddParameter("shopify-access-token", secret: true));
-    }
-    else if (appCredentials)
-    {
-        // The development store, whose locations tools/shopify-seed/stock.mjs made
-        // and mapped. A merchant's store has locations of its own, and a person
-        // writes their file; until then each is proposed as a warehouse.
-        api.WithEnvironment("Shopify__ClientId", builder.AddParameter("shopify-client-id", secret: true))
-            .WithEnvironment("Shopify__ClientSecret", builder.AddParameter("shopify-client-secret", secret: true))
-            .WithEnvironment("Shopify__LocationsFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "locations.json"));
+        if (accessToken is not null)
+        {
+            service.WithEnvironment("Shopify__AccessToken", accessToken);
+        }
+        else if (clientId is not null && clientSecret is not null)
+        {
+            // The development store, whose locations tools/shopify-seed/stock.mjs made
+            // and mapped. A merchant's store has locations of its own, and a person
+            // writes their file; until then each is proposed as a warehouse.
+            service.WithEnvironment("Shopify__ClientId", clientId)
+                .WithEnvironment("Shopify__ClientSecret", clientSecret)
+                .WithEnvironment("Shopify__LocationsFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "locations.json"))
+                // The keys its seed wrote each attribute under, for the channel to write the same ones.
+                .WithEnvironment("Shopify__AttributeKeysFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "attribute-keys.json"));
+        }
+
+        if (merchantsToken || appCredentials)
+        {
+            service.WithEnvironment("Shopify__Store", shopifyStore)
+                .WithEnvironment("Shopify__CategoriesFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "categories.json"));
+        }
     }
 
-    if (merchantsToken || appCredentials)
+    // AND A SALES CHANNEL (phase 16, S3; ADR 0070), only when said:
+    //
+    //   Tendero__ShopifyChannel=true dotnet run --project src/AppHost
+    //
+    // A store connected to import from is not, by that alone, one Tendero writes to:
+    // with the switch the worker publishes the catalogue and stock to it at start and
+    // reconciles its orders every few minutes, and the API takes its webhooks.
+    if (string.Equals(builder.Configuration["Tendero:ShopifyChannel"], "true", StringComparison.OrdinalIgnoreCase)
+        && (merchantsToken || appCredentials))
     {
-        api.WithEnvironment("Shopify__Store", shopifyStore)
-            .WithEnvironment("Shopify__CategoriesFile", Path.Combine(repositoryRoot, "tools", "shopify-seed", "categories.json"));
+        api.WithEnvironment("Shopify__SalesChannel", "true");
+        workers.WithEnvironment("Shopify__SalesChannel", "true");
     }
 }
 

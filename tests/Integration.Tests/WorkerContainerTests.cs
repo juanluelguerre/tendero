@@ -80,9 +80,42 @@ public sealed class WorkerContainerTests
         Assert.NotNull(scope.ServiceProvider.GetService(service));
     }
 
-    private static ServiceProvider BuildWorkerServices(bool withVectorLayer = false)
+    /// <summary>
+    /// Hosted services start in the order they are registered, and in development the
+    /// migrator creates the schema the others read. One registered before it raced it:
+    /// on S3's round trip on the lab store (2026-11-03) the channels' reconciliation
+    /// republished the catalogue while the migration that creates its tables was still
+    /// running, every one of the 102 products failed with "relation channels.listings
+    /// does not exist", and the next republication was six hours away.
+    /// </summary>
+    [Fact]
+    public void In_development_nothing_of_the_shops_starts_before_the_schema_is_migrated()
     {
-        var builder = Host.CreateApplicationBuilder();
+        var builder = WorkerBuilder(environment: Environments.Development);
+
+        var ours = builder.Services
+            .Where(descriptor => descriptor.ServiceType == typeof(IHostedService))
+            .Select(descriptor => descriptor.ImplementationType ?? descriptor.ImplementationInstance?.GetType())
+            .Where(type => type?.Namespace?.StartsWith("ElGuerre.Tendero", StringComparison.Ordinal) == true)
+            .Select(type => type!.Name)
+            .ToList();
+
+        // The two allowed before it never read Postgres as they start: the AI log's
+        // writer waits until a model is called, which nothing does before the host has
+        // started, and the search indexes are Elasticsearch's. Any other is a race.
+        Assert.Equal(
+            [nameof(ElGuerre.Tendero.AI.AIInvocationsWorker), "CreateSearchIndexesAtStartupWorker"],
+            ours.TakeWhile(name => name != nameof(MigrateSchemaAtStartupWorker)));
+        Assert.Contains(nameof(MigrateSchemaAtStartupWorker), ours);
+    }
+
+    private static ServiceProvider BuildWorkerServices(bool withVectorLayer = false) =>
+        WorkerBuilder(withVectorLayer).Services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+    private static HostApplicationBuilder WorkerBuilder(bool withVectorLayer = false, string? environment = null)
+    {
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { EnvironmentName = environment });
 
         // The two strings the worker demands at startup. Neither is used: neither
         // the DbContext nor the Elastic client connects on construction. Port 1,
@@ -112,7 +145,6 @@ public sealed class WorkerContainerTests
         builder.AddServiceDefaults();
         builder.AddTenderoWorker();
 
-        return builder.Services.BuildServiceProvider(
-            new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+        return builder;
     }
 }

@@ -178,26 +178,11 @@ public sealed class ImportOrdersHandler(
     /// <summary>The order's lines as the catalogue sells them, or null — with a note — when one names something it lacks.</summary>
     private async Task<List<OrderLine>?> LinesAsync(SourceOrder placed, List<OrderNote> notes, CancellationToken cancellationToken)
     {
-        var skus = placed.Lines.Select(line => line.Sku).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        var known = await catalogue.FindBySkusAsync(skus, cancellationToken);
-
-        var missing = placed.Lines.FirstOrDefault(line => line.Sku is null || !known.ContainsKey(line.Sku));
+        var (lines, missing) = await SourceOrders.LinesAsync(placed, catalogue, cancellationToken);
         if (missing is not null)
-        {
             notes.Add(new OrderNote(OrderNoteCode.ProductNotInCatalogue, placed.Number, missing.Sku ?? missing.ProductName));
-            return null;
-        }
 
-        return
-        [
-            .. placed.Lines.Select(line =>
-            {
-                // The catalogue's ids and category; the names as the buyer saw them then.
-                var variant = known[line.Sku!];
-                return new OrderLine(variant.ProductId, variant.VariantId, variant.Sku, line.ProductName, line.VariantLabel, variant.ImageId,
-                    line.UnitPrice, line.Quantity, variant.CategoryCode, variant.CategoryPath);
-            }),
-        ];
+        return lines;
     }
 
     /// <summary>The customer imported for the buyer, or a guest — said, when the store knew who they were.</summary>
@@ -237,7 +222,7 @@ public sealed class ImportOrdersHandler(
                 new OrderTotals(totals.Subtotal, totals.Discount, totals.Shipping, totals.Tax, totals.Total),
                 placed.PlacedAt,
                 [.. placed.Discounts.Select(discount => new OrderDiscount(discount.Code, discount.Label, discount.Amount))],
-                [.. placed.Taxes.Select(Tax)],
+                [.. placed.Taxes.Select(SourceOrders.Tax)],
                 placed.Culture ?? "es",
                 placed.ShippedAt,
                 placed.ContactEmail);
@@ -248,15 +233,6 @@ public sealed class ImportOrdersHandler(
             return null;
         }
     }
-
-    /// <summary>
-    /// A tax line as the store named it. Prices include the tax (ADR 0028), so the
-    /// base the rate was taken on is the amount divided by the rate.
-    /// </summary>
-    private static OrderTax Tax(SourceTax tax) =>
-        new(tax.Title, tax.Rate,
-            tax.Rate > 0 ? new Money(decimal.Round(tax.Amount.Amount / tax.Rate, 2), tax.Amount.Currency) : Money.Zero(tax.Amount.Currency),
-            tax.Amount);
 
     /// <summary>
     /// Each refund of a delivered order, a return born refunded with no reason stated.

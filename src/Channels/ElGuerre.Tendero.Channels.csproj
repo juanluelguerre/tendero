@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bounded context Channels (phase 16, S3; ADR 0070; spec
+       docs/specs/shopify-channel.md): the places besides our own storefront where
+       people buy, kept in step with Tendero. It owns what a channel has been told —
+       a product's listing and the ids the channel gave it, the stock last
+       published, where the reconciliation got to — and the outbound port each
+       channel's adapter implements (Shopify's first).
+
+       It earns its boundary with a writer (the channel's handlers), a lifecycle
+       (published, stale, refused) and an actor (the shopkeeper who connects a
+       channel). Like Pricing and Inventory it references SharedKernel and nothing
+       else: a product crosses by its code, stock by its SKU. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Channels</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Channels.Tests" />
+  </ItemGroup>
+
+</Project>

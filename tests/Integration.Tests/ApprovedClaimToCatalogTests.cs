@@ -3,6 +3,8 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Catalog.Features.PublishProduct;
 using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
+using ElGuerre.Tendero.Channels;
+using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Features.ProductSpecs;
@@ -13,6 +15,7 @@ using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
+using ElGuerre.Tendero.Workers.Channels;
 using ElGuerre.Tendero.Workers.Knowledge;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -166,6 +169,8 @@ public sealed class ApprovedClaimToCatalogTests(PostgresFixture postgres)
             {
                 ["Catalog:Connectors:Seed:FilePath"] = Path.Combine(AppContext.BaseDirectory, "TestData", "products.sample.json"),
                 ["Catalog:Attributes:FilePath"] = Path.Combine(AppContext.BaseDirectory, "TestData", "attributes.sample.json"),
+                // The channel bridges tell stock by warehouse (P16-28): the warehouses come with Inventory.
+                ["Inventory:Warehouses:FilePath"] = Path.Combine(AppContext.BaseDirectory, "TestData", "warehouses.sample.json"),
             })
             .Build();
 
@@ -179,6 +184,9 @@ public sealed class ApprovedClaimToCatalogTests(PostgresFixture postgres)
         services.AddTenderoSlices(typeof(SetProductAttributeCommand));
         services.AddTenderoPersistence(connectionString);
         services.AddCatalog(configuration);
+        services.AddInventory(configuration);
+        services.AddChannels(configuration);
+        services.AddChannelBridges();
         services.AddKnowledge(configuration);
         services.AddHybridSearch(configuration);
         services.AddSingleton<IProductIndexer>(new NoIndex());
