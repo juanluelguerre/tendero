@@ -19,6 +19,16 @@ from the text below, each said where it applies:
 - **Stock is published for drafts too**, ready the day they go on sale.
 - **Bridges never fail the outbox message**; the reconciliation repairs.
 - **The first bulk publication is deferred** with its number.
+- **Metafields are written apart, and the attributes travel** (2026-11-04, found after
+  the round trip): productSet's metafields replace every one the store holds, and the
+  first publication wiped the lab store's attributes. The code and every attribute are
+  now written with metafieldsSet, which leaves the others alone, under the key the
+  store keeps each attribute under (`Shopify:AttributeKeys`, read from
+  `AttributeKeysFile`; the lab store's is `tools/shopify-seed/attribute-keys.json`) or
+  the code in lower case. Values as a filter lists them: an option's label, a number
+  without its unit, a yes or no as a word in the channel's language. The importer no
+  longer reads the channel's `code` as an attribute. An attribute removed in Tendero
+  stays in the store until someone removes it there.
 - **Oversold** is a column on the order, a tag on the backoffice's status label and
   `tendero.channel.oversold`; the saga flags an order a channel took instead of
   cancelling it.

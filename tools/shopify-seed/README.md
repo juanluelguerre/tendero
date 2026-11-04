@@ -67,6 +67,10 @@ dotnet user-secrets set "Parameters:shopify-client-secret" "<client secret>" --p
   (`write_inventory`, `write_locations`). Repeatable: it writes only what
   differs. It writes `locations.json`, location → warehouse code, which the
   stock import reads through `Shopify:LocationsFile`.
+- `attribute-keys.json` (S3): each attribute's code in Tendero to the key the seed
+  wrote it under (`GENDER` → `genero`), which the sales channel reads through
+  `Shopify:AttributeKeysFile` so it writes the same metafields the store's filters
+  list. A code with the same key in lower case is not in it.
 - `history.mjs` (S2b, P16-16): the people and their history from `history.json`
   — five customers with their address books, a dozen past orders (one cancelled,
   one partly refunded, one still open), two discounts (one the promotions engine
@@ -106,6 +110,22 @@ same. What the store keeps differently from what was written is named in the
 tests: an order's addresses join its buyer's address book, and an order written
 by `orderCreate` has no buyer's language and a fulfilment dated the day it was
 written.
+
+## After the store has been a sales channel (S3)
+
+The same store is the sales channel's lab (`https-shopify-channel`), and a channel
+writes Tendero's catalogue and stock over it: stock becomes Tendero's less the
+margin, and the products carry the channel's `tendero.code`. The round trips above
+expect the seed, so bring it back after a channel round trip:
+
+```
+node tools/shopify-seed/seed.mjs --refresh-attributes
+node tools/shopify-seed/stock.mjs
+```
+
+and delete the test orders and the customer they made in the store's admin (or by
+`orderCancel`/`orderDelete`/`customerDelete`), since `LabStoreMigrationTests`
+counts the store's people and orders.
 
 ## The round trip from the other side (E-3)
 
