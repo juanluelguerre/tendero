@@ -223,6 +223,45 @@ public sealed class ReceiveChannelOrdersTests
             recorder.Of("tendero.channel.orders.received").Select(tags => (string?)tags["outcome"]));
     }
 
+    /// <summary>
+    /// Each skip is said as a value too, not only a sentence (P16-29): the reconciliation
+    /// holds the ones that can be mended and retries them, so it needs the order's id and
+    /// why, and what it concerns — the SKU the catalogue does not sell.
+    /// </summary>
+    [Fact]
+    public async Task Each_skipped_order_is_said_as_a_value_with_what_it_concerns()
+    {
+        var wrong = Taken("7002") with { Totals = new SourceOrderTotals(Eur(25m), Eur(0m), Eur(4.95m), Eur(5.20m), Eur(99m)) };
+        var nowhere = Taken("7003") with { ShippingAddress = null, BillingAddress = null };
+        var channel = new ChannelOrders(Taken("7001", SourceOrderState.Cancelled), wrong, nowhere, Taken("7004", sku: "NOT-SOLD"), Taken("7005"));
+
+        var result = await Handler(channel, new Orders()).HandleAsync(new ReceiveChannelOrdersCommand("shopify", Since), Ct);
+        var market = await Handler(new ChannelOrders(Taken("7006")), new Orders()).HandleAsync(new ReceiveChannelOrdersCommand("market", Since), Ct);
+
+        Assert.Equal(
+            [
+                ("7001", "#7001", ChannelOrderSkip.NotOpen, (string?)null),
+                ("7002", "#7002", ChannelOrderSkip.TotalsDoNotAddUp, null),
+                ("7003", "#7003", ChannelOrderSkip.NoAddress, null),
+                ("7004", "#7004", ChannelOrderSkip.NotInCatalogue, "NOT-SOLD"),
+                ("7006", "#7006", ChannelOrderSkip.UnknownChannel, null),
+            ],
+            result.SkippedOrders.Concat(market.SkippedOrders).Select(skipped => (skipped.ExternalId, skipped.Number, skipped.Why, skipped.About)));
+        Assert.Equal(result.Notes, result.SkippedOrders.Select(skipped => skipped.Note));
+    }
+
+    /// <summary>A held order read again by its id is counted as held, not as a webhook's.</summary>
+    [Fact]
+    public async Task A_held_order_read_again_is_counted_by_its_own_path()
+    {
+        using var recorder = new InstrumentRecorder("tendero.channel.orders.received");
+
+        await Handler(new ChannelOrders(Taken("7001")), new Orders())
+            .HandleAsync(new ReceiveChannelOrderCommand("shopify", "7001", ChannelOrderPath.Held), Ct);
+
+        Assert.Equal("held", (string?)Assert.Single(recorder.Of("tendero.channel.orders.received"))["path"]);
+    }
+
     /// <summary>A channel that does not say the customer's culture leaves the shop's.</summary>
     [Fact]
     public async Task Without_a_culture_the_order_is_in_the_shops()

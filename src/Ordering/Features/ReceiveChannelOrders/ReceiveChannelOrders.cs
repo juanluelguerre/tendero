@@ -14,13 +14,50 @@ namespace ElGuerre.Tendero.Ordering.Features.ReceiveChannelOrders;
 public sealed record ReceiveChannelOrdersCommand(string Channel, DateTimeOffset Since)
     : ICommand<ChannelOrdersReceived>, IUnauditedCommand;
 
-/// <summary>One order a sales channel took, by the id its webhook names.</summary>
-public sealed record ReceiveChannelOrderCommand(string Channel, string ExternalId)
+/// <summary>One order a sales channel took, by its id: the one a webhook names, or one held and read again (P16-29).</summary>
+public sealed record ReceiveChannelOrderCommand(string Channel, string ExternalId, ChannelOrderPath Path = ChannelOrderPath.Webhook)
     : ICommand<ChannelOrdersReceived>, IUnauditedCommand;
+
+/// <summary>How an order came to be read, as <c>tendero.channel.orders.received</c> counts it.</summary>
+public enum ChannelOrderPath
+{
+    Webhook,
+    Reconciliation,
+
+    /// <summary>Skipped before for a reason that can be mended, and read again by its id.</summary>
+    Held,
+}
+
+/// <summary>Why an order a channel took did not become one of Tendero's.</summary>
+public enum ChannelOrderSkip
+{
+    /// <summary>Cancelled or fulfilled on the channel before Tendero saw it: nothing to ship.</summary>
+    NotOpen,
+
+    /// <summary>A line sells something the catalogue does not.</summary>
+    NotInCatalogue,
+
+    /// <summary>Neither a shipping nor a billing address.</summary>
+    NoAddress,
+
+    /// <summary>The channel is not one an order can come from.</summary>
+    UnknownChannel,
+
+    /// <summary>The channel's figures do not make an order by Tendero's arithmetic.</summary>
+    TotalsDoNotAddUp,
+}
+
+/// <param name="About">What it concerns, when one thing does: the SKU or product the catalogue does not sell.</param>
+/// <param name="Note">The sentence, in English, for the log and the trace.</param>
+public sealed record SkippedChannelOrder(string ExternalId, string Number, ChannelOrderSkip Why, string? About, string Note);
 
 /// <param name="ReadUntil">The latest change read, or the mark asked for when nothing was.</param>
 /// <param name="Notes">Why an order was skipped, one sentence each, for the log and the trace.</param>
-public sealed record ChannelOrdersReceived(int Received, int AlreadyHere, int Skipped, DateTimeOffset ReadUntil, IReadOnlyList<string> Notes);
+public sealed record ChannelOrdersReceived(int Received, int AlreadyHere, int Skipped, DateTimeOffset ReadUntil, IReadOnlyList<string> Notes)
+{
+    /// <summary>The same skips as values, in the order read: what the reconciliation holds and retries.</summary>
+    public IReadOnlyList<SkippedChannelOrder> SkippedOrders { get; init; } = [];
+}
 
 /// <summary>
 /// Each open order becomes one Tendero ships (<see cref="Order.Received"/>), keyed by the
@@ -56,7 +93,7 @@ public sealed class ReceiveChannelOrdersHandler(
         await foreach (var order in channels.Get(command.Channel).UpdatedSinceAsync(command.Since, cancellationToken))
             taken.Add(order);
 
-        return await ReceiveAsync(command.Channel, "reconciliation", taken, command.Since, activity, cancellationToken);
+        return await ReceiveAsync(command.Channel, ChannelOrderPath.Reconciliation, taken, command.Since, activity, cancellationToken);
     }
 
     public async Task<ChannelOrdersReceived> HandleAsync(ReceiveChannelOrderCommand command, CancellationToken cancellationToken)
@@ -66,27 +103,29 @@ public sealed class ReceiveChannelOrdersHandler(
         activity?.SetTag("ordering.channel_order", command.ExternalId);
 
         var order = await channels.Get(command.Channel).FindAsync(command.ExternalId, cancellationToken);
-        return await ReceiveAsync(command.Channel, "webhook", order is null ? [] : [order], clock.GetUtcNow(), activity, cancellationToken);
+        return await ReceiveAsync(command.Channel, command.Path, order is null ? [] : [order], clock.GetUtcNow(), activity, cancellationToken);
     }
 
     private async Task<ChannelOrdersReceived> ReceiveAsync(
-        string channel, string path, IReadOnlyList<SourceOrder> taken, DateTimeOffset since, Activity? activity, CancellationToken cancellationToken)
+        string channel, ChannelOrderPath path, IReadOnlyList<SourceOrder> taken, DateTimeOffset since, Activity? activity, CancellationToken cancellationToken)
     {
-        var notes = new List<string>();
-        int received = 0, alreadyHere = 0, skipped = 0;
+        var skippedOrders = new List<SkippedChannelOrder>();
+        int received = 0, alreadyHere = 0;
 
         foreach (var placed in taken)
         {
-            var outcome = await ReceiveOneAsync(channel, placed, notes, cancellationToken);
+            var (outcome, skip) = await ReceiveOneAsync(channel, placed, cancellationToken);
             switch (outcome)
             {
                 case "received": received++; break;
                 case "already_here": alreadyHere++; break;
-                default: skipped++; break;
+                default: skippedOrders.Add(skip!); break;
             }
 
-            Received.Add(1, new("channel", channel), new("path", path), new("outcome", outcome));
+            Received.Add(1, new("channel", channel), new("path", PathTag(path)), new("outcome", outcome));
         }
+
+        var skipped = skippedOrders.Count;
 
         if (received > 0)
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -95,40 +134,38 @@ public sealed class ReceiveChannelOrdersHandler(
         activity?.SetTag("ordering.skipped", skipped);
 
         var readUntil = taken.Select(order => order.UpdatedAt).OfType<DateTimeOffset>().DefaultIfEmpty(since).Max();
-        return new ChannelOrdersReceived(received, alreadyHere, skipped, readUntil > since ? readUntil : since, notes);
+        return new ChannelOrdersReceived(received, alreadyHere, skipped, readUntil > since ? readUntil : since, [.. skippedOrders.Select(order => order.Note)])
+        {
+            SkippedOrders = skippedOrders,
+        };
     }
 
-    private async Task<string> ReceiveOneAsync(string channel, SourceOrder placed, List<string> notes, CancellationToken cancellationToken)
+    private async Task<(string Outcome, SkippedChannelOrder? Skipped)> ReceiveOneAsync(string channel, SourceOrder placed, CancellationToken cancellationToken)
     {
+        (string, SkippedChannelOrder?) Skip(string outcome, ChannelOrderSkip why, string note, string? about = null) =>
+            (outcome, new SkippedChannelOrder(placed.ExternalId, placed.Number, why, about, note));
+
         if (await orders.FindByIdempotencyKeyAsync(Order.ReceivedKey(channel, placed.ExternalId), cancellationToken) is not null)
-            return "already_here";
+            return ("already_here", null);
 
         if (placed.State != SourceOrderState.Open)
-        {
-            notes.Add($"{placed.Number} was {placed.State.ToString().ToLowerInvariant()} on {channel} before Tendero saw it: nothing to ship.");
-            return "not_open";
-        }
+            return Skip("not_open", ChannelOrderSkip.NotOpen,
+                $"{placed.Number} was {placed.State.ToString().ToLowerInvariant()} on {channel} before Tendero saw it: nothing to ship.");
 
         var (lines, missing) = await SourceOrders.LinesAsync(placed, catalogue, cancellationToken);
         if (lines is null)
         {
-            notes.Add($"{placed.Number} sells {missing!.Sku ?? missing.ProductName}, which the catalogue does not.");
-            return "not_in_catalogue";
+            var unsold = missing!.Sku ?? missing.ProductName;
+            return Skip("not_in_catalogue", ChannelOrderSkip.NotInCatalogue, $"{placed.Number} sells {unsold}, which the catalogue does not.", unsold);
         }
 
         var shipping = placed.ShippingAddress ?? placed.BillingAddress;
         var billing = placed.BillingAddress ?? placed.ShippingAddress;
         if (shipping is null || billing is null)
-        {
-            notes.Add($"{placed.Number} has nowhere to be sent.");
-            return "no_address";
-        }
+            return Skip("no_address", ChannelOrderSkip.NoAddress, $"{placed.Number} has nowhere to be sent.");
 
         if (OrderChannelOf(channel) is not { } orderChannel)
-        {
-            notes.Add($"{channel} is not a channel an order can come from.");
-            return "unknown_channel";
-        }
+            return Skip("unknown_channel", ChannelOrderSkip.UnknownChannel, $"{channel} is not a channel an order can come from.");
 
         try
         {
@@ -147,14 +184,21 @@ public sealed class ReceiveChannelOrdersHandler(
                 [.. placed.Taxes.Select(SourceOrders.Tax)],
                 placed.Culture ?? "es",
                 placed.ContactEmail));
-            return "received";
+            return ("received", null);
         }
         catch (InvalidOperationException refused)
         {
-            notes.Add($"{placed.Number}'s figures do not make an order: {refused.Message}");
-            return "totals_do_not_add_up";
+            return Skip("totals_do_not_add_up", ChannelOrderSkip.TotalsDoNotAddUp, $"{placed.Number}'s figures do not make an order: {refused.Message}");
         }
     }
+
+    private static string PathTag(ChannelOrderPath path) => path switch
+    {
+        ChannelOrderPath.Webhook => "webhook",
+        ChannelOrderPath.Reconciliation => "reconciliation",
+        ChannelOrderPath.Held => "held",
+        _ => throw new ArgumentOutOfRangeException(nameof(path), path, "Not a path an order comes by."),
+    };
 
     private static OrderChannel? OrderChannelOf(string channel) => channel switch
     {
