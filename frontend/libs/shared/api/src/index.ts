@@ -2,6 +2,7 @@ export * from './lib/accounts-contracts';
 export * from './lib/address-contracts';
 export * from './lib/campaigns-contracts';
 export * from './lib/catalog-contracts';
+export * from './lib/channels-contracts';
 export * from './lib/history-contracts';
 export * from './lib/home-contracts';
 export * from './lib/inventory-contracts';

@@ -564,6 +564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/channels/held-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListHeldOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/exports/orders": {
         parameters: {
             query?: never;
@@ -2547,6 +2563,22 @@ export interface components {
             customer: null | string;
             customerAtSource: null | string;
         };
+        /** @enum {unknown} */
+        HeldOrderReason: "NotInCatalogue" | "NoAddress" | "TotalsDoNotAddUp";
+        HeldOrderView: {
+            channel: string;
+            externalId: string;
+            number: string;
+            reason: components["schemas"]["MessageOfHeldOrderReason"];
+            page: null | string;
+            /** Format: date-time */
+            heldSince: string;
+            /** Format: date-time */
+            lastTriedAt: string;
+        };
+        HeldOrdersView: {
+            orders: components["schemas"]["HeldOrderView"][];
+        };
         HistorySettingsRequest: {
             enabled: boolean;
         };
@@ -2819,6 +2851,11 @@ export interface components {
         };
         MessageOfDiscountNoteCode: {
             code: components["schemas"]["DiscountNoteCode"];
+            about: null | string;
+            text: string;
+        };
+        MessageOfHeldOrderReason: {
+            code: components["schemas"]["HeldOrderReason"];
             about: null | string;
             text: string;
         };
@@ -5944,6 +5981,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogueGaps"];
+                };
+            };
+            /** @description This needs somebody signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Unauthenticated";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+            /** @description Whoever is asking may not do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @enum {string} */
+                        code?: "Forbidden";
+                    } & components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ListHeldOrders: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldOrdersView"];
                 };
             };
             /** @description This needs somebody signed in. */

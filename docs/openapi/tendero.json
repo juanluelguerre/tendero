@@ -3198,6 +3198,86 @@
         ]
       }
     },
+    "/api/channels/held-orders": {
+      "get": {
+        "tags": [
+          "Channels"
+        ],
+        "operationId": "ListHeldOrders",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldOrdersView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "This needs somebody signed in.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Unauthenticated"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Whoever is asking may not do this.",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Problem"
+                    }
+                  ],
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "Forbidden"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": [
+              "Shopkeeper"
+            ]
+          }
+        ]
+      }
+    },
     "/api/exports/orders": {
       "post": {
         "tags": [
@@ -14719,6 +14799,67 @@
           }
         }
       },
+      "HeldOrderReason": {
+        "enum": [
+          "NotInCatalogue",
+          "NoAddress",
+          "TotalsDoNotAddUp"
+        ]
+      },
+      "HeldOrderView": {
+        "required": [
+          "channel",
+          "externalId",
+          "number",
+          "reason",
+          "page",
+          "heldSince",
+          "lastTriedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/MessageOfHeldOrderReason"
+          },
+          "page": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "heldSince": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastTriedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "HeldOrdersView": {
+        "required": [
+          "orders"
+        ],
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeldOrderView"
+            }
+          }
+        }
+      },
       "HistorySettingsRequest": {
         "required": [
           "enabled"
@@ -15819,6 +15960,28 @@
         "properties": {
           "code": {
             "$ref": "#/components/schemas/DiscountNoteCode"
+          },
+          "about": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "MessageOfHeldOrderReason": {
+        "required": [
+          "code",
+          "about",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/HeldOrderReason"
           },
           "about": {
             "type": [

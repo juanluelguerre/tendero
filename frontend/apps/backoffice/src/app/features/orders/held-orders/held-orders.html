@@ -1,0 +1,24 @@
+@if (store.orders().length) {
+  <ng-container *transloco="let t; prefix: 'orders.held'">
+    <lib-notice class="mt-4" tone="warn" data-held-orders>
+      <h2 class="text-md font-semibold">{{ t('title', { count: store.orders().length }) }}</h2>
+      <p class="mt-1 text-sm text-muted">{{ t('hint') }}</p>
+      <ul class="mt-3 grid gap-2">
+        @for (order of store.orders(); track order.channel + order.externalId) {
+          <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1" data-held-order>
+            <span class="font-mono font-medium" data-number>{{ order.number }}</span>
+            <span>{{ t('reason.' + order.reason.code, { about: order.reason.about }) }}</span>
+            <span class="text-xs text-muted">{{
+              t('since', { when: order.heldSince | dateTime: culture.active() })
+            }}</span>
+            @if (order.page) {
+              <a class="text-sm underline" [href]="order.page" target="_blank" rel="noopener">{{
+                t('open', { channel: t('channel.' + order.channel) })
+              }}</a>
+            }
+          </li>
+        }
+      </ul>
+    </lib-notice>
+  </ng-container>
+}

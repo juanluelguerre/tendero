@@ -12,6 +12,7 @@ import { primaryMove } from '../order-moves';
 import { OrderPayment } from '../order-payment/order-payment';
 import { OrderStatusLabel } from '../order-status-label/order-status-label';
 import { OrdersExport } from '../orders-export/orders-export';
+import { HeldOrders } from '../held-orders/held-orders';
 import { OrdersStore } from '../orders.store';
 
 /**
@@ -31,6 +32,7 @@ import { OrdersStore } from '../orders.store';
     ListState,
     PricePipe,
     OrdersExport,
+    HeldOrders,
   ],
   templateUrl: './order-list.html',
 })

@@ -224,6 +224,20 @@
     },
     "empty": "No orders yet. Buy something from the storefront and it lands here.",
     "failed": "Could not load the orders.",
+    "held": {
+      "title": "{{count}} paid orders could not be received",
+      "hint": "Each one was charged in its channel and is not among the orders below. Mend it there, or cancel it there, and it leaves this list by itself.",
+      "reason": {
+        "NotInCatalogue": "It sells {{about}}, which the catalogue does not have.",
+        "NoAddress": "It has nowhere to be sent.",
+        "TotalsDoNotAddUp": "Its figures do not add up by the shop's arithmetic."
+      },
+      "since": "held since {{when}}",
+      "open": "Open in {{channel}}",
+      "channel": {
+        "shopify": "Shopify"
+      }
+    },
     "hint": "What is waiting to ship comes first. Open an order to see it beside the list; a refused move comes back with the reason.",
     "loading": "Loading orders...",
     "move": {

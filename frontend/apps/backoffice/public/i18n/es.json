@@ -224,6 +224,20 @@
     },
     "empty": "Todavía no hay pedidos. Compra algo en la tienda y aparecerá aquí.",
     "failed": "No se han podido cargar los pedidos.",
+    "held": {
+      "title": "{{count}} pedidos cobrados no se han podido recibir",
+      "hint": "Cada uno se cobró en su canal y no está entre los pedidos de abajo. Arréglalo allí, o cancélalo allí, y saldrá solo de esta lista.",
+      "reason": {
+        "NotInCatalogue": "Vende {{about}}, que el catálogo no tiene.",
+        "NoAddress": "No tiene adónde enviarse.",
+        "TotalsDoNotAddUp": "Sus importes no cuadran con los de la tienda."
+      },
+      "since": "retenido desde {{when}}",
+      "open": "Abrir en {{channel}}",
+      "channel": {
+        "shopify": "Shopify"
+      }
+    },
     "hint": "Primero lo que espera envío. Abre un pedido para verlo junto a la lista; un movimiento rechazado vuelve con el motivo.",
     "loading": "Cargando pedidos...",
     "move": {
