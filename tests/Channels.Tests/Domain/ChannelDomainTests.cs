@@ -82,6 +82,16 @@ public sealed class ChannelListingTests
     [InlineData("shopify", " ")]
     public void A_listing_needs_a_channel_and_a_code(string channel, string code) =>
         Assert.Throws<ArgumentException>(() => ChannelListing.For(channel, code));
+
+    // Found by P16-28/29's Stryker run: the two guards could be deleted.
+
+    [Fact]
+    public void A_publication_without_the_channels_id_is_refused() =>
+        Assert.Throws<ArgumentException>(() => ChannelListing.For("shopify", "TAZ-001").Published(" ", new Dictionary<string, string>(), ChannelProductStatus.OnSale, At));
+
+    [Fact]
+    public void A_refusal_without_a_reason_is_refused() =>
+        Assert.Throws<ArgumentException>(() => ChannelListing.For("shopify", "TAZ-001").Refused("", At));
 }
 
 public sealed class ChannelStockLevelTests
@@ -151,6 +161,13 @@ public sealed class ChannelStockLevelTests
     [Fact]
     public void A_negative_quantity_is_refused() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => ChannelStockLevel.For("shopify", "S", "main").Set(-1, At));
+
+    [Theory]
+    [InlineData("", "S", "main")]
+    [InlineData("shopify", " ", "main")]
+    [InlineData("shopify", "S", "")]
+    public void A_level_needs_a_channel_a_sku_and_a_location(string channel, string sku, string location) =>
+        Assert.ThrowsAny<ArgumentException>(() => ChannelStockLevel.For(channel, sku, location));
 }
 
 public sealed class ChannelCursorTests
@@ -167,4 +184,17 @@ public sealed class ChannelCursorTests
 
         Assert.Equal(At.AddMinutes(5), cursor.OrdersReadUntil);
     }
+
+    /// <summary>Found by P16-28/29's Stryker run: a cursor made empty still passed the test above, which moved it before reading it.</summary>
+    [Fact]
+    public void A_new_cursor_is_its_channels_and_starts_at_the_mark_given()
+    {
+        var cursor = ChannelCursor.For("shopify", At);
+
+        Assert.Equal(("shopify", At), (cursor.Channel, cursor.OrdersReadUntil));
+    }
+
+    [Fact]
+    public void A_cursor_needs_a_channel() =>
+        Assert.ThrowsAny<ArgumentException>(() => ChannelCursor.For(" ", At));
 }
