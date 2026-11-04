@@ -97,6 +97,19 @@ public sealed class CatalogueExportReaderTests
         Assert.Equal("reduced", exported.Variants[1].TaxClass);
     }
 
+    /// <summary>Where it came from leaves with it, so a channel that is also a source (Shopify) finds its own product.</summary>
+    [Fact]
+    public async Task A_product_leaves_with_the_sources_it_was_imported_from()
+    {
+        var shirt = AShirt();
+        shirt.LinkExternal(Clock, "seed", "B0SHIRT01");
+        shirt.LinkExternal(Clock, "Shopify", "gid://shopify/Product/7", "technical-t-shirt");
+
+        var exported = Assert.Single(await Reader(shirt).ProductsAsync("es", Ct));
+
+        Assert.Equal([new ExportedReference("seed", "B0SHIRT01"), new ExportedReference("shopify", "gid://shopify/Product/7")], exported.References);
+    }
+
     [Fact]
     public async Task A_draft_leaves_said_as_not_on_sale_and_an_archived_product_does_not_leave()
     {

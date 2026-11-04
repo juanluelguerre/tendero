@@ -55,6 +55,18 @@ public sealed record ChannelProduct(
     IReadOnlyList<ChannelPicture> Pictures,
     IReadOnlyList<ChannelVariant> Variants)
 {
+    /// <summary>The channel's id for it as Tendero last published it, from its listing; null if never.</summary>
+    public string? ListedAs { get; init; }
+
+    /// <summary>
+    /// The product's id at each source it was imported from, by the source's key
+    /// (<c>shopify</c>): a channel that is also a source finds its own product by it.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> References { get; init; } = None;
+
+    // One instance, so two products with no references are equal as records are.
+    private static readonly IReadOnlyDictionary<string, string> None = new Dictionary<string, string>(StringComparer.Ordinal);
+
     /// <summary>
     /// A product gone from the catalogue: only its code and its status travel, because the
     /// channel archives what it already holds and needs nothing else to do it.
@@ -75,7 +87,7 @@ public sealed record ChannelListingIds(string ProductId, IReadOnlyDictionary<str
 
 /// <param name="Location">The channel's location: a Tendero warehouse, mapped by the adapter's configuration.</param>
 /// <param name="Available">What the channel may sell: Tendero's available minus the margin, never below zero.</param>
-/// <param name="Expected">What Tendero last published here; null before the first publication.</param>
+/// <param name="Expected">What Tendero last published here; null before the first publication, which compares nothing and replaces whatever the channel held of its own.</param>
 /// <param name="IdempotencyKey">Unique per publication, so a retry of the same one changes nothing twice.</param>
 public sealed record ChannelStock(string Sku, string Location, int Available, int? Expected, string IdempotencyKey);
 

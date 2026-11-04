@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using ElGuerre.Tendero.Channels;
 using ElGuerre.Tendero.Channels.Ports;
 using Microsoft.Extensions.Options;
@@ -30,17 +31,15 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
     {
         await EnsurePricesMeanTheSameAsync(cancellationToken);
 
-        var handle = HandleOf(product.Code);
-        var found = await admin.QueryAsync(
-            "query ($handle: String!) { productByIdentifier(identifier: { handle: $handle }) { id } }",
-            new { handle },
-            cancellationToken);
-        var existing = found.GetProperty("productByIdentifier") is { ValueKind: JsonValueKind.Object } held
-            ? held.GetProperty("id").GetString()
-            : null;
+        var held = await HeldAsync(product, cancellationToken);
+        var existing = held?.Id;
 
         if (product.Status == ChannelProductStatus.Archived && product.Variants.Count == 0)
             return await ArchiveAsync(existing, product.Code, cancellationToken);
+
+        // The store's handle is kept: its URLs, and what search engines know them by,
+        // are the merchant's. A product the store never held is named by its code.
+        var handle = held?.Handle ?? HandleOf(product.Code);
 
         var answer = (await admin.QueryAsync(
             """
@@ -154,6 +153,81 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
 
     internal static string HandleOf(string code) => code.ToLowerInvariant();
 
+    private sealed record HeldProduct(string Id, string Handle);
+
+    /// <summary>
+    /// The store's own product for this one, if it holds it: by the id Tendero last
+    /// published it as, then by the id it was imported from this store with (S1), then
+    /// by its SKUs — the identity the merchant shares between the two systems — and
+    /// last by the handle Tendero names the products it makes with, its code. A code
+    /// is Tendero's and a handle the store's, so the code alone does not find what the
+    /// store made: the lab store's round trip (2026-11-03) made a second copy that way.
+    /// </summary>
+    private async Task<HeldProduct?> HeldAsync(ChannelProduct product, CancellationToken cancellationToken)
+    {
+        foreach (var id in new[] { product.ListedAs, product.References.GetValueOrDefault(Key) })
+            if (id is { Length: > 0 } && await ProductAsync(id, cancellationToken) is { } listed)
+                return listed;
+
+        return await BySkusAsync(product, cancellationToken) ?? await ByHandleAsync(HandleOf(product.Code), cancellationToken);
+    }
+
+    private async Task<HeldProduct?> ByHandleAsync(string handle, CancellationToken cancellationToken)
+    {
+        var product = (await admin.QueryAsync(
+            "query ($handle: String!) { productByIdentifier(identifier: { handle: $handle }) { id handle } }",
+            new { handle },
+            cancellationToken)).GetProperty("productByIdentifier");
+
+        return product.ValueKind == JsonValueKind.Object
+            ? new HeldProduct(product.GetProperty("id").GetString()!, product.GetProperty("handle").GetString()!)
+            : null;
+    }
+
+    private async Task<HeldProduct?> ProductAsync(string id, CancellationToken cancellationToken)
+    {
+        var product = (await admin.QueryAsync(
+            "query ($id: ID!) { product(id: $id) { id handle } }",
+            new { id },
+            cancellationToken)).GetProperty("product");
+
+        return product.ValueKind == JsonValueKind.Object
+            ? new HeldProduct(product.GetProperty("id").GetString()!, product.GetProperty("handle").GetString()!)
+            : null;
+    }
+
+    /// <summary>The one product of the store that sells these SKUs; two are refused rather than guessed between.</summary>
+    private async Task<HeldProduct?> BySkusAsync(ChannelProduct product, CancellationToken cancellationToken)
+    {
+        var skus = product.Variants.Select(variant => variant.Sku).Where(sku => sku.Length > 0).ToHashSet(StringComparer.Ordinal);
+        if (skus.Count == 0)
+            return null;
+
+        var answer = await admin.QueryAsync(
+            "query ($query: String!) { productVariants(first: 250, query: $query) { nodes { sku product { id handle } } } }",
+            new { query = string.Join(" OR ", skus.Select(SkuQuery)) },
+            cancellationToken);
+
+        var holders = answer.GetProperty("productVariants").GetProperty("nodes").EnumerateArray()
+            // The search matches loosely; only the SKU itself counts.
+            .Where(variant => variant.GetProperty("sku").GetString() is { } sku && skus.Contains(sku))
+            .Select(variant => variant.GetProperty("product"))
+            .Select(holder => new HeldProduct(holder.GetProperty("id").GetString()!, holder.GetProperty("handle").GetString()!))
+            .Distinct()
+            .ToList();
+
+        return holders.Count switch
+        {
+            0 => null,
+            1 => holders[0],
+            _ => throw new ChannelRefusedException(
+                $"The store sells {product.Code}'s SKUs under {holders.Count} products ({string.Join(", ", holders.Select(holder => holder.Handle))}): "
+                + "which one is it is the merchant's to say, not Tendero's to guess."),
+        };
+    }
+
+    private static string SkuQuery(string sku) => $"sku:\"{sku.Replace("\"", "\\\"", StringComparison.Ordinal)}\"";
+
     /// <summary>
     /// The status alone, so the variants the store holds — which its past orders name —
     /// stay: productSet would delete every variant a product was sent without.
@@ -201,11 +275,23 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
                 + "published, every price would sell above what it means. Turn on 'All prices include tax' in the store's settings.");
     }
 
-    private object Input(ChannelProduct product, string handle)
+    /// <summary>
+    /// The option a Shopify product without axes still has: its variants must be values
+    /// of some option, or productSet answers "Product options input is required when
+    /// updating variants" — every such product on the lab store's round trip. The seed
+    /// and Shopify's own admin use this one.
+    /// </summary>
+    private static readonly IReadOnlyList<ChannelOption> DefaultOption = [new("Title", "Default Title")];
+
+    private JsonObject Input(ChannelProduct product, string handle)
     {
+        var variants = product.Variants
+            .Select(variant => variant.Options.Count == 0 ? variant with { Options = DefaultOption } : variant)
+            .ToList();
+        product = product with { Variants = variants };
         var axes = product.Variants.SelectMany(variant => variant.Options).Select(option => option.Axis).Distinct().ToList();
 
-        return new
+        var input = JsonSerializer.SerializeToNode(new
         {
             handle,
             title = product.Name,
@@ -223,7 +309,6 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
                 values = product.Variants.SelectMany(variant => variant.Options).Where(option => option.Axis == axis)
                     .Select(option => option.Value).Distinct().Select(value => new { name = value }),
             }),
-            files = Pictures(product),
             metafields = new[] { new { @namespace = options.Value.AttributesNamespace, key = "code", type = "single_line_text_field", value = product.Code } },
             variants = product.Variants.Select(variant => new
             {
@@ -235,7 +320,14 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
                 inventoryItem = new { tracked = true },
                 optionValues = variant.Options.Select(option => new { optionName = option.Axis, name = option.Value }),
             }),
-        };
+        })!.AsObject();
+
+        // Only when there are pictures the store can fetch: productSet's files replace
+        // the product's, and "files": null is a value in GraphQL, not an absence.
+        if (Pictures(product) is { } files)
+            input["files"] = JsonSerializer.SerializeToNode(files);
+
+        return input;
     }
 
     /// <summary>
@@ -280,7 +372,7 @@ internal sealed class ShopifySalesChannel(ShopifyAdmin admin, IOptions<ShopifyOp
     {
         var answer = await admin.QueryAsync(
             "query ($query: String!) { productVariants(first: 1, query: $query) { nodes { sku inventoryItem { id } } } }",
-            new { query = $"sku:\"{sku.Replace("\"", "\\\"", StringComparison.Ordinal)}\"" },
+            new { query = SkuQuery(sku) },
             cancellationToken);
 
         return answer.GetProperty("productVariants").GetProperty("nodes").EnumerateArray()

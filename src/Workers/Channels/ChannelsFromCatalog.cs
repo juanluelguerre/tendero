@@ -83,5 +83,11 @@ public static class ChannelProducts
                 variant.Price,
                 // The axis as a shopper reads it: the channel shows the option's name.
                 [.. variant.Options.Select(option => new ChannelOption(option.AxisLabel, option.Label))])),
-        ]);
+        ])
+    {
+        // One id per source: a product is imported from a source once.
+        References = product.References
+            .GroupBy(reference => reference.Source, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First().ExternalId, StringComparer.Ordinal),
+    };
 }

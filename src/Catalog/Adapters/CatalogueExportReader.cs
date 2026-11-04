@@ -71,7 +71,10 @@ public sealed class CatalogueExportReader(
                                 attributes.ByCode(axis)?.LabelForOption(variant.AxisValues[axis], culture) ?? variant.AxisValues[axis])),
                     ],
                     [.. product.PicturesOf(variant).Select(image => image.Id.Value)])),
-        ]);
+        ])
+    {
+        References = [.. product.ExternalReferences.Select(reference => new ExportedReference(reference.Source, reference.ExternalId))],
+    };
 
     /// <summary>The value as the page reads it; a number with its unit, since another vocabulary has no definition to render it by.</summary>
     private static ExportedAttribute Attribute(AttributeValue value, AttributeDefinition definition, string culture)

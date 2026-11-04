@@ -16,6 +16,9 @@ internal sealed class InMemorySalesChannel : ISalesChannel
 
     public List<ChannelShipment> Shipped { get; } = [];
 
+    /// <summary>Every product it was told, as it was told it, in order.</summary>
+    public List<ChannelProduct> Told { get; } = [];
+
     /// <summary>Every stock publication it was sent, refused ones included, in order.</summary>
     public List<ChannelStock> StockSent { get; } = [];
 
@@ -27,6 +30,7 @@ internal sealed class InMemorySalesChannel : ISalesChannel
 
     public Task<ChannelListingIds> PublishAsync(ChannelProduct product, CancellationToken cancellationToken = default)
     {
+        Told.Add(product);
         if (product.Status == ChannelProductStatus.Archived && product.Variants.Count == 0)
         {
             if (!products.TryGetValue(product.Code, out var archived))
@@ -60,7 +64,8 @@ internal sealed class InMemorySalesChannel : ISalesChannel
 
         var key = (publication.Sku, publication.Location);
         int? held = stock.TryGetValue(key, out var quantity) ? quantity : null;
-        if (held != publication.Expected)
+        // The first publication expects nothing and compares nothing, as Shopify does.
+        if (publication.Expected is not null && held != publication.Expected)
             return Task.FromResult<StockPublication>(new StockPublication.Stale(held));
 
         stock[key] = publication.Available;

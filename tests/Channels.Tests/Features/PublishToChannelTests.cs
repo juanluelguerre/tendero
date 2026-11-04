@@ -40,6 +40,22 @@ public sealed class PublishToChannelTests
         Assert.Equal(1, state.Saves);
     }
 
+    /// <summary>
+    /// The channel is told what Tendero last published the product as, so it updates
+    /// that one rather than look for it again (the lab store's round trip, 2026-11-03).
+    /// </summary>
+    [Fact]
+    public async Task The_channel_is_told_what_the_product_was_last_published_as()
+    {
+        var channel = new InMemorySalesChannel();
+        var state = new InMemoryChannelState();
+
+        await Handler(channel, state).HandleAsync(new PublishToChannelCommand("memory", Mug()), Ct);
+        await Handler(channel, state).HandleAsync(new PublishToChannelCommand("memory", Mug()), Ct);
+
+        Assert.Equal([null, "product/TAZ-001"], channel.Told.Select(product => product.ListedAs));
+    }
+
     /// <summary>The second publication of the same product updates its listing; it never makes a second one.</summary>
     [Fact]
     public async Task Publishing_again_updates_the_one_listing()

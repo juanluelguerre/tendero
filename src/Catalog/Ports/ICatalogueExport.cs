@@ -43,7 +43,18 @@ public sealed record ExportedProduct(
     IReadOnlyList<ExportedCategoryStep> Category,
     IReadOnlyList<ExportedPicture> Pictures,
     IReadOnlyList<ExportedAttribute> Attributes,
-    IReadOnlyList<ExportedVariant> Variants);
+    IReadOnlyList<ExportedVariant> Variants)
+{
+    /// <summary>
+    /// Where the product came from: each source it was imported from, by that source's
+    /// id. A channel that is also a source (Shopify, S1 then S3) finds its own product by it.
+    /// </summary>
+    public IReadOnlyList<ExportedReference> References { get; init; } = [];
+}
+
+/// <param name="Source">The source's key, lower case: <c>shopify</c>, <c>seed</c>.</param>
+/// <param name="ExternalId">The source's own id for it, such as <c>gid://shopify/Product/123</c>.</param>
+public sealed record ExportedReference(string Source, string ExternalId);
 
 public sealed record ExportedCategoryStep(string Code, string Name);
 

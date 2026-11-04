@@ -141,7 +141,9 @@ public sealed class ShopifySalesChannelTests
     {
         var (withoutAddress, first) = ChannelStore.Open();
         await withoutAddress.PublishAsync(Mug(), Ct);
-        Assert.Null(first.ProductInputs.Single()["files"]);
+        // Not sent at all: "files": null is a value in GraphQL, and productSet's files
+        // replace the product's, so null could take its pictures away.
+        Assert.False(first.ProductInputs.Single().ContainsKey("files"));
 
         var (withAddress, second) = ChannelStore.Open(new Uri("https://shop.example.com/"));
         await withAddress.PublishAsync(Mug(), Ct);
@@ -289,6 +291,101 @@ public sealed class ShopifySalesChannelTests
         Assert.Equal(["TAZ-001-BLU-S"], ids.VariantIdsBySku.Keys);
     }
 
+    /// <summary>
+    /// The lab store's round trip (2026-11-03): the store sold the mug under its own
+    /// handle, Tendero knows it by a code of its own, and looking for the code made a
+    /// second copy. The SKUs are what both share: the product is found by them and
+    /// updated, and its handle — its URLs — stays the store's.
+    /// </summary>
+    [Fact]
+    public async Task A_product_the_store_sells_under_its_own_handle_is_found_by_its_skus_and_keeps_that_handle()
+    {
+        var (channel, store) = ChannelStore.Open();
+        var held = store.Hold("b13bag0711", "TAZ-001-BLU");
+
+        var ids = await channel.PublishAsync(Mug(), Ct);
+
+        Assert.Equal(held, ids.ProductId);
+        Assert.Equal([held], store.Identifiers);
+        Assert.Equal(["b13bag0711"], store.Handles);
+        Assert.Equal("b13bag0711", (string?)store.ProductInputs.Single()["handle"]);
+    }
+
+    /// <summary>What Tendero last published it as is asked first: the SKUs are not searched.</summary>
+    [Fact]
+    public async Task A_product_listed_before_is_updated_by_its_listed_id()
+    {
+        var (channel, store) = ChannelStore.Open();
+        var held = store.Hold("taza-de-gres", "OTHER-SKU");
+
+        await channel.PublishAsync(Mug() with { ListedAs = held }, Ct);
+
+        Assert.Equal([held], store.Identifiers);
+        Assert.Equal(0, store.SkuSearches);
+    }
+
+    /// <summary>Imported from this store (S1), the product is found by the id it came with, even with SKUs Tendero gave it.</summary>
+    [Fact]
+    public async Task A_product_imported_from_the_store_is_found_by_the_id_it_came_with()
+    {
+        var (channel, store) = ChannelStore.Open();
+        var held = store.Hold("taza-de-gres", "SHOPIFY-OWN-SKU");
+
+        await channel.PublishAsync(Mug() with { References = new Dictionary<string, string> { ["seed"] = "B0X", ["shopify"] = held } }, Ct);
+
+        Assert.Equal([held], store.Identifiers);
+    }
+
+    /// <summary>A listed product deleted in the store's admin is looked for again, and made anew when it is gone.</summary>
+    [Fact]
+    public async Task A_listed_product_the_store_deleted_is_made_anew()
+    {
+        var (channel, store) = ChannelStore.Open();
+        var gone = store.Hold("taza-de-gres", "OTHER-SKU");
+        store.Delete("taza-de-gres");
+
+        var ids = await channel.PublishAsync(Mug() with { ListedAs = gone }, Ct);
+
+        Assert.Equal([null], store.Identifiers);
+        Assert.NotEqual(gone, ids.ProductId);
+        Assert.Equal(["taz-001"], store.Handles);
+    }
+
+    /// <summary>Two of the store's products sell its SKUs: which is the merchant's to say, so nothing is written.</summary>
+    [Fact]
+    public async Task Skus_the_store_sells_under_two_products_are_refused()
+    {
+        var (channel, store) = ChannelStore.Open();
+        store.Hold("taza-azul", "TAZ-001-BLU");
+        store.Hold("taza-roja", "TAZ-001-BLU");
+
+        var refused = await Assert.ThrowsAsync<ChannelRefusedException>(() => channel.PublishAsync(Mug(), Ct));
+
+        Assert.Contains("taza-azul", refused.Message, StringComparison.Ordinal);
+        Assert.Empty(store.ProductInputs);
+    }
+
+    /// <summary>
+    /// A product without axes still has an option in Shopify, its default one: the store
+    /// refused all 101 such products on the lab store's round trip (2026-11-03) with
+    /// "Product options input is required when updating variants". The seed sends the same.
+    /// </summary>
+    [Fact]
+    public async Task A_product_without_axes_is_sent_the_stores_default_option()
+    {
+        var (channel, store) = ChannelStore.Open();
+        var plain = Mug() with { Variants = [new ChannelVariant("TAZ-001-DEFAULT", null, new Money(12.5m, "EUR"), [])] };
+
+        var ids = await channel.PublishAsync(plain, Ct);
+
+        var input = store.ProductInputs.Single();
+        Assert.Equal("Title", (string?)input["productOptions"]![0]!["name"]);
+        Assert.Equal("Default Title", (string?)input["productOptions"]![0]!["values"]![0]!["name"]);
+        var value = input["variants"]![0]!["optionValues"]![0]!;
+        Assert.Equal(("Title", "Default Title"), ((string?)value["optionName"], (string?)value["name"]));
+        Assert.Equal(["TAZ-001-DEFAULT"], ids.VariantIdsBySku.Keys);
+    }
+
     /// <summary>The code travels as a metafield the importer reads back, and a picture is declared an image.</summary>
     [Fact]
     public async Task The_code_is_a_text_metafield_and_a_picture_an_image()
@@ -355,6 +452,23 @@ public sealed class ShopifySalesChannelTests
         Assert.Equal(
             ("available", "correction", "tendero://channels/stock/TAZ-001-BLU"),
             (input.GetProperty("name").GetString(), input.GetProperty("reason").GetString(), input.GetProperty("referenceDocumentUri").GetString()));
+    }
+
+    /// <summary>
+    /// The first publication expects nothing, and Shopify then compares nothing: the
+    /// store's own number — the lab store's seed held some — is replaced, as the round
+    /// trip on the lab store showed (2026-11-03: 196 levels set, none stale).
+    /// </summary>
+    [Fact]
+    public async Task The_first_publication_replaces_what_the_store_held_of_its_own()
+    {
+        var (channel, store) = ChannelStore.Open();
+        await channel.PublishAsync(Mug(), Ct);
+        store.Stocks("TAZ-001-BLU", ChannelStore.Madrid, 6);
+
+        var first = await channel.SetAvailableAsync(new ChannelStock("TAZ-001-BLU", "MAD", 3, null, "k1"), Ct);
+
+        Assert.IsType<StockPublication.Set>(first);
     }
 
     /// <summary>Stale where the store holds no level at all: the channel's number is none, not zero.</summary>

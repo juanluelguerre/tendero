@@ -56,8 +56,31 @@ internal sealed partial class FakeShopify
     /// <summary>What each productSet sent as its input, in order.</summary>
     public List<JsonObject> ProductInputs { get; } = [];
 
+    /// <summary>How many times a product was looked for by its SKUs.</summary>
+    public int SkuSearches { get; private set; }
+
+    /// <summary>The products the store holds, by handle.</summary>
+    public IReadOnlyCollection<string> Handles => shelf.Keys;
+
+    /// <summary>A product the store already sells under a handle of its own, as the lab store's seed made them.</summary>
+    public string Hold(string handle, params string[] skus)
+    {
+        var id = $"gid://shopify/Product/{++ids}";
+        var variants = new JsonArray();
+        foreach (var sku in skus)
+            variants.Add(new JsonObject { ["id"] = $"gid://shopify/ProductVariant/{++ids}", ["sku"] = sku, ["item"] = $"gid://shopify/InventoryItem/{ids}" });
+        shelf[handle] = new JsonObject { ["id"] = id, ["status"] = "ACTIVE", ["variants"] = variants };
+        return id;
+    }
+
+    /// <summary>A product deleted in the store's admin, behind Tendero's back.</summary>
+    public void Delete(string handle) => shelf.Remove(handle);
+
     /// <summary>A product's status in the store (ACTIVE, DRAFT, ARCHIVED), by handle.</summary>
     public string? StatusOf(string handle) => shelf.TryGetValue(handle, out var product) ? (string?)product["status"] : null;
+
+    /// <summary>What the store holds of its own, before Tendero tells it anything: the lab store's seeded stock.</summary>
+    public void Stocks(string sku, string location, int quantity) => available[(ItemOf(sku)!, location)] = quantity;
 
     /// <summary>A sale the store made on its own: what turns the channel's next publication stale.</summary>
     public void Sell(string sku, string location, int quantity) => available[(ItemOf(sku)!, location)] -= quantity;
@@ -78,7 +101,26 @@ internal sealed partial class FakeShopify
         if (query.Contains("productByIdentifier(identifier: { handle: $handle })", StringComparison.Ordinal))
         {
             var handle = variables.GetProperty("handle").GetString()!;
-            return Data(new { productByIdentifier = shelf.TryGetValue(handle, out var held) ? new { id = (string?)held["id"] } : null });
+            return Data(new { productByIdentifier = shelf.TryGetValue(handle, out var byHandle) ? new { id = (string?)byHandle["id"], handle } : null });
+        }
+
+        if (query.Contains("product(id: $id) { id handle }", StringComparison.Ordinal))
+        {
+            var id = variables.GetProperty("id").GetString();
+            var held = shelf.FirstOrDefault(pair => (string?)pair.Value["id"] == id);
+            return Data(new { product = held.Value is null ? null : new { id, handle = held.Key } });
+        }
+
+        if (query.Contains("productVariants(first: 250, query: $query)", StringComparison.Ordinal))
+        {
+            // sku:"A" OR sku:"B", matched exactly here; the store matches more loosely.
+            var skus = variables.GetProperty("query").GetString()!.Split(" OR ").Select(term => term.Split('"')[1]).ToHashSet(StringComparer.Ordinal);
+            SkuSearches++;
+            var nodes = shelf
+                .SelectMany(pair => pair.Value["variants"]!.AsArray().Select(variant => (Handle: pair.Key, Id: (string?)pair.Value["id"], Sku: (string?)variant!["sku"])))
+                .Where(held => held.Sku is { } sku && skus.Contains(sku))
+                .Select(held => new { sku = held.Sku, product = new { id = held.Id, handle = held.Handle } });
+            return Data(new { productVariants = new { nodes } });
         }
 
         if (query.Contains("productSet(", StringComparison.Ordinal))
@@ -165,7 +207,27 @@ internal sealed partial class FakeShopify
             : null);
         if (Errors("productSet") is var refused && refused != NoErrors)
             return Data(new { productSet = new { product = (object?)null, userErrors = refused } });
+
+        // The store's own rule, met on the lab store's round trip (2026-11-03): variants
+        // need the options they are values of, even the one a product without axes has.
+        if (input["variants"]!.AsArray().Count > 0 && input["productOptions"]?.AsArray() is not { Count: > 0 })
+            return Data(new
+            {
+                productSet = new
+                {
+                    product = (object?)null,
+                    userErrors = new[] { new { field = new[] { "input", "productOptions" }, message = "Product options input is required when updating variants" } },
+                },
+            });
         var handle = (string)input["handle"]!;
+        var named = Identifiers[^1];
+
+        // Named by id, the product is that one, whatever handle it is sent with.
+        if (named is not null && shelf.FirstOrDefault(pair => (string?)pair.Value["id"] == named) is { Value: { } byId } held && held.Key != handle)
+        {
+            shelf.Remove(held.Key);
+            shelf[handle] = byId;
+        }
 
         if (!shelf.TryGetValue(handle, out var product))
         {
@@ -211,8 +273,9 @@ internal sealed partial class FakeShopify
         if (!keysSeen.Add(key))
             return Data(new { inventorySetQuantities = new { userErrors = NoErrors } });
 
+        // changeFromQuantity null compares nothing, as the real store does.
         int? held = available.TryGetValue(at, out var current) ? current : null;
-        if (held != expected)
+        if (expected is not null && held != expected)
             return Data(new
             {
                 inventorySetQuantities = new

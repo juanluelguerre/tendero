@@ -42,7 +42,10 @@ public sealed class PublishToChannelHandler(
 
         try
         {
-            var ids = await channels.Get(command.Channel).PublishAsync(command.Product, cancellationToken);
+            // What Tendero last published it as, so the channel updates that product
+            // rather than look for it again.
+            var told = command.Product with { ListedAs = listing.ExternalProductId };
+            var ids = await channels.Get(command.Channel).PublishAsync(told, cancellationToken);
             listing.Published(ids.ProductId, ids.VariantIdsBySku, command.Product.Status, clock.GetUtcNow());
         }
         catch (ChannelRefusedException refused)

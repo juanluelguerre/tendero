@@ -84,7 +84,8 @@ public sealed class ChannelsFromCatalogTests(PostgresFixture postgres)
         }
         while (await WorkerOutbox.PassAsync(provider, ct) > 0) { }
 
-        Assert.Equal(ChannelProduct.Archived(mug.Code), channel.Told.Last(told => told.Code == mug.Code));
+        // By the id it was published as, so the channel archives that product.
+        Assert.Equal(ChannelProduct.Archived(mug.Code) with { ListedAs = "product/" + mug.Code }, channel.Told.Last(told => told.Code == mug.Code));
 
         await using (var scope = provider.CreateAsyncScope())
         {
