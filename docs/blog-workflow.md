@@ -53,7 +53,8 @@ exists to protect.
 3. Include real numbers (NDCG, latency, cost per operation) — no hand-waving.
 4. One diagram max, recreated in the article's own style. The single
    exception is article 00, whose subject is the architecture itself and
-   which carries four; diagram sources live in `docs/blog/assets/`.
+   which carries four; diagram sources live in `docs/blog/assets/<article>/`,
+   the folder named as the article's file.
 5. Link the repo tag from the article.
 6. **Publish the tag to the public repository before the post goes live**, with
    `docs/blog/publish-public.ps1 -Tag blog/NN-slug` from `tendero-workshop` (see

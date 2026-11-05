@@ -271,7 +271,7 @@ Many commits by theme on `feature/search-answers`, one push, one pull request to
   Tendero has the retrieval and not the generation today, and where generation arrives
   (phases 10 and 12); *cross-encoder*; *query understanding*.
 - **Diagrams**: the four published with article 00 (`docs/blog/assets/01`–`04`) are not
-  touched. A new source `docs/blog/assets/07-search-layers.html`, exported to `.svg` and
+  touched. A new source `docs/blog/assets/19-hybrid-search-in-dotnet/search-layers.html`, exported to `.svg` and
   `.png`, for article 09.
 - **Backlog row (D6)**: *trained query classifier (Q2PT)* — today 23 categories, anchors,
   no logs; enters when the taxonomy passes a few hundred categories, interaction logs exist,

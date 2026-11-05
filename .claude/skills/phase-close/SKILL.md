@@ -162,7 +162,7 @@ Survivors older than the phase are counted, not classified one by one.
   ignored `StrykerOutput/` or `frontend/reports/` until the survivors are
   classified, and then those folders are deleted. What the repository keeps is
   the numbers and the classification above; an article that needs the report
-  keeps a screenshot of it in `docs/blog/assets/`.
+  keeps a screenshot of it in `docs/blog/assets/<article>/`.
 - `docs/delivery-plan.md`: the phase's status line, with its scores.
 - `docs/blog/notebook.md`: what the run taught, with the numbers.
 - `docs/book/material-map.md`: a row for the close in the phase's section
