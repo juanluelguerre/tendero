@@ -181,15 +181,19 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
     {
         await GoAsync(page, $"/{culture}/checkout");
 
-        var name = page.Locator("input[name='recipientName']");
+        // The address is a named Signal Form, so its inputs are `address.*`: the
+        // same locators as the browser tests' checkoutWithAnAddress
+        // (frontend/apps/storefront-e2e/src/journeys.ts), which CI keeps true.
+        var name = page.Locator("input[name='address.recipientName']");
         if (!await AppearsAsync(name, Glance))
             return false; // an empty cart has no checkout
 
         await name.FillAsync("Ana Simulada");
-        await page.Locator("input[name='line1']").FillAsync("Calle Mayor 1");
-        await page.Locator("input[name='postalCode']").FillAsync("28013");
-        await page.Locator("input[name='city']").FillAsync("Madrid");
-        await name.PressAsync("Tab");
+        await page.Locator("input[name='address.line1']").FillAsync("Calle Mayor 1");
+        await page.Locator("input[name='address.postalCode']").FillAsync("28013");
+        var city = page.Locator("input[name='address.city']");
+        await city.FillAsync("Madrid");
+        await city.PressAsync("Tab");
 
         var shipping = page.Locator("input[name='shipping']").First;
         await shipping.WaitForAsync();
@@ -208,8 +212,10 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
             if (!await AppearsAsync(card, Glance))
                 return paid;
 
+            // The button by what it says ("Pay 24,90 €", "Pagar 24,90 €"), as the
+            // browser tests' payWith finds it: a class is styling and changes.
             await card.CheckAsync();
-            await page.Locator("button.button--block").ClickAsync();
+            await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^(pay|pagar) ", RegexOptions.IgnoreCase) }).ClickAsync();
 
             // Placed: the order page. Declined: the checkout stays, and says so.
             try
@@ -252,7 +258,7 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
         await pick.CheckAsync();
         await page.Locator(".returnable__detail select").First.SelectOptionAsync(reason);
         await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("request the return|solicitar la devolución", RegexOptions.IgnoreCase) }).ClickAsync();
-        return await AppearsAsync(page.Locator("p.notice--good[role='status']"), Glance);
+        return await AppearsAsync(page.Locator("lib-notice [data-tone='good'][role='status']"), Glance);
     }
 
     /// <summary>Whether something shows up within a while: a page renders after its data arrives.</summary>
