@@ -1845,7 +1845,7 @@ Body: the three runs' numbers.
 - Create: `docs/adr/0032-knowing-what-the-shop-does-not-sell.md`
 - Modify: `docs/adr/0023-feature-flags-with-removal-conditions.md`, `docs/adr/0031-model-weights-are-dependencies.md`, `docs/adr/README.md`
 - Modify: `docs/search-evaluation.md`, `docs/architecture.md`, `docs/analysis/gap-analysis.md`, `docs/testing.md`, `docs/delivery-plan.md`, `docs/glossary.md`, `docs/mcp.md`
-- Create: `docs/blog/assets/07-search-layers.html` (+ exported `.svg`, `.png`)
+- Create: `docs/blog/assets/19-hybrid-search-in-dotnet/search-layers.html` (+ exported `.svg`, `.png`)
 - Modify: `docs/blog/index.md`
 
 - [ ] **Step 1: ADR 0032** — *Knowing that the shop does not sell something is a query-understanding decision, not a threshold on a retrieval score*. Context → decision → consequences, under a page: H1/H4/H5 with their numbers; the research (with URLs); layer A (identity fields, no fuzziness, help topics only with a destination); layer B (anchors, contrast, ambiguous band, calibration, fingerprint) and its measured verdict from Task 12; the spec deviation on embedding reuse with the measured latency; the exit condition to a trained classifier (backlog row). Add it to `docs/adr/README.md`.
@@ -1880,7 +1880,7 @@ flowchart LR
   - **RAG — Retrieval-Augmented Generation** — retrieval gives a generative model the context it answers from. **Tendero has the retrieval and not the generation today**: nothing generates text (no `IChatClient`, no prompt). Generation arrives with claims (phase 10) and the copilot (phase 12), and when it does, the retrieval it stands on is the one measured here. Say plainly that calling today's search "RAG" would be wrong.
   - Update the existing *Reranker* and *Graceful degradation* entries to present tense (they say "Ours will be" / "The planned test").
 
-- [ ] **Step 6: Diagram for article 09** — `docs/blog/assets/07-search-layers.html`, built like `05-image-pipeline.html` (project tokens, Bricolage for titles, JetBrains Mono for technical text): the query splitting into lexical and semantic, fusion, the reranker (dashed, "GPU only"), and beside them query understanding producing the answer; the non-AI path drawn in clay ("no model decided this"), the same convention diagram 05 uses. Export to `.svg` and 2000 px `.png` with the procedure in `docs/blog/index.md` → *Diagrams* (Node Playwright from `frontend/node_modules`, explicit `executablePath`). **Do not touch `01`–`04`.**
+- [ ] **Step 6: Diagram for article 09** — `docs/blog/assets/19-hybrid-search-in-dotnet/search-layers.html`, built like `14-a-hundred-pictures-in-csharp/image-pipeline.html` (project tokens, Bricolage for titles, JetBrains Mono for technical text): the query splitting into lexical and semantic, fusion, the reranker (dashed, "GPU only"), and beside them query understanding producing the answer; the non-AI path drawn in clay ("no model decided this"), the same convention diagram 05 uses. Export to `.svg` and 2000 px `.png` with the procedure in `docs/blog/index.md` → *Diagrams* (Node Playwright from `frontend/node_modules`, explicit `executablePath`). **Do not touch `01`–`04`.**
 
 - [ ] **Step 7: `docs/analysis/gap-analysis.md`** — the hybrid search row: what the answer adds, whether hybrid is the default now, and the numbers.
 
