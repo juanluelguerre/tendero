@@ -197,6 +197,12 @@ export const TinoStore = signalStore(
         };
         send({ id, question: text, request });
       },
+
+      /** The shopper starts over from the panel's head: the conversation is forgotten, and how long it was is reported. */
+      restart(): void {
+        store._telemetry.trackEvent('tino_conversation_restarted', { exchanges: store.exchanges().length });
+        store.newConversation();
+      },
     };
   }),
 );

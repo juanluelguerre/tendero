@@ -76,6 +76,10 @@ it cannot show (no "popular", no "best" without the figure and its source).
   travels beside the question, one line marked as data, as Steward's does. On the
   home, a listing or the cart there is no such line. Loaded `@defer`, so a shopper who
   never opens it downloads nothing.
+- Beside the close, **a new conversation** (2026-11-06, at the author's request):
+  another topic should not carry the last one's history. Idle while nothing has
+  been said, absent where Tino is not available; it reports
+  `tino_conversation_restarted` with how many questions were forgotten.
 - The search page offers it where search is weakest: with no results, or when the
   query is a sentence, *Ask Tino this* carries the query over.
 - A turn shows one working line with **Stop**; turns do not stream (the answer is

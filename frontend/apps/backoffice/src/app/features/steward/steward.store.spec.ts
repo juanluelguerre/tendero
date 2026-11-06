@@ -182,6 +182,22 @@ describe('the steward store', () => {
     ]);
   });
 
+  /** Starting over forgets the conversation, and says where it was asked from and how long it was — never what it said. */
+  it('starts over when asked, and reports from where and after how many questions', () => {
+    store.ask('One', screen);
+    http.expectOne((req) => req.url === Turns).flush(answer('A'));
+    store.ask('Two', screen);
+    http.expectOne((req) => req.url === Turns).flush(answer('B'));
+    telemetry.trackEvent.mockClear();
+
+    store.restart('header');
+
+    expect([store.exchanges().length, store.conversationId()]).toEqual([0, null]);
+    expect(telemetry.trackEvent.mock.calls).toEqual([
+      ['steward_conversation_restarted', { from: 'header', exchanges: 2 }],
+    ]);
+  });
+
   it('says when the conversation nears the model’s window', () => {
     store.ask('One', screen);
     http.expectOne((req) => req.url === Turns).flush(answer('A', { nearContextLimit: true }));

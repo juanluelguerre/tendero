@@ -264,4 +264,16 @@ describe('the tino store', () => {
       conversationId: null,
     });
   });
+
+  /** The head's new conversation: forgotten, and reported with how many questions it had — never what they said. */
+  it('starts over when the shopper asks, and reports after how many questions', () => {
+    store.ask('una sartén', null);
+    turn().flush(answer({ kind: 'Ask', products: [], ask: '¿Cuál?' }));
+    telemetry.trackEvent.mockClear();
+
+    store.restart();
+
+    expect([store.exchanges().length, store.conversationId()]).toEqual([0, null]);
+    expect(telemetry.trackEvent.mock.calls).toEqual([['tino_conversation_restarted', { exchanges: 1 }]]);
+  });
 });

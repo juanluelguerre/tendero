@@ -15,6 +15,8 @@ export type Affordance = TrackedEvents['backoffice_affordance_used']['affordance
 export type AffordanceTarget = TrackedEvents['backoffice_affordance_used']['target'];
 /** A batch a model proposed: Steward's proposals, or a product's claims together. */
 export type ReviewedKind = TrackedEvents['proposals_reviewed']['kind'];
+/** Where a new conversation with Steward was asked for: the panel's head, the notice near the window, or the end. */
+export type RestartedFrom = TrackedEvents['steward_conversation_restarted']['from'];
 type Reviewed = Omit<TrackedEvents['proposals_reviewed'], 'kind'>;
 
 /** A turn's status as the tracking plan spells it. */
@@ -135,6 +137,11 @@ export class BackofficeUsage {
     });
     if (answer.status === 'Unavailable')
       this.telemetry.trackEvent('steward_unavailable', { fell_back: answer.fellBack });
+  }
+
+  /** A new conversation with Steward, and after how many questions: by choice, or because Steward asked? */
+  stewardRestarted(from: RestartedFrom, exchanges: number): void {
+    this.telemetry.trackEvent('steward_conversation_restarted', { from, exchanges });
   }
 
   /** A batch a model proposed, decided through the review: reviewed, or stamped? */

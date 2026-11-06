@@ -8,7 +8,7 @@ import { type ConversationExchange, withConversation } from '@tendero/shared-uti
 import { catchError, EMPTY, pipe, switchMap, takeUntil, tap } from 'rxjs';
 import { StewardService } from '../../data-access/steward.service';
 import { WaitingStore } from '../../shell/waiting.store';
-import { BackofficeUsage } from '../../usage';
+import { BackofficeUsage, type RestartedFrom } from '../../usage';
 
 /** Where a question stands: on its way, answered, stopped by the person, or lost on the way. */
 export type ExchangeState = 'asking' | 'answered' | 'stopped' | 'failed' | 'tooMany';
@@ -121,6 +121,16 @@ export const StewardStore = signalStore(
           conversationId: store.conversationId(),
         };
         send({ id, request });
+      },
+
+      /**
+       * Starts over: the conversation is forgotten, and where the person asked
+       * for it and how long it was are reported — by choice from the head, or
+       * because Steward said the window is near or the conversation over.
+       */
+      restart(from: RestartedFrom): void {
+        store._usage.stewardRestarted(from, store.exchanges().length);
+        store.newConversation();
       },
     };
   }),

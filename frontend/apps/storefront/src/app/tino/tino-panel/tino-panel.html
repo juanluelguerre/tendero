@@ -10,6 +10,20 @@
         </span>
       }
       <span class="flex-1"></span>
+      @if (!door.unavailable()) {
+        <!-- Starting over, beside the close: another topic should not carry the last one's
+             history. Idle while nothing has been said. -->
+        <button
+          type="button"
+          class="inline-grid size-tap flex-none place-items-center rounded-md bg-transparent text-body hover:bg-raised disabled:cursor-default disabled:text-muted disabled:hover:bg-transparent"
+          [attr.aria-label]="t('tino.newConversation')"
+          [title]="t('tino.newConversation')"
+          [disabled]="store.exchanges().length === 0"
+          (click)="store.restart()"
+        >
+          <lib-icon name="compose" />
+        </button>
+      }
       <button
         type="button"
         class="inline-grid size-tap flex-none place-items-center rounded-md bg-transparent text-body hover:bg-raised"

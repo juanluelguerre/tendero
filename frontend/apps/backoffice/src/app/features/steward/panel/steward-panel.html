@@ -9,6 +9,18 @@
         </span>
       }
       <span class="flex-1"></span>
+      <!-- Starting over by choice, beside the close; Steward's own notices offer it too
+           when the window is near or the conversation over. Idle while nothing has been said. -->
+      <button
+        type="button"
+        class="inline-grid size-tap flex-none place-items-center rounded-md text-body hover:bg-raised disabled:cursor-default disabled:text-muted disabled:hover:bg-transparent"
+        [attr.aria-label]="t('steward.newConversation')"
+        [title]="t('steward.newConversation')"
+        [disabled]="store.exchanges().length === 0"
+        (click)="store.restart('header')"
+      >
+        <lib-icon name="compose" />
+      </button>
       <button
         type="button"
         class="inline-grid size-tap flex-none place-items-center rounded-md text-body hover:bg-raised"
@@ -184,7 +196,7 @@
       @if (store.nearLimit() && !store.ended()) {
         <lib-notice tone="info">
           <p class="m-0 text-sm">{{ t('steward.near') }}</p>
-          <button type="button" class="button button--small button--quiet mt-2" (click)="store.newConversation()">
+          <button type="button" class="button button--small button--quiet mt-2" (click)="store.restart('near_limit')">
             {{ t('steward.newConversation') }}
           </button>
         </lib-notice>
@@ -193,7 +205,7 @@
 
     <footer class="grid gap-2 border-t border-hairline p-4">
       @if (store.ended()) {
-        <button type="button" class="button" (click)="store.newConversation()">
+        <button type="button" class="button" (click)="store.restart('ended')">
           {{ t('steward.newConversation') }}
         </button>
       } @else {

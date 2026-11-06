@@ -228,8 +228,8 @@ export interface TrackedEvents {
   /**
    * The shopkeeper opened Steward's panel, from the bar or the palette (phase 12). A staff event: never who, never what they ask.
    *
-   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
-   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. If the head's new conversation is almost never pressed it leaves the head; if most restarts come from the notice near the window, the window or the history sent is too small.
    */
   readonly steward_opened: {
     /** The screen it was opened on. */
@@ -239,8 +239,8 @@ export interface TrackedEvents {
   /**
    * A Steward turn came back. Never the question's text nor the answer's: what it read, what it cost, which profile answered.
    *
-   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
-   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. If the head's new conversation is almost never pressed it leaves the head; if most restarts come from the notice near the window, the window or the history sent is too small.
    */
   readonly steward_answered: {
     /** StewardStatus, as the turn answered it. */
@@ -262,8 +262,8 @@ export interface TrackedEvents {
   /**
    * A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. Sent once the server answered, counting what it did to each row; the counts, never what they said.
    *
-   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
-   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. If the head's new conversation is almost never pressed it leaves the head; if most restarts come from the notice near the window, the window or the history sent is too small.
    */
   readonly proposals_reviewed: {
     /** Steward's proposals, or a product's claims (S-5). */
@@ -281,8 +281,8 @@ export interface TrackedEvents {
   /**
    * A Steward turn found no model to answer it: the default failed, and the fallback too when there is one.
    *
-   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
-   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. If the head's new conversation is almost never pressed it leaves the head; if most restarts come from the notice near the window, the window or the history sent is too small.
    */
   readonly steward_unavailable: {
     /** Whether a fallback profile was tried as well. */
@@ -290,10 +290,23 @@ export interface TrackedEvents {
   };
 
   /**
+   * The shopkeeper started a new conversation with Steward, forgetting the one on screen: from the panel's head when they chose to, or from the notice near the model's window or the end of a conversation when Steward asked. Never what was said.
+   *
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. If the head's new conversation is almost never pressed it leaves the head; if most restarts come from the notice near the window, the window or the history sent is too small.
+   */
+  readonly steward_conversation_restarted: {
+    /** The head's button, the notice near the model's window, or the button that replaces the composer once the conversation is over. */
+    readonly from: 'header' | 'near_limit' | 'ended';
+    /** How many questions the conversation forgotten had. */
+    readonly exchanges: number;
+  };
+
+  /**
    * A shopper opened Tino's panel, from the header or from the search page's offer (phase 12b). Only with analytics consent; never what they ask.
    *
-   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
-   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops. If shoppers start over after one or two questions, the history drags answers off topic and what a turn sends of it is what changes; if nobody ever does, the head's button goes.
    */
   readonly tino_opened: {
     /** The header's door, or the search page's *Ask Tino this*. */
@@ -305,8 +318,8 @@ export interface TrackedEvents {
   /**
    * Tino answered a turn (phase 12b). The kind of answer and its counts, never the question nor a sentence of the answer. Only with analytics consent.
    *
-   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
-   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops. If shoppers start over after one or two questions, the history drags answers off topic and what a turn sends of it is what changes; if nobody ever does, the head's button goes.
    */
   readonly tino_answered: {
     /** The shape of the answer. */
@@ -324,8 +337,8 @@ export interface TrackedEvents {
   /**
    * A shopper followed something an answer of Tino's offered (phase 12b): a product, the order's page, or all the search's results. Only with analytics consent.
    *
-   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
-   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops. If shoppers start over after one or two questions, the history drags answers off topic and what a turn sends of it is what changes; if nobody ever does, the head's button goes.
    */
   readonly tino_result_followed: {
     /** What was followed. */
@@ -339,12 +352,23 @@ export interface TrackedEvents {
   /**
    * Tino did not answer and the panel showed the search results instead, or said it is not available (phase 12b). Only with analytics consent.
    *
-   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
-   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops. If shoppers start over after one or two questions, the history drags answers off topic and what a turn sends of it is what changes; if nobody ever does, the head's button goes.
    */
   readonly tino_unavailable: {
     /** The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. */
     readonly cause: 'no_profile' | 'model' | 'time' | 'budget' | 'shop' | 'too_long' | 'scorer' | 'too_many' | 'network' | 'not_available';
+  };
+
+  /**
+   * A shopper started a new conversation with Tino from the panel's head, forgetting the one on screen. Only with analytics consent; never what was said.
+   *
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops. If shoppers start over after one or two questions, the history drags answers off topic and what a turn sends of it is what changes; if nobody ever does, the head's button goes.
+   */
+  readonly tino_conversation_restarted: {
+    /** How many questions the conversation forgotten had. */
+    readonly exchanges: number;
   };
 
   /**
@@ -536,10 +560,12 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   steward_answered: 'staff',
   proposals_reviewed: 'staff',
   steward_unavailable: 'staff',
+  steward_conversation_restarted: 'staff',
   tino_opened: 'behavioural',
   tino_answered: 'behavioural',
   tino_result_followed: 'behavioural',
   tino_unavailable: 'behavioural',
+  tino_conversation_restarted: 'behavioural',
   image_alt_proposal_decided: 'staff',
   search_by_image_submitted: 'behavioural',
   search_by_image_result_followed: 'behavioural',
