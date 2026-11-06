@@ -245,20 +245,56 @@ against the mutant Stryker named:
   - `ui`: the composer's focus after a turn and its dictation appended to a
     draft (19 mutants); the modal sheet closing only when open; the stop icon
     drawn filled; the theme following the system's while the page is open.
-  - `telemetry`: `routeTemplate` and following the route — the name every page
-    view carries — have no spec of their own; the staff consent gate; a failing
-    adapter's `route()`. The Faro and OpenTelemetry adapters' survivors are
-    mostly attribute names and optional calls, to be read with the next
-    telemetry change.
+  - `telemetry`: ~~`routeTemplate` and following the route~~ (closed
+    2026-11-06, below); the staff consent gate; a failing adapter's `route()`.
+    The Faro and OpenTelemetry adapters' survivors are mostly attribute names
+    and optional calls, to be read with the next telemetry change.
   - `a11y`: the colour parser behind the contrast checks (short and eight-digit
     hex, `rgb()` with spaces, the linearisation's boundary) and the large-text
     threshold at exactly 18.66 px.
-  - `agent`: the WebMCP tool result's shape, `{ content: [{ type: 'text', text }] }`,
-    is never asserted — the one thing an agent reading the page receives.
+  - `agent`: ~~the WebMCP tool result's shape~~ (closed 2026-11-06, below).
   - `auth`: the role claim's name, `isSignedIn`, the expired flag's start.
   - `i18n`: the chosen culture remembered in `localStorage`.
   - `composer`: the microphone store's status after a question is sent, the
     Web Speech adapter's error handling, `speechLanguage`.
+
+**The baselines live in `frontend/tools/mutation-baselines.json`** since
+2026-11-06, and `npm run mutate` holds a run to them: under its library's
+baseline it fails; over it, it says so and the baseline is raised by hand, with
+the run written here. The table above is the first runs, kept as history. In CI,
+the *Mutation (frontend)* workflow (`.github/workflows/mutation-frontend.yml`)
+runs the same command for `all` or a list of libraries, **only when started by
+hand** — never on a push or a schedule (the author, 2026-11-06: a schedule spends
+the account's minutes when nothing changed, and level 2 runs at a phase close) —
+one job per library, the score in the job summary, the HTML and JSON report as
+an artifact.
+
+**2026-11-06 — two written-down gaps closed, and one found on the way.** Each
+test proven against hand mutations before its run:
+
+- `agent`: *answers in MCP content shape, exactly, through the registration
+  too* — `say` and `refuse` compared whole, and what a registered tool hands the
+  agent. Hand mutations: `say`'s `type` emptied, `refuse`'s content an empty
+  object, the registration's wrapper returning nothing; each red. Re-run:
+  78.85 → **88.46 %** (55 mutants, 19 s), the new baseline. The six left: the
+  `MODEL_CONTEXT` token's name, `providedIn` and factory (static artefacts);
+  `inject`'s `{ optional: true }` on a token with a factory (equivalent); and
+  `if (this.context)` as `true`, which only differs on a browser that has
+  `modelContext` while none is injected (unreachable in jsdom).
+- `telemetry`: `routeTemplate` on its own (levels joined from the root, a level
+  with no path skipped, the root alone `/`) and `TelemetryStartup` following the
+  route (the page it starts on, then each page's template and never its URL;
+  nothing after its injector is destroyed). Hand mutations: `if (path)` as
+  `!== undefined`, the leading slash dropped, the first report removed, the
+  subscription never ended, the URL in place of the template; each red. The run
+  then named a gap nobody had written down: the context an adapter starts with
+  (`service`, `sessionId`, `endpoint`) could be emptied. *Starts the adapter with
+  the app's name, the session and the page's own endpoint*, its hand mutation
+  (the context `{}`) red. Re-run: 67.42 → 72.83 → **74.23 %** (416 mutants, about
+  2 min), the new baseline. Left in `provide-telemetry.ts`, eight: the adapters
+  token's name, `providedIn` and factory (static artefacts); `inject(Router, { optional: true })`, and `if (!router)` and
+  `if (!load)` as `false`, which differ only without a router — `Router` is
+  provided in root — or end in the same no-op through the `catch` (equivalent).
 
 ### Level 2's closes, as they ran
 

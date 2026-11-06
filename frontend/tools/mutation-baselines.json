@@ -1,0 +1,11 @@
+{
+  "$comment": "Each shared library's StrykerJS baseline, as `of covered` in percent: killed and timed out over killed, timed out and survived. A ratchet: npm run mutate fails under it, and is raised by hand when a run beats it, with the run in docs/testing.md (Level 2 on the frontend).",
+  "a11y": 87.5,
+  "agent": 88.46,
+  "auth": 55.56,
+  "composer": 86.64,
+  "i18n": 86.08,
+  "telemetry": 74.23,
+  "ui": 76.62,
+  "util": 95.65
+}

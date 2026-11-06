@@ -1,0 +1,88 @@
+# StrykerJS over the frontend's shared libraries (docs/testing.md, Level 2 on the
+# frontend). Run by hand, never on a push or a schedule: level 2 runs at a phase
+# close, over the libraries the phase touched, and a schedule would spend the
+# account's minutes when nothing has changed (decided 2026-11-06).
+#
+# Each library is held to its baseline in frontend/tools/mutation-baselines.json:
+# `npm run mutate` fails under it. The HTML and JSON reports are kept as an
+# artifact, since a mutation report is never committed.
+name: Mutation (frontend)
+
+on:
+  workflow_dispatch:
+    inputs:
+      libraries:
+        description: 'Shared libraries, comma separated, or "all"'
+        required: true
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  libraries:
+    name: Which libraries
+    runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.pick.outputs.list }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # The libraries StrykerJS can run are the ones with a Vitest config, as
+      # tools/mutate.mjs finds them; a name that is not one fails here.
+      - id: pick
+        env:
+          ASKED: ${{ inputs.libraries }}
+        run: |
+          node --input-type=module -e '
+            import { existsSync, readdirSync } from "node:fs";
+            const known = readdirSync("frontend/libs/shared").filter((name) => existsSync(`frontend/libs/shared/${name}/vite.config.mts`));
+            const asked = process.env.ASKED.trim() === "all" ? known : process.env.ASKED.split(",").map((name) => name.trim()).filter(Boolean);
+            const unknown = asked.filter((name) => !known.includes(name));
+            if (asked.length === 0 || unknown.length > 0) {
+              console.error(`Unknown or no libraries: ${unknown.join(", ")}. Known: ${known.join(", ")}`);
+              process.exit(1);
+            }
+            console.log(`list=${JSON.stringify(asked)}`);
+          ' >> "$GITHUB_OUTPUT"
+
+  mutate:
+    name: Mutate ${{ matrix.library }}
+    needs: libraries
+    runs-on: ubuntu-latest
+    # The longest library, telemetry, takes about five minutes on a laptop.
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        library: ${{ fromJSON(needs.libraries.outputs.list) }}
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NX_DAEMON: 'false'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: StrykerJS, held to the baseline
+        run: npm run mutate -- ${{ matrix.library }} 2>&1 | tee mutation.log; exit "${PIPESTATUS[0]}"
+        shell: bash
+
+      - name: The score in the job summary
+        if: always()
+        run: grep -E '% of covered' mutation.log >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload the report
+        if: always() && hashFiles(format('frontend/reports/mutation/{0}/mutation.html', matrix.library)) != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-${{ matrix.library }}
+          path: frontend/reports/mutation/${{ matrix.library }}/

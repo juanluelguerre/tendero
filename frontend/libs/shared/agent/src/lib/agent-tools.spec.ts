@@ -148,6 +148,26 @@ describe('the agent surface', () => {
   });
 
   /**
+   * The one thing an agent reading the page receives. An agent parses MCP's
+   * content shape and nothing else: a `type` it does not know, or a text in
+   * another field, is a tool that answered nothing it can read.
+   */
+  it('answers in MCP content shape, exactly, through the registration too', async () => {
+    expect(say('here you go')).toStrictEqual({ content: [{ type: 'text', text: 'here you go' }] });
+    expect(refuse('no such SKU')).toStrictEqual({ content: [{ type: 'text', text: 'no such SKU' }], isError: true });
+
+    const registerTool = vi.fn<ModelContext['registerTool']>(() => Promise.resolve());
+    TestBed.configureTestingModule({ providers: [{ provide: MODEL_CONTEXT, useValue: { registerTool } }] });
+    const answers: ToolDescriptor = { ...aTool('search_products'), execute: () => Promise.resolve(say('two kettles')) };
+    TestBed.inject(AgentTools).register([answers]);
+    const [search] = registered(registerTool);
+
+    expect(await search.execute({}, { signal: new AbortController().signal })).toStrictEqual({
+      content: [{ type: 'text', text: 'two kettles' }],
+    });
+  });
+
+  /**
    * The browser's half of telling a person from an agent (ADR 0036): every call
    * an agent makes through WebMCP is an event marked webmcp, and a refusal is
    * counted as a refusal rather than as an answer.
