@@ -186,6 +186,16 @@ survivors in `docs/testing.md`, then delete it. A library takes from about ten
 seconds (`a11y`) to four and a half minutes (`telemetry`). It runs at a phase
 close over each library the phase touched, never per pull request.
 
+**Held to a baseline.** After the table, `npm run mutate` prints the library's
+`of covered` score and compares it with its baseline in
+`tools/mutation-baselines.json`: under it, the command fails; over it, it says
+so, and raising the baseline is done by hand, with the run written down in
+`docs/testing.md`. **In CI**, the _Mutation (frontend)_ workflow runs the same
+command, only when started by hand (_Actions → Mutation (frontend) → Run
+workflow_, with `all` or a list such as `agent, telemetry`): one job per
+library, its score in the job summary, its HTML and JSON report kept as an
+artifact. It never runs on a push or a schedule.
+
 **Reading the score.** `of covered` is the one that counts: of the mutants some
 spec runs, the share a spec kills. `of total` also counts code no spec reaches,
 which in a library is mostly code only a browser runs. Every survivor gets a
@@ -193,7 +203,7 @@ name — a real gap (write the test, see it kill that mutant), equivalent, a
 static artefact (a module's top-level body runs once, before Stryker can switch
 a mutant on), configuration, or unreachable in jsdom.
 
-**The two files in `tools/`:**
+**The three files in `tools/`:**
 
 - **`mutate.mjs`** — what `npm run mutate` runs. It starts StrykerJS from
   `frontend/`, not from the library's folder, because the libraries import each
@@ -210,3 +220,5 @@ a mutant on), configuration, or unreachable in jsdom.
   options of `input()`, `output()`, `model()` and the view and content queries.
   Instrumented, those are refused (NG1010) and a library with a component cannot
   run at all. It is never run by hand.
+- **`mutation-baselines.json`** — each library's baseline, the ratchet
+  `mutate.mjs` holds a run to.
