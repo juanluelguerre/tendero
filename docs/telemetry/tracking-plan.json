@@ -389,13 +389,14 @@
     {
       "name": "Steward",
       "area": "backoffice",
-      "question": "Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?",
-      "decision": "Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.",
+      "question": "Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?",
+      "decision": "Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. If the head's new conversation is almost never pressed it leaves the head; if most restarts come from the notice near the window, the window or the history sent is too small.",
       "signals": [
         "steward_opened",
         "steward_answered",
         "proposals_reviewed",
-        "steward_unavailable"
+        "steward_unavailable",
+        "steward_conversation_restarted"
       ]
     },
     {
@@ -420,13 +421,14 @@
     {
       "name": "Tino",
       "area": "storefront",
-      "question": "Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?",
-      "decision": "Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops.",
+      "question": "Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?",
+      "decision": "Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops. If shoppers start over after one or two questions, the history drags answers off topic and what a turn sends of it is what changes; if nobody ever does, the head's button goes.",
       "signals": [
         "tino_opened",
         "tino_answered",
         "tino_result_followed",
         "tino_unavailable",
+        "tino_conversation_restarted",
         "tendero.tino.turns"
       ]
     },
@@ -1019,6 +1021,26 @@
       }
     },
     {
+      "name": "steward_conversation_restarted",
+      "description": "The shopkeeper started a new conversation with Steward, forgetting the one on screen: from the panel's head when they chose to, or from the notice near the model's window or the end of a conversation when Steward asked. Never what was said.",
+      "consent": "staff",
+      "attributes": {
+        "from": {
+          "type": "string",
+          "values": [
+            "header",
+            "near_limit",
+            "ended"
+          ],
+          "description": "The head's button, the notice near the model's window, or the button that replaces the composer once the conversation is over."
+        },
+        "exchanges": {
+          "type": "number",
+          "description": "How many questions the conversation forgotten had."
+        }
+      }
+    },
+    {
       "name": "tino_opened",
       "description": "A shopper opened Tino's panel, from the header or from the search page's offer (phase 12b). Only with analytics consent; never what they ask.",
       "consent": "behavioural",
@@ -1129,6 +1151,17 @@
             "not_available"
           ],
           "description": "The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off."
+        }
+      }
+    },
+    {
+      "name": "tino_conversation_restarted",
+      "description": "A shopper started a new conversation with Tino from the panel's head, forgetting the one on screen. Only with analytics consent; never what was said.",
+      "consent": "behavioural",
+      "attributes": {
+        "exchanges": {
+          "type": "number",
+          "description": "How many questions the conversation forgotten had."
         }
       }
     },

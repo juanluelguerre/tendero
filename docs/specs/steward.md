@@ -127,6 +127,11 @@ contexts compute the figures and apply the rules (invariant 12).
   a turn can be cancelled.
 - Near the context limit the panel says so and offers a new conversation; it
   never trims the history in silence.
+- The head carries **a new conversation** beside the close (2026-11-06, at the
+  author's request), idle while nothing has been said: starting over by choice,
+  not only when Steward asks. Every restart reports
+  `steward_conversation_restarted` with where it was asked for (`header`,
+  `near_limit`, `ended`) and how many questions were forgotten.
 
 ### The review
 

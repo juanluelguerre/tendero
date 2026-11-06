@@ -35,7 +35,7 @@ everything here that is not *planned* is emitted.
 | Campaign card | Do shoppers open the campaign card, before a campaign starts as well as while it runs? | If the before card is not opened, the teaser is not worth its place. | `campaign_card_opened` | emitted |
 | Browsing trail | Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it? | If many clear it, the trail is felt as surveillance; show less, or ask first. | `trail_cleared` | emitted |
 | Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
-| Tino | Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? | Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops. | `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`, `tendero.tino.turns` | emitted |
+| Tino | Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions? | Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. If the cards code adds under *Matches your search* are opened far less than those the model explained, topping an answer up to three stops. If shoppers start over after one or two questions, the history drags answers off topic and what a turn sends of it is what changes; if nobody ever does, the head's button goes. | `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`, `tino_conversation_restarted`, `tendero.tino.turns` | emitted |
 | Search with a picture | Does anyone search with a picture, from where, do they mark a part, how much of what they photograph does the shop sell, and does the picture find what they wanted? | If almost nobody does, the control leaves the search box for the search page; if results are followed no more often than the words' are, text against pictures is not worth making a leg of the main search; if most searches are refused or fail, the limits or the model's place are wrong. If most are marked, the detector matters less than the box and its cost is questioned; many objects not sold is the catalogue's gap, measured; and whether Tino gets pictures (the camera search's stage 2) is decided on these. | `search_by_image_submitted`, `search_by_image_result_followed` | emitted |
 | Speak to the shop | Does anyone speak to the shop, does it understand them, and are the words it hears good enough to send? | If almost nobody speaks after a month of traffic, the microphone leaves the search box and stays in Tino only; if one adapter's words are edited or discarded far more often than the other's, the default moves; if most questions are not heard, the engine or its model is wrong for this shop. | `voice_input_heard`, `voice_transcript_used` | emitted |
 | Kits | Are kits asked for, and can the shop fill them at the budgets people give; is a solved kit worth buying; and does a sentence get a shopper to a kit? | A template mostly left with empty required slots at common budgets needs cheaper candidates in the catalogue, or to go; built often and added seldom means the choices are not trusted, and the explanation is what to work on before anything else. Most sentences naming no kit means the box asks the wrong thing or the shop lacks the kits people want: reword it, add those kits, or take the box out; understood sentences seldom built into a kit means what was read is not what was meant. | `kit_built`, `kit_added_to_cart`, `kit_sentence_read` | emitted |
@@ -62,7 +62,7 @@ everything here that is not *planned* is emitted.
 | Theme choice | Does anybody change the theme from the system's, and to which? | If nobody changes it within a month of the laboratory's use, the switch goes and the system's preference stays (the redesign's R-3). The storefront's half arrives with R-5.1 as a behavioural event. | `backoffice_theme_chosen` | emitted |
 | Palette and list shortcuts | Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row? | R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3. | `backoffice_affordance_used`, `backoffice_action_taken` | emitted |
 | Stock search and filters | Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which? | If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count. | `backoffice_affordance_used` | emitted |
-| Steward | Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? | Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. | `steward_opened`, `steward_answered`, `proposals_reviewed`, `steward_unavailable` | emitted |
+| Steward | Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions? | Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. If the head's new conversation is almost never pressed it leaves the head; if most restarts come from the notice near the window, the window or the history sent is too small. | `steward_opened`, `steward_answered`, `proposals_reviewed`, `steward_unavailable`, `steward_conversation_restarted` | emitted |
 | Alt text for pictures | Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read? | Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes. | `tendero.alt_text.pictures`, `image_alt_proposal_decided` | emitted |
 | Pictures read for claims | Does the job that has product pictures read get through its batches, or stall on pictures it cannot read or a model that does not answer in the shape asked for? | Failed or skipped above one in five is the model or the store, not the catalogue: the instructions, the profile or the pictures are what changes before any claim is proposed from a reading. Whether the claims read from pictures are worth reviewing is measured where they are decided, with the review queue's own events. | `tendero.picture_reading.pictures` | emitted |
 | Importing a store | Is the Shopify source used, and how much of a store comes across clean, per context? | A high count of CategoryNotMapped moves collections or a proposed taxonomy mapping up the plan; DescriptionHadLayout decides whether descriptions keep their tables (docs/specs/shopify-import.md). For stock, LocationNotMapped and VariantNotInCatalogue say whether the locations file and the order of imports need a tool of their own. Gift cards listed for reissue, counted per store, say whether Tendero needs gift cards of its own (docs/specs/shopify-leave.md, decision 6). A rehearsal of the whole migration never followed by one for real says the answer stopped the merchant, and its notes say which step to work on first. | `tendero.catalog.import.products`, `tendero.catalog.import.notes`, `tendero.inventory.import.levels`, `tendero.inventory.import.notes`, `tendero.accounts.import.customers`, `tendero.accounts.import.notes`, `tendero.ordering.import.orders`, `tendero.ordering.import.notes`, `tendero.ordering.import.gift_cards`, `tendero.pricing.import.discounts`, `tendero.pricing.import.notes`, `tendero.migration.runs` | emitted |
@@ -309,7 +309,7 @@ browser event, staff. The shopkeeper opened Steward's panel, from the bar or the
 
 Answers:
 
-- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
@@ -321,7 +321,7 @@ browser event, staff. A Steward turn came back. Never the question's text nor th
 
 Answers:
 
-- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
@@ -339,7 +339,7 @@ browser event, staff. A batch a model proposed was decided through the review: S
 
 Answers:
 
-- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
@@ -355,11 +355,24 @@ browser event, staff. A Steward turn found no model to answer it: the default fa
 
 Answers:
 
-- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `fell_back` | boolean | — | Whether a fallback profile was tried as well. |
+
+### `steward_conversation_restarted`
+
+browser event, staff. The shopkeeper started a new conversation with Steward, forgetting the one on screen: from the panel's head when they chose to, or from the notice near the model's window or the end of a conversation when Steward asked. Never what was said.
+
+Answers:
+
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? Do people start over by choice, and after how many questions?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `from` | string | `header`, `near_limit`, `ended` | The head's button, the notice near the model's window, or the button that replaces the composer once the conversation is over. |
+| `exchanges` | number | — | How many questions the conversation forgotten had. |
 
 ### `tino_opened`
 
@@ -367,7 +380,7 @@ browser event, behavioural. A shopper opened Tino's panel, from the header or fr
 
 Answers:
 
-- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
@@ -380,7 +393,7 @@ browser event, behavioural. Tino answered a turn (phase 12b). The kind of answer
 
 Answers:
 
-- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
@@ -396,7 +409,7 @@ browser event, behavioural. A shopper followed something an answer of Tino's off
 
 Answers:
 
-- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
@@ -410,11 +423,23 @@ browser event, behavioural. Tino did not answer and the panel showed the search 
 
 Answers:
 
-- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `cause` | string | `no_profile`, `model`, `time`, `budget`, `shop`, `too_long`, `scorer`, `too_many`, `network`, `not_available` | The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. |
+
+### `tino_conversation_restarted`
+
+browser event, behavioural. A shopper started a new conversation with Tino from the panel's head, forgetting the one on screen. Only with analytics consent; never what was said.
+
+Answers:
+
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `exchanges` | number | — | How many questions the conversation forgotten had. |
 
 ### `image_alt_proposal_decided`
 
@@ -1166,7 +1191,7 @@ counter, unit `{turn}`. Tino's turns, by status, by cause when it did not answer
 
 Answers:
 
-- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? Do shoppers start over, and after how many questions?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|

@@ -160,6 +160,46 @@ describe('the steward panel', () => {
     expect(card.request.params.getAll('ids')).toEqual(['p1', 'p2']);
   });
 
+  /** The head's new conversation: there beside the close, idle while nothing has been said, and it starts over. */
+  it('offers a new conversation in its head once something has been said, and starts over from there', async () => {
+    const fixture = TestBed.createComponent(StewardPanel);
+    fixture.detectChanges();
+    for (const translations of http.match((req) => req.url.includes('/i18n/'))) translations.flush({});
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const restart = () =>
+      element.querySelector<HTMLButtonElement>('header button[aria-label="steward.newConversation"]');
+    const idle = restart()?.disabled;
+
+    const store = TestBed.inject(StewardStore);
+    store.ask('Which products have no English name?', null);
+    http.expectOne((req) => req.url === Turns).flush(answer({}));
+    fixture.detectChanges();
+    const restarted = vi.spyOn(store, 'restart');
+    restart()!.click();
+
+    expect([idle, restarted.mock.calls]).toEqual([true, [['header']]]);
+  });
+
+  /** Where Steward itself asks for a new conversation, that is where the restart says it came from. */
+  it('starts over from the notice near the window, saying so', async () => {
+    const near = await asked(answer({ nearContextLimit: true }));
+    const store = TestBed.inject(StewardStore);
+    const restarted = vi.spyOn(store, 'restart');
+    near.querySelector<HTMLButtonElement>('lib-notice button')!.click();
+
+    expect(restarted.mock.calls).toEqual([['near_limit']]);
+  });
+
+  it('starts over from the button that replaces the composer once the conversation is over', async () => {
+    const ended = await asked(answer({ status: 'ConversationTooLong', text: null, reads: [], cost: null }));
+    const restarted = vi.spyOn(TestBed.inject(StewardStore), 'restart');
+    ended.querySelector<HTMLButtonElement>('footer button')!.click();
+
+    expect(restarted.mock.calls).toEqual([['ended']]);
+  });
+
   /** Invariant 8 for Steward: no model, and the shop is still usable — the same list as a filter, and Proposals. */
   it('says no model answered and offers the way on without one', async () => {
     const element = await asked(answer({ status: 'Unavailable', text: null, reads: [], cost: null }));

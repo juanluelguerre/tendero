@@ -330,6 +330,23 @@ describe('the tino panel', () => {
     http.expectNone((req) => req.url === Turns);
   });
 
+  /** The head's new conversation: there beside the close, idle while nothing has been said, and it starts over. */
+  it('offers a new conversation in its head once something has been said, and starts over from there', async () => {
+    const fixture = await drawn();
+    const element = fixture.nativeElement as HTMLElement;
+    const restart = () => element.querySelector<HTMLButtonElement>('header button[aria-label="tino.newConversation"]');
+    const idle = restart()?.disabled;
+
+    const store = TestBed.inject(TinoStore);
+    store.ask('una sartén', null);
+    http.expectOne((req) => req.url === Turns).flush(answer({ kind: 'Ask', products: [], ask: '¿Cuál?' }));
+    fixture.detectChanges();
+    const restarted = vi.spyOn(store, 'restart');
+    restart()!.click();
+
+    expect([idle, restarted.mock.calls.length]).toEqual([true, 1]);
+  });
+
   it('names no page in its head where there is no one thing on the screen', async () => {
     const element = (await drawn('/es/c/KITCHEN')).nativeElement as HTMLElement;
 
@@ -390,6 +407,7 @@ describe('the tino panel', () => {
 
     expect(element.textContent).toContain('tino.notAvailable.title');
     expect(element.querySelector('textarea')).toBeNull();
+    expect(element.querySelector('header button[aria-label="tino.newConversation"]')).toBeNull();
 
     const box = element.querySelector<HTMLInputElement>('input[type="search"]')!;
     box.value = 'sartén';
