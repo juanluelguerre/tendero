@@ -67,7 +67,7 @@ them. Faro was run with its defaults, as declared, except console capture.
 | 3 | LCP p75 | 231 ms | 244 ms | < 10 % apart — **met** (+5.6 %) |
 | 3 | INP p75 | 24 ms | 24 ms | **met** |
 | 3 | CLS p75 | 0.167 | 0.167 | **met** |
-| 4 | Browser traces joined to the API | 266 of 272 (97.8 %) | 206 of 211 (97.6 %) | both join — **met** |
+| 4 | Browser traces joined to the API | 266 of 272 (97.8 %) | 206 of 211 (97.6 %) | both join — **met**; every call to the API joined, the rest were never API calls (*The 2 % that did not join*, below) |
 | 4 | Our events / exceptions reaching Loki | 8 / 0 | 8 / 0 | **met** |
 | 4 | Web Vitals lines | 152 | 262 measurements | — |
 | 4 | Lines carrying the route template | 160 of 160 | 8 (ours only) | — |
@@ -101,6 +101,40 @@ twice the download and ten times the bytes on every visit, and it needs a
 receiver the default mode does not have. The vitals it reports are the same.
 **OTel stays the default; Faro stays an adapter that can be switched on**
 (`Parameters:browser-telemetry=faro`) — which is what the port is for.
+
+**The 2 % that did not join** (classified 2026-11-06, after a reader asked about
+it under article 05). The hypothesis asked only whether both adapters join, so the
+6 and 5 unjoined spans were left unexplained at the time. Tempo still held both
+days, and every unjoined browser span was one of two things:
+
+| Unjoined span | 2026-09-25, whole day | 2026-09-26, whole day | 2026-11-06, same seed, OTel |
+|---|---|---|---|
+| `GET /i18n/en.json` (the page's own dev server) | 13 | 5 | 0 |
+| `GET :5130/dev-issuer/.well-known/jwks.json` | 9 | 1 | 3 |
+| `POST :5130/dev-issuer/connect/token` | 3 | 1 | 0 |
+| **Browser client spans, all** | 711 (25 unjoined) | 217 (7) | 588 (3) |
+| **Calls to `/api` that did not join** | **0** | **0** | **0** |
+
+The whole days hold more than the two runs did, so their totals are larger than
+the table's 272 and 211; the kinds are the same.
+
+- **A translation file is not an API call.** The adapter traces every `fetch` the
+  page makes, and the measure divided by all of them. `/i18n/*.json` is served by
+  Angular's dev server: there is no API span for it to join. A fault of the
+  measure, not of propagation.
+- **The issuer is another origin.** The page is on `localhost:4200`, the
+  development issuer on `localhost:5130`. OpenTelemetry's fetch instrumentation
+  sends `traceparent` only to the page's own origin unless
+  `propagateTraceHeaderCorsUrls` names others, and ours names none. The API
+  answers, and its server span starts a trace of its own: Tempo holds
+  `GET /dev-issuer/.well-known/jwks.json` roots with no parent at the same times.
+
+Both adapters missed the same share because the cause was the traffic, not the
+SDK. **Measured as it should have been — browser spans to `/api` over browser
+spans to `/api` — both join 100 %.** Propagation to the issuer stays off on
+purpose: it is an external system (Keycloak outside development), the header
+would cost a CORS preflight on every sign-in request and a change to the issuer's
+CORS, and a sign-in is not a trace anyone follows across the boundary.
 
 **Caveats.** One run each, on one laptop, a day apart, with the Faro run on
 three temporarily moved ports (Windows had reserved the usual ones). The vitals
