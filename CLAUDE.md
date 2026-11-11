@@ -1,7 +1,7 @@
 # CLAUDE.md — Tendero
 
 The AI-native shopkeeper: an ecommerce platform for humans and AI agents.
-.NET 11 (preview) + Aspire backend, Angular 22 frontends, self-hosted AI stack
+.NET 11 + Aspire backend, Angular 22 frontends, self-hosted AI stack
 (Text Embeddings Inference, Qdrant, Elasticsearch; Ollama once a generative
 model arrives) via Docker. Companion repo for a blog series —
 code quality and architectural clarity matter more than shipping fast.

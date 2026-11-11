@@ -100,6 +100,11 @@ describeTelemetryAdapterContract('The Faro adapter', () => {
   trace.disable();
   context.disable();
   propagation.disable();
+  // Since 2.14 Faro also records, on the global object, which instance owns
+  // tracing, and every later instance registers no tracer provider at all. Its
+  // own reset (`resetTracingOwnerForTests`) is not exported, so the key it
+  // deletes is deleted here.
+  delete (globalThis as Record<string, unknown>)['_faroTracingOwner'];
 
   const transport = new CapturingTransport();
   const adapter = createFaroAdapter({ transports: [transport], batching: { enabled: false }, instrumentFetch: false });

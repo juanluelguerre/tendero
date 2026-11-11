@@ -50,7 +50,7 @@ public sealed class WireMoneyTests
     [Fact]
     public void Writing_and_reading_any_whole_number_of_minor_units_gives_the_same_money()
     {
-        Gen.Select(Gen.Long[-100_000_000, 100_000_000], Gen.OneOfConst("EUR", "USD", "GBP", "JPY", "KWD")).Sample((minor, currency) =>
+        Gen.Select(Gen.Long[-100_000_000, 100_000_000], Gen.OneOf("EUR", "USD", "GBP", "JPY", "KWD")).Sample((minor, currency) =>
         {
             var money = new Money(minor / (decimal)Math.Pow(10, MinorUnits.Of(currency)), currency);
 

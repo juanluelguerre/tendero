@@ -5,6 +5,18 @@
   "projectType": "library",
   "tags": ["scope:shared", "type:auth"],
   "targets": {
-    "lint": { "executor": "@nx/eslint:lint" }
+    "lint": {
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["eslint"]
+        }
+      ]
+    }
   }
 }

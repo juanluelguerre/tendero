@@ -432,7 +432,7 @@ test.describe('the backoffice', () => {
     // A shop with no orders is a legitimate state and the reason this is not an
     // unconditional assertion: the fixture is whatever the stack has, and a spec
     // that demanded an order would fail on a fresh clone for the wrong reason.
-    if (await empty.isVisible().catch(() => false)) test.skip();
+    test.skip(await empty.isVisible().catch(() => false), 'The shop has no orders yet.');
 
     const row = page.getByRole('row').nth(1);
     const buttons = row.getByRole('button');

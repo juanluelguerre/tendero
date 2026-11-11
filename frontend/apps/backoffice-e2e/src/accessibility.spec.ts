@@ -46,6 +46,7 @@ async function hold(pages: readonly (readonly [string, string])[], page: Page): 
     for (const width of Widths) {
       await page.setViewportSize({ width, height: width < 800 ? 844 : 1000 });
       await page.goto(url);
+      // eslint-disable-next-line playwright/no-networkidle -- the audit reads the page once everything it fetches has painted; no single element says that
       await page.waitForLoadState('networkidle');
       found.push(...findingsOf(name, width, await auditPage(page)));
     }

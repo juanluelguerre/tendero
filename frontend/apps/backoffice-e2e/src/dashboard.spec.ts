@@ -66,6 +66,7 @@ test.describe('the dashboard', () => {
       '/dashboard/agents',
     ]) {
       await page.goto(tab);
+      // eslint-disable-next-line playwright/no-networkidle -- the wall is measured once every widget has painted its data; no single element says that
       await page.waitForLoadState('networkidle');
       await page.locator('.full-screen-enter').click();
       await expect(page.locator('.wall-head')).toBeVisible();
