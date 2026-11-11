@@ -43,13 +43,12 @@ jobs:
           df -h /
 
 
-      # global.json pins 11.0.0 with allowPrerelease; `dotnet-quality: preview`
-      # is what lets the installer actually resolve a preview SDK
-      # (initial-plan.md §8).
+      # global.json pins the 11.0.100 SDK, .NET 11's GA, with no prereleases:
+      # the preview quality the installer needed until then (initial-plan.md §8)
+      # is gone with them.
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '11.0.x'
-          dotnet-quality: preview
 
       - run: dotnet restore
 
@@ -133,7 +132,6 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '11.0.x'
-          dotnet-quality: preview
 
       # SearchEval deliberately does not start Elasticsearch itself
       # (docs/search-evaluation.md) — a service container is exactly the thing
@@ -302,7 +300,6 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '11.0.x'
-          dotnet-quality: preview
 
       - uses: actions/setup-node@v7
         with:

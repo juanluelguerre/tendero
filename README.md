@@ -302,7 +302,7 @@ and the rest of the terms this README uses without stopping to define them
 
 | | why this exact version |
 |---|---|
-| **.NET 11 SDK, preview** | `global.json` pins a prerelease floor. `11.0.100` plus `allowPrerelease` resolves *nothing* on a preview-only machine: roll-forward only rolls up, and a preview sorts below its own release. |
+| **.NET 11 SDK, 11.0.100 or later** | `global.json` pins `11.0.100`, the GA SDK, with no prereleases and roll-forward to the latest feature band. A machine that still has only a .NET 11 preview resolves nothing: a preview sorts below its own release. |
 | **Node 24** (`.nvmrc`) | Angular 22 requires `^22.22.3 \|\| ^24.15.0 \|\| >=26.0.0`. Node 22.21 fails. |
 | **Docker** | Every backing service is a container. The default stack pulls Postgres and Elasticsearch, about 2.5 GB the first time; the optional layers below pull more, and each says how much. Docker Desktop on Windows needs at least 4 GB for its WSL2 backend: Elasticsearch alone asks for a 1 GB heap. |
 | **An NVIDIA GPU** — optional | Only for search by meaning at full speed and for the reranker. Without one, the embeddings run on the CPU and the reranker stays off; nothing else changes. |

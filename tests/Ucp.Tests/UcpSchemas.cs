@@ -123,6 +123,3 @@ internal static class UcpSchemas
         return count;
     }
 }
-
-[CollectionDefinition(UcpSchemas.Collection)]
-public sealed class UcpSchemasCollection;

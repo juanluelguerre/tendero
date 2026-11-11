@@ -11,27 +11,28 @@
     <PackageVersion Include="Carter" Version="10.0.0" />
     <!-- FluentValidation 12.2.0 — Apache-2.0 (checked on that version, 2026-10-16) (not to be confused with FluentAssertions) -->
     <PackageVersion Include="FluentValidation" Version="12.2.0" />
-    <!-- Tier 1, Apache-2.0 (checked on 3.3.4, 2026-09-29): the IANA time zone
+    <!-- Tier 1, Apache-2.0 (checked on 3.3.7, 2026-11-11; 3.3.4 first, 2026-09-29): the IANA time zone
          database inside the process. The backend runs with InvariantGlobalization,
          so the operating system's zones are not there to ask (ADR 0046). -->
-    <PackageVersion Include="NodaTime" Version="3.3.5" />
-    <!-- Microsoft.Extensions.* 11.0.0-rc.2 — MIT (checked 2026-10-16, the installed SDK's band). The DI container only:
+    <PackageVersion Include="NodaTime" Version="3.3.7" />
+    <!-- Microsoft.Extensions.* 11.0.0 — MIT (checked 2026-11-11, .NET 11's GA, the SDK's band). The DI container only:
          the abstractions (Options, Logging, Hosting) come in .NET 11's shared
          framework, and referencing them explicitly is an NU1510 error. -->
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-rc.2.26504.105" />
-    <!-- Microsoft.AspNetCore.OpenApi 11.0.0-rc.2 — MIT. In the framework, so
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0" />
+    <!-- Microsoft.AspNetCore.OpenApi 11.0.0 — MIT. In the framework, so
          neither Swashbuckle nor NSwag: the generated document is the source of
          the API's shape, and from it come the frontend's types and, later, the
-         UCP capability schemas. Same preview band as the SDK; it moves with it. -->
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0-rc.2.26504.105" />
-    <!-- JwtBearer 11.0.0-rc.2 — MIT. It ONLY validates tokens. It is
+         UCP capability schemas. Same band as the SDK; it moves with it. -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
+    <!-- JwtBearer 11.0.0 — MIT. It ONLY validates tokens. It is
          identity's client half and it does not change when the issuer goes from
          the dev-issuer to Keycloak: that is a configuration string. No
          authorization server is written here (invariant 10). -->
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-rc.2.26504.105" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0" />
   </ItemGroup>
   <ItemGroup Label="Agent surfaces">
-    <!-- ModelContextProtocol.AspNetCore 2.2.0 - Apache-2.0, declared as a licence
+    <!-- ModelContextProtocol.AspNetCore 2.4.0 - Apache-2.0 (checked on that version,
+         2026-11-11; 2.2.0 before), declared as a licence
          EXPRESSION in the nuspec rather than as a URL, which is what ADR 0006
          asks for after Aspire.Hosting.Elasticsearch declared none at all. Its
          two transitive packages, ModelContextProtocol and
@@ -48,40 +49,44 @@
          does, and ADR 0005 already names MEAI as the AI abstraction. The AI
          layer arriving through the door marked "agent surface" is the right
          door. -->
-    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.4.0" />
     <!-- The client half, for the traffic simulator's agent personas (ADR 0037).
          Already in the tree as the package above's own dependency, same version,
          same Apache-2.0 expression: a direct reference, not a new licence. -->
-    <PackageVersion Include="ModelContextProtocol" Version="2.2.0" />
+    <PackageVersion Include="ModelContextProtocol" Version="2.4.0" />
   </ItemGroup>
   <ItemGroup Label="Traffic simulation">
-    <!-- Microsoft.Playwright 1.63.0 - MIT, a licence EXPRESSION in the nuspec;
+    <!-- Microsoft.Playwright 1.64.1 - MIT, a licence EXPRESSION in the nuspec (checked 2026-11-11);
          its three dependencies (Microsoft.Bcl.AsyncInterfaces,
          System.ComponentModel.Annotations, System.Text.Json) are Microsoft's
          and MIT. Tier 1, approved by the author on 2026-09-24 (ADR 0037), and
          referenced only by tools/TrafficSim: the shop never links it. It
          downloads its browsers on first use, outside the repository. -->
-    <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.64.1" />
   </ItemGroup>
   <ItemGroup Label="Persistence">
-    <!-- EF Core 11.0.0-rc.1 — MIT. Pinned one preview behind the SDK on
-         purpose: the Npgsql provider takes an EXACT dependency on the EF version,
-         so EF moves when Npgsql moves, not when the SDK does. -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="11.0.0-rc.1.26425.128" />
-    <!-- Npgsql provider 11.0.0-rc.1.1 (it takes EF 11.0.0-rc.1.26425.128 exactly; checked 2026-10-16) — PostgreSQL License (OSI-approved, BSD-style) -->
-    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="11.0.0-rc.1.1" />
-    <!-- EF Core Design 11.0.0-rc.1 — MIT. It enters with the first
+    <!-- EF Core 11.0.0-rc.3 — MIT. Still a release candidate after .NET 11's GA,
+         on purpose: the Npgsql provider takes an EXACT dependency on the EF version,
+         so EF moves when Npgsql moves, not when the SDK does. On 2026-11-11, the day
+         after the GA, EF 11.0.0 was out and Npgsql's newest was rc.3, which takes
+         [11.0.0-rc.3.26522.148]; EF 11.0.0 beside it is NU1608, an error under
+         -warnaserror. Both go to 11.0.0 when Npgsql publishes its GA. -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="11.0.0-rc.3.26522.148" />
+    <!-- Npgsql provider 11.0.0-rc.3 (it takes EF 11.0.0-rc.3.26522.148 exactly; checked 2026-11-11) — PostgreSQL License (OSI-approved, BSD-style) -->
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="11.0.0-rc.3" />
+    <!-- EF Core Design 11.0.0-rc.3 — MIT. It enters with the first
          migration, at the SAME revision as the runtime. The tool is pinned to the
          same one in .config/dotnet-tools.json: the machine's global `dotnet ef`
          was 10.0.2 and is useless against an 11 runtime. -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0-rc.1.26425.128" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0-rc.3.26522.148" />
   </ItemGroup>
   <ItemGroup Label="Search">
     <!-- Elastic.Clients.Elasticsearch 9.5.3 — Apache-2.0 -->
     <PackageVersion Include="Elastic.Clients.Elasticsearch" Version="9.5.3" />
-    <!-- Microsoft.Extensions.AI and Microsoft.Extensions.AI.OpenAI 10.11.0 — both
-         MIT, stable (both raised from 10.10.x on 2026-10-16; the adapter still brings
-         the OpenAI SDK 2.14.0). What follows is the history of the first check. The adapter brings the OpenAI SDK 2.14.0
+    <!-- Microsoft.Extensions.AI and Microsoft.Extensions.AI.OpenAI 11.0.0 — both
+         MIT, stable (raised from 10.11.0 on 2026-11-11 with .NET 11's GA; the adapter
+         still brings the OpenAI SDK 2.14.0, and Microsoft.Agents.AI and the MCP SDK ask
+         for Abstractions >= 10.11.0, which 11.0.0 satisfies). What follows is the history of the first check. The adapter brings the OpenAI SDK 2.14.0
          (MIT), System.ClientModel 1.15.0 (MIT) and Abstractions 10.10.1, one
          patch above the pipeline's own 10.10.0, for which no 10.10.1 exists
          (checked 2026-09-30; first checked at P8-2). The first is here for the pipeline and its
@@ -89,32 +94,35 @@
          rather than an HTTP request. They raise the
          Microsoft.Extensions.AI.Abstractions the MCP server already brought
          from 10.8.3 to 10.10.0: an upgrade, not a downgrade. -->
-    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.11.0" />
-    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.11.0" />
-    <!-- Microsoft.Agents.AI 1.25.0 — MIT, the expression on that exact version
-         (checked on nuget.org 2026-10-16; 1.23.0 first, on 2026-10-02), approved by the author on 2026-10-02 for
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="11.0.0" />
+    <!-- Microsoft.Agents.AI 1.28.0 — MIT, the expression on that exact version
+         (checked on nuget.org 2026-11-11; 1.25.0 on 2026-10-16; 1.23.0 first, on 2026-10-02), approved by the author on 2026-10-02 for
          Steward's agent (phase 12, invariant 9). It depends on Microsoft.Extensions.AI
          10.10.0, the version already here, and brings, all MIT on their exact
          versions: Microsoft.Agents.AI.Abstractions 1.23.0, Microsoft.Extensions.AI.
          Evaluation 10.10.0, Microsoft.Extensions.Compliance.Abstractions 10.10.0,
          Microsoft.Extensions.VectorData.Abstractions 10.10.0, Microsoft.ML.Tokenizers
          2.0.0 and Microsoft.Extensions.FileSystemGlobbing 10.0.12. Tier 1. -->
-    <PackageVersion Include="Microsoft.Agents.AI" Version="1.25.0" />
+    <PackageVersion Include="Microsoft.Agents.AI" Version="1.28.0" />
     <!-- Microsoft.ML.Tokenizers 2.0.1 — MIT, the licence expression in the nuspec of
-         that exact version (checked 2026-10-16; 2.0.0 on 2026-10-08). Already in the graph through
+         that exact version (checked 2026-10-16; 2.0.0 on 2026-10-08; still the newest
+         stable on 2026-11-11, when only 3.0.0 previews were newer). Already in the graph through
          Microsoft.Agents.AI; referenced directly by Search for SigLIP 2's text
          tokenizer — SentencePiece over Gemma's vocabulary (phase 13a, P13-1).
          Approved by the author on 2026-10-06 (docs/specs/images.md). Tier 1. -->
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
-    <!-- Microsoft.ML.OnnxRuntime 1.31.0 — MIT, read in the LICENSE file of that exact
-         version on 2026-10-16, and its Managed half's LICENSE.txt too (1.30.0 before) (it has been in the graph since P10-0, through OnnxRuntimeGenAI,
+    <!-- Microsoft.ML.OnnxRuntime 1.31.1 — MIT, read in the LICENSE file of that exact
+         version on 2026-11-11 (1.31.0 on 2026-10-16, 1.30.0 before; OnnxRuntimeGenAI 0.19.0
+         asks for >= 1.31.0, so one native runtime still resolves) (it has been in the graph since P10-0, through OnnxRuntimeGenAI,
          which pins it). Referenced directly by Search to run SigLIP 2's two
          towers in process (phase 13a, P13-2). The same version on purpose: two
          onnxruntime.dll in one output folder is the collision the note on
          DirectML below is about. Approved by the author on 2026-10-06. Tier 1. -->
-    <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
+    <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.31.1" />
     <!-- Qdrant.Client 1.19.0 — Apache-2.0, a licence EXPRESSION in the nuspec.
-         The version is not a choice: Aspire.Hosting.Qdrant 13.6.2 pins it (still, 2026-10-20), and a
+         The version is not a choice: Aspire.Hosting.Qdrant 13.6.5 pins it (still, 2026-11-11,
+         with 1.20.0 published), and a
          newer client in a project the AppHost references is a downgrade NuGet
          reports and -warnaserror fails on. Its chain, each checked at the version
          it resolves: Grpc.Net.Client, Grpc.Net.Common and Grpc.Core.Api 2.71.0
@@ -122,41 +130,42 @@
     <PackageVersion Include="Qdrant.Client" Version="1.19.0" />
   </ItemGroup>
   <ItemGroup Label="Observability">
-    <!-- OpenTelemetry 1.20.0 — Apache-2.0 (checked 2026-10-16) -->
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.20.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.20.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.20.0" />
-    <!-- MIT -->
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
-    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.11.0" />
+    <!-- OpenTelemetry 1.20.x — Apache-2.0 (checked 2026-11-11, the newest stable patch of
+         each package; 1.21.0 is still a release candidate) -->
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.20.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.20.1" />
+    <!-- MIT (11.0.0, checked 2026-11-11: they ship with .NET 11's GA) -->
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="11.0.0" />
   </ItemGroup>
   <ItemGroup Label="Aspire (AppHost only)">
-    <!-- Aspire 13.6.2 — MIT (checked 2026-10-20). Its graph brings MessagePack 2.5.307
-         (MIT, with its Annotations), past GHSA-qhrr-8q5h-9q3h: the direct reference that
-         lifted 13.6.1's 2.5.302 to 2.5.303 on 2026-10-16 is gone, as it said it would be. -->
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.6.2" />
+    <!-- Aspire 13.6.5 — MIT (checked 2026-11-11; 13.6.2 on 2026-10-20). Its graph still brings
+         MessagePack 2.5.307 (MIT, with its Annotations), past GHSA-qhrr-8q5h-9q3h: the direct
+         reference that lifted 13.6.1's 2.5.302 to 2.5.303 on 2026-10-16 is gone, as it said it would be. -->
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.6.5" />
     <!-- Only what the AppHost declares today. Redis arrives when something reads
          it; the Ollama CommunityToolkit package does not come back for phase 8,
          because Text Embeddings Inference serves those models (ADR 0031) as a
          plain container. Elasticsearch is a plain container resource too
          (see ADR 0006). -->
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.2" />
-    <!-- MIT; its only Aspire dependency is exactly Aspire.Hosting 13.6.2. It
-         pins the server image to qdrant/qdrant:v1.18.0 and Qdrant.Client to
-         1.19.0 (1.18.1 under 13.5.3), so Search takes exactly that client version: a newer
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.5" />
+    <!-- MIT; its only Aspire dependency is exactly Aspire.Hosting 13.6.5. It
+         pins Qdrant.Client to 1.19.0 (1.18.1 under 13.5.3; still 1.19.0 under 13.6.5),
+         so Search takes exactly that client version: a newer
          one in a project the AppHost references would be a downgrade NuGet
          reports and -warnaserror turns into a failure. -->
-    <PackageVersion Include="Aspire.Hosting.Qdrant" Version="13.6.2" />
+    <PackageVersion Include="Aspire.Hosting.Qdrant" Version="13.6.5" />
     <!-- Orchestrates both Angular apps alongside the backend: one command brings
          everything up and the API's URL is injected instead of hand-written. MIT. -->
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.6.2" />
-    <!-- Aspire.Hosting.Keycloak 13.6.2-preview.1.26519.11 — MIT (checked 2026-10-20;
-         13.6.1-preview.1.26506.6 before), declared in the
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.6.5" />
+    <!-- Aspire.Hosting.Keycloak 13.6.5-preview.1.26559.7 — MIT (checked 2026-11-11;
+         13.6.2-preview.1.26519.11 on 2026-10-20, 13.6.1-preview.1.26506.6 before), declared in the
          nuspec (`<license type="expression">MIT</license>`), authored by
          Microsoft, from github.com/microsoft/aspire. Its only Aspire dependency
-         is `Aspire.Hosting 13.6.2`, which is exactly what the AppHost already
+         is `Aspire.Hosting 13.6.5`, which is exactly what the AppHost already
          resolves, so there is no version conflict.
 
          Both halves of ADR 0006's check, and this one passes where
@@ -166,14 +175,15 @@
 
          The version string is the awkward part and it is worth knowing rather
          than discovering: EVERY one of this package's 46 published versions is a
-         preview, while `Aspire.Hosting.AppHost` 13.6.2 is not. `dotnet package
+         preview, while `Aspire.Hosting.AppHost` 13.6.5 is not. `dotnet package
          search Aspire.Hosting.Keycloak` therefore returns "No results found",
-         which reads exactly like a package that does not exist. -->
-    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.6.2-preview.1.26519.11" />
+         which reads exactly like a package that does not exist (and the outdated
+         listing without prereleases says "Not found at the sources"). -->
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.6.5-preview.1.26559.7" />
   </ItemGroup>
   <ItemGroup Label="Knowledge">
-    <!-- Microsoft.ML.OnnxRuntimeGenAI 0.18.0 - MIT (its LICENSE and its Managed
-         half's read on 2026-10-16; it now takes OnnxRuntime 1.31.0), approved by the author on
+    <!-- Microsoft.ML.OnnxRuntimeGenAI 0.19.0 - MIT (its LICENSE and its Managed
+         half's read on 2026-11-11; it takes OnnxRuntime >= 1.31.0; 0.18.0 on 2026-10-16), approved by the author on
          2026-09-26 for P10-0 (at 0.17.0) and read in the LICENSE file of this
          exact version, as were its three dependencies: Microsoft.ML.OnnxRuntimeGenAI.Managed
          0.17.1, Microsoft.ML.OnnxRuntime 1.30.0 and Microsoft.ML.OnnxRuntime.Managed
@@ -185,7 +195,7 @@
          It brings its own onnxruntime.dll, as the DirectML package below does:
          the two must never meet in one project, and they do not (Knowledge and
          tools/SeedImages share no output folder). -->
-    <PackageVersion Include="Microsoft.ML.OnnxRuntimeGenAI" Version="0.18.0" />
+    <PackageVersion Include="Microsoft.ML.OnnxRuntimeGenAI" Version="0.19.0" />
   </ItemGroup>
   <!-- Seed image generation. A TOOL-ONLY group: nothing here enters a shipped
        assembly, and no project outside tools/SeedImages may reference it. -->
@@ -206,7 +216,8 @@
          onnxruntime.dll, so referencing Microsoft.ML.OnnxRuntime alongside it
          puts two native runtimes in the same output folder. -->
     <PackageVersion Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
-    <!-- SkiaSharp 4.153.1 - MIT. The repository had no image library at all: it
+    <!-- SkiaSharp 4.155.0 - MIT (the expression on that exact version, checked
+         2026-11-11; 4.153.1 before). The repository had no image library at all: it
          moves image BYTES around and never decodes a pixel (ADR 0011). This is
          the first thing that needs to, because seed/IMAGES-TODO.md asks for
          1400px WebP at quality 82 with no alpha channel, and SDXL emits a 1024px
@@ -216,8 +227,8 @@
          server does not decode it, so it is written again as PNG, in memory,
          before a model is sent it (Chat/Pictures.cs). The shop still stores and
          serves bytes it never decodes; what decodes is the path to a model. -->
-    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
-    <!-- SkiaSharp.NativeAssets.Linux 4.153.1 - MIT, verified in the nuspec, and
+    <PackageVersion Include="SkiaSharp" Version="4.155.0" />
+    <!-- SkiaSharp.NativeAssets.Linux 4.155.0 - MIT, verified in the nuspec, and
          it declares no dependency of its own. It is not an optional extra: the
          SkiaSharp package ships the managed wrapper and pulls the Windows and
          macOS binaries transitively, while the Linux one is opt-in. Without it
@@ -225,7 +236,7 @@
          DllNotFoundException, and the four imaging tests fail on any Linux -
          which is what CI runs on. Same exact version as the wrapper, because a
          native binary and its bindings are one artefact split in two. -->
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.153.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.155.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- JsonSchema.Net 8.0.5 - MIT, and the version matters more than usual.
@@ -243,21 +254,21 @@
          It is in the Testing group because it is a test-only dependency: the
          product does not validate its own manifest at runtime, a test does.
          Checked again 2026-09-30, when an update offered 9.4.0: still the
-         OSMF EULA. If it ever has to move, the alternative that validates
+         OSMF EULA; and again 2026-11-11, on 9.6.0: still the EULA. If it ever has to move, the alternative that validates
          UCP's draft 2020-12 is Corvus.Json.Validator (Apache-2.0), at the cost
          of five code-generation packages; NJsonSchema stops at draft 7. -->
     <PackageVersion Include="JsonSchema.Net" Version="8.0.5" />
     <!-- xUnit v3 4.0.2 — Apache-2.0. It brings Microsoft.Testing.Platform with
          it: neither VSTest nor Microsoft.NET.Test.Sdk is needed (see dotnet.config). -->
-    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <!-- NetArchTest.Rules 1.3.2 — MIT (declared in the repo, not in the nuspec) -->
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
-    <!-- Microsoft.AspNetCore.Mvc.Testing 11.0.0-preview.7 — MIT. It enters with
+    <!-- Microsoft.AspNetCore.Mvc.Testing 11.0.0 — MIT. It enters with
          the OpenAPI contract test, which starts the API for real with
          WebApplicationFactory and asks it for its document. It drags in no
          Docker: neither the DbContext nor the Elasticsearch client connects on
          construction, so two fake connection strings are enough to boot it. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0-rc.2.26504.105" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" />
     <!-- Testcontainers.PostgreSql 4.16.0 — MIT. A real Postgres for the tests
          that mean nothing against an in-memory provider: the jsonb mapping, the
          unique indexes and the outbox drain.
@@ -267,11 +278,11 @@
          The reset is a twenty-line TRUNCATE of our own, which is less surface
          than the doubt. -->
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
-    <!-- CsCheck 4.9.1 — Apache-2.0, verified for this exact version. Enters with
+    <!-- CsCheck 5.0.1 — Apache-2.0, verified for this exact version (2026-11-11; 4.9.1 before). Enters with
          the promotion combination rules, which is the canonical property-based
          case: totals never negative, stackable sets order-independent, two
          exclusives of a group never co-apply. Three examples cannot say that.
          It comes back for the kit solver in phase 13. -->
-    <PackageVersion Include="CsCheck" Version="4.9.1" />
+    <PackageVersion Include="CsCheck" Version="5.0.1" />
   </ItemGroup>
 </Project>
