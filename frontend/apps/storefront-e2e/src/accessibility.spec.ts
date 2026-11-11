@@ -24,6 +24,7 @@ async function hold(pages: readonly (readonly [string, string])[], page: Page): 
     for (const width of Widths) {
       await page.setViewportSize({ width, height: width < 800 ? 844 : 1000 });
       await page.goto(url);
+      // eslint-disable-next-line playwright/no-networkidle -- the audit reads the page once everything it fetches has painted; no single element says that
       await page.waitForLoadState('networkidle');
       found.push(...findingsOf(name, width, await auditPage(page)));
     }
@@ -44,6 +45,7 @@ async function hold(pages: readonly (readonly [string, string])[], page: Page): 
 test('the storefront gets no less accessible than R-1 found it', async ({ page }) => {
   test.setTimeout(240_000);
   await page.goto('/es');
+  // eslint-disable-next-line playwright/no-networkidle -- the audit reads the page once everything it fetches has painted; no single element says that
   await page.waitForLoadState('networkidle');
   // The campaign's listing, when a campaign leads (R-8): its heading and its chip.
   const cta = page.locator('storefront-campaign-card a.campaign__cta');
@@ -65,6 +67,7 @@ test('the storefront gets no less accessible than R-1 found it', async ({ page }
   // shopper sees, not only a first visit's.
   await page.goto(product ?? '/es');
   await page.goto('/es?q=mochila');
+  // eslint-disable-next-line playwright/no-networkidle -- the audit reads the page once everything it fetches has painted; no single element says that
   await page.waitForLoadState('networkidle');
 
   await hold(

@@ -49,6 +49,10 @@
       "continuous": true,
       "executor": "@angular/build:dev-server",
       "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "apps/storefront/proxy.conf.mjs",
+        "port": 4200
+      },
       "configurations": {
         "production": {
           "buildTarget": "storefront:build:production"
@@ -57,13 +61,22 @@
           "buildTarget": "storefront:build:development"
         }
       },
-      "options": {
-        "proxyConfig": "apps/storefront/proxy.conf.mjs",
-        "port": 4200
+      "readyWhen": {
+        "signal": true
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["eslint"]
+        }
+      ]
     },
     "test": {
       "executor": "@angular/build:unit-test",
@@ -75,6 +88,10 @@
     "serve-static": {
       "continuous": true,
       "executor": "@nx/web:file-server",
+      "readyWhen": {
+        "signal": true
+      },
+      "dependsOn": ["build"],
       "options": {
         "buildTarget": "storefront:build",
         "staticFilePath": "dist/apps/storefront/browser",

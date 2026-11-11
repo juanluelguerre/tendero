@@ -1,6 +1,13 @@
 /**
- * The shape of `document.modelContext`, declared here because no library ships
- * it yet.
+ * The shape of `document.modelContext` the shop uses, declared here because no
+ * library shipped it when this was written.
+ *
+ * Angular 22.2.5 now carries the draft's types inside `@angular/core`
+ * (`third_party/webmcp-types`, MIT) and declares `Document.modelContext` globally
+ * as `WebMCP.ModelContext`, so this file no longer augments `Document`: a second
+ * declaration of the same member is TS2717. The interfaces below stay as the
+ * narrower shape the shop registers through, and the browser's
+ * `WebMCP.ModelContext` is assignable to it.
  *
  * WebMCP is under incubation at the W3C Web Machine Learning Community Group
  * (Google and Microsoft). **It is not on the standards track and it is
@@ -109,10 +116,4 @@ export interface ModelContext {
  */
 export function supportsModelContext(target: Document = document): boolean {
   return typeof target.modelContext?.registerTool === 'function';
-}
-
-declare global {
-  interface Document {
-    readonly modelContext?: ModelContext;
-  }
 }
