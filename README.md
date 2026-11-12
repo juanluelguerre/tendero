@@ -934,6 +934,7 @@ Each phase ships with an article, in English, on
 | 03 | [Your build is green and your shop's search is broken: NDCG as a CI gate in .NET](https://elguerre.com/2026/10/22/ndcg-as-a-ci-gate/) | `blog/03-ndcg-as-a-ci-gate` |
 | 04 | [Tests that had never failed, written by an AI and passed by everyone: mutation testing with Stryker.NET](https://elguerre.com/2026/10/29/tests-that-had-never-failed/) | `blog/04-tests-that-had-never-failed` |
 | 05 | [Three of eighteen features could prove they were used, and none of them sold anything](https://elguerre.com/2026/11/05/seeing-it-run-opentelemetry-dotnet/) | `blog/05-seeing-it-run` |
+| 06 | [Test your ecommerce analytics before real customers arrive: simulated shoppers as Markov chains](https://elguerre.com/2026/11/12/simulating-ecommerce-traffic-dotnet/) | `blog/06-a-shop-with-no-customers` |
 
 Every article links a tag of this repository named after it, `blog/NN-slug`,
 cut once its snippets and numbers had been checked against the code. Clone that
