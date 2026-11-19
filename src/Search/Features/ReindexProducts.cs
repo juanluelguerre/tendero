@@ -32,19 +32,21 @@ namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 /// removed, so the reindex CONVERGES — a product that stopped being active
 /// leaves the index — rather than merely adding.
 ///
-/// It does not recreate the indexes or touch their mappings: that is
-/// CreateSearchIndexesAtStartupWorker's job, and duplicating the mapping definition here
-/// would be two sources for the same truth.
+/// It does not own the mappings. With <see cref="ReindexProductsCommand.Recreate"/>
+/// it drops the indexes and creates them again, but through the same
+/// <c>SearchIndexes.CreateAsync</c> that CreateSearchIndexesAtStartupWorker uses,
+/// so creating and recreating cannot drift: one definition, two callers.
 ///
-/// A known LIMIT: it converges for the products that EXIST. A product deleted
-/// from the table leaves its document orphaned, because the walk cannot see what
-/// is no longer there. It does not happen through the application — the domain
-/// does not delete, it archives, and Archive() emits ProductArchived which
+/// Without Recreate it converges only for the products that EXIST. A product
+/// deleted from the table leaves its document orphaned, because the walk cannot
+/// see what is no longer there. It does not happen through the application — the
+/// domain does not delete, it archives, and Archive() emits ProductArchived which
 /// removes it — but it does with a hand-written DELETE or by restoring an old
 /// copy of the database. Actually observed: six rows deleted by SQL left twelve
-/// documents for six products. Closing that means dropping the indexes before
-/// rebuilding, and that moves ownership of the mapping; it gets decided when
-/// there is a case that is not a manual reset in development.
+/// documents for six products. The repair is <c>?recreate=true</c>: an index
+/// dropped and rebuilt from Postgres holds nothing from before. It is a repair
+/// by hand, not an automatic one — the startup worker recreates only an index
+/// that is empty or on an older mapping, and an index with orphans is neither.
 /// </summary>
 /// <param name="Recreate">
 /// Drop the indexes and rebuild their mapping before replaying, rather than
